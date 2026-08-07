@@ -11,6 +11,7 @@
 - appearance는 운영체제 설정을 따르는 `automatic`으로 고정한다. 앱 안에 별도의 테마 선택이나 저장 기능을 두지 않는다.
 - 최초 앱 소유 색상은 `background.canvas`가 light `#F4F4F6`, dark `#0B0B0D`, `text.primary`가 light `#111114`, dark `#FFFFFF`, `background.surface`가 light `#FFFFFF`, dark `#1A1A1E`다.
 - Expo Router의 navigation theme에서 `background`와 `card`는 `background.canvas`, `text`는 `text.primary`에 연결한다. 기본 navigation theme의 시스템 폰트는 덮어쓰지 않는다.
+- 루트 `AppThemeProvider`가 운영체제 appearance를 한 번 구독해 시맨틱 색상과 navigation theme를 공급하고, React Native UI는 `useAppTheme()`으로 이미 계산된 색상을 사용한다.
 - 네이티브 root window의 배경도 `background.canvas`와 동기화하고 status bar 스타일은 appearance를 자동으로 따른다.
 
 ## Boundaries

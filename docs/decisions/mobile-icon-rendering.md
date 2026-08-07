@@ -2,9 +2,9 @@
 
 ## Decisions
 
-- React Native UI의 시스템 아이콘은 `expo-symbols`의 `SymbolView`로 렌더링한다.
-- 하나의 아이콘 의미에 iOS SF Symbol과 Android Material Symbol 이름을 함께 지정한다. SF Symbol 문자열 하나만 전달하는 iOS 전용 사용은 하지 않는다.
-- 네이티브 셸의 아이콘은 Expo Router의 tab, toolbar와 menu icon API가 렌더링한다.
+- 네이티브 셸의 아이콘은 그 표면을 소유한 Expo Router의 tab, toolbar와 menu icon API가 렌더링한다.
+- `NativeTabs`에서는 하나의 아이콘 의미에 iOS SF Symbol과 Android Material Symbol 이름을 함께 지정한다. `NativeTabs.Trigger.Icon`의 `sf`와 `md`에 기본·선택 이름을 전달하고, iOS 전용 문자열만 공유 코드에 남기지 않는다.
+- 현재 React Native placeholder에는 시스템 아이콘이 없다. 이후 RN 화면에 아이콘이 실제로 필요할 때만 `expo-symbols` 직접 의존성과 `SymbolView` 사용을 별도로 결정한다.
 - `@expo/ui`의 `Host` 안에 아이콘이 필요하면 universal `Icon`을 사용한다. `SymbolView`를 `Host` 안에 삽입하지 않는다.
 - 시스템 심벌로 표현할 수 없는 브랜드 로고나 고유 그래픽만 이미지 또는 SVG asset으로 제공한다.
 
@@ -17,7 +17,7 @@
 
 ## Why
 
-현재 셸은 플랫폼 관례를 따르는 표현과 낮은 구현 복잡도를 우선한다. `expo-symbols`는 React Native UI에서 각 운영체제의 시스템 심벌을 사용할 수 있고, 선택한 Glass 탭도 같은 렌더러를 기본으로 사용한다. 네이티브 셸과 `Host` 내부에서는 각 표면의 소유 API를 사용해야 네이티브 상태, tint와 접근성 동작을 보존할 수 있다.
+현재 셸은 플랫폼 관례를 따르는 표현과 낮은 구현 복잡도를 우선한다. `NativeTabs`가 icon 변환과 네이티브 tab item 생성을 소유하게 하면 앱이 별도 아이콘 view의 크기, tint, 선택 상태와 접근성을 보정할 필요가 없다. 같은 이유로 `Host` 내부에서도 해당 표면의 universal API를 사용한다.
 
 ## Reconsider when
 
@@ -32,5 +32,5 @@
 
 ## Evidence worth preserving
 
-- 선택한 `expo-glass-tabs` `0.1.1`의 기본 아이콘 경로는 `expo-symbols`의 `SymbolView`를 사용한다.
-- 현재 `expo-symbols`에서 이름을 문자열 하나로 전달하면 SF Symbol로 취급된다. Android에도 표시하려면 플랫폼별 이름 객체가 필요하다.
+- 설치된 Expo Router `NativeTabs`는 `Trigger.Icon`의 `sf`와 `md` 정의를 각 플랫폼의 native tab icon으로 변환한다.
+- 앱은 `expo-symbols`를 직접 import하거나 patch하지 않는다. Expo Router가 내부 구현 의존성으로 `expo-symbols`를 설치할 수 있지만, 그 버전과 사용은 Router가 소유한다.
