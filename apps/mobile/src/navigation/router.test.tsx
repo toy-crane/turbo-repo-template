@@ -8,7 +8,7 @@ import {
   waitFor,
 } from "expo-router/testing-library";
 import type { PropsWithChildren } from "react";
-import type { PressableProps } from "react-native";
+import { Platform, type PressableProps } from "react-native";
 
 jest.mock("../features/activity/activity-screen", () => {
   const React = require("react") as typeof import("react");
@@ -73,4 +73,24 @@ test("포커스된 탭 경로가 바뀌면 탭 바를 확장 상태로 되돌린
     expect(resetMinimization).toHaveBeenCalledTimes(initialCallCount + 1);
   });
   expect(resetMinimization).toHaveBeenLastCalledWith(expect.any(Object), 0);
+});
+
+test("iOS에서 세 탭을 각각 선택 가능한 접근성 버튼으로 노출한다", async () => {
+  const platform = jest.replaceProperty(Platform, "OS", "ios");
+
+  try {
+    const router = renderRouter("./app", { initialUrl: "/" });
+    await router;
+
+    const tabs = ["Home", "Activity", "Settings"].map((name) =>
+      screen.getByRole("button", { name })
+    );
+
+    expect(tabs).toHaveLength(3);
+    expect(tabs[0]?.props.accessibilityState).toEqual({ selected: true });
+    expect(tabs[1]?.props.accessibilityState).toEqual({ selected: false });
+    expect(tabs[2]?.props.accessibilityState).toEqual({ selected: false });
+  } finally {
+    platform.restore();
+  }
 });

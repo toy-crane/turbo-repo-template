@@ -9,7 +9,7 @@ import {
 import { usePathname, useRouter } from "expo-router";
 import { TabList, TabSlot, Tabs, TabTrigger } from "expo-router/ui";
 import { type ComponentProps, useCallback, useEffect, useMemo } from "react";
-import { StyleSheet, useColorScheme } from "react-native";
+import { Platform, StyleSheet, useColorScheme } from "react-native";
 
 import { appTabs } from "../../src/navigation/app-tabs";
 import { getGlassTabTheme } from "../../src/theme/glass-tab-theme";
@@ -22,7 +22,7 @@ function AccessibleGlassTabButton(
     <GlassTabButton
       {...props}
       accessibilityLabel={props.item.label}
-      accessibilityRole="tab"
+      accessibilityRole={Platform.OS === "ios" ? "button" : "tab"}
       accessibilityState={{ selected: Boolean(props.isFocused) }}
     />
   );
