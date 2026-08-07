@@ -3,13 +3,13 @@
 ## 결정
 
 - 모바일 앱은 Expo SDK 57로 시작한다.
+- 지원 플랫폼은 iOS와 Android로 한정하며 Expo Web은 개발하지 않는다.
 - `expo-dev-client`를 포함하고, 앱 전용 Development Build를 기본 네이티브 개발 런타임으로 사용한다.
 - 일상적인 iOS·Android 개발에는 로컬에서 컴파일한 Development Build를 우선 사용한다. Expo Go는 기본 개발 방식으로 지원하지 않는다.
 
 ## 경계
 
 - JavaScript만 변경했을 때는 설치된 Development Build를 재사용한다. 네이티브 의존성, 네이티브 설정 또는 Expo SDK가 변경되면 바이너리를 다시 빌드한다.
-- 웹 개발에는 `expo-dev-client`를 사용하지 않는다.
 - 이 결정은 EAS Build, TestFlight 배포, 서명 자격 증명, Expo 유료 서비스 또는 스토어 제출의 설정이나 사용을 허용하지 않는다.
 
 ## 이유
@@ -19,6 +19,7 @@ Development Build는 앱의 네이티브 의존성 구성과 일치하고, 프�
 ## 재검토 조건
 
 - Expo가 Development Build를 대체하는 더 나은 권장 런타임을 제공할 때
+- 웹 지원이 제품 범위에 추가될 때
 - 모바일 앱에 네이티브 플랫폼이나 네이티브 의존성이 더 이상 필요하지 않을 때
 - 로컬 빌드 방식으로 지원할 수 없는 실물 기기에 서명된 빌드를 공유해야 할 때
 - 향후 Expo SDK 업그레이드로 Development Client 또는 로컬 빌드 방식이 달라질 때
