@@ -22,6 +22,19 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "plugins": ["expo-router", "expo-font"]
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F4F4F6",
+          "image": "./assets/splash-icon.png",
+          "dark": {
+            "backgroundColor": "#0B0B0D"
+          }
+        }
+      ]
+    ]
   }
 }
