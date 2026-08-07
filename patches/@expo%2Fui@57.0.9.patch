@@ -84,7 +84,7 @@ diff --git a/src/universal/Switch/index.android.tsx b/src/universal/Switch/index
 index c2ddf6cd1b39ba86f976e340179b586f4514b29c..e67fabb1c19dc97952b31d7f537abe1d2fca2787 100644
 --- a/src/universal/Switch/index.android.tsx
 +++ b/src/universal/Switch/index.android.tsx
-@@ -1,15 +1,28 @@
+@@ -1,2 +1,10 @@
 -import { Row, Switch as ComposeSwitch, Text } from '@expo/ui/jetpack-compose';
 -import { testID as testIDModifier, weight } from '@expo/ui/jetpack-compose/modifiers';
 +import {
@@ -97,9 +97,7 @@ index c2ddf6cd1b39ba86f976e340179b586f4514b29c..e67fabb1c19dc97952b31d7f537abe1d
 +  testID as testIDModifier,
 +  weight,
 +} from '@expo/ui/jetpack-compose/modifiers';
- 
- import type { SwitchProps } from './types';
- 
+@@ -6,9 +14,14 @@
  export function Switch({ value, onValueChange, label, disabled, testID, modifiers }: SwitchProps) {
 +  const colors = useMaterialColors();
    const toggle = (
@@ -115,9 +113,7 @@ index c2ddf6cd1b39ba86f976e340179b586f4514b29c..e67fabb1c19dc97952b31d7f537abe1d
 +      ]}
      />
    );
- 
-@@ -17,7 +30,9 @@ export function Switch({ value, onValueChange, label, disabled, testID, modifier
- 
+@@ -19,5 +32,7 @@ export function Switch({ value, onValueChange, label, disabled, testID, modifier
    return (
      <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 8 }}>
 -      <Text modifiers={[weight(1)]}>{label}</Text>
@@ -126,4 +122,3 @@ index c2ddf6cd1b39ba86f976e340179b586f4514b29c..e67fabb1c19dc97952b31d7f537abe1d
 +      </Text>
        {toggle}
      </Row>
-   );
