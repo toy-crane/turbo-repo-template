@@ -1,29 +1,29 @@
-# Mobile development runtime
+# 모바일 개발 런타임
 
-## Decisions
+## 결정
 
-- Start the mobile app on Expo SDK 57.
-- Include `expo-dev-client` and use an app-specific Development Build as the default native development runtime.
-- Prefer locally compiled Development Builds for day-to-day iOS and Android development. Expo Go is not a supported primary workflow.
+- 모바일 앱은 Expo SDK 57로 시작한다.
+- `expo-dev-client`를 포함하고, 앱 전용 Development Build를 기본 네이티브 개발 런타임으로 사용한다.
+- 일상적인 iOS·Android 개발에는 로컬에서 컴파일한 Development Build를 우선 사용한다. Expo Go는 기본 개발 방식으로 지원하지 않는다.
 
-## Boundaries
+## 경계
 
-- JavaScript-only changes reuse an installed Development Build; changes to native dependencies, native configuration, or the Expo SDK require a rebuilt binary.
-- Web development does not run through `expo-dev-client`.
-- This decision does not configure or authorize EAS Build, TestFlight distribution, signing credentials, paid Expo services, or store submission.
+- JavaScript만 변경했을 때는 설치된 Development Build를 재사용한다. 네이티브 의존성, 네이티브 설정 또는 Expo SDK가 변경되면 바이너리를 다시 빌드한다.
+- 웹 개발에는 `expo-dev-client`를 사용하지 않는다.
+- 이 결정은 EAS Build, TestFlight 배포, 서명 자격 증명, Expo 유료 서비스 또는 스토어 제출의 설정이나 사용을 허용하지 않는다.
 
-## Why
+## 이유
 
-A Development Build matches the app's native dependency set, supports production-oriented native capabilities, and exposes the Hermes and native debugging paths needed for higher-fidelity diagnosis. Expo Go is optimized for learning and quick experiments and would constrain SDK selection and native integrations. Local compilation keeps the default loop independent of cloud accounts and paid build minutes while the current development machine can build iOS locally.
+Development Build는 앱의 네이티브 의존성 구성과 일치하고, 프로덕션 수준의 네이티브 기능을 지원하며, 정밀한 진단에 필요한 Hermes와 네이티브 디버깅 경로를 제공한다. Expo Go는 학습과 빠른 실험에 맞춰져 있어 SDK 선택과 네이티브 연동을 제한한다. 현재 개발 환경에서 iOS를 로컬로 빌드할 수 있으므로, 로컬 컴파일을 기본으로 삼으면 클라우드 계정과 유료 빌드 시간에 의존하지 않아도 된다.
 
-## Reconsider when
+## 재검토 조건
 
-- Expo replaces Development Builds with a more capable recommended runtime.
-- The mobile app no longer needs native platforms or native dependencies.
-- The team needs signed builds shared with physical devices that cannot be served by the local build workflow.
-- A future Expo SDK upgrade changes the development-client or local-build contract.
+- Expo가 Development Build를 대체하는 더 나은 권장 런타임을 제공할 때
+- 모바일 앱에 네이티브 플랫폼이나 네이티브 의존성이 더 이상 필요하지 않을 때
+- 로컬 빌드 방식으로 지원할 수 없는 실물 기기에 서명된 빌드를 공유해야 할 때
+- 향후 Expo SDK 업그레이드로 Development Client 또는 로컬 빌드 방식이 달라질 때
 
-## Still-rejected alternatives
+## 계속 제외하는 대안
 
-- Expo Go as the primary runtime — it does not represent the app-specific native runtime and limits native integrations; reconsider only for isolated learning or throwaway experiments.
-- EAS Build as the only development-build path — it adds account, signing, network, and possible billing dependencies to the default loop; reconsider when remote distribution becomes a regular team requirement.
+- Expo Go를 기본 런타임으로 사용 — 앱 전용 네이티브 런타임을 재현하지 못하고 네이티브 연동을 제한한다. 독립적인 학습이나 일회성 실험에만 재검토한다.
+- EAS Build만으로 Development Build를 생성 — 기본 개발 과정에 계정, 서명, 네트워크 및 잠재적인 과금 의존성을 추가한다. 원격 배포가 팀의 일상적인 요구가 될 때 재검토한다.
