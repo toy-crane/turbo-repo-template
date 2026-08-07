@@ -37,14 +37,14 @@ jest.mock("@expo/ui", () => {
       value: boolean;
     }) =>
       React.createElement(
-        Pressable,
-        {
-          accessibilityLabel: label,
+        View,
+        null,
+        label ? React.createElement(NativeText, null, label) : null,
+        React.createElement(Pressable, {
           accessibilityRole: "switch",
           accessibilityState: { checked: value },
           testID,
-        },
-        label ? React.createElement(NativeText, null, label) : null
+        })
       ),
     Text: ({ children }: PropsWithChildren) =>
       React.createElement(NativeText, null, children),
@@ -60,12 +60,13 @@ test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 �
     expect(screen.getAllByText("Notifications")).toHaveLength(1);
     expect(screen.getAllByText("Haptics")).toHaveLength(1);
     expect(
-      screen.getByRole("switch", { name: "Notifications" }).props
-        .accessibilityState
+      screen.getByTestId("notifications-switch").props.accessibilityState
     ).toEqual({ checked: false });
     expect(
-      screen.getByRole("switch", { name: "Haptics" }).props.accessibilityState
-    ).toEqual({ checked: true });
+      screen.getByTestId("haptics-switch").props.accessibilityState
+    ).toEqual({
+      checked: true,
+    });
   } finally {
     platform.restore();
   }

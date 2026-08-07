@@ -48,5 +48,6 @@ completed
 - Android build: API 35 전용 `Codex Mobile Foundation API 35` AVD에서 새 prebuild로 Gradle `assembleDebug`를 실행했다. 455개 task가 `BUILD SUCCESSFUL`로 끝났고 APK 설치와 Metro 8093 bundle이 성공했다.
 - Android runtime: `/`가 Home으로 시작했고, 접근성 tree에서 Home·Activity·Settings가 각각 icon·label을 가진 네이티브 하단 내비게이션 item으로 표시됐다. Settings→Activity 전환과 Activity 1–18 스크롤 후에도 탭 바가 유지되는 것을 확인했다.
 - Default switches: 같은 universal `Host`·`FieldGroup`에서 Notifications·Haptics label의 좌측 영역과 switch의 우측 영역을 확인했다. 두 switch를 눌렀을 때 각 thumb의 좌우 위치가 바뀌어 `off/on → on/off` 전환이 반영됐다.
+- Accepted upstream limitation: `@expo/ui 57.0.9`의 기본 Android 구현은 보이는 label을 switch의 TalkBack 이름으로 연결하지 않고 label 색상 prop도 제공하지 않는다. patch 없이 공식 `Switch label`을 사용한다는 선택을 유지하고, 테스트 mock도 이 실제 sibling 구조를 반영했다.
 - Dependency cleanup: 앱의 `expo-glass-tabs`, 직접 `expo-symbols`와 관련 glass·blur·haptic·animation 의존성 및 모든 Bun patch를 제거했다. `expo-symbols`와 `expo-glass-effect`는 Expo Router 내부 의존성으로 lockfile에만 남으며 앱이 직접 import하거나 patch하지 않는다.
 - Isolation: 검증에 사용한 전용 AVD `emulator-5554`, `agent-device` session과 Metro 8093만 종료했다.

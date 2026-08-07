@@ -94,5 +94,6 @@
 
 - `NativeTabs`는 현재 Expo Router의 unstable API이므로 SDK를 올릴 때 진입점과 option 호환성을 다시 확인해야 한다.
 - iOS Development Build는 현재 Expo SDK 57과 로컬 Apple 도구 체계의 prebuilt React Core 링크 충돌을 피하기 위해 공식 `expo-build-properties`의 `ios.buildReactNativeFromSource`를 사용한다. 깨끗한 native build 시간이 늘어나는 비용이 있다.
+- 현재 `@expo/ui 57.0.9`의 Android 기본 `Switch label`은 보이는 label과 switch를 별도 접근성 node로 내보내며 label 색상을 외부에서 지정할 API도 없다. patch를 두지 않는 결정에 따라 TalkBack control 이름과 Dark 대비를 앱에서 별도로 보정하지 않고 upstream 수정 후 재검토한다.
 - universal `FieldGroup`의 세부 API는 Expo SDK에 따라 바뀔 수 있으므로 구현 시 설치된 `@expo/ui` 타입을 기준으로 사용한다.
 - 플랫폼 UI Settings의 내부 surface는 각 운영체제 시맨틱 표현을 사용하므로 RN의 `background.surface`와 픽셀 단위로 같지 않을 수 있다. 이는 플랫폼 UI 정책에 따른 의도된 차이다.
