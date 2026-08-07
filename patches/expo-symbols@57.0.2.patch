@@ -1,0 +1,25 @@
+diff --git a/build/SymbolView.js b/build/SymbolView.js
+index 6b352b5bef63ede4877eee3a8ed2cae359c5ebdf..32a26b8d0428acdb8149169dfd3ca1fbc21a32d5 100644
+--- a/build/SymbolView.js
++++ b/build/SymbolView.js
+@@ -32,7 +32,7 @@ export function SymbolView(props) {
+     if (!loaded) {
+         return _jsx(View, { style: style });
+     }
+-    return (_jsx(View, { style: style, children: _jsx(Text, { style: {
++    return (_jsx(View, { style: style, children: _jsx(Text, { allowFontScaling: false, style: {
+                 fontFamily: font.name,
+                 color: props.tintColor ?? DEFAULT_SYMBOL_COLOR,
+                 fontSize: size,
+diff --git a/src/SymbolView.tsx b/src/SymbolView.tsx
+index 3df5fd5299da15f9e923c3fc0f0870bcca05be0e..e2f7498e9d84bde5bce2a76d54489a62a7b353ba 100644
+--- a/src/SymbolView.tsx
++++ b/src/SymbolView.tsx
+@@ -40,6 +40,7 @@ export function SymbolView(props: SymbolViewProps): JSX.Element {
+   return (
+     <View style={style}>
+       <Text
++        allowFontScaling={false}
+         style={{
+           fontFamily: font.name,
+           color: props.tintColor ?? DEFAULT_SYMBOL_COLOR,

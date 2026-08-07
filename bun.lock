@@ -52,6 +52,7 @@
     },
   },
   "patchedDependencies": {
+    "expo-symbols@57.0.2": "patches/expo-symbols@57.0.2.patch",
     "expo-glass-tabs@0.1.1": "patches/expo-glass-tabs@0.1.1.patch",
   },
   "packages": {
