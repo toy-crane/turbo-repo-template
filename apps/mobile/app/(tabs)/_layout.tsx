@@ -2,11 +2,13 @@ import {
   GlassTabBar,
   GlassTabButton,
   renderFadingTabScreen,
+  setMinimized,
   TabBarMinimizeProvider,
+  useMinimizeState,
 } from "expo-glass-tabs";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { TabList, TabSlot, Tabs, TabTrigger } from "expo-router/ui";
-import { type ComponentProps, useCallback, useMemo } from "react";
+import { type ComponentProps, useCallback, useEffect, useMemo } from "react";
 import { StyleSheet, useColorScheme } from "react-native";
 
 import { appTabs } from "../../src/navigation/app-tabs";
@@ -26,7 +28,18 @@ function AccessibleGlassTabButton(
   );
 }
 
+function TabBarRouteReset() {
+  const minimizeState = useMinimizeState();
+
+  useEffect(() => {
+    setMinimized(minimizeState, 0);
+  }, [minimizeState]);
+
+  return null;
+}
+
 export default function TabLayout() {
+  const pathname = usePathname();
   const router = useRouter();
   const scheme = useColorScheme();
   const colors = getSemanticColors(scheme);
@@ -43,6 +56,7 @@ export default function TabLayout() {
 
   return (
     <TabBarMinimizeProvider>
+      <TabBarRouteReset key={pathname} />
       <Tabs
         style={[styles.tabs, { backgroundColor: colors.background.canvas }]}
       >

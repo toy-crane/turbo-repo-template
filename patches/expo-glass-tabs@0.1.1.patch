@@ -21,6 +21,22 @@ diff --git a/build/glass-tab-bar.js b/build/glass-tab-bar.js
 -                            ], children: _jsx(TabGlyph, { item: item, tint: theme.activeTint }) })] }), _jsx(Animated.Text, { numberOfLines: 1, style: [{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle], children: item.label })] }) }));
 +                            ], children: _jsx(TabGlyph, { item: item, tint: theme.activeTint }) })] }), _jsx(Animated.Text, { maxFontSizeMultiplier: 1.4, numberOfLines: 1, style: [{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle], children: item.label })] }) }));
  }
+diff --git a/build/index.d.ts b/build/index.d.ts
+--- a/build/index.d.ts
++++ b/build/index.d.ts
+@@ -1,3 +1,3 @@
+ export { GlassTabBar, GlassTabButton, type GlassTabBarProps, type GlassTabBarTheme, type GlassTabItem, } from './glass-tab-bar';
+-export { TabBarMinimizeProvider, useMinimizeOnScroll, useTabBarMinimized, MINIMIZE_SPRING, } from './minimize-context';
++export { type MinimizeState, setMinimized, TabBarMinimizeProvider, useMinimizeOnScroll, useMinimizeState, useTabBarMinimized, MINIMIZE_SPRING, } from './minimize-context';
+ export { ProgressiveBlur } from './progressive-blur';
+diff --git a/build/index.js b/build/index.js
+--- a/build/index.js
++++ b/build/index.js
+@@ -1,3 +1,3 @@
+ export { GlassTabBar, GlassTabButton, } from './glass-tab-bar';
+-export { TabBarMinimizeProvider, useMinimizeOnScroll, useTabBarMinimized, MINIMIZE_SPRING, } from './minimize-context';
++export { setMinimized, TabBarMinimizeProvider, useMinimizeOnScroll, useMinimizeState, useTabBarMinimized, MINIMIZE_SPRING, } from './minimize-context';
+ export { ProgressiveBlur } from './progressive-blur';
 diff --git a/src/glass-tab-bar.tsx b/src/glass-tab-bar.tsx
 --- a/src/glass-tab-bar.tsx
 +++ b/src/glass-tab-bar.tsx
@@ -39,3 +55,17 @@ diff --git a/src/glass-tab-bar.tsx b/src/glass-tab-bar.tsx
 +          maxFontSizeMultiplier={1.4}
            numberOfLines={1}
            style={[{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle]}>
+diff --git a/src/index.ts b/src/index.ts
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -7,7 +7,10 @@ export {
+ } from './glass-tab-bar';
+ export {
++  type MinimizeState,
++  setMinimized,
+   TabBarMinimizeProvider,
+   useMinimizeOnScroll,
++  useMinimizeState,
+   useTabBarMinimized,
+   MINIMIZE_SPRING,
+ } from './minimize-context';
