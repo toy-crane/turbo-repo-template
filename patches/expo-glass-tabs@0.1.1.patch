@@ -1,71 +1,131 @@
 diff --git a/build/glass-tab-bar.d.ts b/build/glass-tab-bar.d.ts
+index 1ff17b7..c21f76d 100644
 --- a/build/glass-tab-bar.d.ts
 +++ b/build/glass-tab-bar.d.ts
-@@ -28,3 +28,3 @@ export type GlassTabBarProps = TabListProps & {
-     theme?: Partial<GlassTabBarTheme>;
+@@ -6,0 +7,4 @@ export type GlassTabBarTheme = {
++    /** Blur material used by the edge fade behind the floating bar. */
++    blurTint: 'dark' | 'light';
++    /** Appearance-aware gradient layered over the edge blur. */
++    blurOverlay: string;
+@@ -29 +33 @@ export type GlassTabBarProps = TabListProps & {
 -    /** Haptic tick while the scrub crosses tab boundaries (iOS). */
 +    /** Haptic tick while the scrub crosses tab boundaries (iOS and Android). */
-     haptics?: boolean;
 diff --git a/build/glass-tab-bar.js b/build/glass-tab-bar.js
+index 420cb04..faa28be 100644
 --- a/build/glass-tab-bar.js
 +++ b/build/glass-tab-bar.js
-@@ -63,3 +63,3 @@ export function GlassTabBar({ children, onIndexSelected, theme: themeOverrides,
-     const tick = useCallback(() => {
+@@ -41,0 +42,2 @@ const DEFAULT_THEME = {
++    blurTint: 'dark',
++    blurOverlay: 'linear-gradient(to top, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.32) 42%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 88%)',
+@@ -64 +66 @@ export function GlassTabBar({ children, onIndexSelected, theme: themeOverrides,
 -        if (haptics && Platform.OS === 'ios') {
 +        if (haptics && (Platform.OS === 'ios' || Platform.OS === 'android')) {
-             Haptics.selectionAsync();
-@@ -246,5 +246,5 @@ export function GlassTabButton({ item, index, isFocused, onPress, ...props }) {
-                                 StyleSheet.absoluteFill,
-                                 { alignItems: 'center', justifyContent: 'center' },
-                                 activeGlyphStyle,
+@@ -163 +165 @@ export function GlassTabBar({ children, onIndexSelected, theme: themeOverrides,
+-    return (_jsxs(View, { ...props, pointerEvents: "box-none", style: { position: 'absolute', left: 0, right: 0, bottom: 0 }, children: [_jsx(ProgressiveBlur, { direction: "bottom", style: {
++    return (_jsxs(View, { ...props, pointerEvents: "box-none", style: { position: 'absolute', left: 0, right: 0, bottom: 0 }, children: [_jsx(ProgressiveBlur, { blurOverlay: theme.blurOverlay, blurTint: theme.blurTint, direction: "bottom", style: {
+@@ -249 +251 @@ export function GlassTabButton({ item, index, isFocused, onPress, ...props }) {
 -                            ], children: _jsx(TabGlyph, { item: item, tint: theme.activeTint }) })] }), _jsx(Animated.Text, { numberOfLines: 1, style: [{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle], children: item.label })] }) }));
 +                            ], children: _jsx(TabGlyph, { item: item, tint: theme.activeTint }) })] }), _jsx(Animated.Text, { maxFontSizeMultiplier: 1.4, numberOfLines: 1, style: [{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle], children: item.label })] }) }));
- }
 diff --git a/build/index.d.ts b/build/index.d.ts
+index ab4a877..cf8eebb 100644
 --- a/build/index.d.ts
 +++ b/build/index.d.ts
-@@ -1,3 +1,3 @@
- export { GlassTabBar, GlassTabButton, type GlassTabBarProps, type GlassTabBarTheme, type GlassTabItem, } from './glass-tab-bar';
+@@ -2 +2 @@ export { GlassTabBar, GlassTabButton, type GlassTabBarProps, type GlassTabBarThe
 -export { TabBarMinimizeProvider, useMinimizeOnScroll, useTabBarMinimized, MINIMIZE_SPRING, } from './minimize-context';
 +export { type MinimizeState, setMinimized, TabBarMinimizeProvider, useMinimizeOnScroll, useMinimizeState, useTabBarMinimized, MINIMIZE_SPRING, } from './minimize-context';
- export { ProgressiveBlur } from './progressive-blur';
 diff --git a/build/index.js b/build/index.js
+index eb03d7f..433bbbe 100644
 --- a/build/index.js
 +++ b/build/index.js
-@@ -1,3 +1,3 @@
- export { GlassTabBar, GlassTabButton, } from './glass-tab-bar';
+@@ -2 +2 @@ export { GlassTabBar, GlassTabButton, } from './glass-tab-bar';
 -export { TabBarMinimizeProvider, useMinimizeOnScroll, useTabBarMinimized, MINIMIZE_SPRING, } from './minimize-context';
 +export { setMinimized, TabBarMinimizeProvider, useMinimizeOnScroll, useMinimizeState, useTabBarMinimized, MINIMIZE_SPRING, } from './minimize-context';
- export { ProgressiveBlur } from './progressive-blur';
+diff --git a/build/progressive-blur.d.ts b/build/progressive-blur.d.ts
+index 3613b0c..0312be8 100644
+--- a/build/progressive-blur.d.ts
++++ b/build/progressive-blur.d.ts
+@@ -2,0 +3,4 @@ type Props = ViewProps & {
++    /** Blur material matched to the surrounding appearance. */
++    blurTint?: 'dark' | 'light';
++    /** Optional complete gradient layered over the blur. */
++    blurOverlay?: string;
+@@ -14 +18 @@ type Props = ViewProps & {
+-export declare function ProgressiveBlur({ style, intensity, direction, ...rest }: Props): import("react").JSX.Element;
++export declare function ProgressiveBlur({ style, blurTint, blurOverlay, intensity, direction, ...rest }: Props): import("react").JSX.Element;
+diff --git a/build/progressive-blur.js b/build/progressive-blur.js
+index 50889ae..ad9dd52 100644
+--- a/build/progressive-blur.js
++++ b/build/progressive-blur.js
+@@ -11 +11 @@ import { View } from 'react-native';
+-export function ProgressiveBlur({ style, intensity = 5, direction = 'top', ...rest }) {
++export function ProgressiveBlur({ style, blurTint = 'dark', blurOverlay, intensity = 5, direction = 'top', ...rest }) {
+@@ -14 +14,3 @@ export function ProgressiveBlur({ style, intensity = 5, direction = 'top', ...re
+-    return (_jsxs(View, { pointerEvents: "none", style: style, ...rest, children: [heights.map((height, index) => (_jsx(BlurView, { tint: "dark", intensity: intensity, style: { position: 'absolute', left: 0, right: 0, height, ...anchor } }, index))), _jsx(View, { style: {
++    const overlay = blurOverlay ??
++        `linear-gradient(to ${direction === 'top' ? 'bottom' : 'top'}, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.32) 42%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 88%)`;
++    return (_jsxs(View, { pointerEvents: "none", style: style, ...rest, children: [heights.map((height, index) => (_jsx(BlurView, { tint: blurTint, intensity: intensity, style: { position: 'absolute', left: 0, right: 0, height, ...anchor } }, index))), _jsx(View, { style: {
+@@ -20 +22 @@ export function ProgressiveBlur({ style, intensity = 5, direction = 'top', ...re
+-                    experimental_backgroundImage: `linear-gradient(to ${direction === 'top' ? 'bottom' : 'top'}, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.32) 42%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 88%)`,
++                    experimental_backgroundImage: overlay,
 diff --git a/src/glass-tab-bar.tsx b/src/glass-tab-bar.tsx
+index c0f798b..fc6d406 100644
 --- a/src/glass-tab-bar.tsx
 +++ b/src/glass-tab-bar.tsx
-@@ -100,3 +100,3 @@ export type GlassTabBarProps = TabListProps & {
-   theme?: Partial<GlassTabBarTheme>;
+@@ -63,0 +64,4 @@ export type GlassTabBarTheme = {
++  /** Blur material used by the edge fade behind the floating bar. */
++  blurTint: 'dark' | 'light';
++  /** Appearance-aware gradient layered over the edge blur. */
++  blurOverlay: string;
+@@ -74,0 +79,3 @@ const DEFAULT_THEME: GlassTabBarTheme = {
++  blurTint: 'dark',
++  blurOverlay:
++    'linear-gradient(to top, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.32) 42%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 88%)',
+@@ -101 +108 @@ export type GlassTabBarProps = TabListProps & {
 -  /** Haptic tick while the scrub crosses tab boundaries (iOS). */
 +  /** Haptic tick while the scrub crosses tab boundaries (iOS and Android). */
-   haptics?: boolean;
-@@ -128,3 +128,3 @@ export function GlassTabBar({
-   const tick = useCallback(() => {
+@@ -129 +136 @@ export function GlassTabBar({
 -    if (haptics && Platform.OS === 'ios') {
 +    if (haptics && (Platform.OS === 'ios' || Platform.OS === 'android')) {
-       Haptics.selectionAsync();
-@@ -430,3 +430,4 @@ export function GlassTabButton({
-         <Animated.Text
+@@ -273,0 +281,2 @@ export function GlassTabBar({
++        blurOverlay={theme.blurOverlay}
++        blurTint={theme.blurTint}
+@@ -430,0 +440 @@ export function GlassTabButton({
 +          maxFontSizeMultiplier={1.4}
-           numberOfLines={1}
-           style={[{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle]}>
 diff --git a/src/index.ts b/src/index.ts
+index 4c84b0a..8835c7b 100644
 --- a/src/index.ts
 +++ b/src/index.ts
-@@ -7,7 +7,10 @@ export {
- } from './glass-tab-bar';
- export {
+@@ -8,0 +9,2 @@ export {
 +  type MinimizeState,
 +  setMinimized,
-   TabBarMinimizeProvider,
-   useMinimizeOnScroll,
+@@ -10,0 +13 @@ export {
 +  useMinimizeState,
-   useTabBarMinimized,
-   MINIMIZE_SPRING,
- } from './minimize-context';
+diff --git a/src/progressive-blur.tsx b/src/progressive-blur.tsx
+index a3355f5..5ce1986 100644
+--- a/src/progressive-blur.tsx
++++ b/src/progressive-blur.tsx
+@@ -4,0 +5,4 @@ type Props = ViewProps & {
++  /** Blur material matched to the surrounding appearance. */
++  blurTint?: 'dark' | 'light';
++  /** Optional complete gradient layered over the blur. */
++  blurOverlay?: string;
+@@ -17 +21,8 @@ type Props = ViewProps & {
+-export function ProgressiveBlur({ style, intensity = 5, direction = 'top', ...rest }: Props) {
++export function ProgressiveBlur({
++  style,
++  blurTint = 'dark',
++  blurOverlay,
++  intensity = 5,
++  direction = 'top',
++  ...rest
++}: Props) {
+@@ -19,0 +31,3 @@ export function ProgressiveBlur({ style, intensity = 5, direction = 'top', ...re
++  const overlay =
++    blurOverlay ??
++    `linear-gradient(to ${direction === 'top' ? 'bottom' : 'top'}, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.32) 42%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 88%)`;
+@@ -26 +40 @@ export function ProgressiveBlur({ style, intensity = 5, direction = 'top', ...re
+-          tint="dark"
++          tint={blurTint}
+@@ -38 +52 @@ export function ProgressiveBlur({ style, intensity = 5, direction = 'top', ...re
+-          experimental_backgroundImage: `linear-gradient(to ${direction === 'top' ? 'bottom' : 'top'}, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.32) 42%, rgba(0,0,0,0.08) 68%, rgba(0,0,0,0) 88%)`,
++          experimental_backgroundImage: overlay,
