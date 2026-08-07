@@ -1,15 +1,9 @@
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { getSemanticColors } from "../../theme/semantic-colors";
+import { useAppTheme } from "../../theme/app-theme-provider";
 
 export function HomeScreen() {
-  const colors = getSemanticColors(useColorScheme());
+  const { colors } = useAppTheme();
 
   return (
     <ScrollView

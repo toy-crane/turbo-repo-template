@@ -1,8 +1,9 @@
 import { FieldGroup, Host, Row, Spacer, Switch, Text } from "@expo/ui";
 import Constants from "expo-constants";
 import { useState } from "react";
-import { Platform, useColorScheme } from "react-native";
+import { Platform } from "react-native";
 
+import { useAppTheme } from "../../theme/app-theme-provider";
 import { getSettingsTextStyle } from "./settings-theme";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
@@ -10,7 +11,8 @@ const appVersion = Constants.expoConfig?.version ?? "Unknown";
 export function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const textStyle = getSettingsTextStyle(useColorScheme());
+  const { colors } = useAppTheme();
+  const textStyle = getSettingsTextStyle(colors);
   const androidTextStyle = Platform.OS === "android" ? textStyle : undefined;
 
   return (

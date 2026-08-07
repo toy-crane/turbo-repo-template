@@ -1,17 +1,11 @@
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { getSemanticColors } from "../../theme/semantic-colors";
+import { useAppTheme } from "../../theme/app-theme-provider";
 
 const placeholderItems = Array.from({ length: 18 }, (_, index) => index + 1);
 
 export function ActivityScreen() {
-  const colors = getSemanticColors(useColorScheme());
+  const { colors } = useAppTheme();
 
   return (
     <ScrollView

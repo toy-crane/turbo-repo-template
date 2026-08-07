@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
 import { Platform } from "react-native";
 
+import { AppThemeProvider } from "../../theme/app-theme-provider";
 import { SettingsScreen } from "./settings-screen";
 
 jest.mock("@expo/ui", () => {
@@ -55,7 +56,11 @@ test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 �
   const platform = jest.replaceProperty(Platform, "OS", "android");
 
   try {
-    await render(<SettingsScreen />);
+    await render(
+      <AppThemeProvider>
+        <SettingsScreen />
+      </AppThemeProvider>
+    );
 
     expect(screen.getAllByText("Notifications")).toHaveLength(1);
     expect(screen.getAllByText("Haptics")).toHaveLength(1);
