@@ -14,10 +14,14 @@ _Avoid_: 호스팅된 SwiftUI, 플랫폼 UI 컴포넌트
 React Native 화면 안의 `Host` 경계를 통해 삽입한 SwiftUI 서브트리다. `Host` 바깥은 React Native가, 그 안의 렌더링과 레이아웃은 SwiftUI가 담당한다.
 _Avoid_: SwiftUI 스타일 RN 컴포넌트, 네이티브-backed RN 컴포넌트
 
+**호스팅된 Compose**:
+React Native 화면 안의 `Host` 경계를 통해 삽입한 Jetpack Compose 서브트리다. `Host` 바깥은 React Native가, 그 안의 렌더링과 레이아웃은 Compose가 담당한다.
+_Avoid_: Compose 스타일 RN 컴포넌트, 네이티브-backed RN 컴포넌트
+
 **네이티브 셸**:
 플랫폼 내비게이션이 소유하는 화면 외곽 구조로, 네이티브 헤더, 툴바, 모달 표시 방식과 전환 제스처를 포함한다.
 _Avoid_: 화면 콘텐츠, React Native UI 셸
 
 **플랫폼 UI**:
-React Native UI와 큰 경계를 대비할 때 호스팅된 SwiftUI와 네이티브 셸을 함께 가리키는 상위 용어다. 구체적인 구현을 말할 때는 더 정확한 하위 용어를 사용한다.
+React Native UI와 큰 경계를 대비할 때 호스팅된 SwiftUI, 호스팅된 Compose와 네이티브 셸을 함께 가리키는 상위 용어다. 구체적인 구현을 말할 때는 더 정확한 하위 용어를 사용한다.
 _Avoid_: 네이티브 UI
