@@ -34,6 +34,14 @@
             "backgroundColor": "#0B0B0D"
           }
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "buildReactNativeFromSource": true
+          }
+        }
       ]
     ]
   }

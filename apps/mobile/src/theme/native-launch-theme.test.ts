@@ -20,4 +20,19 @@ describe("native launch theme", () => {
       },
     ]);
   });
+
+  test("iOS 네이티브 모듈이 React Native 소스 빌드와 함께 링크된다", () => {
+    const buildPropertiesPlugin = appConfig.expo.plugins.find(
+      (plugin) => Array.isArray(plugin) && plugin[0] === "expo-build-properties"
+    );
+
+    expect(buildPropertiesPlugin).toEqual([
+      "expo-build-properties",
+      {
+        ios: {
+          buildReactNativeFromSource: true,
+        },
+      },
+    ]);
+  });
 });
