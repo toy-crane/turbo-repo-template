@@ -19,23 +19,8 @@
 
 시스템 폰트와 시맨틱 텍스트 스타일을 함께 사용하면 React Native UI, 호스팅된 SwiftUI와 네이티브 셸이 각 렌더러의 네이티브 동작을 유지하면서 동일한 정보 위계를 표현할 수 있다. 운영체제의 언어별 폰트 선택과 Dynamic Type을 보존하고, 커스텀 폰트 로딩 및 굵기별 face 관리도 피한다.
 
-Clarity는 SF Pro Rounded의 굵기별 파일을 번들하고 각 face를 `fontFamily`로 선택해 시각적 인상을 통일했다. 이 프로젝트는 Apple 시스템 폰트의 기본 디자인을 그대로 사용하기로 했으므로 그 자산 구조를 복제하지 않고, Clarity가 중앙화하지 않은 텍스트 역할을 프로젝트의 일관성 기준으로 삼는다.
-
 ## Reconsider when
 
 - 브랜드 정체성이 플랫폼별 시스템 폰트보다 동일한 전용 서체를 요구한다.
 - 지원 플랫폼이나 렌더러가 필요한 시맨틱 역할 또는 접근성 확대를 표현하지 못한다.
 - 한국어와 영어, 기본 및 접근성 글자 크기의 실제 화면 검증에서 역할 매핑이 읽기 위계나 레이아웃을 반복적으로 훼손한다.
-
-## Still-rejected alternatives
-
-- SF Pro 또는 SF Pro Rounded 파일 번들 — 플랫폼 기본 디자인이라는 선택과 충돌하고 폰트 로딩 및 굵기별 face 관리를 추가한다. 브랜드 서체가 필요해질 때만 다시 검토한다.
-- 화면마다 `fontSize`, `fontWeight`, `lineHeight` 직접 지정 — 같은 역할이 기능별로 달라지는 드리프트를 막지 못한다.
-- 모든 렌더러에 동일한 고정 수치 적용 — 네이티브 텍스트 위계와 Dynamic Type을 약화하고 렌더러 차이를 불필요하게 숨긴다.
-
-## Evidence worth preserving
-
-- React Native는 앱 전체 텍스트의 전역 스타일 상속 대신 공통 Text 컴포넌트를 권장한다: <https://reactnative.dev/docs/text#limited-style-inheritance>
-- React Native의 iOS `dynamicTypeRamp`는 `largeTitle`부터 `caption2`까지 시맨틱 단계를 제공한다: <https://reactnative.dev/docs/text#dynamictyperamp>
-- Expo UI의 SwiftUI `font` modifier는 `textStyle` 사용 시 Dynamic Type에 맞춰 확대된다: <https://docs.expo.dev/versions/v57.0.0/sdk/ui/swift-ui/modifiers/#fontparams>
-- Clarity의 `c734cfb` 커밋은 SF Pro Rounded Regular부터 Heavy까지를 번들하고 굵기를 별도 font family로 매핑했다: <https://github.com/SchroederNathan/clarity/commit/c734cfb9cc89acd195517099c2c0380737efa186>

@@ -23,16 +23,3 @@
 
 - 완결된 화면으로 만들 수 없으면서 React Native 또는 네이티브-backed RN 컴포넌트로 대체할 수 없는 필수 플랫폼 기능이 생긴다.
 - Expo UI가 `Host` 경계의 레이아웃, 테마와 플랫폼 fallback을 React Native 컴포넌트와 동일한 수준으로 투명하게 처리한다.
-
-## Still-rejected alternatives
-
-- 호스팅된 SwiftUI를 전혀 사용하지 않음 — Settings처럼 플랫폼 관례가 화면 전체의 가치인 경우까지 포기한다. 그런 화면도 React Native UI가 더 적합하다는 실제 증거가 생기면 재검토한다.
-- 효과가 명확한 개별 SwiftUI 컴포넌트만 예외적으로 허용 — 무엇이 핵심 효과인지 매번 다시 판단하게 되고 작은 `Host` 경계를 화면 곳곳에 만든다.
-- 네이티브-backed RN 컴포넌트까지 금지 — `Host` 없이 사용할 수 있는 플랫폼 표현을 불필요하게 배제한다.
-
-## Evidence worth preserving
-
-- Expo UI의 SwiftUI 컴포넌트는 React Native에서 사용할 때 `Host`로 감싸야 한다: <https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/>
-- Expo GlassEffect의 `GlassView`는 React 컴포넌트이며 내부적으로 iOS의 네이티브 `UIVisualEffectView`를 렌더링한다: <https://docs.expo.dev/versions/latest/sdk/glass-effect/>
-- Expo BlurView는 하위 콘텐츠를 흐리게 표시하는 React 컴포넌트다: <https://docs.expo.dev/versions/latest/sdk/blur-view/>
-- Clarity의 호스팅된 SwiftUI 숫자는 안정적인 flex 배치와 safe area를 위해 별도 보정이 필요했다: <https://github.com/SchroederNathan/clarity/blob/main/components/animated-rounded-number.ios.tsx>

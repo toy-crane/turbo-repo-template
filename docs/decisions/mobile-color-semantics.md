@@ -25,15 +25,3 @@ property와 역할을 먼저 적으면 색상값, appearance와 렌더러가 달
 
 - 선택한 UI 프레임워크가 다른 토큰 문법을 필수로 요구해 지속적인 양방향 변환이 필요하다.
 - 실제 화면에서 property-first 구조보다 대비색 쌍이나 컴포넌트 전용 토큰이 오류를 더 잘 방지한다는 반복 가능한 증거가 나온다.
-
-## Still-rejected alternatives
-
-- Clarity의 `background`, `foreground`, `card` 세 이름만 사용 — 작은 화면에는 간결하지만 텍스트, 아이콘, 상태와 Navigation `card` 의미가 늘어날 때 모호해진다.
-- Material의 `primary`, `onPrimary`, `surface`, `onSurface`를 앱 전역 이름으로 직접 사용 — Android에는 자연스럽지만 Apple의 label 및 계층형 background 의미와 제품별 적용 대상을 충분히 구분하지 못한다.
-- 화면에서 primitive 또는 HEX 직접 사용 — appearance와 플랫폼 매핑을 우회하고 같은 역할의 색상 드리프트를 만든다.
-
-## Evidence worth preserving
-
-- Apple의 UI element colors는 값이 아니라 사용 목적을 이름으로 표현하고 appearance에 동적으로 적응한다: <https://developer.apple.com/documentation/uikit/ui-element-colors>
-- Atlassian은 `color.background.danger.bold.pressed`처럼 property, 역할, 강조와 상태 순으로 토큰을 구성한다: <https://atlassian.design/foundations/color-new/>
-- Shopify Polaris도 element, role, prominence와 state 순서를 사용한다: <https://polaris-react.shopify.com/design/colors/color-tokens>
