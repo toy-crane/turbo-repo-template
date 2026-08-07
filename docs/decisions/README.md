@@ -4,3 +4,4 @@
 - [mobile-color-semantics](mobile-color-semantics.md) — 모바일 색상 이름, 시맨틱 토큰, appearance 또는 플랫폼별 색상 매핑을 변경할 때 읽는다.
 - [mobile-testing-and-verification](mobile-testing-and-verification.md) — 모바일 테스트 계층, `agent-device`, E2E 또는 에이전트 연동 방식을 변경할 때 읽는다.
 - [mobile-typography](mobile-typography.md) — 모바일 텍스트 역할, 시스템 폰트, Dynamic Type 또는 렌더러별 타이포그래피 매핑을 변경할 때 읽는다.
+- [mobile-ui-renderer-boundaries](mobile-ui-renderer-boundaries.md) — 모바일 화면 또는 컴포넌트의 React Native, SwiftUI와 네이티브 셸 소유권을 선택할 때 읽는다.
