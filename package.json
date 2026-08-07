@@ -6,6 +6,8 @@
     "packages/*"
   ],
   "scripts": {
+    "agent-device": "agent-device",
+    "agent-device:doctor": "agent-device doctor",
     "build": "turbo run build",
     "check": "turbo run check",
     "check-types": "turbo run check-types",
@@ -14,12 +16,13 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.6",
+    "agent-device": "0.20.5",
     "turbo": "^2.10.8",
     "typescript": "5.9.2",
     "ultracite": "7.10.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.12"
   },
   "devEngines": {
     "packageManager": {
