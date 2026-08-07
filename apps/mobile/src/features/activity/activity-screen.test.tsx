@@ -1,5 +1,6 @@
 import { describe, expect, jest, test } from "@jest/globals";
 import { render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import { ActivityScreen } from "./activity-screen";
 
@@ -23,6 +24,10 @@ describe("ActivityScreen", () => {
     expect(screen.getByLabelText("Activity placeholder 18")).toHaveTextContent(
       "Placeholder 18"
     );
+    expect(
+      StyleSheet.flatten(screen.getByText("Placeholder 01").props.style)
+        .lineHeight
+    ).toBeUndefined();
     expect(
       screen.queryByRole("heading", { name: "Activity" })
     ).not.toBeOnTheScreen();

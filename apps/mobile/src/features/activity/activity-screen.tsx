@@ -48,7 +48,6 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 17,
-    lineHeight: 24,
   },
   screen: {
     flex: 1,
