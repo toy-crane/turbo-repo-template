@@ -1,0 +1,30 @@
+import { describe, expect, jest, test } from "@jest/globals";
+import { render, screen } from "@testing-library/react-native";
+
+import { ActivityScreen } from "./activity-screen";
+
+jest.mock("expo-glass-tabs", () => ({
+  useMinimizeOnScroll: () => undefined,
+}));
+jest.mock("react-native-worklets", () =>
+  require("react-native-worklets/src/mock")
+);
+jest.mock("react-native-reanimated", () =>
+  require("react-native-reanimated/mock")
+);
+
+describe("ActivityScreen", () => {
+  test("스크롤 가능한 중립 placeholder를 screen reader가 식별할 수 있게 표시한다", async () => {
+    await render(<ActivityScreen />);
+
+    expect(screen.getByLabelText("Activity placeholder 1")).toHaveTextContent(
+      "Placeholder 01"
+    );
+    expect(screen.getByLabelText("Activity placeholder 18")).toHaveTextContent(
+      "Placeholder 18"
+    );
+    expect(
+      screen.queryByRole("heading", { name: "Activity" })
+    ).not.toBeOnTheScreen();
+  });
+});

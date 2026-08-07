@@ -14,12 +14,12 @@ None.
 - [ ] Home, Activity와 Settings 세 탭을 탭과 drag로 전환할 수 있고 선택 highlight가 현재 탭을 따른다.
 - [ ] 세 탭은 iOS native Large Title을 표시하며 RN 또는 `@expo/ui` 본문에 같은 제목을 중복하지 않는다.
 - [ ] Home과 Activity는 React Native UI placeholder이고, Activity 스크롤에 따라 Glass 탭이 축소되고 위로 스크롤하면 복원된다.
-- [ ] Settings는 route 루트의 universal `Host` 하나가 전체 본문을 소유하며 `FieldGroup`, Notifications·Haptics 더미 switch와 앱 버전 확인용 row를 표시한다.
-- [ ] 더미 switch는 현재 실행 중에만 상태를 유지하고 운영체제 기능, 저장소 또는 분석 이벤트를 호출하지 않는다.
+- [x] Settings는 route 루트의 universal `Host` 하나가 전체 본문을 소유하며 `FieldGroup`, Notifications·Haptics 더미 switch와 앱 버전 확인용 row를 표시한다.
+- [x] 더미 switch는 현재 실행 중에만 상태를 유지하고 운영체제 기능, 저장소 또는 분석 이벤트를 호출하지 않는다.
 - [ ] appearance가 `automatic`을 따르고 RN 콘텐츠, navigation container, native window, status bar, Glass 탭과 Settings가 Light/Dark 전환에 함께 반응한다.
-- [ ] navigation theme의 `background`와 `card`는 `background.canvas`, `text`는 `text.primary`를 사용하며 navigation font를 덮어쓰지 않는다.
-- [ ] Home, Activity와 Settings 아이콘 정의가 iOS SF Symbol과 Android Material Symbol 이름을 함께 포함한다.
-- [ ] 기존 Development Build 검증 유틸리티를 대체한 라우팅, 시맨틱 색상과 RN placeholder 접근성 테스트가 통과한다.
+- [x] navigation theme의 `background`와 `card`는 `background.canvas`, `text`는 `text.primary`를 사용하며 navigation font를 덮어쓰지 않는다.
+- [x] Home, Activity와 Settings 아이콘 정의가 iOS SF Symbol과 Android Material Symbol 이름을 함께 포함한다.
+- [x] 기존 Development Build 검증 유틸리티를 대체한 라우팅, 시맨틱 색상과 RN placeholder 접근성 테스트가 통과한다.
 - [ ] iOS Development Build에서 세 탭, Large Title, Activity 스크롤, Settings control, Light/Dark와 배경 연속성을 확인한다.
 
 ## Constraints
@@ -42,9 +42,10 @@ None.
 ## Status
 
 <!-- Later values: `in-progress`, `completed`, or `blocked`. -->
-pending
+in-progress
 
 ## Execution
 
-- Verification: —
-- Blocker: —
+- Test seams: 시스템 scheme을 입력받는 공개 시맨틱 색상 선택 API, React Native Testing Library로 렌더링한 Home·Activity placeholder의 접근성 계약
+- Verification: `bun install --frozen-lockfile`; `bun run check --filter=@repo/mobile`; `bun run check-types --filter=@repo/mobile`; `bun run test --filter=@repo/mobile` (4 suites, 6 tests); `bunx expo install --check`; `bunx expo config --type public` 통과
+- Blocker: 다른 세션의 Metro·Simulator와 겹치지 않도록 iOS Development Build 런타임 검증은 아직 실행하지 않음
