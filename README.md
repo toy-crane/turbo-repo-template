@@ -1,6 +1,7 @@
 # Turbo Repo Template
 
-Bun, Turborepo, Next.js, and Ultracite starter workspace.
+Bun, Turborepo, and Ultracite starter workspace. Add applications under
+`apps/` and shared packages under `packages/` as needed.
 
 ## Commands
 
