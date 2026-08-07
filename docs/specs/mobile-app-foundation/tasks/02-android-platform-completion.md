@@ -18,7 +18,7 @@
 - [ ] 시스템 Light/Dark 전환 시 RN placeholder, navigation container, native window, status bar, 탭과 Settings가 함께 갱신된다.
 - [ ] 탭 전환, overscroll과 Settings 진입·이탈 중 다른 배경색이 번쩍이지 않는다.
 - [ ] 기본 및 큰 접근성 글자 크기에서 App Bar, 탭 label과 Settings 핵심 콘텐츠가 잘리거나 겹치지 않는다.
-- [ ] 공통 Jest, React Native Testing Library와 타입·정적 검사가 Android 보완 후에도 통과한다.
+- [x] 공통 Jest, React Native Testing Library와 타입·정적 검사가 Android 보완 후에도 통과한다.
 
 ## Constraints
 
@@ -40,9 +40,10 @@ None.
 ## Status
 
 <!-- Later values: `in-progress`, `completed`, or `blocked`. -->
-pending
+in-progress
 
 ## Execution
 
-- Verification: —
-- Blocker: —
+- Verification: `bun install --frozen-lockfile`; `bun run check --filter=@repo/mobile`; `bun run check-types --filter=@repo/mobile`; `bun run test --filter=@repo/mobile` (4 suites, 6 tests); `bunx expo install --check` 통과. Android autolinking `resolve --platform android --json`은 23개 native module을 패키지별 한 번씩 선택함
+- Diagnostic: `expo-doctor --verbose`에서 필수 peer와 Expo SDK 버전 검사는 통과함. 전체 결과는 Bun 격리 설치의 같은 버전 peer-context 복사본을 중복으로 보고하고 `npm explain`을 호출하는 4개 진단 때문에 16/20이며, 깨끗한 재설치 후에도 동일함
+- Blocker: 다른 세션의 Metro·Simulator와 겹치지 않도록 Android Development Build 런타임 검증은 아직 실행하지 않음
