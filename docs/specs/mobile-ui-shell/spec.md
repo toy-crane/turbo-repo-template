@@ -33,9 +33,10 @@
 
 ### 네이티브 셸과 탭
 
-- Expo Router의 native Stack이 최상위 route container와 화면 전환을 소유한다.
+- Expo Router의 native Stack이 화면 전환과 헤더를 소유한다. 탭 셸 자체의 헤더는 숨기고 Home, Activity와 Settings 각 탭 안에 독립적인 Stack을 둔다.
 - 세 개의 직접 탭은 `expo-router/ui` 기반 `expo-glass-tabs`로 구성한다. 최초 대상 버전은 `0.1.1`이다.
 - 탭은 고정된 순서로 Home, Activity, Settings를 제공한다.
+- 세 탭의 첫 화면은 각각 Home, Activity, Settings라는 플랫폼 네이티브 Large Title을 표시한다. 별도의 RN 또는 `@expo/ui` 제목을 본문에 중복해서 만들지 않는다.
 - 탭 아이콘은 iOS의 SF Symbol과 Android의 Material Symbol 이름을 함께 지정해 두 플랫폼 모두에서 표시한다.
 - 시스템 appearance가 바뀌면 Glass 탭의 label, icon, highlight, glass tint와 fallback도 함께 바뀐다.
 - iOS 26 이상에서는 지원되는 native glass를 사용하고, native glass를 사용할 수 없는 iOS와 Android에서는 solid fallback을 사용한다.
@@ -44,24 +45,27 @@
 ### RN placeholder 화면
 
 - Home과 Activity는 React Native UI다.
-- Home은 `background.canvas`와 시스템 기반 `screenTitle` 역할을 확인할 수 있는 최소 placeholder다.
+- Home은 `background.canvas`와 Large Title 아래의 본문 여백을 확인할 수 있는 최소 placeholder다.
 - Activity는 실제 스크롤이 발생할 만큼 반복된 중립적 placeholder 콘텐츠를 제공해 탭 바 축소와 overscroll을 검증한다.
 - 두 화면은 자체적인 최상위 고정 배경을 중복해서 칠하지 않고 navigation container의 canvas를 사용한다.
-- placeholder에는 실제 제품 데이터, 네트워크 요청, 저장 상태 또는 제품 기능을 넣지 않는다.
+- 두 화면의 본문은 모두 테스트용 placeholder이며 실제 제품 데이터, 네트워크 요청, 저장 상태 또는 제품 기능을 넣지 않는다.
 
 ### 플랫폼 UI Settings
 
 - Settings는 `@expo/ui` universal 컴포넌트 한 트리로 만든다. iOS에서는 SwiftUI, Android에서는 Jetpack Compose로 렌더링한다.
 - Settings route의 루트에 화면 전체를 소유하는 `Host` 하나를 둔다. React Native 컴포넌트를 내부에 삽입하지 않는다.
+- Settings의 Large Title은 바깥의 native Stack이 소유하고, `Host`는 그 아래의 본문 전체를 소유한다.
 - grouped settings 표현에는 universal `FieldGroup`과 platform control을 사용한다.
 - 첫 번째 섹션은 Notifications와 Haptics 같은 두 개의 더미 switch를 제공한다.
 - 두 번째 섹션은 앱 버전처럼 상호작용하지 않는 확인용 row를 제공한다.
+- 모든 row, label과 값은 플랫폼 표현을 확인하기 위한 placeholder이며 실제 설정 기능을 뜻하지 않는다.
 - 더미 control state는 현재 실행 중에만 유지하고 재실행 시 초기화한다. 운영체제 권한, 알림, haptic 설정, 저장소 또는 분석 이벤트와 연결하지 않는다.
 - Settings 내부의 control 색상, pressed state와 accessibility 표현은 플랫폼 기본 동작을 유지한다.
 
 ## 완료 조건
 
 - 앱 시작 경로가 Expo Router로 전환되고 `/`가 Home 탭을 표시한다.
+- Home, Activity와 Settings가 각각 시스템 폰트의 native Large Title을 표시하고 본문에 제목이 중복되지 않는다.
 - Home, Activity와 Settings 탭을 탭과 drag로 전환할 수 있으며 선택 highlight가 올바른 탭을 따른다.
 - Activity를 아래로 스크롤하면 탭 바가 축소되고 위로 스크롤하면 복원된다.
 - Settings의 두 switch가 조작되고 화면 안에서 상태를 유지하지만 앱 재실행 후 초기값으로 돌아온다.
