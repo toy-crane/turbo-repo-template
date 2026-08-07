@@ -7,12 +7,17 @@ import {
   View,
 } from "react-native";
 
-import { getVerificationMessage } from "../utils/get-verification-message";
+import {
+  getVerificationMessage,
+  type VerificationStatus,
+} from "../utils/get-verification-message";
+import { isDevelopmentBuild } from "../utils/is-development-build";
 
 export function DevelopmentHome() {
-  const [isVerified, setIsVerified] = useState(false);
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus>("pending");
   const handleVerification = useCallback(() => {
-    setIsVerified(true);
+    setVerificationStatus(isDevelopmentBuild() ? "verified" : "unavailable");
   }, []);
 
   return (
@@ -20,7 +25,9 @@ export function DevelopmentHome() {
       <Text role="heading" style={styles.title}>
         Expo Development Build
       </Text>
-      <Text style={styles.status}>{getVerificationMessage(isVerified)}</Text>
+      <Text style={styles.status}>
+        {getVerificationMessage(verificationStatus)}
+      </Text>
       <Pressable
         aria-label="런타임 검증"
         onPress={handleVerification}
