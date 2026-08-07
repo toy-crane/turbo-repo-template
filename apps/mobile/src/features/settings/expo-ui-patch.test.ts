@@ -14,12 +14,8 @@ describe("@expo/ui universal Switch patch", () => {
     const patch = readFileSync(patchPath, "utf8");
     expect(patch).toContain('-    "publication": {');
     expect(patch).toContain("color={colors.onSurface}");
-    expect(patch).toContain(
-      "accessibilityLabel={accessibilityLabel ?? label}"
-    );
-    expect(patch).toContain(
-      "accessibilityLabelMod(accessibilityLabel)"
-    );
+    expect(patch).toContain("accessibilityLabel={accessibilityLabel ?? label}");
+    expect(patch).toContain("accessibilityLabelMod(accessibilityLabel)");
     expect(patch).toContain(
       "Accessibility label announced for the switch without rendering visible text."
     );
