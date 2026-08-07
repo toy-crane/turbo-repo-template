@@ -7,6 +7,7 @@
 ## 적용할 결정
 
 - [모바일 색상 시맨틱](../../decisions/mobile-color-semantics.md)
+- [모바일 아이콘 렌더링](../../decisions/mobile-icon-rendering.md)
 - [모바일 타이포그래피](../../decisions/mobile-typography.md)
 - [모바일 UI 렌더러 경계](../../decisions/mobile-ui-renderer-boundaries.md)
 - [모바일 테스트와 런타임 검증](../../decisions/mobile-testing-and-verification.md)
@@ -37,7 +38,7 @@
 - 세 개의 직접 탭은 `expo-router/ui` 기반 `expo-glass-tabs`로 구성한다. 최초 대상 버전은 `0.1.1`이다.
 - 탭은 고정된 순서로 Home, Activity, Settings를 제공한다.
 - 세 탭의 첫 화면은 각각 Home, Activity, Settings라는 플랫폼 네이티브 Large Title을 표시한다. 별도의 RN 또는 `@expo/ui` 제목을 본문에 중복해서 만들지 않는다.
-- 탭 아이콘은 iOS의 SF Symbol과 Android의 Material Symbol 이름을 함께 지정해 두 플랫폼 모두에서 표시한다.
+- Glass 탭 아이콘은 패키지의 기본 `expo-symbols` 경로를 사용한다. Home, Activity와 Settings 각각에 iOS의 SF Symbol과 Android의 Material Symbol 이름을 함께 지정해 두 플랫폼 모두에서 표시한다.
 - 시스템 appearance가 바뀌면 Glass 탭의 label, icon, highlight, glass tint와 fallback도 함께 바뀐다.
 - iOS 26 이상에서는 지원되는 native glass를 사용하고, native glass를 사용할 수 없는 iOS와 Android에서는 solid fallback을 사용한다.
 - Activity의 스크롤에 따라 탭 바가 축소되고 다시 위로 스크롤하면 복원된다. 탭 전환, drag와 haptic 같은 패키지 기본 동작은 변경하지 않는다.
