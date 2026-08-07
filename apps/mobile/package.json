@@ -5,6 +5,9 @@
   "main": "index.ts",
   "scripts": {
     "android": "expo run:android",
+    "build": "bun run build:ios && bun run build:android",
+    "build:android": "expo export --platform android --output-dir dist/android",
+    "build:ios": "expo export --platform ios --output-dir dist/ios",
     "check": "ultracite check .",
     "check-types": "tsc --noEmit",
     "dev": "expo start --dev-client",
