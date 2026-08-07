@@ -33,6 +33,7 @@
   },
   "patchedDependencies": {
     "expo-glass-tabs@0.1.1": "patches/expo-glass-tabs@0.1.1.patch",
-    "expo-symbols@57.0.2": "patches/expo-symbols@57.0.2.patch"
+    "expo-symbols@57.0.2": "patches/expo-symbols@57.0.2.patch",
+    "@expo/ui@57.0.9": "patches/@expo%2Fui@57.0.9.patch"
   }
 }
