@@ -55,7 +55,6 @@
   "patchedDependencies": {
     "expo-symbols@57.0.2": "patches/expo-symbols@57.0.2.patch",
     "expo-glass-tabs@0.1.1": "patches/expo-glass-tabs@0.1.1.patch",
-    "@expo/ui@57.0.9": "patches/@expo%2Fui@57.0.9.patch",
   },
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],

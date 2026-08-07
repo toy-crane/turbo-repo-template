@@ -28,28 +28,30 @@ jest.mock("@expo/ui", () => {
     Row: Container,
     Spacer: Container,
     Switch: ({
-      accessibilityLabel,
       label,
       testID,
       value,
     }: {
-      accessibilityLabel?: string;
       label?: string;
       testID: string;
       value: boolean;
     }) =>
-      React.createElement(Pressable, {
-        accessibilityLabel: accessibilityLabel ?? label,
-        accessibilityRole: "switch",
-        accessibilityState: { checked: value },
-        testID,
-      }),
+      React.createElement(
+        Pressable,
+        {
+          accessibilityLabel: label,
+          accessibilityRole: "switch",
+          accessibilityState: { checked: value },
+          testID,
+        },
+        label ? React.createElement(NativeText, null, label) : null
+      ),
     Text: ({ children }: PropsWithChildren) =>
       React.createElement(NativeText, null, children),
   };
 });
 
-test("Android 설정 스위치가 TalkBack에 각 항목의 이름을 제공한다", async () => {
+test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 표시한다", async () => {
   const platform = jest.replaceProperty(Platform, "OS", "android");
 
   try {

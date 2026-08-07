@@ -17,26 +17,18 @@ export function SettingsScreen() {
     <Host style={{ flex: 1 }} useViewportSizeMeasurement>
       <FieldGroup style={styles.fieldGroup} testID="settings-field-group">
         <FieldGroup.Section title="Preferences">
-          <Row alignment="center">
-            <Text textStyle={androidTextStyle}>Notifications</Text>
-            <Spacer flexible />
-            <Switch
-              accessibilityLabel="Notifications"
-              onValueChange={setNotificationsEnabled}
-              testID="notifications-switch"
-              value={notificationsEnabled}
-            />
-          </Row>
-          <Row alignment="center">
-            <Text textStyle={androidTextStyle}>Haptics</Text>
-            <Spacer flexible />
-            <Switch
-              accessibilityLabel="Haptics"
-              onValueChange={setHapticsEnabled}
-              testID="haptics-switch"
-              value={hapticsEnabled}
-            />
-          </Row>
+          <Switch
+            label="Notifications"
+            onValueChange={setNotificationsEnabled}
+            testID="notifications-switch"
+            value={notificationsEnabled}
+          />
+          <Switch
+            label="Haptics"
+            onValueChange={setHapticsEnabled}
+            testID="haptics-switch"
+            value={hapticsEnabled}
+          />
         </FieldGroup.Section>
         <FieldGroup.Section title="About">
           <Row alignment="center" testID="version-row">
