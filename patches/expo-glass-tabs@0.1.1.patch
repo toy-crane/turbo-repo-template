@@ -14,6 +14,13 @@ diff --git a/build/glass-tab-bar.js b/build/glass-tab-bar.js
 -        if (haptics && Platform.OS === 'ios') {
 +        if (haptics && (Platform.OS === 'ios' || Platform.OS === 'android')) {
              Haptics.selectionAsync();
+@@ -246,5 +246,5 @@ export function GlassTabButton({ item, index, isFocused, onPress, ...props }) {
+                                 StyleSheet.absoluteFill,
+                                 { alignItems: 'center', justifyContent: 'center' },
+                                 activeGlyphStyle,
+-                            ], children: _jsx(TabGlyph, { item: item, tint: theme.activeTint }) })] }), _jsx(Animated.Text, { numberOfLines: 1, style: [{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle], children: item.label })] }) }));
++                            ], children: _jsx(TabGlyph, { item: item, tint: theme.activeTint }) })] }), _jsx(Animated.Text, { maxFontSizeMultiplier: 1.4, numberOfLines: 1, style: [{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle], children: item.label })] }) }));
+ }
 diff --git a/src/glass-tab-bar.tsx b/src/glass-tab-bar.tsx
 --- a/src/glass-tab-bar.tsx
 +++ b/src/glass-tab-bar.tsx
@@ -27,3 +34,8 @@ diff --git a/src/glass-tab-bar.tsx b/src/glass-tab-bar.tsx
 -    if (haptics && Platform.OS === 'ios') {
 +    if (haptics && (Platform.OS === 'ios' || Platform.OS === 'android')) {
        Haptics.selectionAsync();
+@@ -430,3 +430,4 @@ export function GlassTabButton({
+         <Animated.Text
++          maxFontSizeMultiplier={1.4}
+           numberOfLines={1}
+           style={[{ fontSize: 9.5, fontWeight: '600', marginTop: ITEM_GAP }, labelStyle]}>
