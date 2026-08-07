@@ -26,11 +26,7 @@ export function SettingsScreen() {
           />
         </FieldGroup.Section>
         <FieldGroup.Section title="About">
-          <Row
-            alignment="center"
-            style={{ width: "100%" }}
-            testID="version-row"
-          >
+          <Row alignment="center" testID="version-row">
             <Text>Version</Text>
             <Spacer flexible />
             <Text>{appVersion}</Text>
