@@ -2,7 +2,7 @@
 
 ## Outcome
 
-공통 모바일 셸이 Android Development Build에서도 플랫폼 관례에 맞게 완성되어, 사용자가 기본 App Bar, Material Symbol, Glass 탭 fallback과 Compose Settings를 포함한 같은 세 탭 경로를 사용할 수 있다.
+공통 모바일 셸이 Android Development Build에서도 플랫폼 관례에 맞게 완성되어, 사용자가 기본 App Bar, Material Symbol, 네이티브 하단 내비게이션과 Compose Settings를 포함한 같은 세 탭 경로를 사용할 수 있다.
 
 ## Blockers
 
@@ -13,7 +13,7 @@
 - [x] Android Development Build가 `/`의 Home 탭으로 시작하고 Home, Activity와 Settings 세 탭을 전환할 수 있다.
 - [x] 세 화면의 제목은 Android 기본 native App Bar로 표시되고 본문에 제목이 중복되지 않는다.
 - [x] Home, Activity와 Settings의 Material Symbol과 label이 모두 표시되고 screen reader가 각 탭을 식별한다.
-- [x] Android에서 Glass 탭이 solid fallback으로 표시되고 선택 highlight, drag, haptic과 Activity 스크롤 축소·복원이 동작한다.
+- [x] Android에서 `NativeTabs`가 플랫폼 하단 내비게이션으로 표시되고 선택 highlight와 탭 전환이 동작한다. Activity 스크롤 중에도 Android 기본 탭 바는 유지된다.
 - [x] Settings의 같은 universal 트리가 Compose `Host`와 `FieldGroup`으로 렌더링되고 두 더미 switch가 현재 실행 중에만 상태를 유지한다.
 - [x] 시스템 Light/Dark 전환 시 RN placeholder, navigation container, native window, status bar, 탭과 Settings가 함께 갱신된다.
 - [x] 탭 전환, overscroll과 Settings 진입·이탈 중 다른 배경색이 번쩍이지 않는다.
@@ -44,10 +44,9 @@ completed
 
 ## Execution
 
-- Verification: 최종 HEAD의 깨끗한 archive에서 `bun install --frozen-lockfile`; `bun run check`; `bun run check-types`; `bun run test` (최종 HEAD 12 suites, 19 tests); `bunx expo install --check`; `bun run build --filter=@repo/mobile`을 통과했다. Android Development Build는 Gradle `assembleDebug`가 511개 task를 처리해 `BUILD SUCCESSFUL`로 끝났고 APK 설치와 Metro bundle도 성공했다. Android autolinking `resolve --platform android --json`은 23개 native module을 패키지별 한 번씩 선택했다.
-- Android runtime: API 35의 전용 `Codex Mobile Foundation API 35` AVD(`emulator-5564`)와 Metro 8093에서 `/` Home으로 시작했다. 접근성 snapshot과 화면 캡처로 세 탭 전환, 각 화면에 한 번만 표시되는 native App Bar 제목, Material Symbol·label 및 탭의 식별 가능한 접근성 node를 확인했다.
-- Navigation behavior: solid fallback, 선택 highlight와 Settings→Activity→Home scrub을 확인했다. scrub 경계를 지날 때 Android vibrator service에 앱 package의 `TOUCH` event가 두 번 기록됐다. Activity 1–18을 스크롤해 label 없는 축소 bar와 위로 스크롤한 뒤 복원된 bar를 확인했다.
-- Settings and appearance: 같은 universal `Host`·`FieldGroup` 트리에서 Notifications/Haptics를 `off/on → on/off`로 바꾸고 탭 왕복 후 상태 유지를 확인했다. Light/Dark에서 RN 화면, native App Bar·window·status bar, 탭과 Compose Settings가 함께 갱신됐다. Android Dark의 행 텍스트 대비 결함은 `d440355`에서 수정했다. 추가 리뷰에서 발견한 중복 label과 누락된 native switch는 `e900fdf`, Light의 어두운 하단 blur는 `547e0e2`에서 고쳤다. 깨끗한 설치본을 Metro 8093과 전용 `emulator-5554`에서 다시 실행해 각 label이 한 번만 보이고 두 switch가 고유한 접근성 ID로 조작되며, Light 하단이 canvas 색으로 이어지는 것을 화면과 접근성 snapshot으로 재검증했다.
-- Accessibility and continuity: Android `font_scale` 1.0과 2.0에서 Home, Activity 1–18, Settings의 행 확장과 탭을 확인했다. 확대 시 Material Symbol이 잘리던 `expo-symbols` 문제는 재현 test와 Bun patch를 `2b3c2a5`에 추가해 고쳤다. Home→Activity, Activity 상단 overscroll, Settings 진입·switch 조작, Settings→Home scrub을 담은 7.567초 영상을 0.2초 간격 38프레임으로 확인해 이색 배경 flash가 없음을 확인했다. 검증 후 appearance `light`와 `font_scale` 1.0으로 복원했다.
-- Review and diagnostics: `codex review --base main`에서 발견한 finding을 수정했다 — universal Row의 지원되지 않는 percentage width 제거(`ec47a0e`), Android scrub haptic 보완(`7b815d9`), tab label 글자 확대 상한 적용(`eb2c3f8`), Android native switch 복원(`e900fdf`), appearance별 하단 blur 적용(`547e0e2`). dependency patch 내용이 바뀌어도 Turbo task hash가 유지되던 문제는 `patches/**`를 `globalDependencies`에 포함해 고쳤고(`2429e94`), 실제 patch 내용 변경 전후로 build·check·check-types·test hash가 모두 달라지는 것을 확인했다. `expo-doctor --verbose`의 필수 peer와 Expo SDK 버전 검사는 통과했으며, 전체 16/20은 Bun 격리 설치의 같은 버전 peer-context 복사본과 `npm explain` 호출을 보고하는 기존 진단이다.
-- Isolation: 공간이 부족한 기존 Pixel 9 Pro AVD의 사용자 앱과 데이터는 삭제하지 않고 별도 AVD를 만들었다. 검증에 사용한 전용 AVD 인스턴스와 Metro 8093만 종료했다. 다른 세션의 `mobile_shell_verify_api35` Android emulator, iPhone 17 Pro와 Metro 8081은 계속 실행 중이며 iPhone 17e는 shutdown 상태임을 확인했다.
+- Verification: 최종 lockfile에서 `bun install --frozen-lockfile`; `bun run check`; `bun run check-types`; `bun run test`(9 suites, 15 tests); iOS·Android export; Expo dependency와 public config 검사가 모두 통과했다.
+- Android build: API 35 전용 `Codex Mobile Foundation API 35` AVD에서 새 prebuild로 Gradle `assembleDebug`를 실행했다. 455개 task가 `BUILD SUCCESSFUL`로 끝났고 APK 설치와 Metro 8093 bundle이 성공했다.
+- Android runtime: `/`가 Home으로 시작했고, 접근성 tree에서 Home·Activity·Settings가 각각 icon·label을 가진 네이티브 하단 내비게이션 item으로 표시됐다. Settings→Activity 전환과 Activity 1–18 스크롤 후에도 탭 바가 유지되는 것을 확인했다.
+- Default switches: 같은 universal `Host`·`FieldGroup`에서 Notifications·Haptics label의 좌측 영역과 switch의 우측 영역을 확인했다. 두 switch를 눌렀을 때 각 thumb의 좌우 위치가 바뀌어 `off/on → on/off` 전환이 반영됐다.
+- Dependency cleanup: 앱의 `expo-glass-tabs`, 직접 `expo-symbols`와 관련 glass·blur·haptic·animation 의존성 및 모든 Bun patch를 제거했다. `expo-symbols`와 `expo-glass-effect`는 Expo Router 내부 의존성으로 lockfile에만 남으며 앱이 직접 import하거나 patch하지 않는다.
+- Isolation: 검증에 사용한 전용 AVD `emulator-5554`, `agent-device` session과 Metro 8093만 종료했다.

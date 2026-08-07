@@ -2,7 +2,7 @@
 
 ## 목표
 
-현재 개발 확인용 단일 화면을 Expo Router 기반 모바일 셸로 교체한다. 세 개의 테스트용 탭에서 React Native UI, Glass 탭 표현과 플랫폼 UI Settings를 함께 확인하고, 운영체제 appearance가 바뀌어도 앱 콘텐츠, 내비게이션 컨테이너와 네이티브 window가 하나의 시각 체계로 전환되게 한다.
+현재 개발 확인용 단일 화면을 Expo Router 기반 모바일 셸로 교체한다. 세 개의 테스트용 네이티브 탭에서 React Native UI와 플랫폼 UI Settings를 함께 확인하고, 운영체제 appearance가 바뀌어도 앱 콘텐츠, 내비게이션 컨테이너와 네이티브 window가 하나의 시각 체계로 전환되게 한다.
 
 ## 적용할 결정
 
@@ -35,13 +35,13 @@
 ### 네이티브 셸과 탭
 
 - Expo Router의 native Stack이 화면 전환과 헤더를 소유한다. 탭 셸 자체의 헤더는 숨기고 Home, Activity와 Settings 각 탭 안에 독립적인 Stack을 둔다.
-- 세 개의 직접 탭은 `expo-router/ui` 기반 `expo-glass-tabs`로 구성한다. 최초 대상 버전은 `0.1.1`이다.
+- 세 개의 직접 탭은 Expo Router의 `NativeTabs`로 구성한다. 현재 SDK 57에서는 `expo-router/unstable-native-tabs` 진입점을 사용한다.
 - 탭은 고정된 순서로 Home, Activity, Settings를 제공한다.
 - 세 탭의 첫 화면은 각각 Home, Activity, Settings라는 native Stack 제목을 표시한다. iOS에서는 스크롤에 따라 접히는 Large Title, Android에서는 기본 App Bar 제목을 사용하며 별도의 RN 또는 `@expo/ui` 제목을 본문에 중복해서 만들지 않는다.
-- Glass 탭 아이콘은 패키지의 기본 `expo-symbols` 경로를 사용한다. Home, Activity와 Settings 각각에 iOS의 SF Symbol과 Android의 Material Symbol 이름을 함께 지정해 두 플랫폼 모두에서 표시한다.
-- 시스템 appearance가 바뀌면 Glass 탭의 label, icon, highlight, glass tint와 fallback도 함께 바뀐다.
-- iOS 26 이상에서는 지원되는 native glass를 사용하고, native glass를 사용할 수 없는 iOS와 Android에서는 solid fallback을 사용한다.
-- Activity의 스크롤에 따라 탭 바가 축소되고 다시 위로 스크롤하면 복원된다. 탭 전환, drag와 haptic 같은 패키지 기본 동작은 변경하지 않는다.
+- 각 `NativeTabs.Trigger.Icon`에는 iOS의 SF Symbol과 Android의 Material Symbol 이름을 함께 지정한다. 기본·선택 아이콘의 렌더링은 탭을 소유한 네이티브 API에 맡긴다.
+- 탭 바의 appearance, 선택 표현, safe area와 접근성은 운영체제가 소유한다. 앱은 별도 glass tint, blur 또는 solid fallback을 구현하지 않는다.
+- iOS 26 이상에서는 `minimizeBehavior="onScrollDown"`으로 Activity를 아래로 스크롤할 때 탭 바가 축소되고 위로 스크롤하면 복원된다. Android에서는 플랫폼 기본 하단 내비게이션을 유지한다.
+- 탭 전환은 각 탭을 누르는 표준 네이티브 동작을 사용한다. 별도의 drag·scrub·haptic 동작은 추가하지 않는다.
 
 ### RN placeholder 화면
 
@@ -58,6 +58,7 @@
 - Settings의 iOS Large Title과 Android App Bar 제목은 바깥의 native Stack이 소유하고, `Host`는 그 아래의 본문 전체를 소유한다.
 - grouped settings 표현에는 universal `FieldGroup`과 platform control을 사용한다.
 - 첫 번째 섹션은 Notifications와 Haptics 같은 두 개의 더미 switch를 제공한다.
+- switch는 `Switch label="..."` 기본 형태를 그대로 사용한다. 라벨은 왼쪽, control은 오른쪽에 배치되며 이를 바꾸기 위한 라이브러리 patch나 별도 label row를 두지 않는다.
 - 두 번째 섹션은 앱 버전처럼 상호작용하지 않는 확인용 row를 제공한다.
 - 모든 row, label과 값은 플랫폼 표현을 확인하기 위한 placeholder이며 실제 설정 기능을 뜻하지 않는다.
 - 더미 control state는 현재 실행 중에만 유지하고 재실행 시 초기화한다. 운영체제 권한, 알림, haptic 설정, 저장소 또는 분석 이벤트와 연결하지 않는다.
@@ -67,10 +68,10 @@
 
 - 앱 시작 경로가 Expo Router로 전환되고 `/`가 Home 탭을 표시한다.
 - Home, Activity와 Settings가 iOS에서는 시스템 폰트의 native Large Title, Android에서는 기본 App Bar 제목을 표시하고 본문에 제목이 중복되지 않는다.
-- Home, Activity와 Settings 탭을 탭과 drag로 전환할 수 있으며 선택 highlight가 올바른 탭을 따른다.
-- Activity를 아래로 스크롤하면 탭 바가 축소되고 위로 스크롤하면 복원된다.
+- Home, Activity와 Settings 탭을 눌러 전환할 수 있으며 선택 highlight가 올바른 탭을 따른다.
+- iOS 26 이상에서 Activity를 아래로 스크롤하면 탭 바가 축소되고 위로 스크롤하면 복원된다. Android 탭 바는 스크롤과 무관하게 플랫폼 기본 동작을 유지한다.
 - Settings의 두 switch가 조작되고 화면 안에서 상태를 유지하지만 앱 재실행 후 초기값으로 돌아온다.
-- 시스템 appearance를 실행 중에 바꾸면 RN placeholder, navigation container, native window, Glass 탭과 Settings가 모두 대응하는 appearance로 갱신된다.
+- 시스템 appearance를 실행 중에 바꾸면 RN placeholder, navigation container, native window, 네이티브 탭과 Settings가 모두 대응하는 appearance로 갱신된다.
 - 탭 전환, overscroll과 투명한 네이티브 영역에서 다른 배경색이 번쩍이지 않는다.
 - iOS와 Android에서 탭 아이콘과 label이 모두 보이고 screen reader가 식별할 수 있다.
 - 기본 및 큰 접근성 글자 크기에서 탭과 화면의 핵심 콘텐츠가 잘리거나 겹치지 않는다.
@@ -86,11 +87,12 @@
 - RN 화면 내부의 부분적인 SwiftUI 또는 Compose `Host`
 - 제품 accent와 status color 설계
 - Expo Web
-- 별도의 splash, 숫자 애니메이션 또는 추가 Glass 장식
+- 별도의 splash, 숫자 애니메이션 또는 커스텀 탭 장식
 - 테스트를 위한 추가 push route, modal 또는 form sheet
 
 ## 남은 위험
 
-- `expo-glass-tabs`와 `expo-symbols`는 초기 버전이므로 설치된 SDK 57 조합에서 타입, Android symbol과 fallback을 실제 기기 런타임으로 확인해야 한다.
+- `NativeTabs`는 현재 Expo Router의 unstable API이므로 SDK를 올릴 때 진입점과 option 호환성을 다시 확인해야 한다.
+- iOS Development Build는 현재 Expo SDK 57과 로컬 Apple 도구 체계의 prebuilt React Core 링크 충돌을 피하기 위해 공식 `expo-build-properties`의 `ios.buildReactNativeFromSource`를 사용한다. 깨끗한 native build 시간이 늘어나는 비용이 있다.
 - universal `FieldGroup`의 세부 API는 Expo SDK에 따라 바뀔 수 있으므로 구현 시 설치된 `@expo/ui` 타입을 기준으로 사용한다.
 - 플랫폼 UI Settings의 내부 surface는 각 운영체제 시맨틱 표현을 사용하므로 RN의 `background.surface`와 픽셀 단위로 같지 않을 수 있다. 이는 플랫폼 UI 정책에 따른 의도된 차이다.
