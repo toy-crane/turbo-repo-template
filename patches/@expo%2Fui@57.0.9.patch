@@ -1,60 +1,42 @@
 diff --git a/android/src/main/java/expo/modules/ui/SwitchView.kt b/android/src/main/java/expo/modules/ui/SwitchView.kt
-index 13da542ebd551af6f8916af5382b2f204cb73715..9f0a2e8db956e92a83637f3c072e1bf8ad10f419 100644
+index 13da542..9f0a2e8 100644
 --- a/android/src/main/java/expo/modules/ui/SwitchView.kt
 +++ b/android/src/main/java/expo/modules/ui/SwitchView.kt
-@@ -4,6 +4,8 @@ import android.graphics.Color
- import androidx.compose.material3.Switch
- import androidx.compose.material3.SwitchDefaults
- import androidx.compose.runtime.Composable
+@@ -6,0 +7,2 @@ import androidx.compose.runtime.Composable
 +import androidx.compose.ui.semantics.contentDescription
 +import androidx.compose.ui.semantics.semantics
- import expo.modules.kotlin.records.Field
- import expo.modules.kotlin.records.Record
- import expo.modules.kotlin.views.ComposeProps
-@@ -41,6 +43,7 @@ data class SwitchColors(
- data class SwitchProps(
-   val value: Boolean = false,
-   val enabled: Boolean = true,
+@@ -43,0 +46 @@ data class SwitchProps(
 +  val accessibilityLabel: String? = null,
-   val colors: SwitchColors = SwitchColors(),
-   val modifiers: ModifierList = emptyList()
- ) : ComposeProps
-@@ -55,7 +58,11 @@ fun FunctionalComposableScope.SwitchContent(
-   Switch(
-     checked = props.value,
-     onCheckedChange = onCheckedChange,
+@@ -58 +61,5 @@ fun FunctionalComposableScope.SwitchContent(
 -    modifier = ModifierRegistry.applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher),
 +    modifier = ModifierRegistry
 +      .applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher)
 +      .semantics(mergeDescendants = true) {
 +        props.accessibilityLabel?.let { contentDescription = it }
 +      },
-     enabled = props.enabled,
-     thumbContent = thumbContentSlotView?.let {
-       {
 diff --git a/build/jetpack-compose/Switch/index.d.ts b/build/jetpack-compose/Switch/index.d.ts
-index 559b1e743913fc38f37c34c5e02b8e297f25211d..ca9b5bfd8a2b3eeb19250cc67908562cd05d9056 100644
+index 559b1e7..65824b9 100644
 --- a/build/jetpack-compose/Switch/index.d.ts
 +++ b/build/jetpack-compose/Switch/index.d.ts
-@@ -31,6 +31,10 @@ export interface SwitchProps {
-      * @default true
-      */
-     enabled?: boolean;
+@@ -33,0 +34,4 @@ export interface SwitchProps {
 +    /**
 +     * Accessibility label announced for the switch.
 +     */
 +    accessibilityLabel?: string;
-     /**
-      * Callback function that is called when the checked state changes.
-      */
+diff --git a/build/universal/Switch/types.d.ts b/build/universal/Switch/types.d.ts
+index d3e6e4e..7098bf0 100644
+--- a/build/universal/Switch/types.d.ts
++++ b/build/universal/Switch/types.d.ts
+@@ -17,0 +18,4 @@ export interface SwitchProps {
++    /**
++     * Accessibility label announced for the switch without rendering visible text.
++     */
++    accessibilityLabel?: string;
 diff --git a/expo-module.config.json b/expo-module.config.json
-index 3cba55eeb8648170464bdeaad9d1515141d57c92..0ebfddaa1dea66cfe4db659048f58939feae87a5 100644
+index 3cba55e..0ebfdda 100644
 --- a/expo-module.config.json
 +++ b/expo-module.config.json
-@@ -6,12 +6,6 @@
-     "modules": ["ExpoUIModule"]
-   },
-   "android": {
+@@ -9,7 +9 @@
 -    "modules": ["expo.modules.ui.ExpoUIModule"],
 -    "publication": {
 -      "groupId": "expo.modules.ui",
@@ -63,25 +45,17 @@ index 3cba55eeb8648170464bdeaad9d1515141d57c92..0ebfddaa1dea66cfe4db659048f58939
 -      "repository": "local-maven-repo"
 -    }
 +    "modules": ["expo.modules.ui.ExpoUIModule"]
-   }
- }
 diff --git a/src/jetpack-compose/Switch/index.tsx b/src/jetpack-compose/Switch/index.tsx
-index b6268feaa31dbf2d2f8ec5930684d8d9f17023bf..b5373ccaa759d1146ebf91a8ff7f4e4b87440ac2 100644
+index b6268fe..b5373cc 100644
 --- a/src/jetpack-compose/Switch/index.tsx
 +++ b/src/jetpack-compose/Switch/index.tsx
-@@ -37,6 +37,10 @@ export interface SwitchProps {
-    * @default true
-    */
-   enabled?: boolean;
+@@ -39,0 +40,4 @@ export interface SwitchProps {
 +  /**
 +   * Accessibility label announced for the switch.
 +   */
 +  accessibilityLabel?: string;
-   /**
-    * Callback function that is called when the checked state changes.
-    */
 diff --git a/src/universal/Switch/index.android.tsx b/src/universal/Switch/index.android.tsx
-index c2ddf6cd1b39ba86f976e340179b586f4514b29c..e67fabb1c19dc97952b31d7f537abe1d2fca2787 100644
+index c2ddf6c..9792473 100644
 --- a/src/universal/Switch/index.android.tsx
 +++ b/src/universal/Switch/index.android.tsx
 @@ -1,2 +1,10 @@
@@ -97,28 +71,52 @@ index c2ddf6cd1b39ba86f976e340179b586f4514b29c..e67fabb1c19dc97952b31d7f537abe1d
 +  testID as testIDModifier,
 +  weight,
 +} from '@expo/ui/jetpack-compose/modifiers';
-@@ -6,9 +14,14 @@
- export function Switch({ value, onValueChange, label, disabled, testID, modifiers }: SwitchProps) {
+@@ -6 +14,10 @@ import type { SwitchProps } from './types';
+-export function Switch({ value, onValueChange, label, disabled, testID, modifiers }: SwitchProps) {
++export function Switch({
++  value,
++  onValueChange,
++  label,
++  accessibilityLabel,
++  disabled,
++  testID,
++  modifiers,
++}: SwitchProps) {
 +  const colors = useMaterialColors();
-   const toggle = (
-     <ComposeSwitch
-+      accessibilityLabel={label}
-       value={value}
-       onCheckedChange={disabled ? undefined : onValueChange}
-       enabled={!disabled}
+@@ -8,0 +26 @@ export function Switch({ value, onValueChange, label, disabled, testID, modifier
++      accessibilityLabel={accessibilityLabel ?? label}
+@@ -12 +30,4 @@ export function Switch({ value, onValueChange, label, disabled, testID, modifier
 -      modifiers={[...(modifiers ?? []), ...(testID ? [testIDModifier(testID)] : [])]}
 +      modifiers={[
 +        ...(modifiers ?? []),
 +        ...(testID ? [testIDModifier(testID)] : []),
 +      ]}
-     />
-   );
-@@ -19,5 +32,7 @@ export function Switch({ value, onValueChange, label, disabled, testID, modifier
-   return (
-     <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 8 }}>
+@@ -20 +41,3 @@ export function Switch({ value, onValueChange, label, disabled, testID, modifier
 -      <Text modifiers={[weight(1)]}>{label}</Text>
 +      <Text color={colors.onSurface} modifiers={[weight(1)]}>
 +        {label}
 +      </Text>
-       {toggle}
-     </Row>
+diff --git a/src/universal/Switch/index.ios.tsx b/src/universal/Switch/index.ios.tsx
+index 084ab71..165f99e 100644
+--- a/src/universal/Switch/index.ios.tsx
++++ b/src/universal/Switch/index.ios.tsx
+@@ -2 +2,4 @@ import { Toggle } from '@expo/ui/swift-ui';
+-import { disabled as disabledMod } from '@expo/ui/swift-ui/modifiers';
++import {
++  accessibilityLabel as accessibilityLabelMod,
++  disabled as disabledMod,
++} from '@expo/ui/swift-ui/modifiers';
+@@ -10,0 +14 @@ export function Switch({
++  accessibilityLabel,
+@@ -15,0 +20 @@ export function Switch({
++  if (accessibilityLabel) modifiers.push(accessibilityLabelMod(accessibilityLabel));
+diff --git a/src/universal/Switch/types.ts b/src/universal/Switch/types.ts
+index 11cc2a1..4e3a4a0 100644
+--- a/src/universal/Switch/types.ts
++++ b/src/universal/Switch/types.ts
+@@ -21,0 +22,5 @@ export interface SwitchProps {
++  /**
++   * Accessibility label announced for the switch without rendering visible text.
++   */
++  accessibilityLabel?: string;
++

@@ -28,16 +28,18 @@ jest.mock("@expo/ui", () => {
     Row: Container,
     Spacer: Container,
     Switch: ({
+      accessibilityLabel,
       label,
       testID,
       value,
     }: {
+      accessibilityLabel?: string;
       label?: string;
       testID: string;
       value: boolean;
     }) =>
       React.createElement(Pressable, {
-        accessibilityLabel: label,
+        accessibilityLabel: accessibilityLabel ?? label,
         accessibilityRole: "switch",
         accessibilityState: { checked: value },
         testID,
@@ -53,6 +55,8 @@ test("Android 설정 스위치가 TalkBack에 각 항목의 이름을 제공한�
   try {
     await render(<SettingsScreen />);
 
+    expect(screen.getAllByText("Notifications")).toHaveLength(1);
+    expect(screen.getAllByText("Haptics")).toHaveLength(1);
     expect(
       screen.getByRole("switch", { name: "Notifications" }).props
         .accessibilityState
