@@ -16,6 +16,9 @@
     "fix": {
       "cache": false
     },
+    "test": {
+      "dependsOn": ["transit"]
+    },
     "check-types": {
       "dependsOn": ["transit"]
     },

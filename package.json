@@ -12,7 +12,8 @@
     "check": "turbo run check",
     "check-types": "turbo run check-types",
     "dev": "turbo run dev",
-    "fix": "turbo run fix"
+    "fix": "turbo run fix",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.6",
