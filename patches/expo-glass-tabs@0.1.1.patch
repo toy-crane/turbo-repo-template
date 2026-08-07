@@ -1,0 +1,29 @@
+diff --git a/build/glass-tab-bar.d.ts b/build/glass-tab-bar.d.ts
+--- a/build/glass-tab-bar.d.ts
++++ b/build/glass-tab-bar.d.ts
+@@ -28,3 +28,3 @@ export type GlassTabBarProps = TabListProps & {
+     theme?: Partial<GlassTabBarTheme>;
+-    /** Haptic tick while the scrub crosses tab boundaries (iOS). */
++    /** Haptic tick while the scrub crosses tab boundaries (iOS and Android). */
+     haptics?: boolean;
+diff --git a/build/glass-tab-bar.js b/build/glass-tab-bar.js
+--- a/build/glass-tab-bar.js
++++ b/build/glass-tab-bar.js
+@@ -63,3 +63,3 @@ export function GlassTabBar({ children, onIndexSelected, theme: themeOverrides,
+     const tick = useCallback(() => {
+-        if (haptics && Platform.OS === 'ios') {
++        if (haptics && (Platform.OS === 'ios' || Platform.OS === 'android')) {
+             Haptics.selectionAsync();
+diff --git a/src/glass-tab-bar.tsx b/src/glass-tab-bar.tsx
+--- a/src/glass-tab-bar.tsx
++++ b/src/glass-tab-bar.tsx
+@@ -100,3 +100,3 @@ export type GlassTabBarProps = TabListProps & {
+   theme?: Partial<GlassTabBarTheme>;
+-  /** Haptic tick while the scrub crosses tab boundaries (iOS). */
++  /** Haptic tick while the scrub crosses tab boundaries (iOS and Android). */
+   haptics?: boolean;
+@@ -128,3 +128,3 @@ export function GlassTabBar({
+   const tick = useCallback(() => {
+-    if (haptics && Platform.OS === 'ios') {
++    if (haptics && (Platform.OS === 'ios' || Platform.OS === 'android')) {
+       Haptics.selectionAsync();
