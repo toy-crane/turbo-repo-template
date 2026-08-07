@@ -7,6 +7,12 @@
       "skillPath": "skills/add-stack-context/SKILL.md",
       "computedHash": "711e01adba8ce1bcc607278cf10bf791b7688d0a978eedf1392e0047ba813104"
     },
+    "agent-device": {
+      "source": "callstack/agent-device",
+      "sourceType": "github",
+      "skillPath": "skills/agent-device/SKILL.md",
+      "computedHash": "817a81fc498f0a23a6aadcd18dc6079b17430823152d8ce35dcc48d51b34224b"
+    },
     "build-prototype": {
       "source": "toy-crane/skills",
       "sourceType": "github",
@@ -174,6 +180,12 @@
       "sourceType": "github",
       "skillPath": "skills/project-knowledge/SKILL.md",
       "computedHash": "42cf034c0c67308723864b9c33273ee3131eacd7fe85817a505b841e50dcafd6"
+    },
+    "react-native-testing": {
+      "source": "callstack/react-native-testing-library",
+      "sourceType": "github",
+      "skillPath": "skills/react-native-testing/SKILL.md",
+      "computedHash": "bb30ad4660a42c71178c91d7a3f2e88556add9dba2213ee26f099dbe352fd649"
     },
     "shape-idea": {
       "source": "toy-crane/skills",
