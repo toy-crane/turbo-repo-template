@@ -12,8 +12,14 @@ jest.mock("@expo/ui", () => {
     Text: NativeText,
     View,
   } = require("react-native") as typeof import("react-native");
-  const Container = ({ children }: PropsWithChildren) =>
-    React.createElement(View, null, children);
+  const Container = ({
+    children,
+    style,
+    testID,
+  }: PropsWithChildren<{
+    style?: import("react-native").ViewStyle;
+    testID?: string;
+  }>) => React.createElement(View, { style, testID }, children);
   const FieldGroup = Object.assign(Container, { Section: Container });
 
   return {
@@ -57,4 +63,12 @@ test("Android 설정 스위치가 TalkBack에 각 항목의 이름을 제공한�
   } finally {
     platform.restore();
   }
+});
+
+test("플로팅 탭 바 아래로 마지막 설정 행을 스크롤할 여백을 확보한다", async () => {
+  await render(<SettingsScreen />);
+
+  expect(screen.getByTestId("settings-field-group")).toHaveStyle({
+    paddingBottom: 132,
+  });
 });
