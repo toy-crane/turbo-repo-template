@@ -1,6 +1,10 @@
-import { useMinimizeOnScroll } from "expo-glass-tabs";
-import { StyleSheet, Text, useColorScheme, View } from "react-native";
-import Animated from "react-native-reanimated";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+} from "react-native";
 
 import { getSemanticColors } from "../../theme/semantic-colors";
 
@@ -8,14 +12,11 @@ const placeholderItems = Array.from({ length: 18 }, (_, index) => index + 1);
 
 export function ActivityScreen() {
   const colors = getSemanticColors(useColorScheme());
-  const onScroll = useMinimizeOnScroll();
 
   return (
-    <Animated.ScrollView
+    <ScrollView
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
-      onScroll={onScroll}
-      scrollEventThrottle={16}
       style={styles.screen}
     >
       {placeholderItems.map((position) => (
@@ -30,7 +31,7 @@ export function ActivityScreen() {
           </Text>
         </View>
       ))}
-    </Animated.ScrollView>
+    </ScrollView>
   );
 }
 
@@ -42,7 +43,7 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: 12,
-    paddingBottom: 132,
+    paddingBottom: 20,
     paddingHorizontal: 20,
     paddingTop: 20,
   },

@@ -70,11 +70,3 @@ test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 �
     platform.restore();
   }
 });
-
-test("플로팅 탭 바 아래로 마지막 설정 행을 스크롤할 여백을 확보한다", async () => {
-  await render(<SettingsScreen />);
-
-  expect(screen.getByTestId("settings-field-group")).toHaveStyle({
-    paddingBottom: 132,
-  });
-});

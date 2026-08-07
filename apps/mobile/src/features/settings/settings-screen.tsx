@@ -1,7 +1,7 @@
 import { FieldGroup, Host, Row, Spacer, Switch, Text } from "@expo/ui";
 import Constants from "expo-constants";
 import { useState } from "react";
-import { Platform, StyleSheet, useColorScheme } from "react-native";
+import { Platform, useColorScheme } from "react-native";
 
 import { getSettingsTextStyle } from "./settings-theme";
 
@@ -15,7 +15,7 @@ export function SettingsScreen() {
 
   return (
     <Host style={{ flex: 1 }} useViewportSizeMeasurement>
-      <FieldGroup style={styles.fieldGroup} testID="settings-field-group">
+      <FieldGroup testID="settings-field-group">
         <FieldGroup.Section title="Preferences">
           <Switch
             label="Notifications"
@@ -41,9 +41,3 @@ export function SettingsScreen() {
     </Host>
   );
 }
-
-const styles = StyleSheet.create({
-  fieldGroup: {
-    paddingBottom: 132,
-  },
-});

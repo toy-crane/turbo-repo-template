@@ -1,27 +1,20 @@
-import type { GlassTabItem } from "expo-glass-tabs";
-import type { Href } from "expo-router";
-
-export type AppTab = GlassTabItem & {
-  href: Href;
-};
-
-export const appTabs: AppTab[] = [
+export const appTabs = [
   {
-    href: "/",
-    icon: { android: "home_filled", ios: "house.fill" },
+    androidIcon: { default: "home", selected: "home_filled" },
+    iosIcon: { default: "house", selected: "house.fill" },
     label: "Home",
-    name: "home",
+    routeName: "(home)",
   },
   {
-    href: "/activity",
-    icon: { android: "monitoring", ios: "chart.bar.fill" },
+    androidIcon: { default: "monitoring", selected: "monitoring" },
+    iosIcon: { default: "chart.bar", selected: "chart.bar.fill" },
     label: "Activity",
-    name: "activity",
+    routeName: "(activity)",
   },
   {
-    href: "/settings",
-    icon: { android: "settings", ios: "gearshape.fill" },
+    androidIcon: { default: "settings", selected: "settings" },
+    iosIcon: { default: "gearshape", selected: "gearshape.fill" },
     label: "Settings",
-    name: "settings",
+    routeName: "(settings)",
   },
-];
+] as const;
