@@ -10,14 +10,14 @@
 
 ## Acceptance criteria
 
-- [ ] Android Development Build가 `/`의 Home 탭으로 시작하고 Home, Activity와 Settings 세 탭을 전환할 수 있다.
-- [ ] 세 화면의 제목은 Android 기본 native App Bar로 표시되고 본문에 제목이 중복되지 않는다.
-- [ ] Home, Activity와 Settings의 Material Symbol과 label이 모두 표시되고 screen reader가 각 탭을 식별한다.
-- [ ] Android에서 Glass 탭이 solid fallback으로 표시되고 선택 highlight, drag, haptic과 Activity 스크롤 축소·복원이 동작한다.
-- [ ] Settings의 같은 universal 트리가 Compose `Host`와 `FieldGroup`으로 렌더링되고 두 더미 switch가 현재 실행 중에만 상태를 유지한다.
-- [ ] 시스템 Light/Dark 전환 시 RN placeholder, navigation container, native window, status bar, 탭과 Settings가 함께 갱신된다.
-- [ ] 탭 전환, overscroll과 Settings 진입·이탈 중 다른 배경색이 번쩍이지 않는다.
-- [ ] 기본 및 큰 접근성 글자 크기에서 App Bar, 탭 label과 Settings 핵심 콘텐츠가 잘리거나 겹치지 않는다.
+- [x] Android Development Build가 `/`의 Home 탭으로 시작하고 Home, Activity와 Settings 세 탭을 전환할 수 있다.
+- [x] 세 화면의 제목은 Android 기본 native App Bar로 표시되고 본문에 제목이 중복되지 않는다.
+- [x] Home, Activity와 Settings의 Material Symbol과 label이 모두 표시되고 screen reader가 각 탭을 식별한다.
+- [x] Android에서 Glass 탭이 solid fallback으로 표시되고 선택 highlight, drag, haptic과 Activity 스크롤 축소·복원이 동작한다.
+- [x] Settings의 같은 universal 트리가 Compose `Host`와 `FieldGroup`으로 렌더링되고 두 더미 switch가 현재 실행 중에만 상태를 유지한다.
+- [x] 시스템 Light/Dark 전환 시 RN placeholder, navigation container, native window, status bar, 탭과 Settings가 함께 갱신된다.
+- [x] 탭 전환, overscroll과 Settings 진입·이탈 중 다른 배경색이 번쩍이지 않는다.
+- [x] 기본 및 큰 접근성 글자 크기에서 App Bar, 탭 label과 Settings 핵심 콘텐츠가 잘리거나 겹치지 않는다.
 - [x] 공통 Jest, React Native Testing Library와 타입·정적 검사가 Android 보완 후에도 통과한다.
 
 ## Constraints
@@ -40,11 +40,14 @@ None.
 ## Status
 
 <!-- Later values: `in-progress`, `completed`, or `blocked`. -->
-in-progress
+completed
 
 ## Execution
 
-- Verification: 깨끗한 의존성 트리에서 `bun install --frozen-lockfile`; `bun run check --filter=@repo/mobile`; `bun run check-types --filter=@repo/mobile`; `bun run test --filter=@repo/mobile` (4 suites, 6 tests); `bunx expo install --check` 통과. Android autolinking `resolve --platform android --json`은 23개 native module을 패키지별 한 번씩 선택함
-- Review: `codex review --base main`의 세 finding을 수정함 — universal Row의 지원되지 않는 percentage width 제거(`ec47a0e`), Android scrub haptic 보완(`7b815d9`), tab label 전용 글자 확대 상한 적용(`eb2c3f8`). dependency patch는 깨끗한 `--frozen-lockfile` 재설치에서 적용을 확인함
-- Diagnostic: `expo-doctor --verbose`에서 필수 peer와 Expo SDK 버전 검사는 통과함. 전체 결과는 Bun 격리 설치의 같은 버전 peer-context 복사본을 중복으로 보고하고 `npm explain`을 호출하는 4개 진단 때문에 16/20이며, 깨끗한 재설치 후에도 동일함
-- Blocker: 다른 세션의 Metro·Simulator와 겹치지 않도록 Android Development Build 런타임 검증은 아직 실행하지 않음
+- Verification: 최종 lockfile로 `bun install --frozen-lockfile`; `bun run check --filter=@repo/mobile`; `bun run check-types --filter=@repo/mobile`; `bun run test --filter=@repo/mobile` (7 suites, 11 tests); `bunx expo install --check`를 통과했다. Android Development Build는 Gradle `assembleDebug`가 455개 task를 처리해 `BUILD SUCCESSFUL`로 끝났고 APK 설치와 Metro bundle도 성공했다. Android autolinking `resolve --platform android --json`은 23개 native module을 패키지별 한 번씩 선택했다.
+- Android runtime: API 35의 전용 `Codex Mobile Foundation API 35` AVD(`emulator-5564`)와 Metro 8093에서 `/` Home으로 시작했다. 접근성 snapshot과 화면 캡처로 세 탭 전환, 각 화면에 한 번만 표시되는 native App Bar 제목, Material Symbol·label 및 탭의 식별 가능한 접근성 node를 확인했다.
+- Navigation behavior: solid fallback, 선택 highlight와 Settings→Activity→Home scrub을 확인했다. scrub 경계를 지날 때 Android vibrator service에 앱 package의 `TOUCH` event가 두 번 기록됐다. Activity 1–18을 스크롤해 label 없는 축소 bar와 위로 스크롤한 뒤 복원된 bar를 확인했다.
+- Settings and appearance: 같은 universal `Host`·`FieldGroup` 트리에서 Notifications/Haptics를 `off/on → on/off`로 바꾸고 탭 왕복 후 상태 유지를 확인했다. Light/Dark에서 RN 화면, native App Bar·window·status bar, 탭과 Compose Settings가 함께 갱신됐다. Android Dark의 행 텍스트 대비 결함은 `d440355`에서 수정하고 실제 화면으로 재검증했다.
+- Accessibility and continuity: Android `font_scale` 1.0과 2.0에서 Home, Activity 1–18, Settings의 행 확장과 탭을 확인했다. 확대 시 Material Symbol이 잘리던 `expo-symbols` 문제는 재현 test와 Bun patch를 `2b3c2a5`에 추가해 고쳤다. Home→Activity, Activity 상단 overscroll, Settings 진입·switch 조작, Settings→Home scrub을 담은 7.567초 영상을 0.2초 간격 38프레임으로 확인해 이색 배경 flash가 없음을 확인했다. 검증 후 appearance `light`와 `font_scale` 1.0으로 복원했다.
+- Review and diagnostics: 이전 `codex review --base main`의 세 finding을 수정했다 — universal Row의 지원되지 않는 percentage width 제거(`ec47a0e`), Android scrub haptic 보완(`7b815d9`), tab label 글자 확대 상한 적용(`eb2c3f8`). `expo-doctor --verbose`의 필수 peer와 Expo SDK 버전 검사는 통과했으며, 전체 16/20은 Bun 격리 설치의 같은 버전 peer-context 복사본과 `npm explain` 호출을 보고하는 기존 진단이다.
+- Isolation: 공간이 부족한 기존 Pixel 9 Pro AVD의 사용자 앱과 데이터는 삭제하지 않고 별도 AVD를 만들었다. 검증 후 `emulator-5564`와 Metro 8093만 종료했다. 다른 세션의 `mobile_shell_verify_api35` Android emulator, iPhone 17 Pro와 Metro 8081은 계속 실행 중이며 iPhone 17e는 shutdown 상태임을 확인했다.
