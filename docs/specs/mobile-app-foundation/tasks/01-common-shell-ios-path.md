@@ -10,7 +10,7 @@ None.
 
 ## Acceptance criteria
 
-- [ ] 앱이 Expo Router entry로 시작하고 `/`에서 Home 탭을 표시한다.
+- [x] 앱이 Expo Router entry로 시작하고 `/`에서 Home 탭을 표시한다.
 - [ ] Home, Activity와 Settings 세 탭을 탭과 drag로 전환할 수 있고 선택 highlight가 현재 탭을 따른다.
 - [ ] 세 탭은 iOS native Large Title을 표시하며 RN 또는 `@expo/ui` 본문에 같은 제목을 중복하지 않는다.
 - [ ] Home과 Activity는 React Native UI placeholder이고, Activity 스크롤에 따라 Glass 탭이 축소되고 위로 스크롤하면 복원된다.
@@ -47,5 +47,5 @@ in-progress
 ## Execution
 
 - Test seams: 시스템 scheme을 입력받는 공개 시맨틱 색상 선택 API, React Native Testing Library로 렌더링한 Home·Activity placeholder의 접근성 계약
-- Verification: `bun install --frozen-lockfile`; `bun run check --filter=@repo/mobile`; `bun run check-types --filter=@repo/mobile`; `bun run test --filter=@repo/mobile` (4 suites, 6 tests); `bunx expo install --check`; `bunx expo config --type public` 통과
+- Verification: 깨끗한 의존성 트리에서 `bun install --frozen-lockfile`; `bun run check --filter=@repo/mobile`; `bun run check-types --filter=@repo/mobile`; `bun run test --filter=@repo/mobile` (4 suites, 6 tests); `bunx expo install --check`; `bunx expo config --type public` 통과. iOS autolinking은 25개 native module을 패키지별 한 번씩 선택함
 - Blocker: 다른 세션의 Metro·Simulator와 겹치지 않도록 iOS Development Build 런타임 검증은 아직 실행하지 않음

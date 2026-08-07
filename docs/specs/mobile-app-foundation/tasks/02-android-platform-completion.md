@@ -44,6 +44,7 @@ in-progress
 
 ## Execution
 
-- Verification: `bun install --frozen-lockfile`; `bun run check --filter=@repo/mobile`; `bun run check-types --filter=@repo/mobile`; `bun run test --filter=@repo/mobile` (4 suites, 6 tests); `bunx expo install --check` 통과. Android autolinking `resolve --platform android --json`은 23개 native module을 패키지별 한 번씩 선택함
+- Verification: 깨끗한 의존성 트리에서 `bun install --frozen-lockfile`; `bun run check --filter=@repo/mobile`; `bun run check-types --filter=@repo/mobile`; `bun run test --filter=@repo/mobile` (4 suites, 6 tests); `bunx expo install --check` 통과. Android autolinking `resolve --platform android --json`은 23개 native module을 패키지별 한 번씩 선택함
+- Review: `codex review --base main`의 세 finding을 수정함 — universal Row의 지원되지 않는 percentage width 제거(`ec47a0e`), Android scrub haptic 보완(`7b815d9`), tab label 전용 글자 확대 상한 적용(`eb2c3f8`). dependency patch는 깨끗한 `--frozen-lockfile` 재설치에서 적용을 확인함
 - Diagnostic: `expo-doctor --verbose`에서 필수 peer와 Expo SDK 버전 검사는 통과함. 전체 결과는 Bun 격리 설치의 같은 버전 peer-context 복사본을 중복으로 보고하고 `npm explain`을 호출하는 4개 진단 때문에 16/20이며, 깨끗한 재설치 후에도 동일함
 - Blocker: 다른 세션의 Metro·Simulator와 겹치지 않도록 Android Development Build 런타임 검증은 아직 실행하지 않음
