@@ -10,7 +10,7 @@
 ## 경계
 
 - JavaScript만 변경했을 때는 설치된 Development Build를 재사용한다. 네이티브 의존성, 네이티브 설정 또는 Expo SDK가 변경되면 바이너리를 다시 빌드한다.
-- 이 결정은 EAS Build, TestFlight 배포, 서명 자격 증명, Expo 유료 서비스 또는 스토어 제출의 설정이나 사용을 허용하지 않는다.
+- 이 결정은 로컬 개발 런타임만 다룬다. 원격 Development Build, TestFlight 및 스토어 배포 방식은 필요해질 때 별도로 결정한다.
 
 ## 이유
 
