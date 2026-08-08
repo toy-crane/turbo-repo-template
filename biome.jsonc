@@ -4,5 +4,10 @@
     "ultracite/biome/core",
     "ultracite/biome/next",
     "ultracite/biome/react"
-  ]
+  ],
+  "files": {
+    // `supabase gen types typescript` owns this file. Keep it byte-identical to
+    // the generator output instead of reformatting what nobody edits by hand.
+    "includes": ["**", "!packages/supabase/src/database.types.ts"]
+  }
 }

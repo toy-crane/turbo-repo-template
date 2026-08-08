@@ -16,6 +16,7 @@
     "db:start": "supabase start",
     "db:status": "supabase status",
     "db:stop": "supabase stop",
+    "db:types": "supabase gen types typescript --local > packages/supabase/src/database.types.ts",
     "dev": "turbo run dev",
     "fix": "turbo run fix",
     "test": "turbo run test"

@@ -1,0 +1,17 @@
+{
+  "name": "@repo/supabase",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "check": "ultracite check .",
+    "check-types": "tsc --noEmit",
+    "fix": "ultracite fix ."
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}
