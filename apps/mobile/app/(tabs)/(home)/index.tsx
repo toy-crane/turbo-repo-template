@@ -12,7 +12,7 @@ export default function HomeRoute() {
     <>
       <HomeScreen />
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.View>
+        <Stack.Toolbar.View hidesSharedBackground>
           <InitialAvatar initial="T" onPress={openSettings} />
         </Stack.Toolbar.View>
       </Stack.Toolbar>

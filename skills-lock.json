@@ -163,6 +163,12 @@
       "skillPath": "plugins/expo/skills/expo-web-to-native/SKILL.md",
       "computedHash": "8b438fca8004ae91514c9ad8e2fd34566cef0866065451a6e89279c52992a966"
     },
+    "heroui-native": {
+      "source": "heroui-inc/heroui",
+      "sourceType": "github",
+      "skillPath": "skills/heroui-native/SKILL.md",
+      "computedHash": "d2fc03a13d03678d40799726a144ba72ba1cb08126176ddbf0a0461c901aef29"
+    },
     "human-review": {
       "source": "toy-crane/skills",
       "sourceType": "github",
@@ -204,6 +210,12 @@
       "sourceType": "github",
       "skillPath": "skills/tdd/SKILL.md",
       "computedHash": "98cc3a64783dcd8049c4701ba1efeb065dc56b24db791ab613273ca8b4a22627"
+    },
+    "uniwind": {
+      "source": "uni-stack/uniwind",
+      "sourceType": "github",
+      "skillPath": "skills/uniwind/SKILL.md",
+      "computedHash": "ecdc81b7f18b46ca48843bdf052c0f9796d9da42578471ca725c38faf74673fd"
     }
   }
 }

@@ -1,50 +1,71 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Card } from "heroui-native/card";
+import { Chip } from "heroui-native/chip";
+import { ScrollView, Text } from "react-native";
 
-import { useAppTheme } from "../../theme/app-theme-provider";
+const activityPatterns = [
+  {
+    category: "Theme",
+    color: "accent",
+    description: "Canonical color tokens were resolved for light and dark.",
+    title: "Theme tokens synced",
+  },
+  {
+    category: "Shell",
+    color: "success",
+    description: "The native Stack toolbar remained the route owner.",
+    title: "Native shell verified",
+  },
+  {
+    category: "UI",
+    color: "warning",
+    description: "HeroUI content components rendered inside the screen body.",
+    title: "Component previewed",
+  },
+] as const;
 
-const placeholderItems = Array.from({ length: 18 }, (_, index) => index + 1);
+const activityItems = Array.from({ length: 18 }, (_, index) => {
+  const pattern = activityPatterns[index % activityPatterns.length];
+
+  if (!pattern) {
+    throw new Error("Activity pattern is missing");
+  }
+
+  return {
+    ...pattern,
+    position: index + 1,
+    time: `${index + 1}m ago`,
+  };
+});
 
 export function ActivityScreen() {
-  const { colors } = useAppTheme();
-
   return (
     <ScrollView
-      contentContainerStyle={styles.content}
+      className="bg-background"
+      contentContainerClassName="gap-3 px-5 pt-5 pb-6"
       contentInsetAdjustmentBehavior="automatic"
-      style={styles.screen}
     >
-      {placeholderItems.map((position) => (
-        <View
-          accessibilityLabel={`Activity placeholder ${position}`}
+      {activityItems.map((item) => (
+        <Card
+          accessibilityLabel={`Activity item ${item.position}. ${item.title}. ${item.category}. ${item.description} ${item.time}`}
           accessible
-          key={position}
-          style={[styles.card, { backgroundColor: colors.background.surface }]}
+          className="gap-3 p-4"
+          key={item.position}
+          variant="secondary"
         >
-          <Text style={[styles.message, { color: colors.text.primary }]}>
-            {`Placeholder ${position.toString().padStart(2, "0")}`}
-          </Text>
-        </View>
+          <Card.Header className="w-full flex-row items-center justify-between">
+            <Chip color={item.color} size="sm" variant="soft">
+              {item.category}
+            </Chip>
+            <Text className="text-muted text-xs">{item.time}</Text>
+          </Card.Header>
+          <Card.Body className="gap-1">
+            <Card.Title>
+              {`${item.title} ${item.position.toString().padStart(2, "0")}`}
+            </Card.Title>
+            <Card.Description>{item.description}</Card.Description>
+          </Card.Body>
+        </Card>
       ))}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 18,
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-  },
-  content: {
-    gap: 12,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  message: {
-    fontSize: 17,
-  },
-  screen: {
-    flex: 1,
-  },
-});

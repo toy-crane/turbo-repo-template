@@ -1,28 +1,18 @@
 import { describe, expect, test } from "@jest/globals";
-import { render, screen } from "@testing-library/react-native";
-import { StyleSheet } from "react-native";
+import { screen } from "@testing-library/react-native";
 
-import { AppThemeProvider } from "../../theme/app-theme-provider";
+import { renderWithHeroUI } from "../../test/render-with-heroui";
 import { ActivityScreen } from "./activity-screen";
 
-describe("ActivityScreen", () => {
-  test("스크롤 가능한 중립 placeholder를 screen reader가 식별할 수 있게 표시한다", async () => {
-    await render(
-      <AppThemeProvider>
-        <ActivityScreen />
-      </AppThemeProvider>
-    );
+const activityItemLabel = /^Activity item \d+\./;
 
-    expect(screen.getByLabelText("Activity placeholder 1")).toHaveTextContent(
-      "Placeholder 01"
-    );
-    expect(screen.getByLabelText("Activity placeholder 18")).toHaveTextContent(
-      "Placeholder 18"
-    );
-    expect(
-      StyleSheet.flatten(screen.getByText("Placeholder 01").props.style)
-        .lineHeight
-    ).toBeUndefined();
+describe("ActivityScreen", () => {
+  test("스크롤 검증용 활동 18개를 가벼운 HeroUI Card로 표시한다", async () => {
+    await renderWithHeroUI(<ActivityScreen />);
+
+    expect(screen.getAllByLabelText(activityItemLabel)).toHaveLength(18);
+    expect(screen.getByText("Theme tokens synced 01")).toBeOnTheScreen();
+    expect(screen.getByText("Component previewed 18")).toBeOnTheScreen();
     expect(
       screen.queryByRole("heading", { name: "Activity" })
     ).not.toBeOnTheScreen();

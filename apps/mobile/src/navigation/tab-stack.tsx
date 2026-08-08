@@ -1,8 +1,7 @@
 import { Stack } from "expo-router";
 import { Platform } from "react-native";
 
-import { useAppTheme } from "../theme/app-theme-provider";
-import type { SemanticColors } from "../theme/semantic-colors";
+import { useAppTheme } from "../theme/app-theme-bridge";
 
 interface TabStackProps {
   routeName: string;
@@ -12,14 +11,14 @@ interface TabStackProps {
 type MobilePlatform = "android" | "ios";
 
 export function getTabStackScreenOptions(
-  colors: SemanticColors,
+  colors: { background: string; foreground: string },
   platform: MobilePlatform = Platform.OS === "ios" ? "ios" : "android"
 ) {
   return {
-    contentStyle: { backgroundColor: colors.background.canvas },
-    headerLargeTitleStyle: { color: colors.text.primary },
+    contentStyle: { backgroundColor: colors.background },
+    headerLargeTitleStyle: { color: colors.foreground },
     ...(platform === "android" && {
-      headerStyle: { backgroundColor: colors.background.canvas },
+      headerStyle: { backgroundColor: colors.background },
     }),
   };
 }
@@ -32,10 +31,10 @@ export function getTabStackRouteOptions(title: string) {
 }
 
 export function TabStack({ routeName, title }: TabStackProps) {
-  const { colors } = useAppTheme();
+  const { background, foreground } = useAppTheme();
 
   return (
-    <Stack screenOptions={getTabStackScreenOptions(colors)}>
+    <Stack screenOptions={getTabStackScreenOptions({ background, foreground })}>
       <Stack.Screen name={routeName} options={getTabStackRouteOptions(title)} />
     </Stack>
   );

@@ -1,11 +1,13 @@
 import { DarkTheme, DefaultTheme, type Theme } from "expo-router";
-import type { ColorSchemeName } from "react-native";
 
-import type { SemanticColors } from "./semantic-colors";
+interface NavigationThemeColors {
+  background: string;
+  foreground: string;
+}
 
 export function getNavigationTheme(
-  scheme: ColorSchemeName | null,
-  colors: SemanticColors
+  scheme: "dark" | "light",
+  colors: NavigationThemeColors
 ): Theme {
   const baseTheme = scheme === "dark" ? DarkTheme : DefaultTheme;
 
@@ -13,9 +15,9 @@ export function getNavigationTheme(
     ...baseTheme,
     colors: {
       ...baseTheme.colors,
-      background: colors.background.canvas,
-      card: colors.background.canvas,
-      text: colors.text.primary,
+      background: colors.background,
+      card: colors.background,
+      text: colors.foreground,
     },
   };
 }

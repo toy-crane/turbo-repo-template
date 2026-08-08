@@ -1,20 +1,19 @@
 import { describe, expect, test } from "@jest/globals";
-import { render, screen } from "@testing-library/react-native";
+import { screen } from "@testing-library/react-native";
 
-import { AppThemeProvider } from "../../theme/app-theme-provider";
+import { renderWithHeroUI } from "../../test/render-with-heroui";
 import { SavedScreen } from "./saved-screen";
 
-describe("SavedScreen", () => {
-  test("저장한 항목이 들어갈 placeholder를 표시한다", async () => {
-    await render(
-      <AppThemeProvider>
-        <SavedScreen />
-      </AppThemeProvider>
-    );
+const savedItemLabel = /^Saved item /;
 
-    expect(screen.getByLabelText("Saved placeholder")).toHaveTextContent(
-      "저장한 항목이 여기에 표시됩니다."
-    );
+describe("SavedScreen", () => {
+  test("저장된 결정을 HeroUI Card와 Chip으로 구분해 표시한다", async () => {
+    await renderWithHeroUI(<SavedScreen />);
+
+    expect(screen.getAllByLabelText(savedItemLabel)).toHaveLength(3);
+    expect(screen.getByText("Theme")).toBeOnTheScreen();
+    expect(screen.getByText("Navigation")).toBeOnTheScreen();
+    expect(screen.getByText("HeroUI")).toBeOnTheScreen();
     expect(
       screen.queryByRole("heading", { name: "Saved" })
     ).not.toBeOnTheScreen();
