@@ -11,6 +11,11 @@
     "build": "turbo run build",
     "check": "turbo run check",
     "check-types": "turbo run check-types",
+    "db:diff": "supabase db diff",
+    "db:reset": "supabase db reset",
+    "db:start": "supabase start",
+    "db:status": "supabase status",
+    "db:stop": "supabase stop",
     "dev": "turbo run dev",
     "fix": "turbo run fix",
     "test": "turbo run test"
@@ -18,6 +23,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.6",
     "agent-device": "0.20.5",
+    "supabase": "2.113.0",
     "turbo": "^2.10.8",
     "typescript": "5.9.2",
     "ultracite": "7.10.1"
