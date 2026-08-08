@@ -27,4 +27,5 @@
 - DML, backfill, seed 데이터 — `supabase/seed.sql` 또는 별도 versioned migration
 - declarative diff가 표현하지 못하는 객체 — 생성된 migration에 수동으로 보완
 
-자세한 절차는 저장소 루트 `README.md`의 "Supabase 스키마 변경" 절을 따른다.
+자세한 절차는 저장소 루트 `README.md`의 "Changing the Supabase schema" 절을
+따른다.

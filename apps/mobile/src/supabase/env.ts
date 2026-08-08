@@ -31,7 +31,7 @@ export function resolveSupabaseEnv(values: {
 
   if (!(url && publishableKey)) {
     throw new Error(
-      `Supabase client is not configured. Set ${missing.join(" and ")} in apps/mobile/.env.local, then restart the bundler. See README.md "Supabase 연결".`
+      `Supabase is not configured. Set ${missing.join(" and ")} in apps/mobile/.env.local, then restart the bundler. See README.md "Connecting to Supabase".`
     );
   }
 
