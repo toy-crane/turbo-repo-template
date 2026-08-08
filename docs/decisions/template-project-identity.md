@@ -13,6 +13,7 @@
 
 - Supabase local database의 실제 PostgreSQL database 이름인 `postgres`는 변경하지 않는다. `project_id`는 같은 머신의 local stack을 구분하는 프로젝트 식별자다.
 - setup은 Supabase local stack을 시작, 중지, 초기화 또는 삭제하지 않는다.
+- setup은 모바일의 Supabase URL이나 publishable key를 수집하거나 env 파일을 생성하지 않는다.
 - 원격 Supabase project ref 연결은 별도 작업이며 local `project_id`에서 생성하거나 같은 값으로 강제하지 않는다.
 - 알려진 설정 필드만 변경하고 저장소 전체의 동일 문자열을 일괄 치환하지 않는다.
 
