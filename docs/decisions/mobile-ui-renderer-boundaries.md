@@ -3,7 +3,7 @@
 ## Decisions
 
 - 네이티브 셸은 플랫폼 내비게이션이 소유한다. 네이티브 헤더, 툴바, 모달 표시 방식과 전환 제스처가 여기에 포함된다.
-- 시트로 표시하는 독립 화면은 Expo Router Native Stack의 route로 만들고 `formSheet` presentation을 사용한다. 시트의 detent, dismiss gesture, 기본 header와 `Stack.Toolbar`는 네이티브 셸이 소유한다.
+- 시트나 모달로 표시하는 독립 화면은 Expo Router Native Stack의 route로 만든다. 짧은 작업에는 detent가 있는 `formSheet`, 화면 전체 흐름에는 `pageSheet`를 사용하며, Settings는 네이티브 header와 닫기 `Stack.Toolbar`를 갖춘 `pageSheet`로 표시한다. presentation, dismiss gesture, header와 toolbar는 네이티브 셸이 소유한다.
 - 시트 route의 본문 렌더러는 셸과 별도로 선택한다. 일반 제품 본문은 React Native UI와 HeroUI Native를 사용할 수 있고, Settings처럼 플랫폼 관례가 핵심인 본문은 `@expo/ui`를 사용할 수 있다.
 - 최상위 화면 제목은 플랫폼의 native Stack 표현을 따른다. iOS에서는 적합한 첫 화면에 접히는 Large Title을 사용하고, Android에서는 기본 App Bar 제목을 사용한다.
 - 화면 콘텐츠는 React Native UI를 기본으로 한다.

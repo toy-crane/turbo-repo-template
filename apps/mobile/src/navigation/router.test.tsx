@@ -48,7 +48,7 @@ test("/에서 Home 탭의 첫 화면을 표시한다", async () => {
   expect(screen.getByLabelText(heroUIPreviewLabel)).toBeOnTheScreen();
 });
 
-test("Home 이니셜 아바타가 Settings sheet 경로를 연다", async () => {
+test("Home 이니셜 아바타가 Settings page sheet 경로를 연다", async () => {
   const router = renderRouter("./app", { initialUrl: "/" });
   await router;
 
