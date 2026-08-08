@@ -12,11 +12,19 @@ test("이니셜 아바타로 Settings 진입 동작을 실행한다", async () =
 
   expect(screen.getByText("T")).toBeOnTheScreen();
   const avatarButton = screen.getByRole("button", { name: "Open settings" });
+  const avatarVisual = screen.getByTestId("profile-avatar-visual");
   const minimumTouchTarget = Platform.OS === "ios" ? 44 : 48;
 
   expect(avatarButton).toHaveStyle({
     height: minimumTouchTarget,
     width: minimumTouchTarget,
+  });
+  expect(avatarVisual).toHaveStyle({
+    aspectRatio: 1,
+    borderRadius: 16,
+    flexShrink: 0,
+    height: 32,
+    width: 32,
   });
   await fireEvent.press(avatarButton);
   expect(onPress).toHaveBeenCalledTimes(1);

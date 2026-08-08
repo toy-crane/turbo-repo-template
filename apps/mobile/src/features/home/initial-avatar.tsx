@@ -26,6 +26,8 @@ export function InitialAvatar({ initial, onPress }: InitialAvatarProps) {
         alt={`${initial} profile`}
         color="accent"
         size="sm"
+        style={styles.avatar}
+        testID="profile-avatar-visual"
         variant="soft"
       >
         <Avatar.Fallback>{initial}</Avatar.Fallback>
@@ -41,8 +43,16 @@ function getTouchTargetStyle({
 }
 
 const touchTargetSize = Platform.OS === "ios" ? 44 : 48;
+const avatarVisualSize = 32;
 
 const styles = StyleSheet.create({
+  avatar: {
+    aspectRatio: 1,
+    borderRadius: avatarVisualSize / 2,
+    flexShrink: 0,
+    height: avatarVisualSize,
+    width: avatarVisualSize,
+  },
   pressed: {
     opacity: 0.72,
   },
