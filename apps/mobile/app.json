@@ -42,7 +42,9 @@
             "buildReactNativeFromSource": true
           }
         }
-      ]
+      ],
+      "expo-sqlite",
+      "expo-secure-store"
     ]
   }
 }
