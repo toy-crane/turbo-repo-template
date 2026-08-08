@@ -5,4 +5,4 @@
 - [mobile-icon-rendering](mobile-icon-rendering.md) — RN UI, 네이티브 셸 또는 `@expo/ui` 안에서 아이콘 렌더러와 플랫폼별 심벌을 선택할 때 읽는다.
 - [mobile-testing-and-verification](mobile-testing-and-verification.md) — 모바일 테스트 계층, `agent-device`, E2E 또는 에이전트 연동 방식을 변경할 때 읽는다.
 - [mobile-typography](mobile-typography.md) — 모바일 텍스트 역할, 시스템 폰트, Dynamic Type 또는 렌더러별 타이포그래피 매핑을 변경할 때 읽는다.
-- [mobile-ui-renderer-boundaries](mobile-ui-renderer-boundaries.md) — 모바일 화면 또는 컴포넌트의 React Native, SwiftUI와 네이티브 셸 소유권을 선택할 때 읽는다.
+- [mobile-ui-renderer-boundaries](mobile-ui-renderer-boundaries.md) — 모바일 화면의 주 렌더러, 네이티브 셸 소유권 또는 Liquid Glass 사용 범위를 선택할 때 읽는다.
