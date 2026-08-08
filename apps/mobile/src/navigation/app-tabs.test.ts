@@ -17,10 +17,10 @@ test("세 네이티브 탭이 route group과 플랫폼별 기본·선택 아이�
       routeName: "(activity)",
     },
     {
-      androidIcon: { default: "settings", selected: "settings" },
-      iosIcon: { default: "gearshape", selected: "gearshape.fill" },
-      label: "Settings",
-      routeName: "(settings)",
+      androidIcon: { default: "bookmark_border", selected: "bookmark" },
+      iosIcon: { default: "bookmark", selected: "bookmark.fill" },
+      label: "Saved",
+      routeName: "(saved)",
     },
   ]);
 });

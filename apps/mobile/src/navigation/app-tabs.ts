@@ -12,9 +12,9 @@ export const appTabs = [
     routeName: "(activity)",
   },
   {
-    androidIcon: { default: "settings", selected: "settings" },
-    iosIcon: { default: "gearshape", selected: "gearshape.fill" },
-    label: "Settings",
-    routeName: "(settings)",
+    androidIcon: { default: "bookmark_border", selected: "bookmark" },
+    iosIcon: { default: "bookmark", selected: "bookmark.fill" },
+    label: "Saved",
+    routeName: "(saved)",
   },
 ] as const;

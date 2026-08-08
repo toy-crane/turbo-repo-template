@@ -27,6 +27,16 @@ jest.mock("../features/settings/settings-screen", () => {
   };
 });
 
+jest.mock("../features/saved/saved-screen", () => {
+  const React = require("react") as typeof import("react");
+  const { View } = require("react-native") as typeof import("react-native");
+
+  return {
+    SavedScreen: () =>
+      React.createElement(View, { accessibilityLabel: "Saved placeholder" }),
+  };
+});
+
 test("/에서 Home 탭의 첫 화면을 표시한다", async () => {
   const router = renderRouter("./app", { initialUrl: "/" });
   await router;
@@ -46,6 +56,15 @@ test("공개 경로 이동이 각 네이티브 탭의 화면을 표시한다", a
   await waitFor(() => {
     expect(router.getPathname()).toBe("/activity");
     expect(screen.getByLabelText("Activity placeholder")).toBeOnTheScreen();
+  });
+
+  await act(() => {
+    expoRouter.navigate("/saved");
+  });
+
+  await waitFor(() => {
+    expect(router.getPathname()).toBe("/saved");
+    expect(screen.getByLabelText("Saved placeholder")).toBeOnTheScreen();
   });
 
   await act(() => {
