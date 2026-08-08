@@ -72,6 +72,9 @@ test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 �
 
     expect(screen.getAllByText("Notifications")).toHaveLength(1);
     expect(screen.getAllByText("Haptics")).toHaveLength(1);
+    expect(screen.getByTestId("preferences-section")).toHaveStyle({
+      paddingTop: 24,
+    });
     expect(
       screen.getByTestId("notifications-switch").props.accessibilityState
     ).toEqual({ checked: false });
