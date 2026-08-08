@@ -4,7 +4,9 @@
 
 - 템플릿 사용자는 처음 한 번 루트의 `bun run setup`을 실행해 프로젝트 정체성을 설정한다.
 - setup은 lowercase kebab-case의 단일 `project slug`를 받아 루트 `package.json`의 `name`, Expo의 `slug`와 `scheme`, Supabase `config.toml`의 `project_id`에 적용한다.
-- setup은 대화형 입력과 `--project-slug <slug>` 형태의 비대화형 실행을 모두 지원한다.
+- 대화형 setup은 `project slug`, 앱 표시 이름, 완성된 reverse-DNS 모바일 앱 식별자를 한 단계씩 입력받는다. 모바일 앱 식별자는 iOS `bundleIdentifier`와 Android `package`에 동일하게 적용한다.
+- setup은 적용 전에 변경될 필드를 모두 미리 보여주고 사용자의 확인을 받은 뒤 수정한다.
+- setup은 대화형 입력과 `--project-slug`, `--display-name`, `--mobile-app-id`, `--yes`를 사용하는 비대화형 실행을 모두 지원한다.
 - 이미 설정이 끝난 저장소에서는 현재 값을 보여주고 변경 없이 종료한다. 다시 설정하는 작업은 명시적인 override 없이는 수행하지 않는다.
 
 ## 경계
