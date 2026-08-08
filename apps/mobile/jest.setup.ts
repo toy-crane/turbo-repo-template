@@ -12,32 +12,52 @@ Object.defineProperty(globalThis, "__DEV__", {
   writable: true,
 });
 
-// Expo SQLite has no native database under Jest, so back the `localStorage`
-// polyfill with memory. Supabase auth reads it while the client is constructed.
-jest.mock("expo-sqlite/localStorage/install", () => {
+// Native modules the encrypted session storage needs. Jest has no SQLite
+// database and no keystore, so back both with memory and give the cipher a
+// deterministic-length random source.
+jest.mock("expo-sqlite/kv-store", () => {
   const entries = new Map<string, string>();
 
-  Object.defineProperty(globalThis, "localStorage", {
-    configurable: true,
-    value: {
-      clear: () => entries.clear(),
-      getItem: (key: string) => entries.get(key) ?? null,
-      key: (index: number) => Array.from(entries.keys())[index] ?? null,
-      get length() {
-        return entries.size;
-      },
+  return {
+    __esModule: true,
+    default: {
+      getItem: (key: string) => Promise.resolve(entries.get(key) ?? null),
       removeItem: (key: string) => {
         entries.delete(key);
+
+        return Promise.resolve();
       },
       setItem: (key: string, value: string) => {
         entries.set(key, value);
+
+        return Promise.resolve();
       },
     },
-    writable: true,
-  });
-
-  return {};
+  };
 });
+
+jest.mock("expo-secure-store", () => {
+  const entries = new Map<string, string>();
+
+  return {
+    deleteItemAsync: (key: string) => {
+      entries.delete(key);
+
+      return Promise.resolve();
+    },
+    getItemAsync: (key: string) => Promise.resolve(entries.get(key) ?? null),
+    setItemAsync: (key: string, value: string) => {
+      entries.set(key, value);
+
+      return Promise.resolve();
+    },
+  };
+});
+
+jest.mock("expo-crypto", () => ({
+  getRandomBytes: (length: number) =>
+    Uint8Array.from({ length }, (_unused, index) => (index * 7 + 13) % 256),
+}));
 
 jest.mock("react-native-worklets", () =>
   require("react-native-worklets/src/mock")

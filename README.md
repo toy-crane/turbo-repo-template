@@ -186,6 +186,17 @@ checks them while Expo resolves the app config, so `expo start`, `expo prebuild`
 of producing a bundle that breaks at launch. The app also checks at runtime and
 shows the same message on screen, which covers bundles delivered over the air.
 
+### Where the session is stored
+
+The signed-in session is encrypted before it is written to disk. Each write
+generates an AES-256-GCM key, keeps the ciphertext in the app's SQLite store, and
+puts the key in `expo-secure-store` — the iOS keychain and the Android keystore.
+A tampered or unreadable value is treated as "no session", so the app asks the
+user to sign in again rather than failing on unusable state.
+
+This matters because the Supabase session carries a bearer token: anything that
+can read the app's files would otherwise read the token as plain text.
+
 > **Warning**: `EXPO_PUBLIC_` values are embedded verbatim in the app bundle and
 > are therefore public. Never put a `service_role` key or any secret key in these
 > variables. `.env.local` is excluded from Git; the repository carries only an

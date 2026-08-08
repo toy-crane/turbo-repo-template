@@ -1,10 +1,10 @@
 import "react-native-url-polyfill/auto";
-import "expo-sqlite/localStorage/install";
 
 import type { Database } from "@repo/supabase";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { resolveSupabaseEnv } from "./env";
+import { secureSessionStorage } from "./secure-session-storage";
 
 let client: SupabaseClient<Database> | undefined;
 
@@ -26,7 +26,7 @@ export function getSupabaseClient(): SupabaseClient<Database> {
         autoRefreshToken: true,
         detectSessionInUrl: false,
         persistSession: true,
-        storage: localStorage,
+        storage: secureSessionStorage,
       },
     });
   }
