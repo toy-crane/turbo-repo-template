@@ -2,20 +2,34 @@ import "react-native-url-polyfill/auto";
 import "expo-sqlite/localStorage/install";
 
 import type { Database } from "@repo/supabase";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { resolveSupabaseEnv } from "./env";
 
-const { publishableKey, url } = resolveSupabaseEnv({
-  publishableKey: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  url: process.env.EXPO_PUBLIC_SUPABASE_URL,
-});
+let client: SupabaseClient<Database> | undefined;
 
-export const supabase = createClient<Database>(url, publishableKey, {
-  auth: {
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-    persistSession: true,
-    storage: localStorage,
-  },
-});
+/**
+ * Created on first use rather than at module scope. Throwing while the root
+ * layout's module body evaluates happens before React mounts, so no error
+ * boundary can catch it and `expo export` would still emit a bundle that dies
+ * on launch.
+ */
+export function getSupabaseClient(): SupabaseClient<Database> {
+  if (!client) {
+    const { publishableKey, url } = resolveSupabaseEnv({
+      publishableKey: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      url: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    });
+
+    client = createClient<Database>(url, publishableKey, {
+      auth: {
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+        persistSession: true,
+        storage: localStorage,
+      },
+    });
+  }
+
+  return client;
+}

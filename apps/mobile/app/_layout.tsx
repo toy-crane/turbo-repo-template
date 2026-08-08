@@ -1,7 +1,4 @@
 import "../global.css";
-// Initialize the Supabase singleton at startup so a missing public environment
-// variable fails here with a named error instead of inside a later screen.
-import "../src/supabase/client";
 
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -10,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { getSettingsSheetOptions } from "../src/navigation/settings-sheet";
 import { AppQueryProvider } from "../src/query/app-query-provider";
+import { SupabaseGate } from "../src/supabase/supabase-gate";
 import { AppThemeBridge, useAppTheme } from "../src/theme/app-theme-bridge";
 
 const heroUIConfig = {
@@ -41,7 +39,9 @@ export default function RootLayout() {
       <AppQueryProvider>
         <HeroUINativeProvider config={heroUIConfig}>
           <AppThemeBridge>
-            <ThemedRootLayout />
+            <SupabaseGate>
+              <ThemedRootLayout />
+            </SupabaseGate>
           </AppThemeBridge>
         </HeroUINativeProvider>
       </AppQueryProvider>
