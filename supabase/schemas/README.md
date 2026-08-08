@@ -22,6 +22,27 @@
 사전순 위치보다 먼저 실행해야 하는 파일이 생기면 `schema_paths`의 glob 위에 그
 파일 경로를 명시적으로 추가한다.
 
+## 새 테이블을 추가할 때: 기본 권한
+
+이 데이터베이스의 default privileges는 `public`의 새 테이블마다 `anon`,
+`authenticated`, `service_role`에 `REFERENCES`·`TRIGGER`·`TRUNCATE`를 준다.
+RLS는 `TRUNCATE`를 막지 않는다.
+
+schema 파일에 `revoke all ... from anon, authenticated, service_role`을 적어도
+**생성된 migration에는 그 REVOKE가 들어가지 않는다.** default privileges는
+`CREATE TABLE`이 실행될 때 적용되어 schema 차이로 나타나지 않기 때문이다.
+
+그러므로 새 테이블마다 생성된 migration의 `GRANT` 앞에 `REVOKE`를 직접 넣고,
+`db:reset` 뒤에 실제 권한을 확인한다.
+
+```sql
+select grantee, privilege_type
+from information_schema.role_table_grants
+where table_name = '<table>' and grantee in ('anon','authenticated');
+```
+
+`supabase/migrations/20260808225021_create_notes.sql`이 이 보정의 예다.
+
 ## 이 디렉터리에 두지 않는 것
 
 - DML, backfill, seed 데이터 — `supabase/seed.sql` 또는 별도 versioned migration
