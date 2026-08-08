@@ -1,4 +1,7 @@
 import "../global.css";
+// Initialize the Supabase singleton at startup so a missing public environment
+// variable fails here with a named error instead of inside a later screen.
+import "../src/supabase/client";
 
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
