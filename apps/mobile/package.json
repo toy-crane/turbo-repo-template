@@ -23,6 +23,7 @@
     "@expo/ui": "~57.0.9",
     "@repo/supabase": "workspace:*",
     "@supabase/supabase-js": "2.112.2",
+    "@tanstack/react-query": "5.101.4",
     "expo": "~57.0.11",
     "expo-build-properties": "~57.0.9",
     "expo-constants": "~57.0.9",

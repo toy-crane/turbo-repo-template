@@ -9,6 +9,7 @@ import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { getSettingsSheetOptions } from "../src/navigation/settings-sheet";
+import { AppQueryProvider } from "../src/query/app-query-provider";
 import { AppThemeBridge, useAppTheme } from "../src/theme/app-theme-bridge";
 
 const heroUIConfig = {
@@ -37,11 +38,13 @@ function ThemedRootLayout() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HeroUINativeProvider config={heroUIConfig}>
-        <AppThemeBridge>
-          <ThemedRootLayout />
-        </AppThemeBridge>
-      </HeroUINativeProvider>
+      <AppQueryProvider>
+        <HeroUINativeProvider config={heroUIConfig}>
+          <AppThemeBridge>
+            <ThemedRootLayout />
+          </AppThemeBridge>
+        </HeroUINativeProvider>
+      </AppQueryProvider>
     </GestureHandlerRootView>
   );
 }
