@@ -149,8 +149,13 @@ export function readIdentity(root: string): Map<IdentityField, string> {
   );
 }
 
+/**
+ * Configured means no field still holds its template default. `some` would let
+ * a single hand-edited field lock the wizard out of the other six, and would
+ * make a half-applied run unrecoverable without `--force`.
+ */
 export function isConfigured(current: Map<IdentityField, string>): boolean {
-  return IDENTITY_FIELDS.some(
+  return IDENTITY_FIELDS.every(
     (field) => current.get(field) !== field.templateDefault
   );
 }
@@ -168,70 +173,71 @@ export function planIdentityChanges(
 }
 
 /**
- * Replace exactly one `"key": "old"` (or `key = "old"`) occurrence. Anything
- * else means the file no longer matches what setup knows how to edit, so it
- * fails instead of guessing.
+ * Match the key and capture whatever quoted string follows, then compare the
+ * decoded value. Building the pattern from the raw value instead would never
+ * match a name the file had to escape, such as a display name with quotes.
  */
-function replaceSingleValue(
-  text: string,
-  change: IdentityChange,
-  pattern: RegExp
-): string {
-  const matches = text.match(pattern);
+function patternFor(field: IdentityField): RegExp {
+  const quoted = String.raw`"(?:[^"\\]|\\.)*"`;
 
-  if (matches?.length !== 1) {
+  return field.format === "json"
+    ? new RegExp(`("${escapeRegExp(field.key)}"\\s*:\\s*)(${quoted})`, "g")
+    : new RegExp(`^(${escapeRegExp(field.key)}\\s*=\\s*)(${quoted})$`, "gm");
+}
+
+/**
+ * Replace exactly one occurrence. Anything else means the file no longer looks
+ * like what setup knows how to edit, so it fails instead of guessing.
+ */
+function replaceSingleValue(text: string, change: IdentityChange): string {
+  const pattern = patternFor(change.field);
+  const hits = [...text.matchAll(pattern)].filter(
+    (match) => match[2] !== undefined && JSON.parse(match[2]) === change.from
+  );
+
+  if (hits.length !== 1) {
     throw new Error(
-      `${change.field.file}에서 ${change.field.key} = "${change.from}" 항목을 정확히 하나 찾지 못했습니다 (${matches?.length ?? 0}개). 파일을 확인한 뒤 다시 실행하세요.`
+      `${change.field.file}에서 ${change.field.key} = "${change.from}" 항목을 정확히 하나 찾지 못했습니다 (${hits.length}개). 파일을 확인한 뒤 다시 실행하세요.`
     );
   }
 
-  return text.replace(
-    pattern,
-    (_match, prefix: string) => `${prefix}${JSON.stringify(change.to)}`
+  return text.replace(pattern, (match, prefix: string, quoted: string) =>
+    JSON.parse(quoted) === change.from
+      ? `${prefix}${JSON.stringify(change.to)}`
+      : match
   );
 }
 
-function rewriteFile(root: string, changes: IdentityChange[], file: string) {
-  const absolute = join(root, file);
-  let text = readFileSync(absolute, "utf8");
-
-  for (const change of changes) {
-    const { format, key } = change.field;
-    const pattern =
-      format === "json"
-        ? new RegExp(
-            `("${escapeRegExp(key)}"\\s*:\\s*)"${escapeRegExp(change.from)}"`,
-            "g"
-          )
-        : new RegExp(
-            `^(${escapeRegExp(key)}\\s*=\\s*)"${escapeRegExp(change.from)}"$`,
-            "gm"
-          );
-
-    text = replaceSingleValue(text, change, pattern);
-  }
-
-  writeFileSync(absolute, text);
-
-  for (const change of changes) {
-    const applied = readField(root, change.field);
-
-    if (applied !== change.to) {
-      throw new Error(
-        `${file}의 ${change.field.label}이(가) "${change.to}"로 적용되지 않았습니다.`
-      );
-    }
-  }
-}
-
+/**
+ * Compute and verify every file in memory before writing any of them, so a
+ * rejected replacement cannot leave the repository half-renamed.
+ */
 export function applyIdentityChanges(root: string, changes: IdentityChange[]) {
   const files = [...new Set(changes.map((change) => change.field.file))];
-
-  for (const file of files) {
-    rewriteFile(
-      root,
-      changes.filter((change) => change.field.file === file),
-      file
+  const rewritten = files.map((file) => {
+    const fileChanges = changes.filter((change) => change.field.file === file);
+    const text = fileChanges.reduce(
+      (current, change) => replaceSingleValue(current, change),
+      readFileSync(join(root, file), "utf8")
     );
+
+    for (const change of fileChanges) {
+      const applied =
+        change.field.format === "json"
+          ? readJsonPath(text, change.field.path, file)
+          : readTomlKey(text, change.field.key, file);
+
+      if (applied !== change.to) {
+        throw new Error(
+          `${file}의 ${change.field.label}이(가) "${change.to}"로 적용되지 않았습니다.`
+        );
+      }
+    }
+
+    return { file, text };
+  });
+
+  for (const { file, text } of rewritten) {
+    writeFileSync(join(root, file), text);
   }
 }
