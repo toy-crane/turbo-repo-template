@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { getSettingsSheetOptions } from "../src/navigation/settings-sheet";
 import { AppThemeBridge, useAppTheme } from "../src/theme/app-theme-bridge";
 
 const heroUIConfig = {
@@ -23,18 +24,7 @@ function ThemedRootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="settings"
-          options={{
-            contentStyle: { backgroundColor: "transparent" },
-            headerShown: true,
-            presentation: "formSheet",
-            sheetAllowedDetents: [0.5, 1],
-            sheetGrabberVisible: true,
-            sheetInitialDetentIndex: 0,
-            title: "Settings",
-          }}
-        />
+        <Stack.Screen name="settings" options={getSettingsSheetOptions()} />
       </Stack>
       <StatusBar style="auto" />
     </>
