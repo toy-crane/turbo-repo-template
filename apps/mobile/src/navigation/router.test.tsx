@@ -8,6 +8,8 @@ import {
   waitFor,
 } from "expo-router/testing-library";
 
+const heroUIPreviewLabel = /^HeroUI Native preview\./;
+
 jest.mock("../features/activity/activity-screen", () => {
   const React = require("react") as typeof import("react");
   const { View } = require("react-native") as typeof import("react-native");
@@ -43,7 +45,7 @@ test("/에서 Home 탭의 첫 화면을 표시한다", async () => {
   await router;
 
   expect(router.getPathname()).toBe("/");
-  expect(screen.getByLabelText("Home placeholder")).toBeOnTheScreen();
+  expect(screen.getByLabelText(heroUIPreviewLabel)).toBeOnTheScreen();
 });
 
 test("Home 이니셜 아바타가 Settings sheet 경로를 연다", async () => {

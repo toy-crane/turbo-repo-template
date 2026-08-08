@@ -1,42 +1,56 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Card } from "heroui-native/card";
+import { Chip } from "heroui-native/chip";
+import { ScrollView } from "react-native";
+
+const savedItems = [
+  {
+    category: "Theme",
+    color: "accent",
+    description:
+      "HeroUI의 background, foreground, surface를 canonical token으로 사용합니다.",
+    title: "디자인 시스템 결정",
+  },
+  {
+    category: "Navigation",
+    color: "success",
+    description:
+      "Stack 헤더와 formSheet는 Expo Router의 네이티브 셸이 계속 소유합니다.",
+    title: "네이티브 셸 경계",
+  },
+  {
+    category: "HeroUI",
+    color: "warning",
+    description:
+      "Card, Chip, TextField, Button, Spinner, Toast를 실제 화면에서 검증합니다.",
+    title: "컴포넌트 후보",
+  },
+] as const;
 
 export function SavedScreen() {
   return (
     <ScrollView
       className="bg-background"
-      contentContainerStyle={styles.content}
+      contentContainerClassName="gap-3 px-5 pt-5 pb-6"
       contentInsetAdjustmentBehavior="automatic"
-      style={styles.screen}
     >
-      <View
-        accessibilityLabel="Saved placeholder"
-        accessible
-        className="bg-surface"
-        style={styles.card}
-      >
-        <Text className="text-foreground" style={styles.message}>
-          저장한 항목이 여기에 표시됩니다.
-        </Text>
-      </View>
+      {savedItems.map((item) => (
+        <Card
+          accessibilityLabel={`Saved item ${item.title}. ${item.category}. ${item.description}`}
+          accessible
+          className="gap-3 p-5"
+          key={item.title}
+        >
+          <Card.Header>
+            <Chip color={item.color} size="sm" variant="soft">
+              {item.category}
+            </Chip>
+          </Card.Header>
+          <Card.Body className="gap-1.5">
+            <Card.Title>{item.title}</Card.Title>
+            <Card.Description>{item.description}</Card.Description>
+          </Card.Body>
+        </Card>
+      ))}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 18,
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-  },
-  content: {
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  message: {
-    fontSize: 17,
-  },
-  screen: {
-    flex: 1,
-  },
-});

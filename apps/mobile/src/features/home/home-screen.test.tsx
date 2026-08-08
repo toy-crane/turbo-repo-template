@@ -1,21 +1,68 @@
-import { describe, expect, test } from "@jest/globals";
-import { render, screen } from "@testing-library/react-native";
-import { StyleSheet } from "react-native";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from "@jest/globals";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { useToast } from "heroui-native/toast";
 
+import { renderWithHeroUI } from "../../test/render-with-heroui";
 import { HomeScreen } from "./home-screen";
 
-describe("HomeScreen", () => {
-  test("native Stack 제목을 중복하지 않는 접근 가능한 placeholder를 표시한다", async () => {
-    await render(<HomeScreen />);
+jest.mock("heroui-native/toast", () => ({
+  useToast: jest.fn(),
+}));
 
-    expect(screen.getByLabelText("Home placeholder")).toHaveTextContent(
-      "콘텐츠를 준비 중입니다."
+const hideToast = jest.fn();
+const showToast = jest.fn(() => "preview-toast");
+const mockUseToast = jest.mocked(useToast);
+const heroUIPreviewLabel = /^HeroUI Native preview\./;
+
+describe("HomeScreen", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    mockUseToast.mockReturnValue({
+      isToastVisible: false,
+      toast: { hide: hideToast, show: showToast },
+    });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.clearAllMocks();
+  });
+
+  test("HeroUI 입력과 로딩, Toast 피드백을 한 화면에서 체험한다", async () => {
+    await renderWithHeroUI(<HomeScreen />);
+
+    expect(screen.getByLabelText(heroUIPreviewLabel)).toBeOnTheScreen();
+    expect(screen.getByText("React Native UI")).toBeOnTheScreen();
+    expect(screen.getByText("HeroUI Native")).toBeOnTheScreen();
+    const input = screen.getByLabelText("콘텐츠 이름");
+
+    await fireEvent.changeText(input, "알림 카드");
+    await fireEvent.press(
+      screen.getByRole("button", { name: "HeroUI 체험하기" })
     );
+
+    expect(screen.getByRole("button", { name: "적용 중" })).toBeDisabled();
+
+    await act(() => {
+      jest.advanceTimersByTime(650);
+    });
+
+    expect(showToast).toHaveBeenCalledWith({
+      description: "알림 카드 샘플의 입력과 피드백 상태를 확인했습니다.",
+      label: "HeroUI 체험 완료",
+      placement: "bottom",
+      variant: "success",
+    });
     expect(
-      StyleSheet.flatten(
-        screen.getByText("콘텐츠를 준비 중입니다.").props.style
-      ).lineHeight
-    ).toBeUndefined();
+      screen.getByRole("button", { name: "HeroUI 체험하기" })
+    ).toBeEnabled();
     expect(
       screen.queryByRole("heading", { name: "Home" })
     ).not.toBeOnTheScreen();

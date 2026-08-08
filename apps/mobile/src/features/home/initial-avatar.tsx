@@ -1,11 +1,10 @@
+import { Avatar } from "heroui-native/avatar";
 import {
   Platform,
   Pressable,
   type PressableStateCallbackType,
   type StyleProp,
   StyleSheet,
-  Text,
-  View,
   type ViewStyle,
 } from "react-native";
 
@@ -23,9 +22,14 @@ export function InitialAvatar({ initial, onPress }: InitialAvatarProps) {
       onPress={onPress}
       style={getTouchTargetStyle}
     >
-      <View style={styles.avatar}>
-        <Text style={styles.initial}>{initial}</Text>
-      </View>
+      <Avatar
+        alt={`${initial} profile`}
+        color="accent"
+        size="sm"
+        variant="soft"
+      >
+        <Avatar.Fallback>{initial}</Avatar.Fallback>
+      </Avatar>
     </Pressable>
   );
 }
@@ -39,20 +43,6 @@ function getTouchTargetStyle({
 const touchTargetSize = Platform.OS === "ios" ? 44 : 48;
 
 const styles = StyleSheet.create({
-  avatar: {
-    alignItems: "center",
-    backgroundColor: "#4285F4",
-    borderCurve: "continuous",
-    borderRadius: 18,
-    height: 36,
-    justifyContent: "center",
-    width: 36,
-  },
-  initial: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "600",
-  },
   pressed: {
     opacity: 0.72,
   },

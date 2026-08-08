@@ -34,6 +34,7 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+/uniwind-types.d.ts
 
 # generated native folders
 /ios

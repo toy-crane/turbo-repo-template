@@ -7,6 +7,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AppThemeBridge, useAppTheme } from "../src/theme/app-theme-bridge";
 
+const heroUIConfig = {
+  devInfo: { stylingPrinciples: false },
+} as const;
+
 function ThemedRootLayout() {
   const { background } = useAppTheme();
 
@@ -40,7 +44,7 @@ function ThemedRootLayout() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HeroUINativeProvider>
+      <HeroUINativeProvider config={heroUIConfig}>
         <AppThemeBridge>
           <ThemedRootLayout />
         </AppThemeBridge>
