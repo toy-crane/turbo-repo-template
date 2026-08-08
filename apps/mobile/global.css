@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@import "uniwind";
+@import "heroui-native/styles";
+
+@source "./node_modules/heroui-native/lib";
+
+@layer theme {
+  :root {
+    @variant light {
+      --background: #f4f4f6;
+      --foreground: #111114;
+      --surface: #ffffff;
+      --surface-foreground: var(--foreground);
+    }
+  }
+
+  :root {
+    @variant dark {
+      --background: #0b0b0d;
+      --foreground: #ffffff;
+      --surface: #1a1a1e;
+      --surface-foreground: var(--foreground);
+    }
+  }
+}

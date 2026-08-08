@@ -1,19 +1,20 @@
+import "../global.css";
+
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { AppThemeProvider, useAppTheme } from "../src/theme/app-theme-provider";
+import { AppThemeBridge, useAppTheme } from "../src/theme/app-theme-bridge";
 
 function ThemedRootLayout() {
-  const { colors } = useAppTheme();
+  const { background } = useAppTheme();
 
   return (
-    <GestureHandlerRootView
-      style={{ backgroundColor: colors.background.canvas, flex: 1 }}
-    >
+    <>
       <Stack
         screenOptions={{
-          contentStyle: { backgroundColor: colors.background.canvas },
+          contentStyle: { backgroundColor: background },
           headerShown: false,
         }}
       >
@@ -32,14 +33,18 @@ function ThemedRootLayout() {
         />
       </Stack>
       <StatusBar style="auto" />
-    </GestureHandlerRootView>
+    </>
   );
 }
 
 export default function RootLayout() {
   return (
-    <AppThemeProvider>
-      <ThemedRootLayout />
-    </AppThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <HeroUINativeProvider>
+        <AppThemeBridge>
+          <ThemedRootLayout />
+        </AppThemeBridge>
+      </HeroUINativeProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 import { useState } from "react";
 import { Platform } from "react-native";
 
-import { useAppTheme } from "../../theme/app-theme-provider";
+import { useAppTheme } from "../../theme/app-theme-bridge";
 import { getSettingsTextStyle } from "./settings-theme";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
@@ -11,8 +11,8 @@ const appVersion = Constants.expoConfig?.version ?? "Unknown";
 export function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const { colors } = useAppTheme();
-  const textStyle = getSettingsTextStyle(colors);
+  const { foreground } = useAppTheme();
+  const textStyle = getSettingsTextStyle(foreground);
   const androidTextStyle = Platform.OS === "android" ? textStyle : undefined;
 
   return (

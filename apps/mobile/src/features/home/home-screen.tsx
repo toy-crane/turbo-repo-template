@@ -1,12 +1,9 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { useAppTheme } from "../../theme/app-theme-provider";
-
 export function HomeScreen() {
-  const { colors } = useAppTheme();
-
   return (
     <ScrollView
+      className="bg-background"
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
       style={styles.screen}
@@ -14,9 +11,10 @@ export function HomeScreen() {
       <View
         accessibilityLabel="Home placeholder"
         accessible
-        style={[styles.card, { backgroundColor: colors.background.surface }]}
+        className="bg-surface"
+        style={styles.card}
       >
-        <Text style={[styles.message, { color: colors.text.primary }]}>
+        <Text className="text-foreground" style={styles.message}>
           콘텐츠를 준비 중입니다.
         </Text>
       </View>

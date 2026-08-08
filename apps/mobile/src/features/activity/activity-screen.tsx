@@ -1,14 +1,11 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { useAppTheme } from "../../theme/app-theme-provider";
-
 const placeholderItems = Array.from({ length: 18 }, (_, index) => index + 1);
 
 export function ActivityScreen() {
-  const { colors } = useAppTheme();
-
   return (
     <ScrollView
+      className="bg-background"
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
       style={styles.screen}
@@ -17,10 +14,11 @@ export function ActivityScreen() {
         <View
           accessibilityLabel={`Activity placeholder ${position}`}
           accessible
+          className="bg-surface"
           key={position}
-          style={[styles.card, { backgroundColor: colors.background.surface }]}
+          style={styles.card}
         >
-          <Text style={[styles.message, { color: colors.text.primary }]}>
+          <Text className="text-foreground" style={styles.message}>
             {`Placeholder ${position.toString().padStart(2, "0")}`}
           </Text>
         </View>

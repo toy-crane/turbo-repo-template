@@ -1,12 +1,9 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { useAppTheme } from "../../theme/app-theme-provider";
-
 export function SavedScreen() {
-  const { colors } = useAppTheme();
-
   return (
     <ScrollView
+      className="bg-background"
       contentContainerStyle={styles.content}
       contentInsetAdjustmentBehavior="automatic"
       style={styles.screen}
@@ -14,9 +11,10 @@ export function SavedScreen() {
       <View
         accessibilityLabel="Saved placeholder"
         accessible
-        style={[styles.card, { backgroundColor: colors.background.surface }]}
+        className="bg-surface"
+        style={styles.card}
       >
-        <Text style={[styles.message, { color: colors.text.primary }]}>
+        <Text className="text-foreground" style={styles.message}>
           저장한 항목이 여기에 표시됩니다.
         </Text>
       </View>
