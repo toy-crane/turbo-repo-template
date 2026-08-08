@@ -61,8 +61,8 @@ max_client_conn = 100
 enabled = true
 # Specifies an ordered list of schema files, directories, or glob patterns that describe your database.
 # Supports paths relative to supabase directory: "./schemas/*.sql", "./database".
-# Files are ordered by the numeric prefix in their name. Add an explicit path above the glob only
-# when a file must run before its lexicographic position.
+# Files run in lexicographic order, so schemas/ uses two-digit prefixes to keep that order readable.
+# Add an explicit path above the glob only when a file must run before its lexicographic position.
 schema_paths = ["./schemas/*.sql"]
 
 [db.seed]

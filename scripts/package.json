@@ -1,0 +1,15 @@
+{
+  "name": "@repo/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "check": "ultracite check .",
+    "check-types": "tsc --noEmit",
+    "fix": "ultracite fix .",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "5.9.2"
+  }
+}

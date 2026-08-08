@@ -130,7 +130,9 @@ reset, database test, production 규모 lock 검증은 성공이 아니라 `UNVE
 client는 이 package에 두지 않는다.
 
 `packages/supabase/src/database.types.ts`는 `bun run db:types`가 생성하므로 직접
-편집하지 않는다. 이 파일은 lint 대상에서 제외되어 생성기 출력 그대로 유지된다.
+편집하지 않는다. `packages/supabase/biome.jsonc`가 이 파일만 lint 대상에서
+제외하므로 생성기 출력 그대로 유지된다. 생성이 실패해도 기존 파일은 그대로
+남는다.
 
 ## Supabase 연결
 

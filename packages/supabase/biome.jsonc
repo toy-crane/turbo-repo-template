@@ -1,0 +1,11 @@
+{
+  "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+  "root": false,
+  "extends": "//",
+  "files": {
+    // `supabase gen types typescript` owns this file. Excluding it here rather
+    // than in the root config keeps the shared preset's generated-file globs
+    // intact, since a root `files.includes` replaces them instead of merging.
+    "includes": ["**", "!src/database.types.ts"]
+  }
+}
