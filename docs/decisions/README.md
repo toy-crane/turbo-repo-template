@@ -9,3 +9,4 @@
 - [mobile-ui-renderer-boundaries](mobile-ui-renderer-boundaries.md) — 모바일 화면의 주 렌더러, 네이티브 셸 소유권 또는 Liquid Glass 사용 범위를 선택할 때 읽는다.
 - [supabase-client-boundaries](supabase-client-boundaries.md) — Supabase 타입, client 초기화, session storage 또는 런타임별 key 소유권을 변경할 때 읽는다.
 - [supabase-schema-workflow](supabase-schema-workflow.md) — Supabase 스키마 원본, local stack, migration 또는 타입 생성 방식을 변경할 때 읽는다.
+- [template-project-identity](template-project-identity.md) — 템플릿의 최초 설정 command, project slug 또는 도구별 프로젝트 식별자를 변경할 때 읽는다.
