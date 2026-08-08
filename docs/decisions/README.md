@@ -7,3 +7,4 @@
 - [mobile-typography](mobile-typography.md) — 모바일 텍스트 역할, 시스템 폰트, Dynamic Type 또는 렌더러별 타이포그래피 매핑을 변경할 때 읽는다.
 - [mobile-ui-renderer-boundaries](mobile-ui-renderer-boundaries.md) — 모바일 화면의 주 렌더러, 네이티브 셸 소유권 또는 Liquid Glass 사용 범위를 선택할 때 읽는다.
 - [supabase-client-boundaries](supabase-client-boundaries.md) — Supabase 타입, client 초기화, session storage 또는 런타임별 key 소유권을 변경할 때 읽는다.
+- [supabase-schema-workflow](supabase-schema-workflow.md) — Supabase 스키마 원본, local stack, migration 또는 타입 생성 방식을 변경할 때 읽는다.
