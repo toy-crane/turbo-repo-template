@@ -6,6 +6,7 @@ describe("getSettingsSheetOptions", () => {
   test("Settings를 native page sheet로 연다", () => {
     expect(getSettingsSheetOptions()).toEqual({
       headerBackVisible: false,
+      headerShadowVisible: false,
       headerShown: true,
       presentation: "pageSheet",
       title: "Settings",
