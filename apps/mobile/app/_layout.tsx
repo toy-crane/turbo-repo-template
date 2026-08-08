@@ -18,6 +18,18 @@ function ThemedRootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="settings"
+          options={{
+            contentStyle: { backgroundColor: "transparent" },
+            headerShown: true,
+            presentation: "formSheet",
+            sheetAllowedDetents: [0.5, 1],
+            sheetGrabberVisible: true,
+            sheetInitialDetentIndex: 0,
+            title: "Settings",
+          }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </GestureHandlerRootView>
