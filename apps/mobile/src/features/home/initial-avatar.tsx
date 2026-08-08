@@ -1,9 +1,11 @@
 import {
+  Platform,
   Pressable,
   type PressableStateCallbackType,
   type StyleProp,
   StyleSheet,
   Text,
+  View,
   type ViewStyle,
 } from "react-native";
 
@@ -19,18 +21,22 @@ export function InitialAvatar({ initial, onPress }: InitialAvatarProps) {
       accessibilityLabel="Open settings"
       accessibilityRole="button"
       onPress={onPress}
-      style={getAvatarStyle}
+      style={getTouchTargetStyle}
     >
-      <Text style={styles.initial}>{initial}</Text>
+      <View style={styles.avatar}>
+        <Text style={styles.initial}>{initial}</Text>
+      </View>
     </Pressable>
   );
 }
 
-function getAvatarStyle({
+function getTouchTargetStyle({
   pressed,
 }: PressableStateCallbackType): StyleProp<ViewStyle> {
-  return [styles.avatar, pressed && styles.pressed];
+  return [styles.touchTarget, pressed && styles.pressed];
 }
+
+const touchTargetSize = Platform.OS === "ios" ? 44 : 48;
 
 const styles = StyleSheet.create({
   avatar: {
@@ -49,5 +55,11 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.72,
+  },
+  touchTarget: {
+    alignItems: "center",
+    height: touchTargetSize,
+    justifyContent: "center",
+    width: touchTargetSize,
   },
 });
