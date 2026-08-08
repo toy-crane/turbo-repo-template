@@ -1,7 +1,7 @@
 export interface SetupOptions {
-  displayName?: string;
+  displayName: string | undefined;
   force: boolean;
-  mobileAppId?: string;
+  mobileAppId: string | undefined;
   projectSlug: string | undefined;
   yes: boolean;
 }
@@ -19,7 +19,9 @@ const CONTROL_CHARACTER_PATTERN = /[\p{Cc}]/u;
 
 export function parseSetupArgs(argv: string[]): SetupOptions {
   const options: SetupOptions = {
+    displayName: undefined,
     force: false,
+    mobileAppId: undefined,
     projectSlug: undefined,
     yes: false,
   };
@@ -53,7 +55,7 @@ export function parseSetupArgs(argv: string[]): SetupOptions {
 
     const value = inlineValue ?? argv[index + 1];
 
-    if (value === undefined || value.startsWith("--")) {
+    if (!value || value.startsWith("--")) {
       throw new Error(`${flag} 옵션에는 값이 필요합니다.`);
     }
 

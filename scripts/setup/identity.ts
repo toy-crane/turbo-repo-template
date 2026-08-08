@@ -15,7 +15,7 @@ export interface IdentityChange {
   to: string;
 }
 
-interface IdentityField {
+export interface IdentityField {
   file: string;
   format: "json" | "toml";
   key: string;
@@ -128,7 +128,7 @@ function readTomlKey(text: string, key: string, file: string): string {
   );
   const match = text.match(pattern);
 
-  if (!match?.[1]) {
+  if (match?.[1] === undefined) {
     throw new Error(`${file}에서 ${key} 값을 찾지 못했습니다.`);
   }
 

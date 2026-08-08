@@ -45,6 +45,7 @@ function withFixture(run: (root: string) => Promise<void>) {
 const kebabCaseMessage = /kebab-case/;
 const reverseDnsMessage = /reverse-DNS/;
 const unknownOptionMessage = /알 수 없는 옵션/;
+const missingValueMessage = /값이 필요합니다/;
 
 const nonInteractiveArgv = [
   "--project-slug",
@@ -308,4 +309,17 @@ describe("runSetup", () => {
       rmSync(root, { force: true, recursive: true });
     }
   });
+
+  test(
+    "값이 비어 있는 옵션은 조용히 넘기지 않고 거절한다",
+    withFixture(async (root) => {
+      await expect(
+        runSetup({ argv: ["--project-slug="], io: createIo().io, root })
+      ).rejects.toThrow(missingValueMessage);
+
+      await expect(
+        runSetup({ argv: ["--project-slug", "--yes"], io: createIo().io, root })
+      ).rejects.toThrow(missingValueMessage);
+    })
+  );
 });
