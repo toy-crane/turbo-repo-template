@@ -205,6 +205,18 @@
       "skillPath": "skills/split-into-tasks/SKILL.md",
       "computedHash": "5d79e436d3bdd48b7401c89dff56d1f73d690445dd4a7bf8a21b5f8a25d37620"
     },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase/SKILL.md",
+      "computedHash": "886743d08edece523e48b5c6c737afa29029503bdd3b28a722795712cedfcd91"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "e14e276241805c97dbcfe40dcbea1a3035269cc7293cac4b1832dda41a835e60"
+    },
     "tdd": {
       "source": "toy-crane/skills",
       "sourceType": "github",
