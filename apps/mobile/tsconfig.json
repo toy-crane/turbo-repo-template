@@ -1,6 +1,9 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    // app.config.ts is loaded by the Expo CLI, not bundled by Metro, and its
+    // loader only resolves a relative import when the extension is explicit.
+    "allowImportingTsExtensions": true
   }
 }
