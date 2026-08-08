@@ -1,0 +1,4 @@
+interface:
+  display_name: "Supabase Reviewer"
+  short_description: "Review Supabase schema and migration risks"
+  default_prompt: "Use $supabase-reviewer to review the current Supabase schema and migration changes for security, data loss, and reproducibility risks."
