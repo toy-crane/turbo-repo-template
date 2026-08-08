@@ -16,10 +16,7 @@ let client: SupabaseClient<Database> | undefined;
  */
 export function getSupabaseClient(): SupabaseClient<Database> {
   if (!client) {
-    const { publishableKey, url } = resolveSupabaseEnv({
-      publishableKey: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-      url: process.env.EXPO_PUBLIC_SUPABASE_URL,
-    });
+    const { publishableKey, url } = resolveSupabaseEnv();
 
     client = createClient<Database>(url, publishableKey, {
       auth: {

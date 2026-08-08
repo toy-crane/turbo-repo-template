@@ -24,6 +24,7 @@
     "@noble/ciphers": "2.3.0",
     "@repo/supabase": "workspace:*",
     "@supabase/supabase-js": "2.112.2",
+    "@t3-oss/env-core": "0.13.11",
     "@tanstack/react-query": "5.101.4",
     "expo": "~57.0.11",
     "expo-build-properties": "~57.0.9",
@@ -51,9 +52,11 @@
     "tailwind-merge": "3.6.0",
     "tailwind-variants": "3.3.1",
     "tailwindcss": "4.3.3",
-    "uniwind": "1.10.1"
+    "uniwind": "1.10.1",
+    "zod": "4.4.3"
   },
   "devDependencies": {
+    "@expo/env": "2.4.2",
     "@jest/globals": "29.7.0",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "29.5.14",

@@ -180,11 +180,18 @@ publishable key into the same two variables. `bun run setup`, `bun run db:start`
 and the mobile run commands never create or overwrite an env file, and never
 switch between local and remote values for you.
 
-Both variables are required to build or start the app: `apps/mobile/app.config.ts`
-checks them while Expo resolves the app config, so `expo start`, `expo prebuild`,
-`expo run:*`, and `expo export` all fail with the missing variable names instead
-of producing a bundle that breaks at launch. The app also checks at runtime and
-shows the same message on screen, which covers bundles delivered over the air.
+Both variables are required to build or start the app.
+[apps/mobile/src/supabase/env.ts](apps/mobile/src/supabase/env.ts) declares them
+with `@t3-oss/env-core`, and `apps/mobile/app.config.ts` runs that check while
+Expo resolves the app config — so `expo start`, `expo prebuild`, `expo run:*`,
+and `expo export` all fail, naming what is missing or malformed, instead of
+producing a bundle that breaks at launch. The app runs the same check at runtime
+and shows the message on screen, which covers bundles delivered over the air.
+
+Add a variable by declaring it in that file. Values that must never reach the
+device — a Supabase secret key, a database URL, a build-time upload token — go in
+the `server` block, which has no `EXPO_PUBLIC_` prefix; putting one in `client`,
+or reading it from app code, then fails rather than shipping it to every install.
 
 ### Where the session is stored
 
