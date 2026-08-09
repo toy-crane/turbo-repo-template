@@ -34,6 +34,16 @@ const AuthSessionContext = createContext<AuthSessionState | undefined>(
 
 const SIGNED_OUT: AuthSessionState = { session: null, status: "signedOut" };
 
+/**
+ * The error Supabase raises when it could not reach the server, as opposed to
+ * one that means the stored session is finished. Matching on the name is how
+ * Supabase itself decides whether to keep the session, so this keeps the two
+ * decisions from drifting apart.
+ */
+function isUnreachable(error: { name?: string }): boolean {
+  return error.name === "AuthRetryableFetchError";
+}
+
 function toState(session: Session | null): AuthSessionState {
   return session ? { session, status: "signedIn" } : SIGNED_OUT;
 }
@@ -63,11 +73,22 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // An expired refresh token or a stored value that no longer decrypts
-      // arrives here. Neither is a signed-in user, and leaving the broken value
-      // in place would repeat the failure on every launch, so drop the local
-      // session and let the person sign in again.
+      // Either way the app cannot act as this user right now, so it opens the
+      // sign-in screen.
       apply(null);
+
+      // But only a session that is actually dead gets thrown away. Supabase
+      // raises this one when it could not reach the server to refresh, and it
+      // deliberately keeps the refresh token for that case — so does this. The
+      // person opened the app offline; their credentials are fine, and auto
+      // refresh puts them back in the app once the connection returns without
+      // asking for a new code. Signing out here would destroy a working session
+      // over a dropped request, and would not even succeed: Supabase returns
+      // the same error again before it removes anything.
+      if (isUnreachable(error)) {
+        return;
+      }
+
       await auth.signOut({ scope: "local" });
     };
 
