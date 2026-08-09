@@ -198,7 +198,12 @@ password_requirements = ""
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+# Local only. Signing in during development means requesting a new code on every
+# run, and the production default of 2 per hour stops that after one retry.
+# Emails here go to Mailpit, never to a real inbox, so there is no abuse to
+# limit. Remote projects keep their own limit in the Dashboard — do not copy this
+# number there.
+email_sent = 200
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -229,7 +234,10 @@ enable_confirmations = false
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
-max_frequency = "1s"
+# The sign-in screen counts down from this same value before it re-enables
+# "코드 다시 받기". Change both together, or the screen offers a resend the
+# server rejects: apps/mobile/src/features/auth/email-otp.ts.
+max_frequency = "60s"
 # Number of characters used in the email OTP.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
@@ -249,6 +257,19 @@ otp_expiry = 3600
 # [auth.email.template.invite]
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
+
+# `signInWithOtp` picks the template by whether the address is already a user:
+# an existing user gets magic_link, a first-time address gets confirmation. Both
+# have to carry `{{ .Token }}`, otherwise one of the two paths mails a link the
+# app has no screen for. Remote projects set the same two templates in the
+# Dashboard.
+[auth.email.template.magic_link]
+subject = "로그인 코드"
+content_path = "./supabase/templates/email-otp.html"
+
+[auth.email.template.confirmation]
+subject = "로그인 코드"
+content_path = "./supabase/templates/email-otp.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
