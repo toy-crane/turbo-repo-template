@@ -1,5 +1,6 @@
 # 결정 계약
 
+- [AI 서버 경계](ai-server-boundary.md): AI API의 런타임, 배포 위치, 호출 주체 또는 인증 요구를 변경할 때 읽는다.
 - [모바일 인증](mobile-authentication.md): 모바일 로그인 제공자, 인증 세션, 계정 연결, 로그아웃 또는 로컬 인증 검증 경로를 변경할 때 읽는다.
 - [모바일 개발 런타임](mobile-development-runtime.md): 모바일 앱의 Expo SDK, 지원 플랫폼, Development Build 런타임 또는 배포 경계를 변경할 때 읽는다.
 - [모바일 색상 시맨틱](mobile-color-semantics.md): 모바일 색상 이름, 시맨틱 토큰, 화면 모드 또는 플랫폼별 색상 매핑을 변경할 때 읽는다.
