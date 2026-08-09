@@ -3,7 +3,7 @@
 ## 결정
 
 - Supabase 개발은 local-first로 진행하며 로컬 Supabase stack을 개발 기준 환경으로 사용한다.
-- `supabase/schemas/`의 declarative schema 파일을 데이터베이스 구조의 source of truth로 사용한다.
+- `supabase/schemas/`의 declarative schema 파일을 데이터베이스 구조의 원본으로 사용한다.
 - 일반적인 구조 변경 migration은 declarative schema를 수정한 뒤 `supabase db diff -f <name>`으로 생성한다.
 - 생성된 migration은 초안으로 취급해 의도하지 않은 파괴적 변경, 권한과 RLS, diff 미지원 객체 및 실행 순서를 리뷰하고 필요한 예외만 수동으로 보완한다.
 - 전체 migration은 `supabase db reset`으로 처음부터 재생해 검증한 뒤 로컬 스키마에서 TypeScript 타입을 다시 생성한다. schema, migration과 생성 타입은 같은 변경 단위로 커밋한다.
@@ -31,5 +31,5 @@ Declarative schema는 현재 원하는 데이터베이스 상태를 한곳에서
 
 ## 계속 제외하는 대안
 
-- Dashboard-first로 스키마를 관리 — 원격 상태가 Git의 schema 및 migration과 달라질 수 있다. 외부 관리 데이터베이스를 읽기 전용으로 소비할 때만 재검토한다.
-- imperative migration만을 source of truth로 사용 — 현재 스키마를 이해하려면 누적 migration 전체를 재생하거나 추적해야 한다. declarative diff의 한계가 프로젝트의 주요 객체를 막을 때 재검토한다.
+- Dashboard-first로 스키마를 관리: 원격 상태가 Git의 schema 및 migration과 달라질 수 있다. 외부 관리 데이터베이스를 읽기 전용으로 소비할 때만 재검토한다.
+- imperative migration만을 원본으로 사용: 현재 스키마를 이해하려면 누적 migration 전체를 재생하거나 추적해야 한다. declarative diff의 한계가 프로젝트의 주요 객체를 막을 때 재검토한다.
