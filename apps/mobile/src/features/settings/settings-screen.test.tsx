@@ -1,4 +1,5 @@
 import { beforeEach, expect, jest, test } from "@jest/globals";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
   fireEvent,
@@ -103,13 +104,21 @@ beforeEach(() => {
   resetFakeSupabase({ session: createFakeSession() });
 });
 
-function renderSettings() {
+function renderSettings(queryClient?: QueryClient) {
+  const screenTree = (
+    <AppThemeBridge>
+      <SettingsScreen />
+    </AppThemeBridge>
+  );
+
   return render(
-    <AppQueryProvider>
-      <AppThemeBridge>
-        <SettingsScreen />
-      </AppThemeBridge>
-    </AppQueryProvider>
+    queryClient ? (
+      <QueryClientProvider client={queryClient}>
+        {screenTree}
+      </QueryClientProvider>
+    ) : (
+      <AppQueryProvider>{screenTree}</AppQueryProvider>
+    )
   );
 }
 
@@ -156,6 +165,31 @@ test("로그아웃이 끝나기 전에는 같은 버튼을 다시 실행하지 �
   });
 
   expect(fake.auth.signOut).toHaveBeenCalledTimes(1);
+});
+
+test("로그아웃이 실패해도 이전 사용자의 캐시는 남기지 않는다", async () => {
+  const fake = resetFakeSupabase({ session: createFakeSession() });
+  const queryClient = new QueryClient();
+
+  fake.auth.signOut.mockResolvedValueOnce({
+    error: new Error("Network request failed"),
+  } as never);
+
+  await renderSettings(queryClient);
+
+  queryClient.setQueryData(["notes"], ["이전 사용자의 데이터"]);
+
+  await act(() => {
+    fireEvent.press(screen.getByRole("button", { name: "로그아웃" }));
+  });
+
+  // The cache is emptied whatever else failed, so the next person to sign in on
+  // this device cannot read what the previous one left behind.
+  await waitFor(() => {
+    expect(queryClient.getQueryData(["notes"])).toBeUndefined();
+  });
+
+  expect(await screen.findByTestId("sign-out-error")).toBeOnTheScreen();
 });
 
 test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 표시한다", async () => {
