@@ -44,6 +44,11 @@ const googleCancelled = {
   type: "cancelled",
 } as unknown as OneTapResponse;
 
+const googleNoCredential = {
+  data: null,
+  type: "noSavedCredentialFound",
+} as unknown as OneTapResponse;
+
 const appleCredential = {
   authorizationCode: null,
   email: null,
@@ -61,6 +66,7 @@ const resendAgainMessage = /다시 받아/;
 const missingWebClientIdMessage = /EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID/;
 const invalidIdTokenMessage = /Invalid ID token/;
 const hexNonce = /^[0-9a-f]{64}$/;
+const noGoogleAccountMessage = /Google 계정이 있는지/;
 
 const originalEnv = {
   ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
@@ -111,6 +117,9 @@ beforeEach(() => {
     .mocked(GoogleOneTapSignIn.presentExplicitSignIn)
     .mockReset()
     .mockResolvedValue(googleSuccess);
+  jest.mocked(GoogleOneTapSignIn.checkPlayServices).mockClear();
+  jest.mocked(GoogleOneTapSignIn.signIn).mockReset();
+  jest.mocked(GoogleOneTapSignIn.createAccount).mockReset();
   jest
     .mocked(signInAsync)
     .mockReset()
@@ -341,6 +350,48 @@ test("Apple 로그인을 취소하면 오류를 띄우지 않는다", async () =
 
   expect(screen.queryByTestId("sign-in-error-provider")).toBeNull();
   expect(fake.auth.signInWithIdToken).not.toHaveBeenCalled();
+});
+
+test("Google이 자격 정보를 찾지 못하면 취소와 달리 안내를 보여준다", async () => {
+  jest
+    .mocked(GoogleOneTapSignIn.presentExplicitSignIn)
+    .mockResolvedValueOnce(googleNoCredential);
+
+  await renderSignIn();
+
+  await press("Google로 계속하기");
+
+  expect(await screen.findByTestId("sign-in-error-provider")).toHaveTextContent(
+    noGoogleAccountMessage
+  );
+  expect(fake.auth.signInWithIdToken).not.toHaveBeenCalled();
+});
+
+test("Android는 자격 정보를 찾을 때까지 계정 목록을 넓혀 간다", async () => {
+  const platform = jest.replaceProperty(Platform, "OS", "android");
+
+  try {
+    jest
+      .mocked(GoogleOneTapSignIn.signIn)
+      .mockResolvedValueOnce(googleNoCredential);
+    jest
+      .mocked(GoogleOneTapSignIn.createAccount)
+      .mockResolvedValueOnce(googleNoCredential);
+
+    await renderSignIn();
+
+    await press("Google로 계속하기");
+
+    await waitFor(() => {
+      expect(fake.auth.signInWithIdToken).toHaveBeenCalled();
+    });
+
+    expect(GoogleOneTapSignIn.checkPlayServices).toHaveBeenCalled();
+    expect(GoogleOneTapSignIn.signIn).toHaveBeenCalled();
+    expect(GoogleOneTapSignIn.createAccount).toHaveBeenCalled();
+  } finally {
+    platform.restore();
+  }
 });
 
 test("Google 설정이 없으면 설정 오류로 구분해 알린다", async () => {
