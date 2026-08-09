@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { signInAsync } from "expo-apple-authentication";
 import { Platform } from "react-native";
 import {
   GoogleOneTapSignIn,
@@ -42,6 +43,19 @@ const googleCancelled = {
   data: null,
   type: "cancelled",
 } as unknown as OneTapResponse;
+
+const appleCredential = {
+  authorizationCode: null,
+  email: null,
+  fullName: { familyName: "Kim", givenName: "Reader" },
+  identityToken: "apple-id-token",
+  user: "apple-user-1",
+};
+
+const appleCancelled = Object.assign(
+  new Error("The user canceled the authorization attempt"),
+  { code: "ERR_REQUEST_CANCELED" }
+);
 
 const resendAgainMessage = /다시 받아/;
 const missingWebClientIdMessage = /EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID/;
@@ -97,6 +111,10 @@ beforeEach(() => {
     .mocked(GoogleOneTapSignIn.presentExplicitSignIn)
     .mockReset()
     .mockResolvedValue(googleSuccess);
+  jest
+    .mocked(signInAsync)
+    .mockReset()
+    .mockRejectedValue(new Error("signInAsync is not stubbed for this test"));
   process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID =
     "web.apps.googleusercontent.com";
   process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID =
@@ -282,6 +300,47 @@ test("Google 계정 선택을 취소하면 오류를 띄우지 않는다", async
 
   expect(screen.queryByTestId("sign-in-error-provider")).toBeNull();
   expect(screen.getByLabelText("Google로 계속하기")).toBeOnTheScreen();
+});
+
+test("Apple 로그인은 해시 nonce를 Apple에, 원본을 Supabase에 넘긴다", async () => {
+  jest.mocked(signInAsync).mockResolvedValueOnce(appleCredential as never);
+
+  await renderSignIn();
+
+  await press("Apple로 계속하기");
+
+  await waitFor(() => {
+    expect(fake.auth.signInWithIdToken).toHaveBeenCalled();
+  });
+
+  const requested = jest.mocked(signInAsync).mock.calls[0]?.[0];
+  const sent = jest.mocked(fake.auth.signInWithIdToken).mock.calls[0]?.[0] as {
+    nonce?: string;
+    provider?: string;
+    token?: string;
+  };
+
+  expect(sent.provider).toBe("apple");
+  expect(sent.token).toBe("apple-id-token");
+  expect(requested?.nonce).toMatch(hexNonce);
+  expect(sent.nonce).not.toBe(requested?.nonce);
+  // Apple hands the name over on the first approval only, so it is used at once.
+  expect(fake.updates[0]?.values).toEqual({ display_name: "Reader Kim" });
+});
+
+test("Apple 로그인을 취소하면 오류를 띄우지 않는다", async () => {
+  jest.mocked(signInAsync).mockRejectedValueOnce(appleCancelled);
+
+  await renderSignIn();
+
+  await press("Apple로 계속하기");
+
+  await waitFor(() => {
+    expect(signInAsync).toHaveBeenCalled();
+  });
+
+  expect(screen.queryByTestId("sign-in-error-provider")).toBeNull();
+  expect(fake.auth.signInWithIdToken).not.toHaveBeenCalled();
 });
 
 test("Google 설정이 없으면 설정 오류로 구분해 알린다", async () => {
