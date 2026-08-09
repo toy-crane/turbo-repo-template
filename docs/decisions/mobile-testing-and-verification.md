@@ -31,7 +31,7 @@
 
 ## 계속 제외하는 대안
 
-- Skill만 설치하고 CLI는 설치하지 않음 — Skill은 실행 엔진이 아니므로 기기를 조작할 수 없다.
-- MCP 또는 Plugin을 기본 연동으로 사용 — 현재 Codex와 Claude는 프로젝트 터미널에서 동일한 CLI를 사용할 수 있어 추가 구성의 이점이 작다.
-- UI 스냅샷 테스트 중심 구성 — 사용자 관점의 동작과 실제 네이티브 렌더링을 충분히 검증하지 못한다.
-- `react-test-renderer`를 직접 사용하는 구성 — React 19 이상에서 권장되지 않으며 React Native Testing Library가 대체한다.
+- Skill만 설치하고 CLI는 설치하지 않음: Skill은 실행 엔진이 아니므로 기기를 조작할 수 없다.
+- MCP 또는 Plugin을 기본 연동으로 사용: 현재 Codex와 Claude는 프로젝트 터미널에서 동일한 CLI를 사용할 수 있어 추가 구성의 이점이 작다.
+- UI 스냅샷 테스트 중심 구성: 사용자 관점의 동작과 실제 네이티브 렌더링을 충분히 검증하지 못한다.
+- `react-test-renderer`를 직접 사용하는 구성: React 19 이상에서 권장되지 않으며 React Native Testing Library가 대체한다.

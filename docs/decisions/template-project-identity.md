@@ -28,6 +28,6 @@
 
 ## 계속 제외하는 대안
 
-- Supabase만 초기화하는 `setup:supabase` — root package와 Expo 식별자가 템플릿 기본값으로 남는다. 프로젝트별 도구 설정을 완전히 독립적으로 운영해야 할 때만 재검토한다.
-- 저장소 전체 문자열 치환 — 문서, 생성물 또는 우연히 같은 문자열을 가진 데이터까지 변경할 수 있다. 치환 대상이 기계적으로 생성된 전용 템플릿 저장소일 때만 재검토한다.
-- 사용자마다 `supabase init` 실행 — 템플릿이 소유하는 declarative schema와 local config를 덮어쓰거나 버전별 기본값 차이를 만든다. 템플릿이 Supabase config를 더 이상 제공하지 않을 때만 재검토한다.
+- Supabase만 초기화하는 `setup:supabase`: root package와 Expo 식별자가 템플릿 기본값으로 남는다. 프로젝트별 도구 설정을 완전히 독립적으로 운영해야 할 때만 재검토한다.
+- 저장소 전체 문자열 치환: 문서, 생성물 또는 우연히 같은 문자열을 가진 데이터까지 변경할 수 있다. 치환 대상이 기계적으로 생성된 전용 템플릿 저장소일 때만 재검토한다.
+- 사용자마다 `supabase init` 실행: 템플릿이 소유하는 declarative schema와 local config를 덮어쓰거나 버전별 기본값 차이를 만든다. 템플릿이 Supabase config를 더 이상 제공하지 않을 때만 재검토한다.

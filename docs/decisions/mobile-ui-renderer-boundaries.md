@@ -1,6 +1,6 @@
 # 모바일 UI 렌더러 경계
 
-## Decisions
+## 결정
 
 - 앱 셸은 Expo Router Native Stack, NativeTabs, `Stack.Toolbar`와 native presentation이 소유한다. 헤더, 탭, 툴바, 시트, 전환 제스처와 Liquid Glass가 여기에 포함된다.
 - Liquid Glass는 운영체제의 셸 표현이며 앱 테마나 콘텐츠 스타일로 구현하지 않는다.
@@ -10,7 +10,7 @@
 - 최상위 화면 제목은 플랫폼의 native Stack 위계를 따른다. 적합한 iOS 첫 화면은 접히는 Large Title, Android는 기본 App Bar를 사용한다.
 - 셸의 시스템 의미, 상태와 접근성 표현이 브랜드 스타일보다 우선한다.
 
-## Boundaries
+## 경계
 
 - Liquid Glass는 navigation과 functional control에만 사용하고 카드, 목록, 설정 섹션 같은 콘텐츠 surface에는 사용하지 않는다.
 - 표준 네이티브 셸로 표현할 수 없는 중요한 floating control에만 custom Glass를 허용한다.
@@ -21,11 +21,11 @@
 - React Native UI 안의 HeroUI `BottomSheet`는 독립 화면이나 route-level presentation을 대체하지 않는다.
 - 네이티브-backed React Native 컴포넌트는 React Native UI 소유권을 유지한다.
 
-## Why
+## 이유
 
 셸을 플랫폼 내비게이션에 맡기면 운영체제의 presentation, gesture, material과 접근성 적응을 보존할 수 있다. 화면별 주 렌더러와 Liquid Glass의 경계를 고정하면 여러 UI 시스템이 같은 surface를 중복해서 스타일링하지 않는다.
 
-## Reconsider when
+## 재검토 조건
 
 - Expo Router의 네이티브 API가 필수 navigation 동작을 지원하지 못한다.
 - 완결된 화면으로 만들 수 없고 React Native UI로 대체할 수도 없는 필수 플랫폼 기능이 생긴다.
@@ -33,7 +33,7 @@
 - Apple이 Liquid Glass의 레이어 또는 사용 원칙을 변경한다.
 - 지원 플랫폼이나 최소 운영체제 정책이 변경된다.
 
-## Still-rejected alternatives
+## 계속 제외하는 대안
 
-- HeroUI `BottomSheet`로 독립 화면이나 route-level sheet를 표시 — Native Stack의 기본 header, toolbar, route 전환과 presentation 소유권을 잃는다. navigation 의미가 없는 동일 화면의 임시 패널 요구가 확인될 때만 다시 검토한다.
-- Liquid Glass를 앱 테마로 만들거나 콘텐츠 surface에 수동 blur를 적용 — 셸과 콘텐츠의 레이어 경계가 사라지고 플랫폼 적응을 중복 구현하게 된다. 운영체제의 레이어 원칙이 바뀔 때만 다시 검토한다.
+- HeroUI `BottomSheet`로 독립 화면이나 route-level sheet를 표시: Native Stack의 기본 header, toolbar, route 전환과 presentation 소유권을 잃는다. navigation 의미가 없는 동일 화면의 임시 패널 요구가 확인될 때만 다시 검토한다.
+- Liquid Glass를 앱 테마로 만들거나 콘텐츠 surface에 수동 blur를 적용: 셸과 콘텐츠의 레이어 경계가 사라지고 플랫폼 적응을 중복 구현하게 된다. 운영체제의 레이어 원칙이 바뀔 때만 다시 검토한다.

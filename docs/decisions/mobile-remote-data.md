@@ -23,4 +23,4 @@ Supabase client만 사용하면 화면마다 loading, error, 중복 요청, 재�
 
 ## 계속 제외하는 대안
 
-- Supabase 요청 상태를 화면별 `useEffect`와 `useState`로 관리 — 중복 요청, cache와 invalidation 규칙이 화면마다 분산된다. 원격 데이터 화면이 한두 개로 영구히 제한될 때만 재검토한다.
+- Supabase 요청 상태를 화면별 `useEffect`와 `useState`로 관리: 중복 요청, cache와 invalidation 규칙이 화면마다 분산된다. 원격 데이터 화면이 한두 개로 영구히 제한될 때만 재검토한다.

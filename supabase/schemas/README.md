@@ -1,6 +1,6 @@
-# Declarative schemas
+# 선언형 스키마
 
-이 디렉터리의 `.sql` 파일이 데이터베이스 구조의 source of truth다. 원하는 최종
+이 디렉터리의 `.sql` 파일이 데이터베이스 구조의 원본이다. 원하는 최종
 상태를 여기에 적고, migration은 `supabase db diff -f <descriptive-name>`으로
 생성한다. migration 파일을 먼저 손으로 쓰지 않는다.
 
@@ -45,8 +45,8 @@ where table_name = '<table>' and grantee in ('anon','authenticated');
 
 ## 이 디렉터리에 두지 않는 것
 
-- DML, backfill, seed 데이터 — `supabase/seed.sql` 또는 별도 versioned migration
-- declarative diff가 표현하지 못하는 객체 — 생성된 migration에 수동으로 보완
+- DML, backfill, seed 데이터: `supabase/seed.sql` 또는 별도 versioned migration
+- declarative diff가 표현하지 못하는 객체: 생성된 migration에 수동으로 보완
 
 자세한 절차는 저장소 루트 `README.md`의 "Changing the Supabase schema" 절을
 따른다.

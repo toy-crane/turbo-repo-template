@@ -4,7 +4,9 @@
 
 - `@repo/supabase`를 모바일과 향후 서버가 함께 사용하는 내부 패키지로 둔다.
 - 공유 패키지는 Supabase 스키마에서 생성한 TypeScript 타입만 소유하는 types-only package로 시작한다.
-- 모바일 앱은 `createClient<Database>`로 singleton client를 직접 만들고, `@supabase/supabase-js`, React Native URL polyfill, Expo SQLite 기반 `localStorage`, `EXPO_PUBLIC_SUPABASE_URL`과 `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`를 소유한다.
+- 모바일 앱은 `createClient<Database>`로 singleton client를 직접 만든다.
+- 이 클라이언트는 `@supabase/supabase-js`, React Native URL polyfill과 Expo SQLite 기반 `localStorage`를 사용한다.
+- 모바일 앱은 `EXPO_PUBLIC_SUPABASE_URL`과 `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`를 읽는다.
 - 템플릿 사용자는 README의 절차에 따라 local stack의 출력 또는 원격 프로젝트 설정에서 공개 URL과 publishable key를 확인하고 `apps/mobile/.env.local`에 직접 설정한다.
 - setup, local stack 시작과 모바일 실행 command는 `apps/mobile/.env.local`을 생성하거나 덮어쓰지 않는다.
 - 향후 서버는 같은 스키마 타입을 사용하되, 서버 런타임의 환경 변수와 권한에 맞는 별도 client를 초기화한다.
@@ -29,7 +31,7 @@
 
 ## 계속 제외하는 대안
 
-- typed client factory를 공유 패키지에 미리 추가 — 현재는 `createClient<Database>` 한 줄만 감싸며 아직 없는 서버를 위한 추상화가 된다. 둘 이상의 런타임에서 공유할 실질적인 초기화 규칙이 생길 때 재검토한다.
-- 완성된 singleton client를 공유 패키지에서 export — Expo storage와 공개 환경 변수 또는 서버 비밀 키가 하나의 초기화 경로에 섞인다. 모든 소비자가 같은 런타임과 권한 문맥을 갖게 될 때만 재검토한다.
-- Supabase 타입과 client를 모바일 앱에만 배치 — 향후 서버가 같은 스키마 계약을 중복 생성하고 관리하게 된다. 서버 추가 계획이 폐기될 때만 재검토한다.
-- `db:start` 또는 모바일 실행 command가 local 접속 정보를 자동 주입하거나 env 파일을 갱신 — 원격 설정을 덮어쓸 수 있고 환경 선택을 위한 추가 상태와 command가 생긴다. local과 원격을 자주 전환해 수동 설정 오류가 실제 문제로 확인될 때만 재검토한다.
+- typed client factory를 공유 패키지에 미리 추가: 현재는 `createClient<Database>` 한 줄만 감싸며 아직 없는 서버를 위한 추상화가 된다. 둘 이상의 런타임에서 공유할 실질적인 초기화 규칙이 생길 때 재검토한다.
+- 완성된 singleton client를 공유 패키지에서 export: Expo storage와 공개 환경 변수 또는 서버 비밀 키가 하나의 초기화 경로에 섞인다. 모든 소비자가 같은 런타임과 권한 문맥을 갖게 될 때만 재검토한다.
+- Supabase 타입과 client를 모바일 앱에만 배치: 향후 서버가 같은 스키마 계약을 중복 생성하고 관리하게 된다. 서버 추가 계획이 폐기될 때만 재검토한다.
+- `db:start` 또는 모바일 실행 command가 local 접속 정보를 자동 주입하거나 env 파일을 갱신: 원격 설정을 덮어쓸 수 있고 환경 선택을 위한 추가 상태와 command가 생긴다. local과 원격을 자주 전환해 수동 설정 오류가 실제 문제로 확인될 때만 재검토한다.
