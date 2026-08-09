@@ -1,16 +1,19 @@
--- Sample table. It exists so the schema → migration → reset → types workflow has
--- something real to run through, and so the generated Database type is not empty.
--- Delete it once the first real table lands.
-create table public.notes (
-  id bigint generated always as identity primary key,
-  title text not null,
-  body text not null default '',
+-- One profile row per Supabase user. `auth.users` stays the source of identity;
+-- this table holds only the values a user may edit about themselves, so provider
+-- data (email, provider name, avatar) is never duplicated here.
+create table public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  display_name text,
+  avatar_url text,
   created_at timestamptz not null default now(),
-  constraint notes_title_not_blank check (length(btrim(title)) > 0)
+  updated_at timestamptz not null default now()
 );
 
-comment on table public.notes is
-  'Sample public read-only notes. Replace with real product tables.';
+comment on table public.profiles is
+  'User-editable profile, one row per auth.users row. Created by trigger, never by clients.';
 
--- Newest first is the only access path the sample has.
-create index notes_created_at_idx on public.notes (created_at desc);
+comment on column public.profiles.display_name is
+  'Name shown in the app. Providers only fill this while it is null.';
+
+comment on column public.profiles.avatar_url is
+  'Image shown in the app. Providers only fill this while it is null.';

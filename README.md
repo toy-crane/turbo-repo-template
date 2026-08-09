@@ -287,6 +287,7 @@ bun run db:start
 bun run db:status
 bun run db:stop
 bun run db:reset
+bun run db:test
 ```
 
 `bun run db:start`는 API URL과 publishable key를 포함한 접속 정보를 출력합니다.
@@ -319,7 +320,14 @@ bun run db:reset
    bun run db:types
    ```
 
-6. 스키마, 마이그레이션, 생성 타입과 관련 데이터베이스 테스트를 하나의 논리적 변경으로 커밋합니다.
+6. 데이터베이스 테스트를 실행합니다.
+   테스트 파일은 `supabase/tests/*_test.sql`에 두고 pgTAP으로 작성합니다.
+
+   ```bash
+   bun run db:test
+   ```
+
+7. 스키마, 마이그레이션, 생성 타입과 관련 데이터베이스 테스트를 하나의 논리적 변경으로 커밋합니다.
 
 이미 배포한 마이그레이션은 수정하지 마세요.
 변경이 필요하면 앞으로 진행하는 새 마이그레이션을 추가합니다.
