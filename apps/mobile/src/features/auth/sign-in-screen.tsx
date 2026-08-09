@@ -15,6 +15,7 @@ import { TextField } from "heroui-native/text-field";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, ScrollView, Text, useColorScheme, View } from "react-native";
 import { GoogleSignInButton } from "react-native-nitro-google-signin";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getSupabaseClient } from "../../supabase/client";
 import { signInWithApple } from "./apple-sign-in";
@@ -38,6 +39,7 @@ import {
 } from "./provider-sign-in";
 
 const SECOND_MS = 1000;
+const SCREEN_PADDING = 24;
 const APPLE_BUTTON_HEIGHT = 48;
 const GOOGLE_BUTTON_HEIGHT = 48;
 
@@ -108,6 +110,9 @@ export function SignInScreen() {
   const [failure, setFailure] = useState<ScopedFailure | undefined>();
   const [secondsLeft, setSecondsLeft] = useState(0);
   const colorScheme = useColorScheme();
+  // This screen has no header, so the scroll view starts at the very top of the
+  // display and the title would sit under the status bar without this.
+  const insets = useSafeAreaInsets();
   const appName = Constants.expoConfig?.name ?? "앱";
   const isBusy = pending !== undefined;
   const running = useRef<PendingAction | undefined>(undefined);
@@ -263,7 +268,11 @@ export function SignInScreen() {
   return (
     <ScrollView
       className="bg-background"
-      contentContainerClassName="gap-5 px-6 pt-10 pb-8"
+      contentContainerClassName="gap-5 px-6 pb-8"
+      contentContainerStyle={{
+        paddingBottom: insets.bottom + SCREEN_PADDING,
+        paddingTop: insets.top + SCREEN_PADDING,
+      }}
       keyboardShouldPersistTaps="handled"
     >
       <View className="gap-2">
@@ -280,7 +289,17 @@ export function SignInScreen() {
       {isCodeStep ? (
         <View className="gap-4">
           <View className="gap-2">
-            <Label>인증 코드</Label>
+            {/*
+              The field itself carries the name, so the visible label stays out
+              of the accessibility tree. Otherwise "인증 코드" matches two nodes
+              and a selector can land on the caption instead of the input.
+            */}
+            <Label
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              인증 코드
+            </Label>
             <InputOTP
               isDisabled={isBusy}
               maxLength={OTP_LENGTH}
@@ -365,7 +384,12 @@ export function SignInScreen() {
           </View>
 
           <TextField>
-            <Label>이메일</Label>
+            <Label
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              이메일
+            </Label>
             <Input
               accessibilityLabel={signInLabels.email}
               autoCapitalize="none"

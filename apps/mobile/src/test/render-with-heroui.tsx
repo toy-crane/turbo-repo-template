@@ -1,7 +1,15 @@
 import { render } from "@testing-library/react-native";
 import { HeroUINativeProviderRaw } from "heroui-native/provider-raw";
 import type { ReactElement } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Uniwind } from "uniwind";
+
+// Fixed metrics rather than the device's: a screen that reads insets should
+// render the same way on every machine that runs the tests.
+const testSafeAreaMetrics = {
+  frame: { height: 852, width: 393, x: 0, y: 0 },
+  insets: { bottom: 34, left: 0, right: 0, top: 59 },
+};
 
 const testThemeVariables = {
   "--color-accent": "#4285f4",
@@ -21,8 +29,10 @@ Uniwind.updateCSSVariables("dark", testThemeVariables);
 
 export function renderWithHeroUI(element: ReactElement) {
   return render(
-    <HeroUINativeProviderRaw config={{ animation: "disable-all" }}>
-      {element}
-    </HeroUINativeProviderRaw>
+    <SafeAreaProvider initialMetrics={testSafeAreaMetrics}>
+      <HeroUINativeProviderRaw config={{ animation: "disable-all" }}>
+        {element}
+      </HeroUINativeProviderRaw>
+    </SafeAreaProvider>
   );
 }
