@@ -41,7 +41,9 @@ from information_schema.role_table_grants
 where table_name = '<table>' and grantee in ('anon','authenticated');
 ```
 
-`supabase/migrations/20260808225021_create_notes.sql`이 이 보정의 예입니다.
+`supabase/migrations/20260809060236_create_profiles.sql`이 이 보정의 예입니다.
+같은 마이그레이션은 기존 `auth.users` 행의 누락된 프로필을 채우는 DML도 손으로 넣었습니다.
+선언형 diff는 구조만 표현하므로 이런 보충 데이터는 항상 직접 추가해야 합니다.
 
 ## 이 디렉터리에 두지 않는 것
 

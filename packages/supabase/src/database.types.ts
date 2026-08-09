@@ -34,24 +34,27 @@ export type Database = {
   }
   public: {
     Tables: {
-      notes: {
+      profiles: {
         Row: {
-          body: string
+          avatar_url: string | null
           created_at: string
-          id: number
-          title: string
+          display_name: string | null
+          id: string
+          updated_at: string
         }
         Insert: {
-          body?: string
+          avatar_url?: string | null
           created_at?: string
-          id?: never
-          title: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
         }
         Update: {
-          body?: string
+          avatar_url?: string | null
           created_at?: string
-          id?: never
-          title?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
