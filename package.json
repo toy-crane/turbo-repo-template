@@ -9,6 +9,7 @@
   "scripts": {
     "agent-device": "agent-device",
     "agent-device:doctor": "agent-device doctor",
+    "auth:otp": "bun scripts/auth/read-local-email-otp.ts",
     "build": "turbo run build",
     "check": "turbo run check",
     "check-types": "turbo run check-types",
