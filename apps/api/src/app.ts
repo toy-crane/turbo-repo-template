@@ -1,0 +1,74 @@
+import { AuthError } from "@supabase/server";
+import { withSupabase } from "@supabase/server/adapters/hono";
+import {
+  convertToModelMessages,
+  type LanguageModel,
+  safeValidateUIMessages,
+  streamText,
+} from "ai";
+import { Hono, type MiddlewareHandler } from "hono";
+import { HTTPException } from "hono/http-exception";
+
+import { resolveModelId } from "./env";
+
+export interface AppDependencies {
+  /**
+   * The gate on the AI route. Tests replace it to reach the handler without a
+   * real Supabase project; nothing else should.
+   */
+  auth?: MiddlewareHandler;
+  /**
+   * The model to call. Left unset, the server reads `AI_GATEWAY_MODEL` per
+   * request, which is also what keeps tests off the real AI Gateway.
+   */
+  model?: LanguageModel;
+}
+
+const UNAUTHORIZED_STATUS = 401;
+
+export function createApp(dependencies: AppDependencies = {}): Hono {
+  // Built once per app rather than per request, and applied to the AI route
+  // only. An `app.use('*')` middleware would run before route middleware and
+  // would take `/health` with it.
+  const requireUser = dependencies.auth ?? withSupabase({ auth: "user" });
+  const app = new Hono();
+
+  // Deliberately free of auth and of any model call: this answers whether the
+  // server is deployed and running, nothing about the AI configuration.
+  app.get("/health", (c) => c.json({ status: "ok" }));
+
+  app.post("/ai/chat", requireUser, async (c) => {
+    const body: unknown = await c.req.json().catch(() => null);
+    const messages = await safeValidateUIMessages({
+      messages: (body as { messages?: unknown } | null)?.messages,
+    });
+
+    // Returning here is what keeps a malformed body from reaching the model,
+    // so a bad request never costs a generation.
+    if (!messages.success) {
+      return c.json({ error: "Invalid request body." }, 400);
+    }
+
+    const result = streamText({
+      messages: await convertToModelMessages(messages.data),
+      model: dependencies.model ?? resolveModelId(),
+    });
+
+    return result.toUIMessageStreamResponse();
+  });
+
+  app.onError((error, c) => {
+    const cause = error instanceof HTTPException ? error.cause : undefined;
+
+    if (cause instanceof AuthError && cause.status === UNAUTHORIZED_STATUS) {
+      return c.json({ error: "Unauthorized." }, UNAUTHORIZED_STATUS);
+    }
+
+    // Everything else answers the same way on purpose. A missing environment
+    // variable and a provider failure both describe the server's own setup,
+    // and neither belongs in a response the app can read.
+    return c.json({ error: "Internal server error." }, 500);
+  });
+
+  return app;
+}
