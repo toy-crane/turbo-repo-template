@@ -4,6 +4,7 @@ import {
   AuthConfigurationError,
   classifyAuthError,
   MissingProviderTokenError,
+  NoProviderCredentialError,
 } from "./auth-errors";
 
 function supabaseError(fields: { code?: string; status?: number }) {
@@ -42,6 +43,13 @@ describe("classifyAuthError", () => {
     expect(classifyAuthError(new MissingProviderTokenError()).kind).toBe(
       "missingToken"
     );
+  });
+
+  test("자격 정보를 찾지 못한 경우는 취소와 다르게 안내한다", () => {
+    const failure = classifyAuthError(new NoProviderCredentialError());
+
+    expect(failure.kind).toBe("noProviderCredential");
+    expect(failure.message).not.toBe("");
   });
 
   test("Supabase의 재시도 가능한 통신 오류는 네트워크로 본다", () => {

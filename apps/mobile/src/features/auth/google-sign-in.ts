@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 import {
   GoogleOneTapSignIn,
   isCancelledResponse,
+  isNoSavedCredentialFoundResponse,
   isSuccessResponse,
   type OneTapResponse,
 } from "react-native-nitro-google-signin";
@@ -9,6 +10,7 @@ import {
 import {
   AuthConfigurationError,
   MissingProviderTokenError,
+  NoProviderCredentialError,
 } from "./auth-errors";
 import {
   GOOGLE_IOS_CLIENT_ID_ENV,
@@ -88,8 +90,19 @@ export async function signInWithGoogle(): Promise<
       ? await GoogleOneTapSignIn.presentExplicitSignIn()
       : await signInOnAndroid();
 
-  if (!isSuccessResponse(response)) {
+  // Three outcomes, not two. Closing the sheet is a decision and stays silent,
+  // but "the SDK found no credential" is a dead end the person has to hear
+  // about — treating it as a cancellation makes the button look broken.
+  if (isCancelledResponse(response)) {
     return;
+  }
+
+  if (!isSuccessResponse(response)) {
+    throw new NoProviderCredentialError(
+      isNoSavedCredentialFoundResponse(response)
+        ? "Google SDK found no saved credential."
+        : `Google SDK returned an unexpected response: ${response.type}.`
+    );
   }
 
   const { idToken, user } = response.data;

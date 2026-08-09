@@ -15,6 +15,7 @@ export type AuthFailureKind =
   | "invalidEmail"
   | "missingToken"
   | "network"
+  | "noProviderCredential"
   | "rateLimited"
   | "unknown";
 
@@ -29,6 +30,15 @@ export class AuthConfigurationError extends Error {}
 
 /** The provider reported success but handed back no ID token. */
 export class MissingProviderTokenError extends Error {}
+
+/**
+ * The provider's SDK finished without a credential and without a cancellation.
+ *
+ * Named for what the SDK reported rather than for a cause, because the app
+ * cannot tell why: the usual reason is that the device has no account for that
+ * provider, but the SDK does not say so.
+ */
+export class NoProviderCredentialError extends Error {}
 
 const CANCELLED_CODES = new Set([
   // expo-apple-authentication
@@ -85,6 +95,14 @@ export function classifyAuthError(error: unknown): AuthFailure {
 
   if (CANCELLED_CODES.has(readStringField(error, "code") ?? "")) {
     return { kind: "cancelled", message: "" };
+  }
+
+  if (error instanceof NoProviderCredentialError) {
+    return {
+      kind: "noProviderCredential",
+      message:
+        "Google 로그인을 마치지 못했습니다. 기기에 Google 계정이 있는지 확인한 뒤 다시 시도해 주세요.",
+    };
   }
 
   if (error instanceof MissingProviderTokenError) {
