@@ -1,5 +1,18 @@
-import { expect, jest, test } from "@jest/globals";
+import { beforeEach, expect, jest, test } from "@jest/globals";
 import { renderRouter, screen } from "expo-router/testing-library";
+
+import { createFakeSession, resetFakeSupabase } from "../test/fake-supabase";
+
+jest.mock("../supabase/client", () => ({
+  getSupabaseClient: () =>
+    (
+      require("../test/fake-supabase") as typeof import("../test/fake-supabase")
+    ).getFakeSupabase().client,
+}));
+
+beforeEach(() => {
+  resetFakeSupabase({ session: createFakeSession() });
+});
 
 jest.mock("../features/home/home-screen", () => {
   const React = require("react") as typeof import("react");
