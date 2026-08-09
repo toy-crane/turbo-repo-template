@@ -1,10 +1,25 @@
-import { expect, jest, test } from "@jest/globals";
-import { render, screen } from "@testing-library/react-native";
+import { beforeEach, expect, jest, test } from "@jest/globals";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
 import { Platform } from "react-native";
 
+import { AppQueryProvider } from "../../query/app-query-provider";
+import { createFakeSession, resetFakeSupabase } from "../../test/fake-supabase";
 import { AppThemeBridge } from "../../theme/app-theme-bridge";
 import { SettingsScreen } from "./settings-screen";
+
+jest.mock("../../supabase/client", () => ({
+  getSupabaseClient: () =>
+    (
+      require("../../test/fake-supabase") as typeof import("../../test/fake-supabase")
+    ).getFakeSupabase().client,
+}));
 
 jest.mock("@expo/ui", () => {
   const React = require("react") as typeof import("react");
@@ -24,6 +39,30 @@ jest.mock("@expo/ui", () => {
   const FieldGroup = Object.assign(Container, { Section: Container });
 
   return {
+    // The native button exposes its own label as its accessible name, so the
+    // stand-in does the same and tests can find it the way agent-device does.
+    Button: ({
+      disabled,
+      label,
+      onPress,
+      testID,
+    }: {
+      disabled?: boolean;
+      label?: string;
+      onPress?: () => void;
+      testID?: string;
+    }) =>
+      React.createElement(
+        Pressable,
+        {
+          accessibilityLabel: label,
+          accessibilityRole: "button",
+          disabled,
+          onPress,
+          testID,
+        },
+        label ? React.createElement(NativeText, null, label) : null
+      ),
     FieldGroup,
     Host: Container,
     Row: Container,
@@ -60,15 +99,70 @@ jest.mock("uniwind", () => ({
   useUniwind: () => ({ hasAdaptiveThemes: true, theme: "light" }),
 }));
 
+beforeEach(() => {
+  resetFakeSupabase({ session: createFakeSession() });
+});
+
+function renderSettings() {
+  return render(
+    <AppQueryProvider>
+      <AppThemeBridge>
+        <SettingsScreen />
+      </AppThemeBridge>
+    </AppQueryProvider>
+  );
+}
+
+test("로그아웃은 현재 기기 세션만 끝낸다", async () => {
+  const fake = resetFakeSupabase({ session: createFakeSession() });
+
+  await renderSettings();
+
+  fireEvent.press(screen.getByRole("button", { name: "로그아웃" }));
+
+  await waitFor(() => {
+    expect(fake.auth.signOut).toHaveBeenCalledWith({ scope: "local" });
+  });
+});
+
+test("로그아웃이 끝나기 전에는 같은 버튼을 다시 실행하지 않는다", async () => {
+  const fake = resetFakeSupabase({ session: createFakeSession() });
+  let release = () => {
+    // Replaced by the pending implementation below.
+  };
+
+  fake.auth.signOut.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        release = () => resolve({ error: null });
+      })
+  );
+
+  await renderSettings();
+
+  await act(() => {
+    fireEvent.press(screen.getByRole("button", { name: "로그아웃" }));
+  });
+
+  const pending = await screen.findByRole("button", { name: "로그아웃 중" });
+
+  await act(() => {
+    fireEvent.press(pending);
+    fireEvent.press(pending);
+  });
+
+  await act(() => {
+    release();
+  });
+
+  expect(fake.auth.signOut).toHaveBeenCalledTimes(1);
+});
+
 test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 표시한다", async () => {
   const platform = jest.replaceProperty(Platform, "OS", "android");
 
   try {
-    await render(
-      <AppThemeBridge>
-        <SettingsScreen />
-      </AppThemeBridge>
-    );
+    await renderSettings();
 
     expect(screen.getAllByText("Notifications")).toHaveLength(1);
     expect(screen.getAllByText("Haptics")).toHaveLength(1);

@@ -1,4 +1,4 @@
-import { expect, jest, test } from "@jest/globals";
+import { beforeEach, expect, jest, test } from "@jest/globals";
 import { fireEvent } from "@testing-library/react-native";
 import { router as expoRouter } from "expo-router";
 import {
@@ -8,7 +8,22 @@ import {
   waitFor,
 } from "expo-router/testing-library";
 
+import { createFakeSession, resetFakeSupabase } from "../test/fake-supabase";
+
 const heroUIPreviewLabel = /^HeroUI Native preview\./;
+
+// Every route below the root layout is behind the session guard, so these tests
+// start from a signed-in app. The guard itself is covered in auth-routing.test.
+jest.mock("../supabase/client", () => ({
+  getSupabaseClient: () =>
+    (
+      require("../test/fake-supabase") as typeof import("../test/fake-supabase")
+    ).getFakeSupabase().client,
+}));
+
+beforeEach(() => {
+  resetFakeSupabase({ session: createFakeSession() });
+});
 
 jest.mock("../features/activity/activity-screen", () => {
   const React = require("react") as typeof import("react");
