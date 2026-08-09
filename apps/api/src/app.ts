@@ -85,7 +85,16 @@ export function createApp(dependencies: AppDependencies = {}): Hono {
     // and neither belongs in a response the app can read. It does belong in
     // the server's own log, though — without this the generic response is the
     // only trace the failure leaves.
-    console.error("Unhandled error on", c.req.method, c.req.path, error);
+    //
+    // Only the name and the message, never the error object. An AI SDK call
+    // error carries the request it sent, which is the person's whole
+    // conversation; printing the object would copy that into the server log.
+    console.error(
+      "Unhandled error on",
+      c.req.method,
+      c.req.path,
+      error instanceof Error ? `${error.name}: ${error.message}` : "unknown"
+    );
 
     return c.json({ error: "Internal server error." }, 500);
   });
