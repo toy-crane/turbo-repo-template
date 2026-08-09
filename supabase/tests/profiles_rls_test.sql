@@ -1,6 +1,6 @@
 -- What the Data API roles can actually do, exercised as those roles.
 BEGIN;
-SELECT plan(11);
+SELECT plan(14);
 
 INSERT INTO auth.users (id, email)
 VALUES
@@ -62,6 +62,36 @@ SELECT lives_ok(
     set display_name = 'Hijacked'
     where id = '22222222-2222-4222-8222-222222222222'$$,
   'updating another user''s profile raises nothing'
+);
+
+-- RLS decides whose row may change. These decide what may go in it: without
+-- them a signed-in user can store a name made of spaces, a name the size of a
+-- file, or an avatar_url carrying a javascript: payload, all on their own row.
+SELECT throws_ok(
+  $$update public.profiles
+    set display_name = '   '
+    where id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514',
+  NULL,
+  'a display name of only spaces is rejected'
+);
+
+SELECT throws_ok(
+  $$update public.profiles
+    set display_name = repeat('a', 101)
+    where id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514',
+  NULL,
+  'an over-long display name is rejected'
+);
+
+SELECT throws_ok(
+  $$update public.profiles
+    set avatar_url = 'javascript:alert(1)'
+    where id = '11111111-1111-4111-8111-111111111111'$$,
+  '23514',
+  NULL,
+  'an avatar url that is not https is rejected'
 );
 
 SELECT throws_ok(
