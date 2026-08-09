@@ -163,6 +163,10 @@ Nitro Google Sign-In의 Expo config plugin, 공개 client ID와 iOS URL scheme�
    - Client Secret에는 Web client secret을 넣습니다.
    - nonce 검사를 끄지 않습니다.
 
+Android에서 Google 버튼이 아무 반응 없이 끝나면 대부분 이 SHA-1 등록이 빠진 것입니다.
+Credential Manager는 사용자가 창을 닫았을 때와 설정이 맞지 않을 때를 같은 값으로 알려 주므로
+앱은 둘을 구분해서 알려 줄 수 없습니다. [문제 해결](#문제-해결)을 참고하세요.
+
 Web client secret은 Supabase Dashboard에만 저장합니다. 모바일 환경 변수와 Git에는 넣지
 않습니다. 자세한 내용은 [Expo Google 인증](https://docs.expo.dev/guides/google-authentication/),
 [Nitro Google Sign-In 설정](https://react-native-nitro-google-sign-in.github.io/docs/setup/google-cloud),
@@ -314,9 +318,10 @@ bun run auth:otp -- --email agent-20260809-01@example.test
 | `로그인 상태 확인 중` | 세션 확인 중 화면 |
 | `로그아웃` | 설정 화면 |
 
-Google과 Apple 버튼은 각 제공자가 그리는 네이티브 버튼입니다.
-버튼 자체는 제공자가 정한 이름(`Sign in with Google`, `Continue with Apple`)을 쓰고,
-위 표의 이름은 그 버튼을 감싸는 행이 가집니다.
+Google과 Apple 버튼은 각 제공자가 그리는 네이티브 버튼이지만, 위 표의 이름은 앱이 버튼
+자체에 붙입니다. Apple 버튼에서는 이 이름이 Apple이 정한 현지화 이름을 대신합니다.
+기기의 접근성 트리에서는 네이티브 버튼을 감싸는 행에도 같은 이름이 함께 보일 수 있습니다.
+누를 대상은 버튼 쪽입니다.
 인증 코드 입력은 이름과 별개로 입력한 자릿수를 값으로 알려 줍니다.
 
 관리자 API, `service_role`, 고정 JWT로 만든 세션은 로그인 확인으로 인정하지 않습니다.
@@ -513,3 +518,4 @@ Supabase 세션에는 베어러 토큰이 들어 있습니다.
 - **빌드나 앱이 환경 변수 누락을 보고할 때**: `.env.local`을 채우고 번들러를 다시 시작하세요. 오류 메시지에서 누락된 변수 이름을 확인할 수 있습니다.
 - **앱이 로컬 API에 연결되지 않을 때**: `http://127.0.0.1:54321`은 iOS Simulator에서만 그대로 사용할 수 있습니다. Android Emulator는 `10.0.2.2`로 호스트의 loopback에 연결합니다. 실제 기기에서는 개발 컴퓨터의 LAN IP가 필요합니다. 사용하는 기기에서 접근할 수 있는 주소를 찾아 `EXPO_PUBLIC_SUPABASE_URL`에 넣으세요. 이 템플릿은 터널을 자동으로 만들거나 호스트 주소를 바꾸지 않습니다.
 - **네이티브 모듈을 추가했을 때**: `expo-sqlite`처럼 네이티브 코드가 있는 의존성은 기존 Development Build에서 실행할 수 없습니다. `ios` 또는 `android` 명령으로 다시 빌드하세요.
+- **Android에서 Google 버튼을 눌렀는데 아무 반응이 없을 때**: 앱이 취소로 처리한 것입니다. Credential Manager는 사용자가 창을 닫았을 때와 SHA-1, package, client ID가 맞지 않을 때를 같은 값으로 알려 주므로, 앱은 둘을 구분할 수 없습니다. 계정을 고른 뒤에 이렇게 되면 서명 지문 문제일 가능성이 큽니다. `adb logcat`에서 `NitroGoogleSignin` 경고를 확인하고, 지금 설치본을 서명한 SHA-1이 Android OAuth client에 등록되어 있는지 보세요. 배포 빌드라면 release 키와 Play App Signing 지문도 등록해야 합니다.
