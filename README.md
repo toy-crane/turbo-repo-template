@@ -299,8 +299,18 @@ bun run auth:otp -- --email agent-20260809-01@example.test
 3. 위 명령으로 코드를 읽습니다.
 4. 인증 코드 입력에 코드를 넣습니다.
 5. 보호 화면이 열렸는지 확인합니다.
-6. 설정에서 로그아웃합니다.
-7. 로그인 화면으로 돌아왔는지 확인합니다.
+6. Home에서 메시지를 보내고, 생성 중 표시와 답변이 차례로 나오는지 확인합니다.
+7. 설정에서 로그아웃합니다.
+8. 로그인 화면으로 돌아왔는지 확인합니다.
+
+6번을 실행하려면 [AI 채팅 API](#ai-채팅-api)가 떠 있어야 합니다.
+
+Android에서는 헤더의 `Open settings`를 누르면 Expo dev-client 메뉴가 열립니다.
+설정 화면은 앱의 딥 링크로 엽니다.
+
+```bash
+adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://settings" com.toycrane.turborepotemplate.mobile
+```
 
 화면 요소는 접근성 이름으로 찾습니다.
 같은 이름을 React Native Testing Library 테스트도 사용합니다.
@@ -317,6 +327,15 @@ bun run auth:otp -- --email agent-20260809-01@example.test
 | `다른 이메일 사용` | 이메일 수정 버튼 |
 | `로그인 상태 확인 중` | 세션 확인 중 화면 |
 | `로그아웃` | 설정 화면 |
+| `메시지` | Home 채팅 입력 |
+| `보내기` | Home 채팅 전송 버튼 |
+| `답변을 만드는 중` | 답변 생성 중 표시 |
+| `다시 보내기` | 실패한 요청 재시도 버튼 |
+
+채팅 화면의 요소에는 `testID`도 있습니다.
+`chat-input`, `chat-send`, `chat-generating`, `chat-error`, `chat-message-user`, `chat-message-assistant`입니다.
+메시지 `testID`는 말풍선이 아니라 글자에 붙어 있어서 `get text`가 답변 자체를 돌려줍니다.
+대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 앱을 다시 시작해 대화를 비우고 한 건만 보냅니다.
 
 Google과 Apple 버튼은 각 제공자가 그리는 네이티브 버튼이지만, 위 표의 이름은 앱이 버튼
 자체에 붙입니다. Apple 버튼에서는 이 이름이 Apple이 정한 현지화 이름을 대신합니다.
@@ -369,6 +388,40 @@ bun run --cwd apps/mobile test:watch
 ```bash
 bun run agent-device:doctor
 ```
+
+## AI 채팅 API
+
+`apps/api`는 Hono 앱이며 모바일 앱과 다른 Vercel 프로젝트에 배포합니다.
+`GET /health`는 인증 없이 서버 상태만 알려 주고, `POST /ai/chat`은 로그인한 사용자의 access token을 요구합니다.
+
+1. [apps/api/.env.example](apps/api/.env.example)을 참고해 `apps/api/.env.local`을 만듭니다.
+
+   ```dotenv
+   AI_GATEWAY_API_KEY=<Vercel AI Gateway 키>
+   AI_GATEWAY_MODEL=openai/gpt-4.1-nano
+   SUPABASE_URL=http://127.0.0.1:54321
+   SUPABASE_JWKS_URL=http://localhost:54321/auth/v1/.well-known/jwks.json
+   SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+   ```
+
+2. 서버를 실행합니다. 다른 포트를 쓰려면 `BUN_PORT`를 지정합니다.
+
+   ```bash
+   bun run --cwd apps/api dev
+   ```
+
+3. `apps/mobile/.env.local`에 API 주소를 넣습니다.
+   Simulator와 Emulator가 실제로 닿는 주소여야 하며, 자동으로 바꿔 주지 않습니다.
+
+   | 실행 대상 | `EXPO_PUBLIC_API_URL` | `EXPO_PUBLIC_SUPABASE_URL` |
+   | --- | --- | --- |
+   | iOS Simulator | `http://127.0.0.1:3000` | `http://127.0.0.1:54321` |
+   | Android Emulator | `http://10.0.2.2:3000` | `http://10.0.2.2:54321` |
+
+   값을 바꾼 뒤에는 Metro를 다시 시작해야 번들에 반영됩니다.
+
+모델은 서버 설정입니다. 모바일 앱은 모델을 고르지 않고 요청에 모델 이름을 넣지 않습니다.
+대화는 `useChat()` 메모리에만 있으므로 앱을 다시 시작하면 사라집니다.
 
 ## 로컬 Supabase 스택
 

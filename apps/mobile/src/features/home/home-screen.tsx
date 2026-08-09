@@ -39,13 +39,18 @@ function ChatMessage({ message }: { message: UIMessage }) {
           ? "self-end rounded-2xl bg-accent px-4 py-3"
           : "self-start rounded-2xl bg-surface px-4 py-3"
       }
-      testID={`chat-message-${message.role}`}
     >
+      {/*
+        The name sits on the text, not on the bubble around it, so `get text`
+        returns the answer itself. On the container it returns only the id,
+        which cannot tell an empty answer from a full one.
+      */}
       <Text
         className={
           isUser ? "text-accent-foreground" : "text-surface-foreground"
         }
         selectable
+        testID={`chat-message-${message.role}`}
       >
         {messageText(message)}
       </Text>
