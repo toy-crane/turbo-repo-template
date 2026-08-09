@@ -6,7 +6,12 @@
     "check": "ultracite check .",
     "check-types": "tsc --noEmit",
     "fix": "ultracite fix .",
-    "test": "bun test --pass-with-no-tests"
+    "test": "bun test setup auth",
+    "test:integration": "bun test integration"
+  },
+  "dependencies": {
+    "@repo/supabase": "workspace:*",
+    "@supabase/supabase-js": "2.112.2"
   },
   "devDependencies": {
     "@types/bun": "1.3.14",
