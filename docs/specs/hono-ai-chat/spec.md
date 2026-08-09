@@ -2,7 +2,7 @@
 
 ## 목표
 
-별도 Vercel 프로젝트에 배포하는 Hono API와 Expo 모바일 앱을 Vercel AI SDK의 UI message stream으로 연결한다. 로그인한 사용자는 Home 화면에서 메시지를 보내고 생성되는 답변을 바로 볼 수 있다. 첫 버전은 연결과 스트리밍 검증에 집중하며 대화를 저장하지 않는다.
+별도 Vercel 프로젝트에 배포하는 Hono API와 Expo 모바일 앱을 Vercel AI SDK의 UI message stream으로 연결한다. 로그인한 사용자는 Home 화면에서 메시지를 보내고 생성되는 답변을 바로 볼 수 있다. 에이전트는 실제 이메일 OTP 로그인부터 AI 응답까지 E2E로 검증한다. 첫 버전은 연결과 스트리밍 검증에 집중하며 대화를 저장하지 않는다.
 
 이 명세는 인증을 구현하지 않는다. `origin/main`의 모바일 인증 명세를 먼저 구현하고 검증한 뒤, 그 구현이 제공하는 Supabase 세션과 보호 경로를 사용한다.
 
@@ -104,14 +104,20 @@ EXPO_PUBLIC_API_URL=
 
 API 주소는 Simulator와 Emulator에서 실제로 접근할 수 있는 주소여야 한다. 로컬 주소와 배포 주소를 자동으로 바꾸는 별도 도구는 만들지 않는다.
 
-### 테스트와 확인
+### 테스트와 E2E 확인
 
 - Hono 경로 테스트는 공식 `app.request()` 방식으로 실행한다.
 - 서버 테스트는 공개 health 응답, 인증 없는 AI 요청 거절, 인증된 요청의 UI message stream 반환과 잘못된 본문 거절을 확인한다.
 - 성공 경로는 가짜 모델을 사용한다. 자동 테스트에서 실제 AI Gateway 비용을 만들지 않는다.
 - 모바일 컴포넌트 테스트는 가짜 전송 계층으로 사용자 메시지 전송, 생성 중 상태, 스트리밍 답변 표시와 오류 상태를 확인한다.
 - 인증 화면과 제공자 로그인을 이번 컴포넌트 테스트에서 다시 검사하지 않는다. 선행 인증 명세의 테스트를 그대로 유지한다.
-- Development Build에서는 먼저 선행 인증 흐름으로 로그인한다. 그 세션으로 iOS와 Android에서 각각 메시지 한 번과 스트리밍 답변 한 번을 확인한다.
+- 에이전트 E2E는 프로젝트에 고정된 `agent-device` CLI와 선행 인증 명세의 `bun run auth:otp -- --email <고유한-로컬-테스트-이메일>` 명령을 사용한다.
+- iOS와 Android에서 각각 하나의 `agent-device` 세션으로 앱 열기, 로그인 화면 확인, 고유 이메일 입력, OTP 요청, Mailpit에서 OTP 읽기, OTP 입력, 보호된 Home 확인, 메시지 전송, 생성 중 상태 확인, 실제 스트리밍 답변 확인, 로그아웃과 로그인 화면 복귀를 이어서 실행한다.
+- 에이전트 E2E는 실제 로컬 Supabase Auth, 실제 Hono API와 실제 AI Gateway 모델을 사용한다. 정확한 답변 문구 대신 비어 있지 않은 assistant 응답이 스트리밍되어 화면에 남는지를 확인한다.
+- `agent-device`는 최신 `snapshot -i` 또는 `--settle` 결과의 ref와 selector를 사용한다. 이름이 있는 기대 결과는 `wait`, `get`, `is`, `find` 또는 settled diff로 확인하며 스크린샷만으로 통과시키지 않는다.
+- access token이나 세션을 앱에 주입하거나 관리자 API, `service_role`, 고정 JWT로 로그인을 우회한 실행은 E2E 성공으로 인정하지 않는다.
+- E2E 증거에는 플랫폼, 실행한 앱과 서버 버전, 로그인 후 Home, 생성 중 상태, 최종 assistant 응답과 로그아웃 후 로그인 화면의 확인 결과를 남긴다. OTP와 access token은 로그, 파일과 스크린샷에 남기지 않는다.
+- 같은 앱과 기기 문맥의 흐름이 끝나면 `agent-device` 세션을 닫는다.
 - Vercel 배포에서는 `/health`와 로그인 사용자의 `/ai/chat` 요청을 확인한다.
 - 루트의 `bun run check`, `bun run check-types`와 `bun run test`가 모두 통과해야 한다.
 
@@ -125,6 +131,7 @@ API 주소는 Simulator와 Emulator에서 실제로 접근할 수 있는 주소�
 - 모바일 요청에는 현재 Supabase access token이 들어가며 모델 식별자와 비밀 값은 들어가지 않는다.
 - 앱을 다시 시작하면 이전 대화가 보이지 않으며 Supabase에 대화용 테이블이나 행이 생기지 않는다.
 - 자동 테스트는 실제 모델을 호출하지 않고 서버와 모바일의 경계를 확인한다.
+- `agent-device` E2E는 iOS와 Android에서 이메일 OTP로 실제 로그인한 뒤 같은 사용자 세션으로 실제 AI 응답을 받고 로그아웃까지 완료한다.
 - Git 추적 파일과 모바일 번들에 AI Gateway key, Supabase secret key 또는 사용자 토큰이 없다.
 
 ## 가정
@@ -143,7 +150,7 @@ API 주소는 Simulator와 Emulator에서 실제로 접근할 수 있는 주소�
 - 사용자별 사용량, rate limit, Gateway 지출 한도와 자동 충전 설정
 - 제품별 system prompt, 도구 호출, RAG, 검색, 첨부 파일과 구조화 출력
 - 모델 선택 UI, 제공자 직접 연동, BYOK 선택과 fallback 순서
-- 실제 모델을 호출하는 자동 평가와 새 E2E 도구
+- 실제 모델을 호출하는 자동 평가, Maestro와 새 E2E 프레임워크. `agent-device`로 실행하는 필수 E2E는 범위에 포함한다.
 - Expo Web
 
 ## 미룬 내용
@@ -159,6 +166,7 @@ API 주소는 Simulator와 Emulator에서 실제로 접근할 수 있는 주소�
 - `@supabase/server`는 Public Beta이며 Hono adapter와 환경 변수 이름이 바뀔 수 있다. 구현할 때 설치 버전의 문서와 타입을 다시 확인한다.
 - `useChat()` API는 AI SDK 버전에 따라 자주 바뀐다. 구현할 때 설치한 `ai`와 `@ai-sdk/react`의 묶음 문서와 소스를 기준으로 작성한다.
 - `expo/fetch` 스트리밍은 Jest만으로 보장할 수 없다. iOS와 Android Development Build 확인이 완료 증거에 포함된다.
+- 에이전트 E2E는 실제 Supabase, Hono와 AI Gateway 상태의 영향을 받는다. 자동 테스트와 분리하고 실패 시 어느 경계에서 멈췄는지 증거에 남긴다.
 - Vercel 프로젝트의 JWKS 주소나 Gateway 환경 변수가 잘못되면 코드 테스트가 통과해도 배포 요청은 실패한다.
 - rate limit과 지출 한도를 미뤘으므로 이 상태를 불특정 사용자가 쓰는 운영 서비스에 그대로 공개하면 비용 남용 위험이 있다.
 
