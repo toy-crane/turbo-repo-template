@@ -40,32 +40,20 @@ jest.mock("@expo/ui", () => {
   const FieldGroup = Object.assign(Container, { Section: Container });
 
   return {
-    // The native button exposes its own label as its accessible name, so the
-    // stand-in does the same and tests can find it the way agent-device does.
-    Button: ({
-      disabled,
-      label,
-      onPress,
-      testID,
-    }: {
-      disabled?: boolean;
-      label?: string;
-      onPress?: () => void;
-      testID?: string;
-    }) =>
-      React.createElement(
-        Pressable,
-        {
-          accessibilityLabel: label,
-          accessibilityRole: "button",
-          disabled,
-          onPress,
-          testID,
-        },
-        label ? React.createElement(NativeText, null, label) : null
-      ),
     FieldGroup,
     Host: Container,
+    // A native list row takes a press anywhere across it and reads its own text
+    // as its accessible name, so the stand-in does the same.
+    ListItem: ({
+      children,
+      onPress,
+      testID,
+    }: PropsWithChildren<{ onPress?: () => void; testID?: string }>) =>
+      React.createElement(
+        Pressable,
+        { accessibilityRole: "button", onPress, testID },
+        children
+      ),
     Row: Container,
     Spacer: Container,
     Switch: ({

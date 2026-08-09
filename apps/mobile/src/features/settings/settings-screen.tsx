@@ -1,8 +1,16 @@
-import { Button, FieldGroup, Host, Row, Spacer, Switch, Text } from "@expo/ui";
+import {
+  FieldGroup,
+  Host,
+  ListItem,
+  Row,
+  Spacer,
+  Switch,
+  Text,
+} from "@expo/ui";
 import { listSectionMargins } from "@expo/ui/swift-ui/modifiers";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Platform } from "react-native";
 
 import { signOut } from "../../features/auth/sign-out";
@@ -19,15 +27,17 @@ export function SettingsScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutFailure, setSignOutFailure] = useState<string | undefined>();
   const queryClient = useQueryClient();
+  const signingOut = useRef<"idle" | "running">("idle");
   const { foreground } = useAppTheme();
 
   const requestSignOut = useCallback(async () => {
-    // A second press while the first is still running would clear the cache
-    // twice and race the session change.
-    if (isSigningOut) {
+    // The ref, not the state, is what blocks the second press: two taps in the
+    // same frame both read the state from before the first one.
+    if (signingOut.current === "running") {
       return;
     }
 
+    signingOut.current = "running";
     setIsSigningOut(true);
     setSignOutFailure(undefined);
 
@@ -40,9 +50,10 @@ export function SettingsScreen() {
         `로그아웃을 끝내지 못했습니다. 다시 시도해 주세요. (${error instanceof Error ? error.message : String(error)})`
       );
     } finally {
+      signingOut.current = "idle";
       setIsSigningOut(false);
     }
-  }, [isSigningOut, queryClient]);
+  }, [queryClient]);
   const textStyle = getSettingsTextStyle(foreground);
   const androidTextStyle = Platform.OS === "android" ? textStyle : undefined;
   const preferencesSectionModifiers =
@@ -75,13 +86,17 @@ export function SettingsScreen() {
           />
         </FieldGroup.Section>
         <FieldGroup.Section title="Account">
-          <Button
-            disabled={isSigningOut}
-            label={isSigningOut ? "로그아웃 중" : "로그아웃"}
-            onPress={requestSignOut}
-            testID="sign-out-button"
-            variant="text"
-          />
+          {/*
+            ListItem rather than Button: a button's press area follows its label,
+            so a tap on the empty right half of the row did nothing. A list row
+            takes the press anywhere across it, which is what the rest of this
+            screen already behaves like.
+          */}
+          <ListItem onPress={requestSignOut} testID="sign-out-button">
+            <Text textStyle={androidTextStyle}>
+              {isSigningOut ? "로그아웃 중" : "로그아웃"}
+            </Text>
+          </ListItem>
           {signOutFailure ? (
             <Row testID="sign-out-error">
               <Text textStyle={androidTextStyle}>{signOutFailure}</Text>
