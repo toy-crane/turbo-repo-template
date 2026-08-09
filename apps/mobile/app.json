@@ -10,7 +10,8 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.toycrane.turborepotemplate.mobile",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.toycrane.turborepotemplate.mobile",
@@ -44,7 +45,8 @@
         }
       ],
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ]
   }
 }

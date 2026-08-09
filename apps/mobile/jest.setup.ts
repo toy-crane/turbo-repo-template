@@ -1,5 +1,13 @@
 import { jest } from "@jest/globals";
 
+/** The props the app passes to a provider's own native sign-in button. */
+interface ProviderButtonProps {
+  accessibilityLabel?: string;
+  disabled?: boolean;
+  onPress?: () => void;
+  testID?: string;
+}
+
 // Placeholder public values. The Supabase singleton reads these at import time,
 // so every test that mounts the root layout needs them set. Real values live in
 // the developer's untracked apps/mobile/.env.local.
@@ -54,10 +62,94 @@ jest.mock("expo-secure-store", () => {
   };
 });
 
-jest.mock("expo-crypto", () => ({
-  getRandomBytes: (length: number) =>
-    Uint8Array.from({ length }, (_unused, index) => (index * 7 + 13) % 256),
-}));
+// Real SHA-256 from Node rather than a stub: the nonce contract is that the
+// provider receives the hash of what Supabase receives, and a fake digest would
+// let a wrong pairing pass. The byte source stays deterministic but advances on
+// every call, so two sign-in attempts in one test get different nonces.
+jest.mock("expo-crypto", () => {
+  const { createHash } = require("node:crypto") as typeof import("node:crypto");
+  let seed = 0;
+
+  return {
+    CryptoDigestAlgorithm: { SHA256: "SHA-256" },
+    CryptoEncoding: { BASE64: "base64", HEX: "hex" },
+    digestStringAsync: (_algorithm: string, data: string) =>
+      Promise.resolve(createHash("sha256").update(data).digest("hex")),
+    getRandomBytes: (length: number) => {
+      seed += 1;
+
+      return Uint8Array.from(
+        { length },
+        (_unused, index) => (index * 7 + 13 * seed) % 256
+      );
+    },
+  };
+});
+
+// Both provider SDKs reach for native modules while their module body runs, so
+// they cannot be imported at all under Jest. These stand-ins keep the shape the
+// app uses; each test drives them through jest.mocked().
+jest.mock("expo-apple-authentication", () => {
+  const React = require("react") as typeof import("react");
+  const { Pressable } =
+    require("react-native") as typeof import("react-native");
+
+  return {
+    AppleAuthenticationButton: (props: ProviderButtonProps) =>
+      React.createElement(Pressable, {
+        accessibilityLabel: props.accessibilityLabel,
+        accessibilityRole: "button",
+        onPress: props.onPress,
+        testID: props.testID,
+      }),
+    AppleAuthenticationButtonStyle: { BLACK: 0, WHITE: 1, WHITE_OUTLINE: 2 },
+    AppleAuthenticationButtonType: { CONTINUE: 1, SIGN_IN: 0, SIGN_UP: 2 },
+    AppleAuthenticationScope: { EMAIL: 1, FULL_NAME: 0 },
+    isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+    signInAsync: jest.fn(() =>
+      Promise.reject(new Error("signInAsync is not stubbed for this test"))
+    ),
+  };
+});
+
+jest.mock("react-native-nitro-google-signin", () => {
+  const React = require("react") as typeof import("react");
+  const { Pressable } =
+    require("react-native") as typeof import("react-native");
+  const notStubbed = () =>
+    Promise.reject(new Error("Google sign-in is not stubbed for this test"));
+
+  return {
+    GoogleOneTapSignIn: {
+      checkPlayServices: jest.fn(() => Promise.resolve()),
+      configure: jest.fn(),
+      createAccount: jest.fn(notStubbed),
+      presentExplicitSignIn: jest.fn(notStubbed),
+      signIn: jest.fn(notStubbed),
+      signOut: jest.fn(() => Promise.resolve()),
+    },
+    GoogleSignInButton: (props: ProviderButtonProps) =>
+      React.createElement(Pressable, {
+        accessibilityLabel: props.accessibilityLabel,
+        accessibilityRole: "button",
+        disabled: props.disabled,
+        onPress: props.onPress,
+        testID: props.testID,
+      }),
+    isCancelledResponse: (response: { type?: string }) =>
+      response.type === "cancelled",
+    isNoSavedCredentialFoundResponse: (response: { type?: string }) =>
+      response.type === "noSavedCredentialFound",
+    isSuccessResponse: (response: { type?: string }) =>
+      response.type === "success",
+    statusCodes: {
+      IN_PROGRESS: "IN_PROGRESS",
+      PLAY_SERVICES_NOT_AVAILABLE: "PLAY_SERVICES_NOT_AVAILABLE",
+      SIGN_IN_CANCELLED: "SIGN_IN_CANCELLED",
+      SIGN_IN_REQUIRED: "SIGN_IN_REQUIRED",
+    },
+  };
+});
 
 jest.mock("react-native-worklets", () =>
   require("react-native-worklets/src/mock")
