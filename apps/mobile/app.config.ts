@@ -1,6 +1,7 @@
 import { loadProjectEnv } from "@expo/env";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+import { toIosUrlScheme } from "./src/features/auth/google-env.ts";
 import { resolveSupabaseEnv } from "./src/supabase/env.ts";
 
 /**
@@ -14,11 +15,34 @@ import { resolveSupabaseEnv } from "./src/supabase/env.ts";
  * aside under the test runner.
  */
 export default ({ config }: ConfigContext): ExpoConfig => {
-  if (!process.env.JEST_WORKER_ID) {
-    // biome-ignore lint/correctness/noGlobalDirnameFilename: the Expo CLI loads this file as CommonJS, where import.meta is unavailable.
-    loadProjectEnv(__dirname);
-    resolveSupabaseEnv();
+  if (process.env.JEST_WORKER_ID) {
+    return config as ExpoConfig;
   }
 
-  return config as ExpoConfig;
+  // biome-ignore lint/correctness/noGlobalDirnameFilename: the Expo CLI loads this file as CommonJS, where import.meta is unavailable.
+  loadProjectEnv(__dirname);
+  resolveSupabaseEnv();
+
+  // The Google config plugin refuses to run without an iOS URL scheme, which
+  // only exists once a project has its own iOS OAuth client. Adding the plugin
+  // unconditionally would fail `prebuild` for every project that has not set
+  // Google up yet — including a fresh copy of this template. So the plugin is
+  // added when the id is there, and the sign-in screen reports the missing
+  // configuration when it is not.
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim();
+
+  if (!iosClientId) {
+    return config as ExpoConfig;
+  }
+
+  return {
+    ...config,
+    plugins: [
+      ...(config.plugins ?? []),
+      [
+        "react-native-nitro-google-signin",
+        { iosUrlScheme: toIosUrlScheme(iosClientId) },
+      ],
+    ],
+  } as ExpoConfig;
 };
