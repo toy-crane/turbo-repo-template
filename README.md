@@ -200,13 +200,18 @@ Apple 로그인을 추가한다면 별도의 웹 OAuth 설정이 필요합니다
 1. Supabase Dashboard의 **Authentication > SMTP Settings**에서 제품 전용 SMTP host, port,
    username, password, sender email과 sender name을 설정합니다.
 2. 발신 서비스가 요구하는 도메인 DNS 인증을 완료합니다.
-3. **Authentication > Email Templates > Magic Link** 템플릿을 6자리 코드용으로 바꾸고
-   `{{ .Token }}`을 포함합니다.
+3. **Authentication > Email Templates**에서 **Magic Link**와 **Confirm signup** 템플릿을
+   6자리 코드용으로 바꾸고 두 곳 모두에 `{{ .Token }}`을 넣습니다.
+   `signInWithOtp`는 이미 가입한 주소에는 Magic Link 템플릿을, 처음 보는 주소에는
+   Confirm signup 템플릿을 보냅니다. 한쪽만 바꾸면 나머지 한쪽이 앱에 없는 링크를 보냅니다.
 
    ```html
    <h2>로그인 코드</h2>
    <p>앱에 다음 코드를 입력하세요: {{ .Token }}</p>
    ```
+
+   로컬 스택은 `supabase/templates/email-otp.html`과 `supabase/config.toml`이 같은 일을
+   이미 해 둡니다.
 
 4. Email Provider에서 가입을 허용하고 OTP 길이, 만료 시간, 다시 보내기 간격과 전송 한도를
    확인합니다. 이 템플릿의 기본값은 6자리, 1시간 만료입니다.
@@ -320,6 +325,7 @@ bun run test:integration
 ```
 
 `db:test`는 pgTAP으로 trigger, 권한, RLS를 확인합니다.
+`db:lint`는 `public` 스키마의 함수를 정적으로 검사합니다.
 `test:integration`은 실제 Supabase Auth와 Mailpit으로 가입부터 프로필 조회·수정까지 확인합니다.
 둘 다 로컬 스택이 켜져 있어야 합니다.
 그래서 기본 `bun run test`에는 포함하지 않습니다.
@@ -364,7 +370,11 @@ bun run db:status
 bun run db:stop
 bun run db:reset
 bun run db:test
+bun run db:lint
 ```
+
+`db:lint`는 `public` 스키마만 검사합니다.
+pgTAP은 `extensions` 스키마에 자체 함수를 많이 만들고 그 함수들이 검사 결과를 가리기 때문입니다.
 
 `bun run db:start`는 API URL과 publishable key를 포함한 접속 정보를 출력합니다.
 같은 정보는 `bun run db:status`로 다시 확인할 수 있습니다.
