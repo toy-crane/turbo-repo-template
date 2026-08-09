@@ -94,6 +94,25 @@ test("읽을 수 없는 저장값은 로그인 상태로 보지 않고 로컬 �
   expect(fake.auth.signOut).toHaveBeenCalledWith({ scope: "local" });
 });
 
+test("네트워크 때문에 확인하지 못한 세션은 지우지 않는다", async () => {
+  const fake = resetFakeSupabase({
+    sessionError: Object.assign(new Error("Failed to fetch"), {
+      name: "AuthRetryableFetchError",
+    }),
+  });
+
+  const router = renderRouter("./app", { initialUrl: "/" });
+  await router;
+
+  await waitFor(() => {
+    expect(screen.getByLabelText("Google로 계속하기")).toBeOnTheScreen();
+  });
+
+  // The refresh token is still good; throwing it away would make an offline
+  // launch cost the person a new sign-in.
+  expect(fake.auth.signOut).not.toHaveBeenCalled();
+});
+
 test("세션이 끝나면 보호 화면을 닫고 로그인 화면으로 보낸다", async () => {
   const fake = resetFakeSupabase({ session: createFakeSession() });
   const router = renderRouter("./app", { initialUrl: "/" });
