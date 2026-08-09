@@ -73,8 +73,19 @@ jest.mock("expo-crypto", () => {
   return {
     CryptoDigestAlgorithm: { SHA256: "SHA-256" },
     CryptoEncoding: { BASE64: "base64", HEX: "hex" },
-    digestStringAsync: (_algorithm: string, data: string) =>
-      Promise.resolve(createHash("sha256").update(data).digest("hex")),
+    // Both arguments are honoured on purpose. A stand-in that always answered
+    // SHA-256 hex would let the app switch algorithm or encoding without a
+    // single test noticing, and Supabase compares against SHA-256 hex.
+    digestStringAsync: (
+      algorithm: string,
+      data: string,
+      options?: { encoding?: string }
+    ) =>
+      Promise.resolve(
+        createHash(algorithm.replace("-", "").toLowerCase())
+          .update(data)
+          .digest(options?.encoding === "base64" ? "base64" : "hex")
+      ),
     getRandomBytes: (length: number) => {
       seed += 1;
 
@@ -102,7 +113,7 @@ jest.mock("expo-apple-authentication", () => {
         onPress: props.onPress,
         testID: props.testID,
       }),
-    AppleAuthenticationButtonStyle: { BLACK: 0, WHITE: 1, WHITE_OUTLINE: 2 },
+    AppleAuthenticationButtonStyle: { BLACK: 2, WHITE: 0, WHITE_OUTLINE: 1 },
     AppleAuthenticationButtonType: { CONTINUE: 1, SIGN_IN: 0, SIGN_UP: 2 },
     AppleAuthenticationScope: { EMAIL: 1, FULL_NAME: 0 },
     isAvailableAsync: jest.fn(() => Promise.resolve(true)),

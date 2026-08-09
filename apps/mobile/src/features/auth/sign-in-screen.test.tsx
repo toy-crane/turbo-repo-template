@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { signInAsync } from "expo-apple-authentication";
@@ -75,6 +76,14 @@ const originalEnv = {
 };
 
 let fake: FakeSupabase;
+
+/**
+ * Hashes with Node rather than the app's own helper, so the assertion holds the
+ * providers to the contract instead of to whatever the app happens to do.
+ */
+function sha256Hex(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
 
 /**
  * React flushes a state update after the event returns, so a press that reads
@@ -315,9 +324,11 @@ test("Google 로그인은 시도마다 새 nonce를 만들고 원본을 Supabase
 
   expect(sent.provider).toBe("google");
   expect(sent.token).toBe("google-id-token");
-  // Google gets the hash, Supabase gets the original.
-  expect(sent.nonce).not.toBe(configured?.nonce);
-  expect(configured?.nonce).toMatch(hexNonce);
+  // Google gets the hash of exactly what Supabase gets. Asserting the relation,
+  // not just that the two differ: both values are 64 hex characters, so a swap
+  // would satisfy any weaker check while breaking every real sign-in.
+  expect(sent.nonce).toMatch(hexNonce);
+  expect(sha256Hex(sent.nonce as string)).toBe(configured?.nonce);
 });
 
 test("제공자 이름과 이미지는 비어 있는 프로필 값만 채운다", async () => {
@@ -382,8 +393,8 @@ test("Apple 로그인은 해시 nonce를 Apple에, 원본을 Supabase에 넘긴�
 
   expect(sent.provider).toBe("apple");
   expect(sent.token).toBe("apple-id-token");
-  expect(requested?.nonce).toMatch(hexNonce);
-  expect(sent.nonce).not.toBe(requested?.nonce);
+  expect(sent.nonce).toMatch(hexNonce);
+  expect(sha256Hex(sent.nonce as string)).toBe(requested?.nonce);
   // Apple hands the name over on the first approval only, so it is used at once.
   expect(fake.updates[0]?.values).toEqual({ display_name: "Reader Kim" });
 });
