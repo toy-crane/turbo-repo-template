@@ -187,6 +187,12 @@
       "skillPath": "skills/project-knowledge/SKILL.md",
       "computedHash": "42cf034c0c67308723864b9c33273ee3131eacd7fe85817a505b841e50dcafd6"
     },
+    "react-native-nitro-google-signin": {
+      "source": "react-native-nitro-google-sign-in/google-signin",
+      "sourceType": "github",
+      "skillPath": "skills/react-native-nitro-google-signin/SKILL.md",
+      "computedHash": "e5c6928864dbd4f403b6451f71ebb3ee74d8fd5958a5e3af12a3f19fa0395c5c"
+    },
     "react-native-testing": {
       "source": "callstack/react-native-testing-library",
       "sourceType": "github",
