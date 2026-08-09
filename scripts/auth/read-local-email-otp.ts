@@ -293,7 +293,12 @@ async function readOptionalFile(path: string): Promise<string | undefined> {
   }
 }
 
-async function waitForOtp(options: OtpOptions): Promise<OtpReadResult> {
+/**
+ * Polls Mailpit until the code for this recipient shows up. Exported so the
+ * local integration tests can reach the same mailbox the CLI reads, rather than
+ * growing a second copy of this logic that could drift.
+ */
+export async function waitForOtp(options: OtpOptions): Promise<OtpReadResult> {
   const startedAt = Date.now();
   const notBefore = new Date(startedAt - ARRIVAL_GRACE_MS);
   const query = encodeURIComponent(`to:${options.email}`);

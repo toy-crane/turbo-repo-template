@@ -78,6 +78,10 @@
     "scripts": {
       "name": "@repo/scripts",
       "version": "0.0.0",
+      "dependencies": {
+        "@repo/supabase": "workspace:*",
+        "@supabase/supabase-js": "2.112.2",
+      },
       "devDependencies": {
         "@types/bun": "1.3.14",
         "typescript": "5.9.2",
