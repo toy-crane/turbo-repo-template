@@ -67,6 +67,7 @@ const missingWebClientIdMessage = /EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID/;
 const invalidIdTokenMessage = /Invalid ID token/;
 const hexNonce = /^[0-9a-f]{64}$/;
 const noGoogleAccountMessage = /Google 계정이 있는지/;
+const alreadySentMessage = /이미 보낸 코드를 입력해 주세요/;
 
 const originalEnv = {
   ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
@@ -231,6 +232,56 @@ test("코드 다시 받기는 대기 시간이 끝나야 누를 수 있다", asy
     await waitFor(() => {
       expect(fake.auth.signInWithOtp).toHaveBeenCalledTimes(2);
     });
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+test("전송 한도에 걸려도 이미 받은 코드를 넣을 수 있게 한다", async () => {
+  fake.auth.signInWithOtp.mockResolvedValueOnce({
+    data: { session: null, user: null },
+    error: Object.assign(new Error("email rate limit exceeded"), {
+      code: "over_email_send_rate_limit",
+      status: 429,
+    }),
+  } as never);
+
+  await renderSignIn();
+
+  await type("이메일", EMAIL);
+  await press("이메일로 계속하기");
+
+  // The code from the earlier send is still valid, so the input has to open.
+  expect(await screen.findByLabelText("인증 코드")).toBeOnTheScreen();
+  expect(await screen.findByTestId("sign-in-error-code")).toHaveTextContent(
+    alreadySentMessage
+  );
+});
+
+test("다시 받기가 전송 한도에 걸리면 대기 시간을 다시 건다", async () => {
+  jest.useFakeTimers();
+
+  try {
+    await reachCodeStep();
+
+    await act(() => {
+      jest.advanceTimersByTime(60_000);
+    });
+
+    fake.auth.signInWithOtp.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: Object.assign(new Error("email rate limit exceeded"), {
+        status: 429,
+      }),
+    } as never);
+
+    await press("코드 다시 받기");
+
+    // Without a fresh countdown the button would stay open and invite another
+    // rejected request straight away.
+    expect(screen.getByLabelText("코드 다시 받기")).toHaveTextContent(
+      "60초 뒤에 코드 다시 받기"
+    );
   } finally {
     jest.useRealTimers();
   }

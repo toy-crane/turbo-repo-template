@@ -199,6 +199,23 @@ export function SignInScreen() {
     [run]
   );
 
+  /**
+   * Moves to the code step and restarts the wait.
+   *
+   * Called whether or not the send succeeded: the server counts a send the app
+   * could not complete, and the countdown is the app's promise about when the
+   * next one is allowed.
+   */
+  const enterCodeStep = useCallback(
+    (address: string) => {
+      setEmail(address);
+      setCode("");
+      setIsCodeStep(true);
+      startCountdown();
+    },
+    [startCountdown]
+  );
+
   const requestCode = useCallback(
     (action: "email" | "resend") => {
       const address = normalizeEmail(email);
@@ -214,14 +231,34 @@ export function SignInScreen() {
       }
 
       return run(action, action === "resend" ? "code" : "email", async () => {
-        await sendEmailCode(getSupabaseClient(), address);
-        setEmail(address);
-        setCode("");
-        setIsCodeStep(true);
-        startCountdown();
+        try {
+          await sendEmailCode(getSupabaseClient(), address);
+        } catch (error) {
+          const sendFailure = classifyAuthError(error);
+
+          if (sendFailure.kind !== "rateLimited") {
+            throw error;
+          }
+
+          // Being over the send limit means a code went out recently and is
+          // still valid, so the person needs the input, not a closed door.
+          // Leaving them on this step would strand them with a usable code and
+          // no screen that accepts it.
+          enterCodeStep(address);
+          setFailure({
+            ...sendFailure,
+            message:
+              "이미 보낸 코드를 입력해 주세요. 새 코드는 잠시 뒤에 받을 수 있습니다.",
+            scope: "code",
+          });
+
+          return;
+        }
+
+        enterCodeStep(address);
       });
     },
-    [email, run, startCountdown]
+    [email, enterCodeStep, run]
   );
 
   const verifyCode = useCallback(
