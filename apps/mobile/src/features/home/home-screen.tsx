@@ -1,50 +1,120 @@
+import { useChat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
 import { Button } from "heroui-native/button";
-import { Card } from "heroui-native/card";
-import { Chip } from "heroui-native/chip";
-import { Description } from "heroui-native/description";
-import { useThemeColor } from "heroui-native/hooks";
 import { Input } from "heroui-native/input";
 import { Label } from "heroui-native/label";
 import { Spinner } from "heroui-native/spinner";
 import { TextField } from "heroui-native/text-field";
-import { useToast } from "heroui-native/toast";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ScrollView } from "react-native";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { ScrollView, Text, View } from "react-native";
 
-const previewDelayMs = 650;
+import { useAuthSession } from "../auth/auth-session";
+import { createChatTransport } from "../chat/chat-transport";
+
+/** Which request is in flight. Also what blocks a second one. */
+type ChatAction = "retry" | "send";
+
+/** Accessibility names double as the contract for tests and agent-device. */
+export const chatLabels = {
+  generating: "답변을 만드는 중",
+  input: "메시지",
+  retry: "다시 보내기",
+  send: "보내기",
+} as const;
+
+function messageText(message: UIMessage): string {
+  return message.parts
+    .filter((part) => part.type === "text")
+    .map((part) => part.text)
+    .join("");
+}
+
+function ChatMessage({ message }: { message: UIMessage }) {
+  const isUser = message.role === "user";
+
+  return (
+    <View
+      className={
+        isUser
+          ? "self-end rounded-2xl bg-accent px-4 py-3"
+          : "self-start rounded-2xl bg-surface px-4 py-3"
+      }
+      testID={`chat-message-${message.role}`}
+    >
+      <Text
+        className={
+          isUser ? "text-accent-foreground" : "text-surface-foreground"
+        }
+        selectable
+      >
+        {messageText(message)}
+      </Text>
+    </View>
+  );
+}
 
 export function HomeScreen() {
-  const [contentName, setContentName] = useState("");
-  const [isPreviewing, setIsPreviewing] = useState(false);
-  const completionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined
-  );
-  const accentForeground = useThemeColor("accent-foreground");
-  const { toast } = useToast();
+  const { session } = useAuthSession();
+  const [draft, setDraft] = useState("");
 
-  useEffect(
-    () => () => {
-      if (completionTimer.current !== undefined) {
-        clearTimeout(completionTimer.current);
-      }
-    },
+  // The transport reads this on every send, so it has to see the session the
+  // provider holds now rather than the one captured when the screen mounted.
+  const currentSession = useRef(session);
+
+  currentSession.current = session;
+
+  const transport = useMemo(
+    () => createChatTransport(() => currentSession.current?.access_token),
     []
   );
+  const { error, messages, regenerate, sendMessage, status } = useChat({
+    transport,
+  });
 
-  const previewComponents = useCallback(() => {
-    setIsPreviewing(true);
-    completionTimer.current = setTimeout(() => {
-      const previewName = contentName.trim() || "React Native UI";
+  const isBusy = status === "streaming" || status === "submitted";
+  const running = useRef<ChatAction | undefined>(undefined);
 
-      setIsPreviewing(false);
-      toast.show({
-        description: `${previewName} 샘플의 입력과 피드백 상태를 확인했습니다.`,
-        label: "HeroUI 체험 완료",
-        placement: "bottom",
-        variant: "success",
-      });
-    }, previewDelayMs);
-  }, [contentName, toast]);
+  /**
+   * One entry point for both requests this screen can start.
+   *
+   * The ref, not the status, is what stops a double tap: two presses in the
+   * same frame both read the status from before the first one, so a status
+   * check alone would let the second through and send the message twice.
+   */
+  const run = useCallback((action: ChatAction, work: () => Promise<void>) => {
+    if (running.current !== undefined) {
+      return;
+    }
+
+    running.current = action;
+    work().finally(() => {
+      running.current = undefined;
+    });
+  }, []);
+
+  const send = useCallback(() => {
+    const text = draft.trim();
+
+    // No session means no request. Getting the person to a sign-in screen is
+    // the auth implementation's job, not this screen's.
+    if (!(text && currentSession.current) || isBusy) {
+      return;
+    }
+
+    run("send", () => {
+      setDraft("");
+
+      return sendMessage({ text });
+    });
+  }, [draft, isBusy, run, sendMessage]);
+
+  const retry = useCallback(() => {
+    if (isBusy) {
+      return;
+    }
+
+    run("retry", () => regenerate());
+  }, [isBusy, regenerate, run]);
 
   return (
     <ScrollView
@@ -53,46 +123,71 @@ export function HomeScreen() {
       contentInsetAdjustmentBehavior="automatic"
       keyboardShouldPersistTaps="handled"
     >
-      <Card
-        accessibilityLabel="HeroUI Native preview. React Native UI. 네이티브 Stack 안에서 HeroUI 콘텐츠 컴포넌트와 canonical token을 확인합니다."
-        accessible
-        className="gap-4 p-5"
-      >
-        <Card.Header>
-          <Chip color="accent" size="sm" variant="soft">
-            HeroUI Native
-          </Chip>
-        </Card.Header>
-        <Card.Body className="gap-2">
-          <Card.Title className="text-xl">React Native UI</Card.Title>
-          <Card.Description>
-            네이티브 Stack 안에서 HeroUI 콘텐츠 컴포넌트와 canonical token을
-            확인합니다.
-          </Card.Description>
-        </Card.Body>
-      </Card>
+      <View className="gap-3">
+        {messages.map((message) => (
+          <ChatMessage key={message.id} message={message} />
+        ))}
+      </View>
+
+      {isBusy ? (
+        <View className="flex-row items-center gap-2" testID="chat-generating">
+          <Spinner size="sm" />
+          <Text className="text-muted-foreground text-sm">
+            {chatLabels.generating}
+          </Text>
+        </View>
+      ) : null}
+
+      {error ? (
+        <View className="gap-2">
+          <Text
+            accessibilityRole="alert"
+            className="text-danger text-sm"
+            testID="chat-error"
+          >
+            답변을 받지 못했습니다. 잠시 뒤에 다시 시도해 주세요.
+          </Text>
+          <Button
+            accessibilityLabel={chatLabels.retry}
+            isDisabled={isBusy}
+            onPress={retry}
+            variant="tertiary"
+          >
+            <Button.Label>다시 보내기</Button.Label>
+          </Button>
+        </View>
+      ) : null}
 
       <TextField>
-        <Label>콘텐츠 이름</Label>
+        {/*
+          The field itself carries the name, so the visible label stays out of
+          the accessibility tree and a selector cannot land on the caption.
+        */}
+        <Label
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          메시지
+        </Label>
         <Input
-          accessibilityLabel="콘텐츠 이름"
-          onChangeText={setContentName}
-          placeholder="이름을 입력해보세요"
-          returnKeyType="done"
-          value={contentName}
+          accessibilityLabel={chatLabels.input}
+          onChangeText={setDraft}
+          onSubmitEditing={send}
+          placeholder="무엇이든 물어보세요"
+          returnKeyType="send"
+          testID="chat-input"
+          value={draft}
         />
-        <Description>입력값은 완료 Toast의 메시지에 반영됩니다.</Description>
       </TextField>
 
-      <Button isDisabled={isPreviewing} onPress={previewComponents}>
-        {isPreviewing ? (
-          <>
-            <Spinner color={accentForeground} size="sm" />
-            <Button.Label>적용 중</Button.Label>
-          </>
-        ) : (
-          "HeroUI 체험하기"
-        )}
+      <Button
+        accessibilityLabel={chatLabels.send}
+        isDisabled={isBusy || draft.trim().length === 0}
+        onPress={send}
+        testID="chat-send"
+      >
+        {isBusy ? <Spinner size="sm" /> : null}
+        <Button.Label>보내기</Button.Label>
       </Button>
     </ScrollView>
   );
