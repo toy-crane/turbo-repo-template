@@ -10,7 +10,17 @@ import {
 
 import { createFakeSession, resetFakeSupabase } from "../test/fake-supabase";
 
-const heroUIPreviewLabel = /^HeroUI Native preview\./;
+// Home now talks to the AI API, so it is stubbed here like every other screen:
+// these tests are about which route renders, not about what the screen does.
+jest.mock("../features/home/home-screen", () => {
+  const React = require("react") as typeof import("react");
+  const { View } = require("react-native") as typeof import("react-native");
+
+  return {
+    HomeScreen: () =>
+      React.createElement(View, { accessibilityLabel: "Home placeholder" }),
+  };
+});
 
 // Every route below the root layout is behind the session guard, so these tests
 // start from a signed-in app. The guard itself is covered in auth-routing.test.
@@ -60,7 +70,7 @@ test("/에서 Home 탭의 첫 화면을 표시한다", async () => {
   await router;
 
   expect(router.getPathname()).toBe("/");
-  expect(screen.getByLabelText(heroUIPreviewLabel)).toBeOnTheScreen();
+  expect(screen.getByLabelText("Home placeholder")).toBeOnTheScreen();
 });
 
 test("Home 이니셜 아바타가 Settings page sheet 경로를 연다", async () => {
