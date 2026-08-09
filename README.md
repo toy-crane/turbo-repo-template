@@ -39,6 +39,48 @@ bun run setup --project-slug aurora-notes --display-name "Aurora Notes" --mobile
 로컬 Supabase 스택을 시작하거나 중지하거나 초기화하지 않으며 환경 변수 파일도 읽거나 쓰지 않습니다.
 로컬 PostgreSQL 데이터베이스의 실제 이름은 계속 `postgres`입니다.
 
+## 처음 실행할 때: 프로젝트 전용 인증 자격 증명 만들기
+
+인증 제공자를 등록하기 전에 `bun run setup`을 실행합니다.
+여기서 확정한 iOS 번들 식별자와 Android 패키지 이름은 제공자 설정에 사용되므로
+자격 증명을 만들기 전에 최종 값으로 정해야 합니다.
+
+이 템플릿에는 재사용할 OAuth 자격 증명, 제공자 설정 파일 또는 비밀 값을 포함하지 않습니다.
+템플릿으로 만든 프로젝트마다 자체 앱과 백엔드를 위한 자격 증명을 새로 등록해야 합니다.
+다른 애플리케이션의 OAuth 클라이언트, 서명 자격 증명, 제공자 설정 파일 또는 백엔드 키를
+복사하지 마세요.
+
+1. 새 제품을 위한 Supabase 프로젝트를 만들거나 개발 중에는 로컬 Supabase 스택을 사용합니다.
+   URL과 publishable key 설정 방법은 [Supabase 연결](#supabase-연결)을 따릅니다.
+2. Google Auth Platform에서 새 제품 전용 OAuth 클라이언트를 만듭니다.
+   - Google ID 토큰의 대상과 Supabase 제공자 설정에 사용할 Web 클라이언트
+   - `bun run setup`에서 정한 번들 식별자에 연결할 iOS 클라이언트
+   - 패키지 이름과 로컬, EAS, Google Play 빌드에서 사용하는 모든 서명 SHA-1에 연결할
+     Android 클라이언트
+3. 선택한 Google 설정에서 필요하다면 새 `GoogleService-Info.plist`와
+   `google-services.json`을 다운로드합니다.
+   이 파일에는 프로젝트별 식별자가 들어 있으므로 다른 앱의 파일을 가져오지 마세요.
+4. Apple Developer 포털에서 새 App ID를 등록하고 해당 번들 식별자에 Sign in with Apple을
+   활성화합니다. 이 제품에서 선택한 Apple과 Supabase 인증 흐름에 필요한 Services ID,
+   키 또는 비밀 값을 새로 만듭니다.
+5. 새 Supabase 프로젝트에서 Google과 Apple 제공자를 설정합니다.
+   제공자 비밀 값과 Apple 비공개 키는 Supabase 또는 빌드 환경에 보관하고 Expo 클라이언트에는
+   넣지 않습니다.
+6. 호스팅 환경에서 이메일 인증을 사용하려면 운영 배포 전에 제품 전용 SMTP 발신자를 설정합니다.
+   로컬 이메일 인증은 로컬 Supabase 메일함을 사용하며 운영 SMTP 자격 증명을 재사용하지 않습니다.
+
+자격 증명을 등록할 때는 제공자의 최신 안내를 따릅니다.
+
+- [Expo Google 인증](https://docs.expo.dev/guides/google-authentication/)
+- [Supabase Google 로그인](https://supabase.com/docs/guides/auth/social-login/auth-google)
+- [Expo Apple 인증](https://docs.expo.dev/versions/latest/sdk/apple-authentication/)
+- [Supabase Apple 로그인](https://supabase.com/docs/guides/auth/social-login/auth-apple)
+
+클라이언트 ID, Supabase URL과 Supabase publishable key는 공개 설정 값이지만 새 제품에
+종속된 값입니다. 클라이언트 비밀 값, Apple 비공개 키, 데이터베이스 자격 증명,
+Supabase secret key와 `service_role` 키는 서버에만 보관해야 하며 `EXPO_PUBLIC_` 변수를
+사용하면 안 됩니다.
+
 ## 자주 쓰는 명령
 
 ```bash
