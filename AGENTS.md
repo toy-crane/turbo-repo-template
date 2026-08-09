@@ -12,6 +12,12 @@
 
 완료된 명세와 작업 기록은 새로운 내용 변경 없이 문체만 고치지 않는다.
 
+# Hono 개발
+
+- Hono 관련 작업을 시작할 때 `.agents/context/hono/llms.txt`에서 공식 문서 경로를 확인한다.
+- 최신 문서는 `bunx @hono/cli@0.1.11 docs [path]`로 읽고, 주제 검색은 `bunx @hono/cli@0.1.11 search <query>`를 사용한다.
+- 로컬 `llms.txt`는 Hono가 제공하는 `https://hono.dev/llms.txt`의 사본이다. Hono를 올릴 때 공식 원본으로 갱신한다.
+
 # 커밋 정책
 
 - 논리적인 작업 단위를 마칠 때마다 자동으로 커밋한다. 별도 요청을 기다리지 않는다.
