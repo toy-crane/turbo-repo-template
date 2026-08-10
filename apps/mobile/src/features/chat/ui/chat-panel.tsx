@@ -8,7 +8,7 @@ import type { UIMessage } from "ai";
 import { Button } from "heroui-native/button";
 import { useThemeColor } from "heroui-native/hooks";
 import { Spinner } from "heroui-native/spinner";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Platform, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,10 +29,6 @@ const INPUT_MAX_HEIGHT = 120;
  * while the list still follows new content.
  */
 const FOLLOW_END_THRESHOLD = 0.15;
-
-function renderMessage({ item }: { item: UIMessage }) {
-  return <MessageRow message={item} />;
-}
 
 function keyOfMessage(message: UIMessage) {
   return message.id;
@@ -91,6 +87,42 @@ export function ChatPanel({
   const hasMessages = chat.messages.length > 0;
   const canSend = chat.draft.trim().length > 0;
 
+  // Only the last user message can be rewritten and only the last answer can
+  // be regenerated; every earlier message keeps constant props so its
+  // memoized row stays quiet.
+  const lastUserId = chat.messages.findLast(
+    (message) => message.role === "user"
+  )?.id;
+  const lastAssistantId = chat.messages.findLast(
+    (message) => message.role === "assistant"
+  )?.id;
+  const { isBusy, regenerateLast, startEdit, status } = chat;
+  const renderMessage = useCallback(
+    ({ item }: { item: UIMessage }) => (
+      <MessageRow
+        editAction={item.id === lastUserId ? startEdit : undefined}
+        editDisabled={item.id === lastUserId ? isBusy : false}
+        message={item}
+        regenerateAction={
+          item.id === lastAssistantId ? regenerateLast : undefined
+        }
+        regenerateDisabled={
+          item.id === lastAssistantId ? status !== "ready" : false
+        }
+      />
+    ),
+    [isBusy, lastAssistantId, lastUserId, regenerateLast, startEdit, status]
+  );
+
+  // The list refreshes rows only when data or this value changes, so every
+  // input that moves an action button between rows has to be in here. Kept
+  // memoized so streaming chunks (which change none of these) leave the
+  // other rows alone.
+  const listExtraData = useMemo(
+    () => ({ isBusy, lastAssistantId, lastUserId, status }),
+    [isBusy, lastAssistantId, lastUserId, status]
+  );
+
   return (
     <View className="flex-1 bg-background">
       {hasMessages ? (
@@ -102,6 +134,7 @@ export function ChatPanel({
           contentInset={{ top: topInset }}
           contentInsetEndAdjustment={contentInsetEndAdjustment}
           data={chat.messages}
+          extraData={listExtraData}
           freeze={freeze}
           // Interactive tracking exists only on iOS; Android closes the
           // keyboard as soon as the list is dragged.
@@ -153,6 +186,26 @@ export function ChatPanel({
           ref={composerRef}
           style={{ paddingBottom: Math.max(insets.bottom, 12) }}
         >
+          {chat.editing ? (
+            <View
+              className="flex-row items-center justify-between"
+              testID="chat-editing"
+            >
+              <Text className="text-muted-foreground text-sm">
+                메시지를 수정하는 중
+              </Text>
+              <Pressable
+                accessibilityLabel={chatLabels.cancelEdit}
+                accessibilityRole="button"
+                className="min-h-11 justify-center px-2"
+                onPress={chat.cancelEdit}
+                testID="chat-cancel-edit"
+              >
+                <Text className="text-link">편집 취소</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           {chat.isBusy ? (
             <View
               className="flex-row items-center gap-2"
