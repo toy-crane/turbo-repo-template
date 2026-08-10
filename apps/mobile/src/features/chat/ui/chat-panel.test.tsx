@@ -11,6 +11,7 @@ import { simulateReadableStream } from "ai";
 
 import { createChatTransport } from "@/features/chat/api/chat-transport";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
+import { collectTestIds } from "@/shared/test/collect-test-ids";
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { ChatPanel, chatLabels } from "./chat-panel";
 
@@ -46,6 +47,8 @@ jest.mock("./message-parts", () => {
 const mockCreateChatTransport = jest.mocked(createChatTransport);
 
 const ACCESS_TOKEN = "test-access-token";
+
+const PART_MARKER_PATTERN = /^chat-(part|message)-/;
 
 function answerStream(text: string[]): ReadableStream<UIMessageChunk> {
   const chunks: UIMessageChunk[] = [
@@ -408,6 +411,78 @@ describe("ChatPanel", () => {
     expect(screen.getByText("부분 답변")).toBeOnTheScreen();
     expect(screen.queryByTestId("chat-error")).not.toBeOnTheScreen();
     expect(screen.queryByTestId("chat-generating")).not.toBeOnTheScreen();
+  });
+
+  test("가짜 스트림의 텍스트, 파일, 출처, 도구 part가 종류와 순서를 유지한다", async () => {
+    const chunks: UIMessageChunk[] = [
+      { type: "start" },
+      { id: "0", type: "text-start" },
+      { delta: "먼저 설명", id: "0", type: "text-delta" },
+      { id: "0", type: "text-end" },
+      {
+        mediaType: "application/pdf",
+        type: "file",
+        url: "https://example.com/a.pdf",
+      },
+      {
+        sourceId: "s1",
+        title: "출처 하나",
+        type: "source-url",
+        url: "https://example.com/one",
+      },
+      {
+        input: {},
+        toolCallId: "t1",
+        toolName: "search",
+        type: "tool-input-available",
+      },
+      { output: "찾음", toolCallId: "t1", type: "tool-output-available" },
+      { id: "1", type: "text-start" },
+      { delta: "마지막 정리", id: "1", type: "text-delta" },
+      { id: "1", type: "text-end" },
+      { type: "finish" },
+    ];
+    const transport = fakeTransport(() =>
+      Promise.resolve(
+        simulateReadableStream({
+          chunkDelayInMs: null,
+          chunks,
+          initialDelayInMs: null,
+        })
+      )
+    );
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "혼합 스트림");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    layoutList();
+
+    await waitFor(() => {
+      expect(screen.getByText("마지막 정리")).toBeOnTheScreen();
+    });
+
+    const markers = [
+      "chat-part-file",
+      "chat-part-source-url",
+      "chat-part-tool-search",
+      "chat-message-assistant",
+    ];
+
+    expect(
+      collectTestIds(PART_MARKER_PATTERN, (testId) => markers.includes(testId))
+    ).toEqual([
+      "chat-message-assistant",
+      "chat-part-file",
+      "chat-part-source-url",
+      "chat-part-tool-search",
+      "chat-message-assistant",
+    ]);
   });
 
   test("스트리밍 중에는 스트리밍 중인 메시지 행만 다시 렌더링한다", async () => {
