@@ -27,12 +27,23 @@ const testThemeVariables = {
 Uniwind.updateCSSVariables("light", testThemeVariables);
 Uniwind.updateCSSVariables("dark", testThemeVariables);
 
-export function renderWithHeroUI(element: ReactElement) {
-  return render(
+function withProviders(element: ReactElement) {
+  return (
     <SafeAreaProvider initialMetrics={testSafeAreaMetrics}>
       <HeroUINativeProviderRaw config={{ animation: "disable-all" }}>
         {element}
       </HeroUINativeProviderRaw>
     </SafeAreaProvider>
   );
+}
+
+export async function renderWithHeroUI(element: ReactElement) {
+  const view = await render(withProviders(element));
+
+  return {
+    ...view,
+    // The plain rerender would replace the providers with the element alone, so
+    // a test that renders the same screen with new props keeps losing them.
+    rerender: (next: ReactElement) => view.rerender(withProviders(next)),
+  };
 }
