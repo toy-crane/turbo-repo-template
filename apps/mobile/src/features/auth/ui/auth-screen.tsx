@@ -53,11 +53,14 @@ export function AuthScreen({
       </View>
 
       {/*
-        The home indicator's space is the keyboard's while it is up, so the
-        safe-area inset only applies when the keyboard is closed.
+        The footer keeps the home indicator's space as bottom padding, which is
+        only wanted while the keyboard is down. Once it is up the keyboard owns
+        that strip, so the offset gives the padding back: the component adds it
+        to a translateY that is already negative, so a positive number moves the
+        footer back down toward the keyboard.
       */}
       <KeyboardStickyView
-        offset={{ closed: 0, opened: BOTTOM_PADDING - insets.bottom }}
+        offset={{ closed: 0, opened: insets.bottom - BOTTOM_PADDING }}
       >
         <View
           className="gap-2.5 pt-3"
