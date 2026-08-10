@@ -1,0 +1,755 @@
+# Library
+URL: /foundations/iconography/library
+Source: https://github.com/daangn/seed-design/blob/dev/docs/content/foundations/iconography/library.mdx
+
+
+
+## Monochrome Icons
+
+| Icon Name | React Component Name | Figma Name | Keywords | Services | Tags |
+| --- | --- | --- | --- | --- | --- |
+| icon_a_uppercase_a_lowercase_fill | IconAUppercaseALowercaseFill | Weight=Fill | A, uppercase, lowercase, letter, font, 알파벳, 대문자, 소문자, 글자, 폰트 |  |  |
+| icon_a_uppercase_a_lowercase_line | IconAUppercaseALowercaseLine | Weight=Line | A, uppercase, lowercase, letter, font, 알파벳, 대문자, 소문자, 글자, 폰트 |  |  |
+| icon_a_uppercase_outline_fill | IconAUppercaseOutlineFill | Weight=Fill | A, uppercase, letter, 알파벳, 대문자, 글자, 아웃라인 |  |  |
+| icon_a_uppercase_outline_line | IconAUppercaseOutlineLine | Weight=Line | A, uppercase, letter, 알파벳, 대문자, 글자, 아웃라인 |  |  |
+| icon_a_uppercase_square_fill | IconAUppercaseSquareFill | Weight=Fill | A, uppercase, square, letter, 알파벳, 대문자, 사각형, 글자 |  |  |
+| icon_a_uppercase_square_line | IconAUppercaseSquareLine | Weight=Line | A, uppercase, square, letter, 알파벳, 대문자, 사각형, 글자 |  |  |
+| icon_androidshare_fill | IconAndroidshareFill | Weight=Fill | android, android_share, share, 공유, 네트워크, 안드, 안드로이드 |  |  |
+| icon_androidshare_line | IconAndroidshareLine | Weight=Line | android, android_share, share, 공유, 네트워크, 안드, 안드로이드 |  |  |
+| icon_apple_fill | IconAppleFill | Weight=Fill | 사과, 과일, 농수산물, apple, fruit |  | service |
+| icon_apple_line | IconAppleLine | Weight=Line | 사과, 과일, 농수산물, apple, fruit |  | service |
+| icon_arrow_clockwise_circular_fill | IconArrowClockwiseCircularFill | Weight=Fill | arrow, circular, clockwise, refresh, reload, retry, rotate, 리프레시, 새로고침, 시계방향, 원형, 재시도, 화살표, 회전 |  |  |
+| icon_arrow_clockwise_circular_line | IconArrowClockwiseCircularLine | Weight=Line | arrow, circular, clockwise, refresh, reload, retry, rotate, 리프레시, 새로고침, 시계방향, 원형, 재시도, 화살표, 회전 |  |  |
+| icon_arrow_clockwise_oval_fill | IconArrowClockwiseOvalFill | Weight=Fill | 360도, arrow, car, car_around_view, clockwise, panorama, refresh, reload, rotate, 새로고침, 시계방향, 중고차, 파노라마, 화살표, 회전 |  |  |
+| icon_arrow_clockwise_oval_line | IconArrowClockwiseOvalLine | Weight=Line | 360도, arrow, car, car_around_view, clockwise, panorama, refresh, reload, rotate, 새로고침, 시계방향, 중고차, 파노라마, 화살표, 회전 |  |  |
+| icon_arrow_counterclockwise_circular_fill | IconArrowCounterclockwiseCircularFill | Weight=Fill | arrow, circular, clockwise, reset, rotate, 리셋, 초기화, 반시계방향, 원형, 화살표, 회전 |  |  |
+| icon_arrow_counterclockwise_circular_line | IconArrowCounterclockwiseCircularLine | Weight=Line | arrow, circular, clockwise, reset, rotate, 리셋, 초기화, 반시계방향, 원형, 화살표, 회전 |  |  |
+| icon_arrow_down_fill | IconArrowDownFill | Weight=Fill | arrow, down, fall, notification_fall, 아래, 아래로, 알림, 하락, 화살표 |  |  |
+| icon_arrow_down_horizline_fill | IconArrowDownHorizlineFill | Weight=Fill | arrow, arrow down, download, horizontal line, save, 가로선, 다운로드, 아래 화살표, 저장, 화살표 |  |  |
+| icon_arrow_down_horizline_line | IconArrowDownHorizlineLine | Weight=Line | arrow, arrow down, download, horizontal line, save, 가로선, 다운로드, 아래 화살표, 저장, 화살표 |  |  |
+| icon_arrow_down_line | IconArrowDownLine | Weight=Line | arrow, down, fall, notification_fall, 아래, 아래로, 알림, 하락, 화살표 |  |  |
+| icon_arrow_down_line_vertical_arrow_up_square_fill | IconArrowDownLineVerticalArrowUpSquareFill | Weight=Fill | 엘리베이터, 승강기, 건물, 층, elevator, lift, building, floor |  |  |
+| icon_arrow_down_line_vertical_arrow_up_square_line | IconArrowDownLineVerticalArrowUpSquareLine | Weight=Line | 엘리베이터, 승강기, 건물, 층, elevator, lift, building, floor |  |  |
+| icon_arrow_down_right_arrow_up_left_fill | IconArrowDownRightArrowUpLeftFill | Weight=Fill | arrow, down left, expand, collapsed, zoom, 오른쪽 위, 왼쪽 아래, 줌, 확대, 확장, 전체보기, 축소 |  |  |
+| icon_arrow_down_right_arrow_up_left_line | IconArrowDownRightArrowUpLeftLine | Weight=Line | arrow, down left, expand, collapsed, zoom, 오른쪽 위, 왼쪽 아래, 줌, 확대, 확장, 전체보기, 축소 |  |  |
+| icon_arrow_left_bracket_right_fill | IconArrowLeftBracketRightFill | Weight=Fill | arrow, left, bracket, right, in, into, 화살표, 왼쪽, 괄호, 오른쪽, 안으로 |  |  |
+| icon_arrow_left_bracket_right_line | IconArrowLeftBracketRightLine | Weight=Line | arrow, left, bracket, right, in, into, 화살표, 왼쪽, 괄호, 오른쪽, 안으로 |  |  |
+| icon_arrow_left_fill | IconArrowLeftFill | Weight=Fill | arrow, back, backward, left, previous, 뒤로, 이전, 화살표 |  |  |
+| icon_arrow_left_line | IconArrowLeftLine | Weight=Line | arrow, back, backward, left, previous, 뒤로, 이전, 화살표 |  |  |
+| icon_arrow_right_angled_fill | IconArrowRightAngledFill | Weight=Fill | angle, arrow, direction, right, turn, upright, 각도, 방향, 오른쪽, 오른쪽위, 위오른쪽, 화살표, 회전 |  |  |
+| icon_arrow_right_angled_line | IconArrowRightAngledLine | Weight=Line | angle, arrow, direction, right, turn, upright, 각도, 방향, 오른쪽, 오른쪽위, 위오른쪽, 화살표, 회전 |  |  |
+| icon_arrow_right_arrow_left_fill | IconArrowRightArrowLeftFill | Weight=Fill | arrow, change, convert, exchange, left, right, shift, swap, 교체, 교환, 바꾸다, 오른쪽, 왼쪽, 전환, 화살표 |  |  |
+| icon_arrow_right_arrow_left_line | IconArrowRightArrowLeftLine | Weight=Line | arrow, change, convert, exchange, left, right, shift, swap, 교체, 교환, 바꾸다, 오른쪽, 왼쪽, 전환, 화살표 |  |  |
+| icon_arrow_right_fill | IconArrowRightFill | Weight=Fill | arrow, forward, froward, next, right, 다음, 앞으로, 화살표 |  |  |
+| icon_arrow_right_line | IconArrowRightLine | Weight=Line | arrow, forward, froward, next, right, 다음, 앞으로, 화살표 |  |  |
+| icon_arrow_up_arrow_down_fill | IconArrowUpArrowDownFill | Weight=Fill | arrow, down, sort, up, 아래, 위, 정렬, 화살표 |  |  |
+| icon_arrow_up_arrow_down_line | IconArrowUpArrowDownLine | Weight=Line | arrow, down, sort, up, 아래, 위, 정렬, 화살표 |  |  |
+| icon_arrow_up_bracket_down_fill | IconArrowUpBracketDownFill | Weight=Fill | arrow, bracket, down, download, export, ios, ios_share, share, up, upload, 공유, 괄호, 내보내기, 다운로드, 아래, 업로드, 위, 화살표 |  |  |
+| icon_arrow_up_bracket_down_line | IconArrowUpBracketDownLine | Weight=Line | arrow, bracket, down, download, export, ios, ios_share, share, up, upload, 공유, 괄호, 내보내기, 다운로드, 아래, 업로드, 위, 화살표 |  |  |
+| icon_arrow_up_fill | IconArrowUpFill | Weight=Fill | arrow, arrow_upward, top, up, upward, 위로, 화살표 |  |  |
+| icon_arrow_up_left_fill | IconArrowUpLeftFill | Weight=Fill | arrow, open, left, up, 대각선, 열기, 왼쪽, 위, 화살표 |  |  |
+| icon_arrow_up_left_line | IconArrowUpLeftLine | Weight=Line | arrow, open, left, up, 대각선, 열기, 왼쪽, 위, 화살표 |  |  |
+| icon_arrow_up_line | IconArrowUpLine | Weight=Line | arrow, arrow_upward, top, up, upward, 위로, 화살표 |  |  |
+| icon_arrow_up_right_arrow_down_left_fill | IconArrowUpRightArrowDownLeftFill | Weight=Fill | arrow, down left, expand, large, map, place, up right, view, zoom, 오른쪽 위, 왼쪽 아래, 줌, 지도, 화살표, 확대, 확장, 전체보기 |  |  |
+| icon_arrow_up_right_arrow_down_left_line | IconArrowUpRightArrowDownLeftLine | Weight=Line | arrow, down left, expand, large, map, place, up right, view, zoom, 오른쪽 위, 왼쪽 아래, 줌, 지도, 화살표, 확대, 확장, 전체보기 |  |  |
+| icon_arrow_up_right_arrow_down_left_square_fill | IconArrowUpRightArrowDownLeftSquareFill | Weight=Fill | 면적, 영역, 확대, area, zone, expansion |  |  |
+| icon_arrow_up_right_arrow_down_left_square_line | IconArrowUpRightArrowDownLeftSquareLine | Weight=Line | 면적, 영역, 확대, area, zone, expansion |  |  |
+| icon_arrow_up_right_fill | IconArrowUpRightFill | Weight=Fill | arrow, open, right, up, 내보내기, 다운로드, 대각선, 열기, 오른쪽, 위, 화살표 |  |  |
+| icon_arrow_up_right_line | IconArrowUpRightLine | Weight=Line | arrow, open, right, up, 내보내기, 다운로드, 대각선, 열기, 오른쪽, 위, 화살표 |  |  |
+| icon_arrow_up_right_shoppingbag_tilted_fill | IconArrowUpRightShoppingbagTiltedFill | Weight=Fill | 바로구매, 쇼핑백, 쇼핑, 중고거래, 거래, 구매, 서비스, 화살표, buynow, shopping bag, shopping, secondhand trade, trade, purchase, service, arrow |  | service |
+| icon_arrow_up_right_shoppingbag_tilted_line | IconArrowUpRightShoppingbagTiltedLine | Weight=Line | 바로구매, 쇼핑백, 쇼핑, 중고거래, 거래, 구매, 서비스, 화살표, buynow, shopping bag, shopping, secondhand trade, trade, purchase, service, arrow |  | service |
+| icon_arrow_uturn_left_fill | IconArrowUturnLeftFill | Weight=Fill | arrow, chevron, left, more, reset, reverse, undo, uturn, 다시, 되돌리기, 뒤로가기, 왼쪽, 유턴, 이전, 적용취소, 취소, 화살표 |  |  |
+| icon_arrow_uturn_left_line | IconArrowUturnLeftLine | Weight=Line | arrow, chevron, left, more, reset, reverse, undo, uturn, 다시, 되돌리기, 뒤로가기, 왼쪽, 유턴, 이전, 적용취소, 취소, 화살표 |  |  |
+| icon_arrow_uturn_right_fill | IconArrowUturnRightFill | Weight=Fill | arrow, chevron, forward, more, next, redo, right, uturn, 다시, 다시적용, 되돌리기, 앞으로, 오른쪽, 유턴, 재실행, 화살표 |  |  |
+| icon_arrow_uturn_right_line | IconArrowUturnRightLine | Weight=Line | arrow, chevron, forward, more, next, redo, right, uturn, 다시, 다시적용, 되돌리기, 앞으로, 오른쪽, 유턴, 재실행, 화살표 |  |  |
+| icon_arrow2_clockwise_circular_fill | IconArrow2ClockwiseCircularFill | Weight=Fill | arrow, circular, clockwise, photo, photo_edit_rotate, refresh, reload, rotate, 사진, 새로고침, 시계방향, 원형, 화살표, 회전 |  |  |
+| icon_arrow2_clockwise_circular_line | IconArrow2ClockwiseCircularLine | Weight=Line | arrow, circular, clockwise, photo, photo_edit_rotate, refresh, reload, rotate, 사진, 새로고침, 시계방향, 원형, 화살표, 회전 |  |  |
+| icon_article_fill | IconArticleFill | Weight=Fill | article, blog, news, note, 기사, 노트, 뉴스, 블로그, 아티클 |  |  |
+| icon_article_line | IconArticleLine | Weight=Line | article, blog, news, note, 기사, 노트, 뉴스, 블로그, 아티클 |  |  |
+| icon_asterisk_horizrectangle_coolwave3_fill | IconAsteriskHorizrectangleCoolwave3Fill | Weight=Fill | 에어컨, 냉방, 온도, 가전, 생활, air conditioner, cooling, temperature, appliance, lifestyle |  |  |
+| icon_asterisk_horizrectangle_coolwave3_line | IconAsteriskHorizrectangleCoolwave3Line | Weight=Line | 에어컨, 냉방, 온도, 가전, 생활, air conditioner, cooling, temperature, appliance, lifestyle |  |  |
+| icon_at_fill | IconAtFill | Weight=Fill | @, address, at, email, mention, 골뱅이, 그룹, 멘션, 모임, 이메일, 주소, 채팅 |  |  |
+| icon_at_line | IconAtLine | Weight=Line | @, address, at, email, mention, 골뱅이, 그룹, 멘션, 모임, 이메일, 주소, 채팅 |  |  |
+| icon_b_uppercase_fill | IconBUppercaseFill | Weight=Fill | edit, b, font, letter, bold, text, type, typo, uppercase, write, 글, 글자, 두께, 볼드, 알파벳, 작성, 타이포, 텍스트, 폰트 |  |  |
+| icon_b_uppercase_line | IconBUppercaseLine | Weight=Line | edit, b, font, letter, bold, text, type, typo, uppercase, write, 글, 글자, 두께, 볼드, 알파벳, 작성, 타이포, 텍스트, 폰트 |  |  |
+| icon_backspacekey_fill | IconBackspacekeyFill | Weight=Fill | backspace, delete, delete_keyboard, key, keyboard, 삭제, 지우기, 키, 키보드 |  |  |
+| icon_backspacekey_line | IconBackspacekeyLine | Weight=Line | backspace, delete, delete_keyboard, key, keyboard, 삭제, 지우기, 키, 키보드 |  |  |
+| icon_barchart_board_fill | IconBarchartBoardFill | Weight=Fill | bar chart, chart, graph, data, presentation, 막대 그래프, 차트, 데이터, 발표 |  |  |
+| icon_barchart_board_line | IconBarchartBoardLine | Weight=Line | bar chart, chart, graph, data, presentation, 막대 그래프, 차트, 데이터, 발표 |  |  |
+| icon_barchart_square_fill | IconBarchartSquareFill | Weight=Fill | ballot, bar chart, barchart, chart, data, graph, poll, statistics, vote, 데이터, 막대 그래프, 바차트, 차트, 통계, 투표 |  |  |
+| icon_barchart_square_line | IconBarchartSquareLine | Weight=Line | ballot, bar chart, barchart, chart, data, graph, poll, statistics, vote, 데이터, 막대 그래프, 바차트, 차트, 통계, 투표 |  |  |
+| icon_bed_frontside_fill | IconBedFrontsideFill | Weight=Fill | 침대, 가구, 집, 잠, bed, furniture, home, sleep |  |  |
+| icon_bed_frontside_line | IconBedFrontsideLine | Weight=Line | 침대, 가구, 집, 잠, bed, furniture, home, sleep |  |  |
+| icon_bell_fill | IconBellFill | Weight=Fill | alert, bell, noti, notification, 노티, 알림, 종 |  |  |
+| icon_bell_line | IconBellLine | Weight=Line | alert, bell, noti, notification, 노티, 알림, 종 |  |  |
+| icon_bell_slash_fill | IconBellSlashFill | Weight=Fill | bell, mute, noti_off, notification, notification_off, off, 끄기, 노티, 알림, 음소거, 종 |  |  |
+| icon_bell_slash_line | IconBellSlashLine | Weight=Line | bell, mute, noti_off, notification, notification_off, off, 끄기, 노티, 알림, 음소거, 종 |  |  |
+| icon_bluetooth_fill | IconBluetoothFill | Weight=Fill | headphone, speaker, earphone, 블루투스, 이어폰, 스피커, 헤드셋 |  |  |
+| icon_bluetooth_line | IconBluetoothLine | Weight=Line | headphone, speaker, earphone, 블루투스, 이어폰, 스피커, 헤드셋 |  |  |
+| icon_book_fill | IconBookFill | Weight=Fill | book, housekeeping_book, read, reading, 읽기, 책 |  |  |
+| icon_book_line | IconBookLine | Weight=Line | book, housekeeping_book, read, reading, 읽기, 책 |  |  |
+| icon_book_open_fill | IconBookOpenFill | Weight=Fill | book, mission, open, read, reading, 사전, 열림, 읽기, 책 |  |  |
+| icon_book_open_line | IconBookOpenLine | Weight=Line | book, mission, open, read, reading, 사전, 열림, 읽기, 책 |  |  |
+| icon_bookmark_fill | IconBookmarkFill | Weight=Fill | bookmark, favorite, save, scrap, 북마크, 스크랩, 저장, 좋아요 |  |  |
+| icon_bookmark_line | IconBookmarkLine | Weight=Line | bookmark, favorite, save, scrap, 북마크, 스크랩, 저장, 좋아요 |  |  |
+| icon_box_flap_fill | IconBoxFlapFill | Weight=Fill | 박스, 택배, 상자, 짐, 이사, 포장, alba, box, parcel, package, luggage, move, packing |  |  |
+| icon_box_flap_line | IconBoxFlapLine | Weight=Line | 박스, 택배, 상자, 짐, 이사, 포장, alba, box, parcel, package, luggage, move, packing |  |  |
+| icon_bracket_left_arrow_right_fill | IconBracketLeftArrowRightFill | Weight=Fill | arrow, bracket, exit, leave, left, logout, out, out of, right, signout, 괄호, 나가기, 밖으로, 오른쪽, 왼쪽, 탈퇴, 화살표 |  |  |
+| icon_bracket_left_arrow_right_line | IconBracketLeftArrowRightLine | Weight=Line | arrow, bracket, exit, leave, left, logout, out, out of, right, signout, 괄호, 나가기, 밖으로, 오른쪽, 왼쪽, 탈퇴, 화살표 |  |  |
+| icon_building2_fill | IconBuilding2Fill | Weight=Fill | apartment, building, company, condo, office, structure, 건물, 빌라, 사무실, 아파트, 주택, 콘도, 회사 |  |  |
+| icon_building2_line | IconBuilding2Line | Weight=Line | apartment, building, company, condo, office, structure, 건물, 빌라, 사무실, 아파트, 주택, 콘도, 회사 |  |  |
+| icon_building2_twosize_fill | IconBuilding2TwosizeFill | Weight=Fill | house, home, building, residential, property, real-estate, neighborhood, 집, 주택, 건물, 부동산, 주거 |  |  |
+| icon_building2_twosize_line | IconBuilding2TwosizeLine | Weight=Line | house, home, building, residential, property, real-estate, neighborhood, 집, 주택, 건물, 부동산, 주거 |  |  |
+| icon_calendar_fill | IconCalendarFill | Weight=Fill | calendar, date, schedule, 날짜, 달력, 일정 |  |  |
+| icon_calendar_line | IconCalendarLine | Weight=Line | calendar, date, schedule, 날짜, 달력, 일정 |  |  |
+| icon_camcorder_fill | IconCamcorderFill | Weight=Fill | camcorder, camera, media, record, video, 녹화, 동영상, 비디오, 카메라, 캠코더 |  |  |
+| icon_camcorder_line | IconCamcorderLine | Weight=Line | camcorder, camera, media, record, video, 녹화, 동영상, 비디오, 카메라, 캠코더 |  |  |
+| icon_camera_fill | IconCameraFill | Weight=Fill | camera, image, photo, picture, snap, 사진, 이미지, 촬영, 카메라, 포토 |  |  |
+| icon_camera_line | IconCameraLine | Weight=Line | camera, image, photo, picture, snap, 사진, 이미지, 촬영, 카메라, 포토 |  |  |
+| icon_car_fill | IconCarFill | Weight=Fill | 차, 자동차, 옆, car, side |  |  |
+| icon_car_front_upside_wave2_reversed_up_fill | IconCarFrontUpsideWave2ReversedUpFill | Weight=Fill | aeb, car, front, sensor, up, 감지, 경보, 센서, 앞, 위, 전방, 중고차, 차 |  |  |
+| icon_car_front_upside_wave2_reversed_up_line | IconCarFrontUpsideWave2ReversedUpLine | Weight=Line | aeb, car, front, sensor, up, 감지, 경보, 센서, 앞, 위, 전방, 중고차, 차 |  |  |
+| icon_car_frontside_fill | IconCarFrontsideFill | Weight=Fill | automobile, car, cars, transportation, vehicle, vertical, 버티컬, 운송, 자동차, 중고차, 차, 차량 | 중고차 | service |
+| icon_car_frontside_line | IconCarFrontsideLine | Weight=Line | automobile, car, cars, transportation, vehicle, vertical, 버티컬, 운송, 자동차, 중고차, 차, 차량 | 중고차 | service |
+| icon_car_line | IconCarLine | Weight=Line | 차, 자동차, 옆, car, side |  |  |
+| icon_car_rear_trunk_open_leftside_fill | IconCarRearTrunkOpenLeftsideFill | Weight=Fill | car, car_power_trunk, left, open, trunk, 열림, 왼쪽, 전동 트렁크, 중고차, 차, 트렁크 |  |  |
+| icon_car_rear_trunk_open_leftside_line | IconCarRearTrunkOpenLeftsideLine | Weight=Line | car, car_power_trunk, left, open, trunk, 열림, 왼쪽, 전동 트렁크, 중고차, 차, 트렁크 |  |  |
+| icon_car_rear_upside_sector_down_fill | IconCarRearUpsideSectorDownFill | Weight=Fill | car, car_rear_camera, down, rear, sensor, 뒤, 센서, 아래, 중고차, 차, 후면, 후방센서, 후방카메라 |  |  |
+| icon_car_rear_upside_sector_down_line | IconCarRearUpsideSectorDownLine | Weight=Line | car, car_rear_camera, down, rear, sensor, 뒤, 센서, 아래, 중고차, 차, 후면, 후방센서, 후방카메라 |  |  |
+| icon_car_rear_upside_wave2_reversed_down_fill | IconCarRearUpsideWave2ReversedDownFill | Weight=Fill | car, car_rear_sensor, down, rear, sensor, 뒤, 센서, 아래, 중고차, 차, 후방감지 |  |  |
+| icon_car_rear_upside_wave2_reversed_down_left_fill | IconCarRearUpsideWave2ReversedDownLeftFill | Weight=Fill | car, car_blind_spot, down, left, rear, sensor, 뒤, 센서, 아래, 왼쪽, 중고차, 차, 측면, 후방감지 |  |  |
+| icon_car_rear_upside_wave2_reversed_down_left_line | IconCarRearUpsideWave2ReversedDownLeftLine | Weight=Line | car, car_blind_spot, down, left, rear, sensor, 뒤, 센서, 아래, 왼쪽, 중고차, 차, 측면, 후방감지 |  |  |
+| icon_car_rear_upside_wave2_reversed_down_line | IconCarRearUpsideWave2ReversedDownLine | Weight=Line | car, car_rear_sensor, down, rear, sensor, 뒤, 센서, 아래, 중고차, 차, 후방감지 |  |  |
+| icon_card_fill | IconCardFill | Weight=Fill | card, credit card, method, pay, payment, 결제, 결제수단, 신용카드, 카드 |  |  |
+| icon_card_line | IconCardLine | Weight=Line | card, credit card, method, pay, payment, 결제, 결제수단, 신용카드, 카드 |  |  |
+| icon_carrot_fill | IconCarrotFill | Weight=Fill | 당근, carrot, karrot |  |  |
+| icon_carrot_line | IconCarrotLine | Weight=Line | 당근, carrot, karrot |  |  |
+| icon_cart_fill | IconCartFill | Weight=Fill | cart, shopping, shopping cart, 쇼핑, 쇼핑카트, 장바구니, 카트 |  |  |
+| icon_cart_items_fill | IconCartItemsFill | Weight=Fill | 커머스, 카트, 쇼핑, commerce, cart, shopping |  | service |
+| icon_cart_items_line | IconCartItemsLine | Weight=Line | 커머스, 카트, 쇼핑, commerce, cart, shopping |  | service |
+| icon_cart_line | IconCartLine | Weight=Line | cart, shopping, shopping cart, 쇼핑, 쇼핑카트, 장바구니, 카트 |  |  |
+| icon_cart_load_fill | IconCartLoadFill | Weight=Fill | cart, load, box, move, 짐옮기기, 카트, 박스, 포장, 이사 |  |  |
+| icon_cart_load_line | IconCartLoadLine | Weight=Line | cart, load, box, move, 짐옮기기, 카트, 박스, 포장, 이사 |  |  |
+| icon_checkmark_badge_fill | IconCheckmarkBadgeFill | Weight=Fill | badge, check, checkmark, complete, mark, profile_badge, winner, 마크, 뱃지, 상, 완료, 인증, 체크, 확인 |  |  |
+| icon_checkmark_badge_line | IconCheckmarkBadgeLine | Weight=Line | badge, check, checkmark, complete, mark, profile_badge, winner, 마크, 뱃지, 상, 완료, 인증, 체크, 확인 |  |  |
+| icon_checkmark_ballotbox_fill | IconCheckmarkBallotboxFill | Weight=Fill | ballot, ballot box, check, election, poll, vote, 선거, 투표, 투표함 |  |  |
+| icon_checkmark_ballotbox_line | IconCheckmarkBallotboxLine | Weight=Line | ballot, ballot box, check, election, poll, vote, 선거, 투표, 투표함 |  |  |
+| icon_checkmark_calendar_fill | IconCheckmarkCalendarFill | Weight=Fill | calendar, check, confirm, date, reservation, schedule, 날짜, 달력, 예약, 일정, 체크, 확인, 확정 |  |  |
+| icon_checkmark_calendar_line | IconCheckmarkCalendarLine | Weight=Line | calendar, check, confirm, date, reservation, schedule, 날짜, 달력, 예약, 일정, 체크, 확인, 확정 |  |  |
+| icon_checkmark_chatbubble_left_fill | IconCheckmarkChatbubbleLeftFill | Weight=Fill | bubble, chat, chat_bubble_check, check, checkmark, comment, confirm, message, reply, 댓글, 말풍선, 메시지, 채팅, 체크, 확인 |  |  |
+| icon_checkmark_chatbubble_left_line | IconCheckmarkChatbubbleLeftLine | Weight=Line | bubble, chat, chat_bubble_check, check, checkmark, comment, confirm, message, reply, 댓글, 말풍선, 메시지, 채팅, 체크, 확인 |  |  |
+| icon_checkmark_circle_fill | IconCheckmarkCircleFill | Weight=Fill | check, checkmark, circle, 체크, 확인, 완료, 원 |  |  |
+| icon_checkmark_circle_line | IconCheckmarkCircleLine | Weight=Line | check, checkmark, circle, 체크, 확인, 완료, 원 |  |  |
+| icon_checkmark_clipboard_fill | IconCheckmarkClipboardFill | Weight=Fill | board, check, checklist, clipboard, complete, memo, menu, order, 메뉴, 메모, 완료, 주문, 체크, 체크리스트, 클립보드, 확인 |  |  |
+| icon_checkmark_clipboard_line | IconCheckmarkClipboardLine | Weight=Line | board, check, checklist, clipboard, complete, memo, menu, order, 메뉴, 메모, 완료, 주문, 체크, 체크리스트, 클립보드, 확인 |  |  |
+| icon_checkmark_coupon_fill | IconCheckmarkCouponFill | Weight=Fill | check, confirm, coupon, coupon_used, discount, ticket, voucher, 체크, 쿠폰, 티켓, 할인권, 확인, 확정 |  |  |
+| icon_checkmark_coupon_line | IconCheckmarkCouponLine | Weight=Line | check, confirm, coupon, coupon_used, discount, ticket, voucher, 체크, 쿠폰, 티켓, 할인권, 확인, 확정 |  |  |
+| icon_checkmark_fat_fill | IconCheckmarkFatFill | Weight=Fill | check, checkmark, tick, confirm, 확인, 체크, 확정 |  | fat |
+| icon_checkmark_fat_line | IconCheckmarkFatLine | Weight=Line | check, checkmark, tick, confirm, 확인, 체크, 확정 |  | fat |
+| icon_checkmark_fill | IconCheckmarkFill | Weight=Fill | check, checkmark, confirm, tick, 체크, 확인, 확정 |  |  |
+| icon_checkmark_flower_fill | IconCheckmarkFlowerFill | Weight=Fill | badge, bold, check, check_flower, checkmark, confirm, decoration, flower, shape, tick, 굵게, 꽃, 모양, 인증, 장식, 체크, 확인, 확정 |  |  |
+| icon_checkmark_flower_line | IconCheckmarkFlowerLine | Weight=Line | badge, bold, check, check_flower, checkmark, confirm, decoration, flower, shape, tick, 굵게, 꽃, 모양, 인증, 장식, 체크, 확인, 확정 |  |  |
+| icon_checkmark_horizline_fill | IconCheckmarkHorizlineFill | Weight=Fill | check, checkmark, coupon_download_done, done, down, download, horizontal line, tick, 가로선, 다운로드, 완료, 체크, 확인 |  |  |
+| icon_checkmark_horizline_line | IconCheckmarkHorizlineLine | Weight=Line | check, checkmark, coupon_download_done, done, down, download, horizontal line, tick, 가로선, 다운로드, 완료, 체크, 확인 |  |  |
+| icon_checkmark_line | IconCheckmarkLine | Weight=Line | check, checkmark, confirm, tick, 체크, 확인, 확정 |  |  |
+| icon_checkmark_scale_fill | IconCheckmarkScaleFill | Weight=Fill |  |  |  |
+| icon_checkmark_scale_line | IconCheckmarkScaleLine | Weight=Line |  |  |  |
+| icon_checkmark_shield_fill | IconCheckmarkShieldFill | Weight=Fill | badge, check, confirmation, done, protection, safe, security, shield, 방패, 보안, 안전, 완료, 인증, 체크, 확인 |  |  |
+| icon_checkmark_shield_line | IconCheckmarkShieldLine | Weight=Line | badge, check, confirmation, done, protection, safe, security, shield, 방패, 보안, 안전, 완료, 인증, 체크, 확인 |  |  |
+| icon_checkmarkhorizline2_vertical_fill | IconCheckmarkhorizline2VerticalFill | Weight=Fill | list, menu, options, check, complete, document, 목록, 메뉴, 옵션, 확인, 완료, 문서 |  |  |
+| icon_checkmarkhorizline2_vertical_line | IconCheckmarkhorizline2VerticalLine | Weight=Line | list, menu, options, check, complete, document, 목록, 메뉴, 옵션, 확인, 완료, 문서 |  |  |
+| icon_chevron_down_fill | IconChevronDownFill | Weight=Fill | arrow, chevron, down, expand_more, more, unfold, 더보기, 아래, 아래로, 펼치기, 화살표 |  |  |
+| icon_chevron_down_line | IconChevronDownLine | Weight=Line | arrow, chevron, down, expand_more, more, unfold, 더보기, 아래, 아래로, 펼치기, 화살표 |  |  |
+| icon_chevron_down_small_fill | IconChevronDownSmallFill | Weight=Fill | chevron, down, 아래로 |  |  |
+| icon_chevron_down_small_line | IconChevronDownSmallLine | Weight=Line | chevron, down, 아래로 |  |  |
+| icon_chevron_left_fill | IconChevronLeftFill | Weight=Fill | arrow, back, backward, chevron, chevron_left, left, more, previous, 뒤로, 왼쪽, 이전, 화살표 |  |  |
+| icon_chevron_left_line | IconChevronLeftLine | Weight=Line | arrow, back, backward, chevron, chevron_left, left, more, previous, 뒤로, 왼쪽, 이전, 화살표 |  |  |
+| icon_chevron_left_small_fill | IconChevronLeftSmallFill | Weight=Fill | chevron, left, 왼쪽, 좌 |  |  |
+| icon_chevron_left_small_line | IconChevronLeftSmallLine | Weight=Line | chevron, left, 왼쪽, 좌 |  |  |
+| icon_chevron_right_fill | IconChevronRightFill | Weight=Fill | arrow, chevron, chevron_right, forward, more, next, right, 다음, 앞으로, 오른쪽, 화살표 |  |  |
+| icon_chevron_right_line | IconChevronRightLine | Weight=Line | arrow, chevron, chevron_right, forward, more, next, right, 다음, 앞으로, 오른쪽, 화살표 |  |  |
+| icon_chevron_right_small_fill | IconChevronRightSmallFill | Weight=Fill | chevron, right, 오른쪽, 우 |  |  |
+| icon_chevron_right_small_line | IconChevronRightSmallLine | Weight=Line | chevron, right, 오른쪽, 우 |  |  |
+| icon_chevron_up_fill | IconChevronUpFill | Weight=Fill | arrow, chevron, expand_less, fold, less, more, up, 위, 위로, 접기, 화살표 |  |  |
+| icon_chevron_up_line | IconChevronUpLine | Weight=Line | arrow, chevron, expand_less, fold, less, more, up, 위, 위로, 접기, 화살표 |  |  |
+| icon_chevron_up_small_fill | IconChevronUpSmallFill | Weight=Fill | chevron, down, 아래로 |  |  |
+| icon_chevron_up_small_line | IconChevronUpSmallLine | Weight=Line | chevron, down, 아래로 |  |  |
+| icon_circle4_square_fill | IconCircle4SquareFill | Weight=Fill | 인덕션, 가스레인지, 가전, 생활, 주방, 부엌, induction cooker, gas stove, appliance, lifestyle, kitchen |  |  |
+| icon_circle4_square_line | IconCircle4SquareLine | Weight=Line | 인덕션, 가스레인지, 가전, 생활, 주방, 부엌, induction cooker, gas stove, appliance, lifestyle, kitchen |  |  |
+| icon_clock_fill | IconClockFill | Weight=Fill | clock, history, hour, time, 내역, 시간, 시계, 히스토리 |  |  |
+| icon_clock_line | IconClockLine | Weight=Line | clock, history, hour, time, 내역, 시간, 시계, 히스토리 |  |  |
+| icon_compass_fill | IconCompassFill | Weight=Fill | car, car_navigation, compass, direction, navigation, 길찾기, 나침반, 네비, 네비게이션, 방향, 중고차, 지도 |  |  |
+| icon_compass_line | IconCompassLine | Weight=Line | car, car_navigation, compass, direction, navigation, 길찾기, 나침반, 네비, 네비게이션, 방향, 중고차, 지도 |  |  |
+| icon_corner_down_left_fill | IconCornerDownLeftFill | Weight=Fill | arrow, corner, down, left, reply, reply_re, shape, ㄴ, 대댓글, 댓글, 도형, 모서리, 아래, 왼쪽, 화살표 |  |  |
+| icon_corner_down_left_line | IconCornerDownLeftLine | Weight=Line | arrow, corner, down, left, reply, reply_re, shape, ㄴ, 대댓글, 댓글, 도형, 모서리, 아래, 왼쪽, 화살표 |  |  |
+| icon_corner4_inward_fill | IconCorner4InwardFill | Weight=Fill | 축소, 전체화면, 줄이기, corner, contract, inward |  |  |
+| icon_corner4_inward_line | IconCorner4InwardLine | Weight=Line | 축소, 전체화면, 줄이기, corner, contract, inward |  |  |
+| icon_corner4_outward_fill | IconCorner4OutwardFill | Weight=Fill | 확대, 전체화면, 늘리기, 확장, expand, outward, corner |  |  |
+| icon_corner4_outward_line | IconCorner4OutwardLine | Weight=Line | 확대, 전체화면, 늘리기, 확장, expand, outward, corner |  |  |
+| icon_coupon_fill | IconCouponFill | Weight=Fill | coupon, discount, ticket, voucher, 쿠폰, 티켓, 할인권 |  |  |
+| icon_coupon_line | IconCouponLine | Weight=Line | coupon, discount, ticket, voucher, 쿠폰, 티켓, 할인권 |  |  |
+| icon_cropmark_fill | IconCropmarkFill | Weight=Fill | crop, cut, edit, image, photo, photo_edit_crop, 사진, 이미지, 자르기, 크롭, 편집 |  |  |
+| icon_cropmark_line | IconCropmarkLine | Weight=Line | crop, cut, edit, image, photo, photo_edit_crop, 사진, 이미지, 자르기, 크롭, 편집 |  |  |
+| icon_crosshair_fill | IconCrosshairFill | Weight=Fill | aim, crosshair, gps, location, target, 목표, 위치, 조준점 |  |  |
+| icon_crosshair_line | IconCrosshairLine | Weight=Line | aim, crosshair, gps, location, target, 목표, 위치, 조준점 |  |  |
+| icon_crosshair_questionmark_fill | IconCrosshairQuestionmarkFill | Weight=Fill | certification, crosshair, gps_enable, help, location, question mark, target, zoom, 도움말, 목표, 물음표, 위치, 인증, 조준점, 줌, 표적 |  |  |
+| icon_crosshair_questionmark_line | IconCrosshairQuestionmarkLine | Weight=Line | certification, crosshair, gps_enable, help, location, question mark, target, zoom, 도움말, 목표, 물음표, 위치, 인증, 조준점, 줌, 표적 |  |  |
+| icon_crown_fill | IconCrownFill | Weight=Fill | badge, crown, groupchat_king, king, queen, royal, 모임, 방장, 뱃지, 여왕, 왕, 왕관, 채팅 |  |  |
+| icon_crown_line | IconCrownLine | Weight=Line | badge, crown, groupchat_king, king, queen, royal, 모임, 방장, 뱃지, 여왕, 왕, 왕관, 채팅 |  |  |
+| icon_cup_heatwave_fill | IconCupHeatwaveFill | Weight=Fill | cafe, drink, cup, beverage, hot, coffee, tea, 카페, 음료, 뜨거운, 커피, 차, 컵 |  |  |
+| icon_cup_heatwave_line | IconCupHeatwaveLine | Weight=Line | cafe, drink, cup, beverage, hot, coffee, tea, 카페, 음료, 뜨거운, 커피, 차, 컵 |  |  |
+| icon_diamond_fill | IconDiamondFill | Weight=Fill | 다이아몬드, 혜택, 빛나는, 보석, 이벤트, 리워드, 보상, diamond, benefit, shining, jewel, event, reward |  |  |
+| icon_diamond_line | IconDiamondLine | Weight=Line | 다이아몬드, 혜택, 빛나는, 보석, 이벤트, 리워드, 보상, diamond, benefit, shining, jewel, event, reward |  |  |
+| icon_document_arrow_left_fill | IconDocumentArrowLeftFill | Weight=Fill | back, document, file, import, note, previous, 노트, 뒤로, 문서, 불러오기, 이전, 작성중, 파일 |  |  |
+| icon_document_arrow_left_line | IconDocumentArrowLeftLine | Weight=Line | back, document, file, import, note, previous, 노트, 뒤로, 문서, 불러오기, 이전, 작성중, 파일 |  |  |
+| icon_document_checkmark_fill | IconDocumentCheckmarkFill | Weight=Fill | check, complete, document, histroy, list, list_check, menu, note, options, post, 관리, 내역, 노트, 리스트, 메뉴, 목록, 문서, 옵션, 완료, 체크, 포스트, 확인 |  |  |
+| icon_document_checkmark_line | IconDocumentCheckmarkLine | Weight=Line | check, complete, document, histroy, list, list_check, menu, note, options, post, 관리, 내역, 노트, 리스트, 메뉴, 목록, 문서, 옵션, 완료, 체크, 포스트, 확인 |  |  |
+| icon_document_fill | IconDocumentFill | Weight=Fill | document, file, info, note, paper, 노트, 문서, 정보, 파일 |  |  |
+| icon_document_line | IconDocumentLine | Weight=Line | document, file, info, note, paper, 노트, 문서, 정보, 파일 |  |  |
+| icon_document_magnifyingglass_fill | IconDocumentMagnifyingglassFill | Weight=Fill | doc, document, file, find, note, search, search_doc, serach, 검색, 노트, 문서, 찾기, 파일 |  |  |
+| icon_document_magnifyingglass_line | IconDocumentMagnifyingglassLine | Weight=Line | doc, document, file, find, note, search, search_doc, serach, 검색, 노트, 문서, 찾기, 파일 |  |  |
+| icon_document_pen_fill | IconDocumentPenFill | Weight=Fill | article, document, edit, file, modify, note, story, story_article, write, 노트, 문서, 수정, 스토리, 아티클, 파일, 편집 |  |  |
+| icon_document_pen_line | IconDocumentPenLine | Weight=Line | article, document, edit, file, modify, note, story, story_article, write, 노트, 문서, 수정, 스토리, 아티클, 파일, 편집 |  |  |
+| icon_document_plus_fill | IconDocumentPlusFill | Weight=Fill | add, create, document, file, note, plus, write, write_frequent_use, 노트, 문서, 생성, 쓰기, 추가, 파일 |  |  |
+| icon_document_plus_line | IconDocumentPlusLine | Weight=Line | add, create, document, file, note, plus, write, write_frequent_use, 노트, 문서, 생성, 쓰기, 추가, 파일 |  |  |
+| icon_document_tray_fill | IconDocumentTrayFill | Weight=Fill | 파일, 문서, 보관함, 보관, file, paper, document, archive, storage, save |  |  |
+| icon_document_tray_line | IconDocumentTrayLine | Weight=Line | 파일, 문서, 보관함, 보관, file, paper, document, archive, storage, save |  |  |
+| icon_dollar_circle_arrow_right_fill | IconDollarCircleArrowRightFill | Weight=Fill | money, dollor, 돈, 머니, 달러, 동전, circle, coin, send, 송금 |  |  |
+| icon_dollar_circle_arrow_right_line | IconDollarCircleArrowRightLine | Weight=Line | money, dollor, 돈, 머니, 달러, 동전, circle, coin, send, 송금 |  |  |
+| icon_dollar_circle_fill | IconDollarCircleFill | Weight=Fill | money, dollor, 돈, 머니, 달러, 동전, circle, coin |  |  |
+| icon_dollar_circle_line | IconDollarCircleLine | Weight=Line | money, dollor, 돈, 머니, 달러, 동전, circle, coin |  |  |
+| icon_dollar_fill | IconDollarFill | Weight=Fill | money, dollor, 돈, 머니, 달러 |  |  |
+| icon_dollar_line | IconDollarLine | Weight=Line | money, dollor, 돈, 머니, 달러 |  |  |
+| icon_dot3_circle_fill | IconDot3CircleFill | Weight=Fill | circle, more, etc, dot, 기타 |  |  |
+| icon_dot3_circle_line | IconDot3CircleLine | Weight=Line | circle, more, etc, dot, 기타 |  |  |
+| icon_dot3_horizontal_chatbubble_left_fill | IconDot3HorizontalChatbubbleLeftFill | Weight=Fill | bubble, chat, chatting, dots, message, more, reply, 대화, 댓글, 더보기, 말풍선, 메세지, 메시지, 점, 채팅 |  |  |
+| icon_dot3_horizontal_chatbubble_left_line | IconDot3HorizontalChatbubbleLeftLine | Weight=Line | bubble, chat, chatting, dots, message, more, reply, 대화, 댓글, 더보기, 말풍선, 메세지, 메시지, 점, 채팅 |  |  |
+| icon_dot3_horizontal_chatbubble_left_slash_fill | IconDot3HorizontalChatbubbleLeftSlashFill | Weight=Fill | bubble, chat, chatting, dots, message, more, reply, refuse, blocked, 안받기, 대화, 말풍선, 메세지, 메시지, 채팅 |  |  |
+| icon_dot3_horizontal_chatbubble_left_slash_line | IconDot3HorizontalChatbubbleLeftSlashLine | Weight=Line | bubble, chat, chatting, dots, message, more, reply, refuse, blocked, 안받기, 대화, 말풍선, 메세지, 메시지, 채팅 |  |  |
+| icon_dot3_horizontal_fill | IconDot3HorizontalFill | Weight=Fill | dot, dots, horizontal, menu, more, more_horiz, setting, 가로, 더보기, 도트, 메뉴, 상세, 설정, 점 |  |  |
+| icon_dot3_horizontal_line | IconDot3HorizontalLine | Weight=Line | dot, dots, horizontal, menu, more, more_horiz, setting, 가로, 더보기, 도트, 메뉴, 상세, 설정, 점 |  |  |
+| icon_dot3_vertical_fill | IconDot3VerticalFill | Weight=Fill | dot, dots, menu, more, more_vert, setting, vertical, 더보기, 도트, 메뉴, 설정, 세로, 점 |  |  |
+| icon_dot3_vertical_line | IconDot3VerticalLine | Weight=Line | dot, dots, menu, more, more_vert, setting, vertical, 더보기, 도트, 메뉴, 설정, 세로, 점 |  |  |
+| icon_dothorizline3_vertical_fill | IconDothorizline3VerticalFill | Weight=Fill | bullets, dots, list, menu, options, 리스트, 메뉴, 목록, 옵션, 점 |  |  |
+| icon_dothorizline3_vertical_line | IconDothorizline3VerticalLine | Weight=Line | bullets, dots, list, menu, options, 리스트, 메뉴, 목록, 옵션, 점 |  |  |
+| icon_dumbbell_fill | IconDumbbellFill | Weight=Fill | fitness, gym, workout, exercise, 헬스, 체육관, 운동 |  |  |
+| icon_dumbbell_line | IconDumbbellLine | Weight=Line | fitness, gym, workout, exercise, 헬스, 체육관, 운동 |  |  |
+| icon_earth_fill | IconEarthFill | Weight=Fill | earth, world, global, 지구, 세계, 글로벌 |  |  |
+| icon_earth_line | IconEarthLine | Weight=Line | earth, world, global, 지구, 세계, 글로벌 |  |  |
+| icon_envelope_fill | IconEnvelopeFill | Weight=Fill | card, envelope, invite, letter, mail, message, 메시지, 메일, 초대, 편지 |  |  |
+| icon_envelope_line | IconEnvelopeLine | Weight=Line | card, envelope, invite, letter, mail, message, 메시지, 메일, 초대, 편지 |  |  |
+| icon_epb_fill | IconEpbFill | Weight=Fill | brake, car, car_epb, electronic parking brake, parking brake, 감지, 브레이크, 전자식 주차 브레이크, 주차, 주차 브레이크, 주차브레이크, 중고차 |  |  |
+| icon_epb_line | IconEpbLine | Weight=Line | brake, car, car_epb, electronic parking brake, parking brake, 감지, 브레이크, 전자식 주차 브레이크, 주차, 주차 브레이크, 주차브레이크, 중고차 |  |  |
+| icon_eraser_horizline_fill | IconEraserHorizlineFill | Weight=Fill | delete, edit, eraser, horizontal line, write, 가로선, 삭제, 설정, 셋팅, 수정, 연필, 지우개, 편집 |  |  |
+| icon_eraser_horizline_line | IconEraserHorizlineLine | Weight=Line | delete, edit, eraser, horizontal line, write, 가로선, 삭제, 설정, 셋팅, 수정, 연필, 지우개, 편집 |  |  |
+| icon_exclamationmark_chatbubble_rectangular_center_fill | IconExclamationmarkChatbubbleRectangularCenterFill | Weight=Fill | 신고, 신고하기, report |  |  |
+| icon_exclamationmark_chatbubble_rectangular_center_line | IconExclamationmarkChatbubbleRectangularCenterLine | Weight=Line | 신고, 신고하기, report |  |  |
+| icon_exclamationmark_circle_fill | IconExclamationmarkCircleFill | Weight=Fill | alert, circle, exclamation mark, info, warning, 경고, 느낌표, 알림, 원, 주의 |  |  |
+| icon_exclamationmark_circle_line | IconExclamationmarkCircleLine | Weight=Line | alert, circle, exclamation mark, info, warning, 경고, 느낌표, 알림, 원, 주의 |  |  |
+| icon_eye_fill | IconEyeFill | Weight=Fill | eye, see, view, view_count, 눈, 보기, 보다, 조회 |  |  |
+| icon_eye_line | IconEyeLine | Weight=Line | eye, see, view, view_count, 눈, 보기, 보다, 조회 |  |  |
+| icon_eye_slash_fill | IconEyeSlashFill | Weight=Fill | eye, hide, invisible, view, view_count_off, 끄다, 눈, 눈끄기, 눈끔, 보다, 보이지않음, 숨기기, 조회 |  |  |
+| icon_eye_slash_line | IconEyeSlashLine | Weight=Line | eye, hide, invisible, view, view_count_off, 끄다, 눈, 눈끄기, 눈끔, 보다, 보이지않음, 숨기기, 조회 |  |  |
+| icon_face_frustrated_circle_fill | IconFaceFrustratedCircleFill | Weight=Fill | chatting, chat, reaction, react, emoji, emoticon, bad, face, sad, frustrated, upset, unhappy, 짜증, 화남, 불쾌함, 불행, 사람, 슬픔, 얼굴, 이모지, 이모티콘, 채팅, 표정, 감정 |  |  |
+| icon_face_frustrated_circle_line | IconFaceFrustratedCircleLine | Weight=Line | chatting, chat, reaction, react, emoji, emoticon, bad, face, sad, frustrated, upset, unhappy, 짜증, 화남, 불쾌함, 불행, 사람, 슬픔, 얼굴, 이모지, 이모티콘, 채팅, 표정, 감정 |  |  |
+| icon_face_sad_circle_fill | IconFaceSadCircleFill | Weight=Fill | chatting, emoji, emoticon, emoticon_bad, face, sad, unhappy, 불쾌함, 불행, 사람, 슬픔, 얼굴, 이모지, 이모티콘, 채팅, 표정 |  |  |
+| icon_face_sad_circle_line | IconFaceSadCircleLine | Weight=Line | chatting, emoji, emoticon, emoticon_bad, face, sad, unhappy, 불쾌함, 불행, 사람, 슬픔, 얼굴, 이모지, 이모티콘, 채팅, 표정 |  |  |
+| icon_face_smile_circle_fill | IconFaceSmileCircleFill | Weight=Fill | chatting, emoji, emoticon, face, happy, smile, 사람, 얼굴, 웃음, 이모지, 이모티콘, 채팅, 표정, 행복 |  |  |
+| icon_face_smile_circle_folded_fill | IconFaceSmileCircleFoldedFill | Weight=Fill | face, smile, happy, folded, emoji, 얼굴, 웃음, 행복, 접힌, 이모지 |  |  |
+| icon_face_smile_circle_folded_line | IconFaceSmileCircleFoldedLine | Weight=Line | face, smile, happy, folded, emoji, 얼굴, 웃음, 행복, 접힌, 이모지 |  |  |
+| icon_face_smile_circle_line | IconFaceSmileCircleLine | Weight=Line | chatting, emoji, emoticon, face, happy, smile, 사람, 얼굴, 웃음, 이모지, 이모티콘, 채팅, 표정, 행복 |  |  |
+| icon_face_surprised_circle_fill | IconFaceSurprisedCircleFill | Weight=Fill | chatting, chat, reaction, react, emoji, emoticon, bad, face, sad, surprised, wow, 놀람, 당황, 황당, 깜짝, 사람, 얼굴, 이모지, 이모티콘, 채팅, 표정, 감정 |  |  |
+| icon_face_surprised_circle_line | IconFaceSurprisedCircleLine | Weight=Line | chatting, chat, reaction, react, emoji, emoticon, bad, face, sad, surprised, wow, 놀람, 당황, 황당, 깜짝, 사람, 얼굴, 이모지, 이모티콘, 채팅, 표정, 감정 |  |  |
+| icon_face_viewfinder_fill | IconFaceViewfinderFill | Weight=Fill | 얼굴, 인증, 사람, 표정, 안면, 인식, 보완, 페이, face, verification, person, expression, facial, recognition, security, pay |  |  |
+| icon_face_viewfinder_line | IconFaceViewfinderLine | Weight=Line | 얼굴, 인증, 사람, 표정, 안면, 인식, 보완, 페이, face, verification, person, expression, facial, recognition, security, pay |  |  |
+| icon_figure_bike_fill | IconFigureBikeFill | Weight=Fill | figure, wheelchair, accessibility, disabled, 사람, 휠체어, 접근성, 장애인 |  |  |
+| icon_figure_bike_line | IconFigureBikeLine | Weight=Line | figure, wheelchair, accessibility, disabled, 사람, 휠체어, 접근성, 장애인 |  |  |
+| icon_figure_oval_fill | IconFigureOvalFill | Weight=Fill | figure, oval, person, user, 사람, 타원, 사용자 |  |  |
+| icon_figure_oval_line | IconFigureOvalLine | Weight=Line | figure, oval, person, user, 사람, 타원, 사용자 |  |  |
+| icon_figure_run_fill | IconFigureRunFill | Weight=Fill | figure, run, person, move, 사람, 달리기, 이동 |  |  |
+| icon_figure_run_line | IconFigureRunLine | Weight=Line | figure, run, person, move, 사람, 달리기, 이동 |  |  |
+| icon_figure_walk_fill | IconFigureWalkFill | Weight=Fill | alba, figure, man, move, people, person, run, walk, 걷기, 걸어서, 사람, 알바, 유저, 이동 |  |  |
+| icon_figure_walk_line | IconFigureWalkLine | Weight=Line | alba, figure, man, move, people, person, run, walk, 걷기, 걸어서, 사람, 알바, 유저, 이동 |  |  |
+| icon_figure_wheelchair_fill | IconFigureWheelchairFill | Weight=Fill | figure, wheelchair, accessibility, disabled, 사람, 휠체어, 접근성, 장애인 |  |  |
+| icon_figure_wheelchair_line | IconFigureWheelchairLine | Weight=Line | figure, wheelchair, accessibility, disabled, 사람, 휠체어, 접근성, 장애인 |  |  |
+| icon_fingerprint_fill | IconFingerprintFill | Weight=Fill | 지문, 손가락, 터치, 인증, 페이, 보완, fingerprint, finger, touch, verification, pay, security |  |  |
+| icon_fingerprint_line | IconFingerprintLine | Weight=Line | 지문, 손가락, 터치, 인증, 페이, 보완, fingerprint, finger, touch, verification, pay, security |  |  |
+| icon_firework_fill | IconFireworkFill | Weight=Fill | firework, sparkle, happy, party, congratulations, birthday, 폭죽, 축하, 환영, 파티, 생일 |  |  |
+| icon_firework_line | IconFireworkLine | Weight=Line | firework, sparkle, happy, party, congratulations, birthday, 폭죽, 축하, 환영, 파티, 생일 |  |  |
+| icon_fish_wave2_fill | IconFishWave2Fill | Weight=Fill | 붕어빵, 붕어, 물고기, 겨울, 간식, fish, winter, snack |  |  |
+| icon_fish_wave2_line | IconFishWave2Line | Weight=Line | 붕어빵, 붕어, 물고기, 겨울, 간식, fish, winter, snack |  |  |
+| icon_flag_fill | IconFlagFill | Weight=Fill | flag, goal, mark, 깃발, 목표, 표시 |  |  |
+| icon_flag_hill_fill | IconFlagHillFill | Weight=Fill | achievement, challenge, flag, goal, 깃발, 달성, 도전, 목표, 챌린지 |  |  |
+| icon_flag_hill_line | IconFlagHillLine | Weight=Line | achievement, challenge, flag, goal, 깃발, 달성, 도전, 목표, 챌린지 |  |  |
+| icon_flag_line | IconFlagLine | Weight=Line | flag, goal, mark, 깃발, 목표, 표시 |  |  |
+| icon_flame_fill | IconFlameFill | Weight=Fill | flame, fire, hot, 불꽃, 불, 뜨거움 |  |  |
+| icon_flame_line | IconFlameLine | Weight=Line | flame, fire, hot, 불꽃, 불, 뜨거움 |  |  |
+| icon_flask_fill | IconFlaskFill | Weight=Fill | flask, science, chemistry, experiment, 플라스크, 과학, 화학, 실험 |  |  |
+| icon_flask_line | IconFlaskLine | Weight=Line | flask, science, chemistry, experiment, 플라스크, 과학, 화학, 실험 |  |  |
+| icon_fork_spoon_bag_fill | IconForkSpoonBagFill | Weight=Fill | pickup, food delivery, takeaway, restaurant, food, 픽업, 음식 배달, 테이크 아웃, 레스토랑, 음식, 포장 | 픽업 | service |
+| icon_fork_spoon_bag_line | IconForkSpoonBagLine | Weight=Line | pickup, food delivery, takeaway, restaurant, food, 픽업, 음식 배달, 테이크 아웃, 레스토랑, 음식, 포장 | 픽업 | service |
+| icon_fork_spoon_fill | IconForkSpoonFill | Weight=Fill | cutlery, dining, eat, food, fork, restaurant, spoon, 가게, 레스토랑, 숟가락, 식기, 식당, 식사, 음식, 포크 |  |  |
+| icon_fork_spoon_line | IconForkSpoonLine | Weight=Line | cutlery, dining, eat, food, fork, restaurant, spoon, 가게, 레스토랑, 숟가락, 식기, 식당, 식사, 음식, 포크 |  |  |
+| icon_fridge_fill | IconFridgeFill | Weight=Fill | 냉장고, 생활, 가전, 냉동, 냉장, refrigerator, lifestyle, appliance, freezing, refrigeration |  |  |
+| icon_fridge_line | IconFridgeLine | Weight=Line | 냉장고, 생활, 가전, 냉동, 냉장, refrigerator, lifestyle, appliance, freezing, refrigeration |  |  |
+| icon_gear_fill | IconGearFill | Weight=Fill | edit, gear, option, setting, 설정, 세팅, 셋팅, 옵션, 톱니, 톱니바퀴 |  |  |
+| icon_gear_line | IconGearLine | Weight=Line | edit, gear, option, setting, 설정, 세팅, 셋팅, 옵션, 톱니, 톱니바퀴 |  |  |
+| icon_gift_fill | IconGiftFill | Weight=Fill | box, gift, present, voucher, 기프트, 상자, 선물, 쿠폰 |  |  |
+| icon_gift_line | IconGiftLine | Weight=Line | box, gift, present, voucher, 기프트, 상자, 선물, 쿠폰 |  |  |
+| icon_globe_fill | IconGlobeFill | Weight=Fill | global, globe, link, web, website, world, 글로벌, 번역, 사이트, 세계, 웹, 웹사이트, 지구, 지구본 |  |  |
+| icon_globe_line | IconGlobeLine | Weight=Line | global, globe, link, web, website, world, 글로벌, 번역, 사이트, 세계, 웹, 웹사이트, 지구, 지구본 |  |  |
+| icon_graduationcap_fill | IconGraduationcapFill | Weight=Fill | education, school, university, graduation, 과외, 수업, 교육, 학교, 대학교, 졸업 |  |  |
+| icon_graduationcap_line | IconGraduationcapLine | Weight=Line | education, school, university, graduation, 과외, 수업, 교육, 학교, 대학교, 졸업 |  |  |
+| icon_grid_dot5_fill | IconGridDot5Fill | Weight=Fill | QR코드, QR오더, QR주문, 큐알, 큐알오더, 큐알주문, 큐알코드, 오더, 주문, 코드, QR, QR Code, QR Order, qrcode, qrorder |  | service |
+| icon_grid_dot5_line | IconGridDot5Line | Weight=Line | QR코드, QR오더, QR주문, 큐알, 큐알오더, 큐알주문, 큐알코드, 오더, 주문, 코드, QR, QR Code, QR Order, qrcode, qrorder |  | service |
+| icon_grid_fill | IconGridFill | Weight=Fill | align, contents, grid, layout, list, menu, all, 전체, 그리드, 레이아웃, 리스트, 모아보기, 목록, 정렬, 콘텐츠 |  |  |
+| icon_grid_heart_fill | IconGridHeartFill | Weight=Fill | align, contents, favorite, grid, heart, layout, list, menu, 그리드, 레이아웃, 리스트, 모아보기, 목록, 전체, 정렬, 좋아요, 콘텐츠, 하트 |  |  |
+| icon_grid_heart_line | IconGridHeartLine | Weight=Line | align, contents, favorite, grid, heart, layout, list, menu, 그리드, 레이아웃, 리스트, 모아보기, 목록, 전체, 정렬, 좋아요, 콘텐츠, 하트 |  |  |
+| icon_grid_line | IconGridLine | Weight=Line | align, contents, grid, layout, list, menu, all, 전체, 그리드, 레이아웃, 리스트, 모아보기, 목록, 정렬, 콘텐츠 |  |  |
+| icon_hand_point_up_fill | IconHandPointUpFill | Weight=Fill | click, finger, hand, point, select, up, 가리키기, 선택, 손, 위, 클릭 |  |  |
+| icon_hand_point_up_line | IconHandPointUpLine | Weight=Line | click, finger, hand, point, select, up, 가리키기, 선택, 손, 위, 클릭 |  |  |
+| icon_hand_wave_fill | IconHandWaveFill | Weight=Fill | hand, wave, hello, goodbye, greeting, 손, 흔들기, 인사 |  |  |
+| icon_hand_wave_line | IconHandWaveLine | Weight=Line | hand, wave, hello, goodbye, greeting, 손, 흔들기, 인사 |  |  |
+| icon_hash_fill | IconHashFill | Weight=Fill | #, hash, hashtag, number sign, tag, 샵, 태그, 해시태그 |  |  |
+| icon_hash_line | IconHashLine | Weight=Line | #, hash, hashtag, number sign, tag, 샵, 태그, 해시태그 |  |  |
+| icon_headphone_fill | IconHeadphoneFill | Weight=Fill | headphone, audio, music, sound, bluetooth, 헤드폰, 오디오, 음악 |  |  |
+| icon_headphone_line | IconHeadphoneLine | Weight=Line | headphone, audio, music, sound, bluetooth, 헤드폰, 오디오, 음악 |  |  |
+| icon_headset_fill | IconHeadsetFill | Weight=Fill | customer service, headphone, headphones, headset, help, sound, support, 고객 서비스, 도움, 지원, 헤드셋, 헤드폰 |  |  |
+| icon_headset_line | IconHeadsetLine | Weight=Line | customer service, headphone, headphones, headset, help, sound, support, 고객 서비스, 도움, 지원, 헤드셋, 헤드폰 |  |  |
+| icon_heart_fill | IconHeartFill | Weight=Fill | favorite, heart, like, love, 관심, 사랑, 좋아요, 하트 |  |  |
+| icon_heart_line | IconHeartLine | Weight=Line | favorite, heart, like, love, 관심, 사랑, 좋아요, 하트 |  |  |
+| icon_horizline_viewfinder_fill | IconHorizlineViewfinderFill | Weight=Fill | camera, chat, horizontal line, qr, qrcode, qr코드, scan, scanner, viewfinder, 가로선, 뷰파인더, 스캐너, 스캔, 채팅, 카메라 |  |  |
+| icon_horizline_viewfinder_line | IconHorizlineViewfinderLine | Weight=Line | camera, chat, horizontal line, qr, qrcode, qr코드, scan, scanner, viewfinder, 가로선, 뷰파인더, 스캐너, 스캔, 채팅, 카메라 |  |  |
+| icon_horizline2_vertical_chatbubble_rectangular_right_fill | IconHorizline2VerticalChatbubbleRectangularRightFill | Weight=Fill | bubble, chat, comment, lines, message, reply, text, 댓글, 말풍선, 메시지, 선, 채팅, 텍스트 |  |  |
+| icon_horizline2_vertical_chatbubble_rectangular_right_line | IconHorizline2VerticalChatbubbleRectangularRightLine | Weight=Line | bubble, chat, comment, lines, message, reply, text, 댓글, 말풍선, 메시지, 선, 채팅, 텍스트 |  |  |
+| icon_horizline2_vertical_chatbubble_rectangular_right_slash_fill | IconHorizline2VerticalChatbubbleRectangularRightSlashFill | Weight=Fill | bubble, chat, comment, lines, message, reply, text, 댓글, 안받기, 댓글안받기, refuse, blocked, 말풍선, 메시지, 텍스트 |  |  |
+| icon_horizline2_vertical_chatbubble_rectangular_right_slash_line | IconHorizline2VerticalChatbubbleRectangularRightSlashLine | Weight=Line | bubble, chat, comment, lines, message, reply, text, 댓글, 안받기, 댓글안받기, refuse, blocked, 말풍선, 메시지, 텍스트 |  |  |
+| icon_horizline3_vertical_checkmark_fill | IconHorizline3VerticalCheckmarkFill | Weight=Fill | check, complete, list, list_select, menu, options, 메뉴, 목록, 선택, 옵션, 완료, 체크, 확인 |  |  |
+| icon_horizline3_vertical_checkmark_line | IconHorizline3VerticalCheckmarkLine | Weight=Line | check, complete, list, list_select, menu, options, 메뉴, 목록, 선택, 옵션, 완료, 체크, 확인 |  |  |
+| icon_horizline3_vertical_fill | IconHorizline3VerticalFill | Weight=Fill | list, menu, options, 더보기, 메뉴, 목록, 옵션 |  |  |
+| icon_horizline3_vertical_line | IconHorizline3VerticalLine | Weight=Line | list, menu, options, 더보기, 메뉴, 목록, 옵션 |  |  |
+| icon_horizline3_vertical_star_fill | IconHorizline3VerticalStarFill | Weight=Fill | bookmark, bookmark_list, bookmarklist, divider, favorite, horizontal, important, lines, list, menu, options, star, vertical, 가로, 메뉴, 목록, 별, 북마크, 북마크리스트, 분리, 선, 세로, 옵션, 저장, 저장목록, 중요 |  |  |
+| icon_horizline3_vertical_star_line | IconHorizline3VerticalStarLine | Weight=Line | bookmark, bookmark_list, bookmarklist, divider, favorite, horizontal, important, lines, list, menu, options, star, vertical, 가로, 메뉴, 목록, 별, 북마크, 북마크리스트, 분리, 선, 세로, 옵션, 저장, 저장목록, 중요 |  |  |
+| icon_horizline3_vertical_tight_fill | IconHorizline3VerticalTightFill | Weight=Fill | divider, handle, horizontal, lines, vertical, 가로, 분리, 선, 세로, 이동, 핸들 |  |  |
+| icon_horizline3_vertical_tight_line | IconHorizline3VerticalTightLine | Weight=Line | divider, handle, horizontal, lines, vertical, 가로, 분리, 선, 세로, 이동, 핸들 |  |  |
+| icon_horizrectangle_horizline2_vertical_fill | IconHorizrectangleHorizline2VerticalFill | Weight=Fill | card, horizontal, image, layout, lines, list, list_card, rectangle, thumbnail, type, vertical, view, 가로, 레이아웃, 리스트, 뷰타입, 선, 세로, 썸네일, 직사각형, 카드 |  |  |
+| icon_horizrectangle_horizline2_vertical_line | IconHorizrectangleHorizline2VerticalLine | Weight=Line | card, horizontal, image, layout, lines, list, list_card, rectangle, thumbnail, type, vertical, view, 가로, 레이아웃, 리스트, 뷰타입, 선, 세로, 썸네일, 직사각형, 카드 |  |  |
+| icon_hospitalcross_building_fill | IconHospitalcrossBuildingFill | Weight=Fill | 병원, 의료, medical, hospital, building, clinic |  |  |
+| icon_hospitalcross_building_line | IconHospitalcrossBuildingLine | Weight=Line | 병원, 의료, medical, hospital, building, clinic |  |  |
+| icon_hospitalcross_shield_fill | IconHospitalcrossShieldFill | Weight=Fill | protection, security, medical, insurance, 방패, 보호, 보안, 의료, 보험 |  |  |
+| icon_hospitalcross_shield_line | IconHospitalcrossShieldLine | Weight=Line | protection, security, medical, insurance, 방패, 보호, 보안, 의료, 보험 |  |  |
+| icon_hospitalcross_square_fill | IconHospitalcrossSquareFill | Weight=Fill | 병원, 의료, medical, hospital, clinic |  |  |
+| icon_hospitalcross_square_line | IconHospitalcrossSquareLine | Weight=Line | 병원, 의료, medical, hospital, clinic |  |  |
+| icon_house_card_fill | IconHouseCardFill | Weight=Fill | 월세, 카드, 집, 부동산, 페이, 결제, rent, card, home, real estate, pay, payment |  |  |
+| icon_house_card_line | IconHouseCardLine | Weight=Line | 월세, 카드, 집, 부동산, 페이, 결제, rent, card, home, real estate, pay, payment |  |  |
+| icon_house_fill | IconHouseFill | Weight=Fill | building, home, house, 건물, 메인, 집, 홈 |  |  |
+| icon_house_line | IconHouseLine | Weight=Line | building, home, house, 건물, 메인, 집, 홈 |  |  |
+| icon_house_plus_fill | IconHousePlusFill | Weight=Fill | 우리집, 추가, 집, house, home, add, myhome |  |  |
+| icon_house_plus_line | IconHousePlusLine | Weight=Line | 우리집, 추가, 집, house, home, add, myhome |  |  |
+| icon_house_square_fill | IconHouseSquareFill | Weight=Fill | house, home, heart, favorite, 집, 홈, myhome, 우리집, 마이홈 |  |  |
+| icon_house_square_line | IconHouseSquareLine | Weight=Line | house, home, heart, favorite, 집, 홈, myhome, 우리집, 마이홈 |  |  |
+| icon_i_lowercase_serif_circle_fill | IconILowercaseSerifCircleFill | Weight=Fill | circle, help, info, information, noti, notice, tip, 공지, 도움말, 설명, 안내, 원, 정보 |  |  |
+| icon_i_lowercase_serif_circle_line | IconILowercaseSerifCircleLine | Weight=Line | circle, help, info, information, noti, notice, tip, 공지, 도움말, 설명, 안내, 원, 정보 |  |  |
+| icon_keyboard_chevron_down_fill | IconKeyboardChevronDownFill | Weight=Fill | chevron, down, input, keyboard, keyboard_hiding, 셰브론, 숨김, 아래, 입력, 키보드, 키보드닫기 |  |  |
+| icon_keyboard_chevron_down_line | IconKeyboardChevronDownLine | Weight=Line | chevron, down, input, keyboard, keyboard_hiding, 셰브론, 숨김, 아래, 입력, 키보드, 키보드닫기 |  |  |
+| icon_keyhole_shield_fill | IconKeyholeShieldFill | Weight=Fill | confirmation_pay, financial security, protection, security, shield, won, 결제, 금융 보안, 방패, 보안, 보호, 금융인증서, 인증, lock |  |  |
+| icon_keyhole_shield_line | IconKeyholeShieldLine | Weight=Line | confirmation_pay, financial security, protection, security, shield, won, 결제, 금융 보안, 방패, 보안, 보호, 금융인증서, 인증, lock |  |  |
+| icon_laptop_fill | IconLaptopFill | Weight=Fill | computer, device, laptop, macbook, notebook, 기기, 노트북, 랩탑, 맥북, 컴퓨터 |  |  |
+| icon_laptop_line | IconLaptopLine | Weight=Line | computer, device, laptop, macbook, notebook, 기기, 노트북, 랩탑, 맥북, 컴퓨터 |  |  |
+| icon_leaf_fill | IconLeafFill | Weight=Fill | green, leaf, nature, plant, safe, vegetable, 나뭇잎, 식물, 잎, 자연, 채소, 친환경, 풀, 환경 |  |  |
+| icon_leaf_line | IconLeafLine | Weight=Line | green, leaf, nature, plant, safe, vegetable, 나뭇잎, 식물, 잎, 자연, 채소, 친환경, 풀, 환경 |  |  |
+| icon_lightbulb_dot5_fill | IconLightbulbDot5Fill | Weight=Fill | lightbulb, idea, solution, 전구, 아이디어, 해결책 |  |  |
+| icon_lightbulb_dot5_line | IconLightbulbDot5Line | Weight=Line | lightbulb, idea, solution, 전구, 아이디어, 해결책 |  |  |
+| icon_lightning_fill | IconLightningFill | Weight=Fill | lightning, electricity, power, 번개, 전기, 파워 |  |  |
+| icon_lightning_line | IconLightningLine | Weight=Line | lightning, electricity, power, 번개, 전기, 파워 |  |  |
+| icon_lightning_slash_fill | IconLightningSlashFill | Weight=Fill | lightning, electricity, power, off, 번개, 전기, 파워, 끄기 |  |  |
+| icon_lightning_slash_line | IconLightningSlashLine | Weight=Line | lightning, electricity, power, off, 번개, 전기, 파워, 끄기 |  |  |
+| icon_linechart_up_xaxis_fill | IconLinechartUpXaxisFill | Weight=Fill | ad, graph, boost, growth, increase, trend, statistics, data, 광고, 부스터, 부스트, 성장, 증가, 추세, 통계, 데이터, 이웃광고 | 이웃광고 | service |
+| icon_linechart_up_xaxis_line | IconLinechartUpXaxisLine | Weight=Line | ad, graph, boost, growth, increase, trend, statistics, data, 광고, 부스터, 부스트, 성장, 증가, 추세, 통계, 데이터, 이웃광고 | 이웃광고 | service |
+| icon_locationpin_fill | IconLocationpinFill | Weight=Fill | location, map, near, near_me, pin, place, 근처, 내위치, 내주변, 위치, 장소, 지도, 핀 |  |  |
+| icon_locationpin_line | IconLocationpinLine | Weight=Line | location, map, near, near_me, pin, place, 근처, 내위치, 내주변, 위치, 장소, 지도, 핀 |  |  |
+| icon_lock_fill | IconLockFill | Weight=Fill | lock, password, security, 보안, 비밀번호, 자물쇠, 잠금 |  |  |
+| icon_lock_line | IconLockLine | Weight=Line | lock, password, security, 보안, 비밀번호, 자물쇠, 잠금 |  |  |
+| icon_lock_opened_fill | IconLockOpenedFill | Weight=Fill | lock, unlock, security, password, 잠금, 해제, 보안, 비밀번호 |  |  |
+| icon_lock_opened_line | IconLockOpenedLine | Weight=Line | lock, unlock, security, password, 잠금, 해제, 보안, 비밀번호 |  |  |
+| icon_magnifyingglass_fill | IconMagnifyingglassFill | Weight=Fill | find, magnifying glass, search, 검색, 돋보기, 찾기 |  |  |
+| icon_magnifyingglass_line | IconMagnifyingglassLine | Weight=Line | find, magnifying glass, search, 검색, 돋보기, 찾기 |  |  |
+| icon_malesymbol_femalesymbol_fill | IconMalesymbolFemalesymbolFill | Weight=Fill | female, gender, male, man, sex, woman, 남성, 남자, 성, 성별, 여성, 여자 |  |  |
+| icon_malesymbol_femalesymbol_line | IconMalesymbolFemalesymbolLine | Weight=Line | female, gender, male, man, sex, woman, 남성, 남자, 성, 성별, 여성, 여자 |  |  |
+| icon_map_fill | IconMapFill | Weight=Fill | area, location, map, place, 위치, 장소, 지도 |  |  |
+| icon_map_line | IconMapLine | Weight=Line | area, location, map, place, 위치, 장소, 지도 |  |  |
+| icon_map_locationpin_fill | IconMapLocationpinFill | Weight=Fill | area, location, map, pin, place, 위치, 장소, 지도, 핀 |  |  |
+| icon_map_locationpin_line | IconMapLocationpinLine | Weight=Line | area, location, map, pin, place, 위치, 장소, 지도, 핀 |  |  |
+| icon_megaphone_fill | IconMegaphoneFill | Weight=Fill | announcement, loudspeaker, megaphone, notice, promotion, speaker, 공지, 스피커, 알림, 홍보, 확성기 |  |  |
+| icon_megaphone_line | IconMegaphoneLine | Weight=Line | announcement, loudspeaker, megaphone, notice, promotion, speaker, 공지, 스피커, 알림, 홍보, 확성기 |  |  |
+| icon_megaphone_tilted_fill | IconMegaphoneTiltedFill | Weight=Fill | ad, 확성기, 메가폰, megaphone, 광고 | 광고 | service |
+| icon_megaphone_tilted_line | IconMegaphoneTiltedLine | Weight=Line | ad, 확성기, 메가폰, megaphone, 광고 | 광고 | service |
+| icon_metro_frontside_fill | IconMetroFrontsideFill | Weight=Fill | metro, subway, underground, 지하철, 메트로, 역, 교통 |  |  |
+| icon_metro_frontside_line | IconMetroFrontsideLine | Weight=Line | metro, subway, underground, 지하철, 메트로, 역, 교통 |  |  |
+| icon_microphone_fill | IconMicrophoneFill | Weight=Fill | audio, mic, microphone, record, 녹음, 마이크, 음성 |  |  |
+| icon_microphone_line | IconMicrophoneLine | Weight=Line | audio, mic, microphone, record, 녹음, 마이크, 음성 |  |  |
+| icon_microphone_slash_fill | IconMicrophoneSlashFill | Weight=Fill | audio, disabled, mic, off, mic_off, microphone, mute, record, 끄기, 끄다, 녹음, 마이크, 음성, 음소거 |  |  |
+| icon_microphone_slash_line | IconMicrophoneSlashLine | Weight=Line | audio, disabled, mic, off, mic_off, microphone, mute, record, 끄기, 끄다, 녹음, 마이크, 음성, 음소거 |  |  |
+| icon_microwave_fill | IconMicrowaveFill | Weight=Fill | 전자레인지, 가전, 생활, 부동산, microwave, appliance, lifestyle, realty |  |  |
+| icon_microwave_line | IconMicrowaveLine | Weight=Line | 전자레인지, 가전, 생활, 부동산, microwave, appliance, lifestyle, realty |  |  |
+| icon_midcut_square_fill | IconMidcutSquareFill | Weight=Fill | 파일, 문서, 보관함, 보관, 저장, 임시, 임시저장, file, document, archive, storage, save, temp, autosave |  |  |
+| icon_midcut_square_line | IconMidcutSquareLine | Weight=Line | 파일, 문서, 보관함, 보관, 저장, 임시, 임시저장, file, document, archive, storage, save, temp, autosave |  |  |
+| icon_minus_circle_fill | IconMinusCircleFill | Weight=Fill | circle, info, minus, remove, subtract, subtract_circle, 마이너스, 빼기, 원, 제거 |  |  |
+| icon_minus_circle_line | IconMinusCircleLine | Weight=Line | circle, info, minus, remove, subtract, subtract_circle, 마이너스, 빼기, 원, 제거 |  |  |
+| icon_minus_fat_fill | IconMinusFatFill | Weight=Fill | minus, subtract, remove, 빼기, 제거 |  | fat |
+| icon_minus_fat_line | IconMinusFatLine | Weight=Line | minus, subtract, remove, 빼기, 제거 |  | fat |
+| icon_minus_fill | IconMinusFill | Weight=Fill | -, minus, remove, subtract, subtraction, 마이너스, 빼기, 제거, 짝대기 |  |  |
+| icon_minus_line | IconMinusLine | Weight=Line | -, minus, remove, subtract, subtraction, 마이너스, 빼기, 제거, 짝대기 |  |  |
+| icon_mobile_fill | IconMobileFill | Weight=Fill | device, mobile, phone, smartphone, 기기, 모바일, 스마트폰, 폰, 휴대폰 |  |  |
+| icon_mobile_line | IconMobileLine | Weight=Line | device, mobile, phone, smartphone, 기기, 모바일, 스마트폰, 폰, 휴대폰 |  |  |
+| icon_moon_fill | IconMoonFill | Weight=Fill | dark, moon, night, weather, 날씨, 다크, 달, 밤, 어두운 |  |  |
+| icon_moon_line | IconMoonLine | Weight=Line | dark, moon, night, weather, 날씨, 다크, 달, 밤, 어두운 |  |  |
+| icon_musicalnote_double_fill | IconMusicalnoteDoubleFill | Weight=Fill | music, note, double, 음악, 음표, 두개 |  |  |
+| icon_musicalnote_double_line | IconMusicalnoteDoubleLine | Weight=Line | music, note, double, 음악, 음표, 두개 |  |  |
+| icon_n_uppercase_circle_fill | IconNUppercaseCircleFill | Weight=Fill | N, badge, circle, letter, new, newtopic, uppercase, 글자, 대문자, 뱃지, 신규, 알파벳, 업데이트, 원 |  |  |
+| icon_n_uppercase_circle_line | IconNUppercaseCircleLine | Weight=Line | N, badge, circle, letter, new, newtopic, uppercase, 글자, 대문자, 뱃지, 신규, 알파벳, 업데이트, 원 |  |  |
+| icon_nailpolish_fill | IconNailpolishFill | Weight=Fill | beauty, cosmetics, makeup, nail, polish, 뷰티, 화장품, 메이크업, 네일, 폴리쉬 |  |  |
+| icon_nailpolish_line | IconNailpolishLine | Weight=Line | beauty, cosmetics, makeup, nail, polish, 뷰티, 화장품, 메이크업, 네일, 폴리쉬 |  |  |
+| icon_needle_scale_fill | IconNeedleScaleFill | Weight=Fill | 저울, 무게, 택배, scale, weight, parcel |  |  |
+| icon_needle_scale_line | IconNeedleScaleLine | Weight=Line | 저울, 무게, 택배, scale, weight, parcel |  |  |
+| icon_p_uppercase_circle_fill | IconPUppercaseCircleFill | Weight=Fill | 페이, 결제, 포인트, 계산, pay, point, money |  |  |
+| icon_p_uppercase_circle_line | IconPUppercaseCircleLine | Weight=Line | 페이, 결제, 포인트, 계산, pay, point, money |  |  |
+| icon_paintroller_fill | IconPaintrollerFill | Weight=Fill | homerepair, paint, roller, tool, home improvement, 페인트, 롤러, 도구, 집수리, 수리 |  |  |
+| icon_paintroller_line | IconPaintrollerLine | Weight=Line | homerepair, paint, roller, tool, home improvement, 페인트, 롤러, 도구, 집수리, 수리 |  |  |
+| icon_palette_fill | IconPaletteFill | Weight=Fill | class, art, design, color, palette, 과외, 취미, 수업, 미술, 디자인, 색상, 팔레트 |  |  |
+| icon_palette_line | IconPaletteLine | Weight=Line | class, art, design, color, palette, 과외, 취미, 수업, 미술, 디자인, 색상, 팔레트 |  |  |
+| icon_paperclip_fill | IconPaperclipFill | Weight=Fill | attach, clip, file, link, paperclip, scrap, 링크, 첨부, 클립, 파일 |  |  |
+| icon_paperclip_line | IconPaperclipLine | Weight=Line | attach, clip, file, link, paperclip, scrap, 링크, 첨부, 클립, 파일 |  |  |
+| icon_paperplane_fill | IconPaperplaneFill | Weight=Fill | airplane, chat, chatting, chatting_send, message, paperplane, send, 메시지, 보내기, 비행기, 전송, 종이비행기, 채팅 |  |  |
+| icon_paperplane_line | IconPaperplaneLine | Weight=Line | airplane, chat, chatting, chatting_send, message, paperplane, send, 메시지, 보내기, 비행기, 전송, 종이비행기, 채팅 |  |  |
+| icon_paperplane_tilted_fill | IconPaperplaneTiltedFill | Weight=Fill | airplane, chat, chatting, chatting_send, message, paperplane, send, 메시지, 보내기, 비행기, 전송, 종이비행기, 채팅 |  |  |
+| icon_paperplane_tilted_line | IconPaperplaneTiltedLine | Weight=Line | airplane, chat, chatting, chatting_send, message, paperplane, send, 메시지, 보내기, 비행기, 전송, 종이비행기, 채팅 |  |  |
+| icon_pawprint_fill | IconPawprintFill | Weight=Fill | animal, 동물, 발바닥, 발, 발모양, 발자국, foot, footprint, print |  |  |
+| icon_pawprint_line | IconPawprintLine | Weight=Line | animal, 동물, 발바닥, 발, 발모양, 발자국, foot, footprint, print |  |  |
+| icon_pen_horizline_fill | IconPenHorizlineFill | Weight=Fill | edit, horizontal line, pen, write, 가로선, 수정, 쓰기, 쓰다, 연필, 작성, 펜 |  |  |
+| icon_pen_horizline_line | IconPenHorizlineLine | Weight=Line | edit, horizontal line, pen, write, 가로선, 수정, 쓰기, 쓰다, 연필, 작성, 펜 |  |  |
+| icon_pencil_fill | IconPencilFill | Weight=Fill | pencil, school, study, 과외, 수업, 교육, 학교, 대학교, 학원, 연필 |  |  |
+| icon_pencil_line | IconPencilLine | Weight=Line | pencil, school, study, 과외, 수업, 교육, 학교, 대학교, 학원, 연필 |  |  |
+| icon_people3_fill | IconPeople3Fill | Weight=Fill | 커뮤니티, 사람, 그룹, 사회, community, people, group, society |  | service |
+| icon_people3_line | IconPeople3Line | Weight=Line | 커뮤니티, 사람, 그룹, 사회, community, people, group, society |  | service |
+| icon_percent_fill | IconPercentFill | Weight=Fill | %, discount, percent, percentage, 퍼센트, 할인 |  |  |
+| icon_percent_flower_fill | IconPercentFlowerFill | Weight=Fill | percent, discount, sale, flower, shape, 퍼센트, 할인, 세일, 꽃, 모양 |  |  |
+| icon_percent_flower_line | IconPercentFlowerLine | Weight=Line | percent, discount, sale, flower, shape, 퍼센트, 할인, 세일, 꽃, 모양 |  |  |
+| icon_percent_line | IconPercentLine | Weight=Line | %, discount, percent, percentage, 퍼센트, 할인 |  |  |
+| icon_person_circle_fill | IconPersonCircleFill | Weight=Fill | account, circle, my, my_profile, person, profile, uesr, user, 계정, 나의, 마이, 사람, 사용자, 원, 유저, 프로필 |  |  |
+| icon_person_circle_line | IconPersonCircleLine | Weight=Line | account, circle, my, my_profile, person, profile, uesr, user, 계정, 나의, 마이, 사람, 사용자, 원, 유저, 프로필 |  |  |
+| icon_person_fill | IconPersonFill | Weight=Fill | human, my, people, person, profile, uesr, user, 단골, 사람, 사용자, 유저, 프로필 |  |  |
+| icon_person_flower_fill | IconPersonFlowerFill | Weight=Fill | person, profile, flower, 전문가, 사람, 프로필, 꽃, 모양 |  |  |
+| icon_person_flower_line | IconPersonFlowerLine | Weight=Line | person, profile, flower, 전문가, 사람, 프로필, 꽃, 모양 |  |  |
+| icon_person_line | IconPersonLine | Weight=Line | human, my, people, person, profile, uesr, user, 단골, 사람, 사용자, 유저, 프로필 |  |  |
+| icon_person_magnifyingglass_fill | IconPersonMagnifyingglassFill | Weight=Fill | discover, explore, find, job, jobs, magnifying glass, person, search, vertical, 검색, 공고, 돋보기, 발견, 버티컬, 사람, 알바, 찾기, 탐색 | 알바 | service |
+| icon_person_magnifyingglass_line | IconPersonMagnifyingglassLine | Weight=Line | discover, explore, find, job, jobs, magnifying glass, person, search, vertical, 검색, 공고, 돋보기, 발견, 버티컬, 사람, 알바, 찾기, 탐색 | 알바 | service |
+| icon_person_plus_fill | IconPersonPlusFill | Weight=Fill | add, create, friend, human, invite, invite_friend, my, people, person, profile, uesr, user, 단골, 사람, 사용자, 생성, 유저, 초대, 추가, 친구, 프로필 |  |  |
+| icon_person_plus_line | IconPersonPlusLine | Weight=Line | add, create, friend, human, invite, invite_friend, my, people, person, profile, uesr, user, 단골, 사람, 사용자, 생성, 유저, 초대, 추가, 친구, 프로필 |  |  |
+| icon_person_shield_fill | IconPersonShieldFill | Weight=Fill | confirmation_profile, person, protection, security, shield, user safety, 방패, 보안, 보호, 사람, 사용자 안전 |  |  |
+| icon_person_shield_line | IconPersonShieldLine | Weight=Line | confirmation_profile, person, protection, security, shield, user safety, 방패, 보안, 보호, 사람, 사용자 안전 |  |  |
+| icon_person2_fill | IconPerson2Fill | Weight=Fill | group, people, profile, user, user_group, users, 그룹, 사람, 사람들, 유저, 집단 |  |  |
+| icon_person2_line | IconPerson2Line | Weight=Line | group, people, profile, user, user_group, users, 그룹, 사람, 사람들, 유저, 집단 |  |  |
+| icon_person2_openarms_fill | IconPerson2OpenarmsFill | Weight=Fill | people, community, group, welcome, 모임, 동네생활, 사람들, 커뮤니티, 그룹, 환영 | 모임 | service |
+| icon_person2_openarms_line | IconPerson2OpenarmsLine | Weight=Line | people, community, group, welcome, 모임, 동네생활, 사람들, 커뮤니티, 그룹, 환영 | 모임 | service |
+| icon_phone_fill | IconPhoneFill | Weight=Fill | call, phone, telephone, 전화, 콜 |  |  |
+| icon_phone_line | IconPhoneLine | Weight=Line | call, phone, telephone, 전화, 콜 |  |  |
+| icon_phone_xmark_fill | IconPhoneXmarkFill | Weight=Fill | call, call_declined, cancel, declined, off, phone, reject, 거절, 끄다, 수신불가, 전화, 전화기, 취소 |  |  |
+| icon_phone_xmark_line | IconPhoneXmarkLine | Weight=Line | call, call_declined, cancel, declined, off, phone, reject, 거절, 끄다, 수신불가, 전화, 전화기, 취소 |  |  |
+| icon_picture_fill | IconPictureFill | Weight=Fill | album, image, photo, picture, 그림, 사진, 앨범, 이미지, 첨부 |  |  |
+| icon_picture_line | IconPictureLine | Weight=Line | album, image, photo, picture, 그림, 사진, 앨범, 이미지, 첨부 |  |  |
+| icon_picture2_stacked_fill | IconPicture2StackedFill | Weight=Fill | image, images, photo, photo_several, photos, pictures, stack, 다중이미지, 복수, 사진, 스택, 앨범, 이미지, 첨부 |  |  |
+| icon_picture2_stacked_line | IconPicture2StackedLine | Weight=Line | image, images, photo, photo_several, photos, pictures, stack, 다중이미지, 복수, 사진, 스택, 앨범, 이미지, 첨부 |  |  |
+| icon_plus_circle_fill | IconPlusCircleFill | Weight=Fill | add, add_circle, circle, create, info, plus, 더하기, 불러오기, 생성, 원, 추가 |  |  |
+| icon_plus_circle_line | IconPlusCircleLine | Weight=Line | add, add_circle, circle, create, info, plus, 더하기, 불러오기, 생성, 원, 추가 |  |  |
+| icon_plus_fill | IconPlusFill | Weight=Fill | +, add, create, plus, 더하기, 불러오기, 생성, 추가 |  |  |
+| icon_plus_line | IconPlusLine | Weight=Line | +, add, create, plus, 더하기, 불러오기, 생성, 추가 |  |  |
+| icon_plus_small_fill | IconPlusSmallFill | Weight=Fill | +, add, create, plus, 더하기, 불러오기, 생성, 추가, small |  |  |
+| icon_plus_small_line | IconPlusSmallLine | Weight=Line | +, add, create, plus, 더하기, 불러오기, 생성, 추가, small |  |  |
+| icon_plus_square_fill | IconPlusSquareFill | Weight=Fill | add, create, plus, sell, square, 더하기, 사각형, 생성, 추가 |  |  |
+| icon_plus_square_line | IconPlusSquareLine | Weight=Line | add, create, plus, sell, square, 더하기, 사각형, 생성, 추가 |  |  |
+| icon_post_fill | IconPostFill | Weight=Fill | community, eco-friendly, leaf, nature, news, note, paper, person, post, 노트, 사람, 잎, 자연, 친환경, 커뮤니티, 포스트, 동네생활 |  |  |
+| icon_post_line | IconPostLine | Weight=Line | community, eco-friendly, leaf, nature, news, note, paper, person, post, 노트, 사람, 잎, 자연, 친환경, 커뮤니티, 포스트, 동네생활 |  |  |
+| icon_pushpin_fill | IconPushpinFill | Weight=Fill | attach, pin, pushpin, 고정, 압정, 핀 |  |  |
+| icon_pushpin_line | IconPushpinLine | Weight=Line | attach, pin, pushpin, 고정, 압정, 핀 |  |  |
+| icon_q_uppercase_chatbubble_right_fill | IconQUppercaseChatbubbleRightFill | Weight=Fill | question, chat, bubble, message, 질문, 채팅, 말풍선, 메시지 |  |  |
+| icon_q_uppercase_chatbubble_right_line | IconQUppercaseChatbubbleRightLine | Weight=Line | question, chat, bubble, message, 질문, 채팅, 말풍선, 메시지 |  |  |
+| icon_questionmark_circle_fill | IconQuestionmarkCircleFill | Weight=Fill | circle, help, info, information, question, question mark, tip, 도움, 도움말, 문의, 물음표, 원, 정보 |  |  |
+| icon_questionmark_circle_line | IconQuestionmarkCircleLine | Weight=Line | circle, help, info, information, question, question mark, tip, 도움, 도움말, 문의, 물음표, 원, 정보 |  |  |
+| icon_questionmark_square_fill | IconQuestionmarkSquareFill | Weight=Fill | check, circle, help, information, question, question mark, question_check, square, 도움돼요, 도움말, 물음표, 사각형, 완료, 정보, 체크 |  |  |
+| icon_questionmark_square_line | IconQuestionmarkSquareLine | Weight=Line | check, circle, help, information, question, question mark, question_check, square, 도움돼요, 도움말, 물음표, 사각형, 완료, 정보, 체크 |  |  |
+| icon_quotationmark2_left_fill | IconQuotationmark2LeftFill | Weight=Fill | left, quotation, quotation mark, quote, talkingup, 따옴표, 쌍따움표, 왼쪽, 인용 |  |  |
+| icon_quotationmark2_left_line | IconQuotationmark2LeftLine | Weight=Line | left, quotation, quotation mark, quote, talkingup, 따옴표, 쌍따움표, 왼쪽, 인용 |  |  |
+| icon_quotationmark2_right_fill | IconQuotationmark2RightFill | Weight=Fill | quotation, quotation mark, quote, right, talkingdown, 따옴표, 쌍따움표, 오른쪽, 인용 |  |  |
+| icon_quotationmark2_right_line | IconQuotationmark2RightLine | Weight=Line | quotation, quotation mark, quote, right, talkingdown, 따옴표, 쌍따움표, 오른쪽, 인용 |  |  |
+| icon_receipt_fill | IconReceiptFill | Weight=Fill | bill, invoice, note, receipt, 노트, 비즈니스, 빌지, 영수증, 청구서 |  |  |
+| icon_receipt_line | IconReceiptLine | Weight=Line | bill, invoice, note, receipt, 노트, 비즈니스, 빌지, 영수증, 청구서 |  |  |
+| icon_rectangle_splited_line_vertical_fill | IconRectangleSplitedLineVerticalFill | Weight=Fill | rectangle, split, vertical, divide, 직사각형, 분할, 세로, 나누기 |  |  |
+| icon_rectangle_splited_line_vertical_line | IconRectangleSplitedLineVerticalLine | Weight=Line | rectangle, split, vertical, divide, 직사각형, 분할, 세로, 나누기 |  |  |
+| icon_roadlane_fill | IconRoadlaneFill | Weight=Fill | car, car_ldws, highway, lane, road, street, 경보, 고속도로, 도로, 센서, 이탈, 중고차, 차선 |  |  |
+| icon_roadlane_line | IconRoadlaneLine | Weight=Line | car, car_ldws, highway, lane, road, street, 경보, 고속도로, 도로, 센서, 이탈, 중고차, 차선 |  |  |
+| icon_rocket_fill | IconRocketFill | Weight=Fill | 사과, 과일, 농수산물, apple, fruit |  | service |
+| icon_rocket_line | IconRocketLine | Weight=Line | 사과, 과일, 농수산물, apple, fruit |  | service |
+| icon_rooftoproom_fill | IconRooftoproomFill | Weight=Fill | 옥탑, 건물, 주거, 집, 지붕, 루프탑, 옥상, 빌딩, rooftop, building, residence, home, roof |  |  |
+| icon_rooftoproom_line | IconRooftoproomLine | Weight=Line | 옥탑, 건물, 주거, 집, 지붕, 루프탑, 옥상, 빌딩, rooftop, building, residence, home, roof |  |  |
+| icon_s_uppercase_horizline_center_fill | IconSUppercaseHorizlineCenterFill | Weight=Fill | edit, s, font, letter, text, type, typo, write, underline, 글, 글자, 알파벳, 작성, 타이포, 텍스트, 폰트, 밑줄, 편집 |  |  |
+| icon_s_uppercase_horizline_center_line | IconSUppercaseHorizlineCenterLine | Weight=Line | edit, s, font, letter, text, type, typo, write, underline, 글, 글자, 알파벳, 작성, 타이포, 텍스트, 폰트, 밑줄, 편집 |  |  |
+| icon_scissors_fill | IconScissorsFill | Weight=Fill | beautyshop, hair, beauty, scissors, cut, tool, 미용실, 헤어샵, 가위, 자르기, 도구 |  |  |
+| icon_scissors_line | IconScissorsLine | Weight=Line | beautyshop, hair, beauty, scissors, cut, tool, 미용실, 헤어샵, 가위, 자르기, 도구 |  |  |
+| icon_scribble_fill | IconScribbleFill | Weight=Fill | doodle, draw, edit, line, pencil, photo, photo_edit_draw, scribble, 그리기, 그림, 낙서, 사진, 선, 설정, 편집 |  |  |
+| icon_scribble_line | IconScribbleLine | Weight=Line | doodle, draw, edit, line, pencil, photo, photo_edit_draw, scribble, 그리기, 그림, 낙서, 사진, 선, 설정, 편집 |  |  |
+| icon_seat_left_fan_fill | IconSeatLeftFanFill | Weight=Fill | car, car_ventilation_seat, fan, left, seat, ventilation, 시트, 왼쪽, 좌석, 중고차, 통풍, 팬 |  |  |
+| icon_seat_left_fan_line | IconSeatLeftFanLine | Weight=Line | car, car_ventilation_seat, fan, left, seat, ventilation, 시트, 왼쪽, 좌석, 중고차, 통풍, 팬 |  |  |
+| icon_seat_left_fill | IconSeatLeftFill | Weight=Fill | car, car_leather_seat, chair, left, seat, 가죽, 시트, 왼쪽, 의자, 좌석, 중고차 |  |  |
+| icon_seat_left_heatwave2_fill | IconSeatLeftHeatwave2Fill | Weight=Fill | car, car_heated_seat, heat, heating, left, seat, 시트, 열선, 열선시트, 왼쪽, 좌석, 중고차 |  |  |
+| icon_seat_left_heatwave2_line | IconSeatLeftHeatwave2Line | Weight=Line | car, car_heated_seat, heat, heating, left, seat, 시트, 열선, 열선시트, 왼쪽, 좌석, 중고차 |  |  |
+| icon_seat_left_line | IconSeatLeftLine | Weight=Line | car, car_leather_seat, chair, left, seat, 가죽, 시트, 왼쪽, 의자, 좌석, 중고차 |  |  |
+| icon_shoppingbag_fill | IconShoppingbagFill | Weight=Fill | bag, product, sale, shop, shopping, shopping bag, store, 가게, 가방, 상품, 세일, 쇼핑, 쇼핑백, 스토어 |  |  |
+| icon_shoppingbag_items_fill | IconShoppingbagItemsFill | Weight=Fill | shopping, retail, products, goods, items, 중고거래, 커머스, 쇼핑, 소매, 제품, 상품 | 중고거래 | service |
+| icon_shoppingbag_items_line | IconShoppingbagItemsLine | Weight=Line | shopping, retail, products, goods, items, 중고거래, 커머스, 쇼핑, 소매, 제품, 상품 | 중고거래 | service |
+| icon_shoppingbag_line | IconShoppingbagLine | Weight=Line | bag, product, sale, shop, shopping, shopping bag, store, 가게, 가방, 상품, 세일, 쇼핑, 쇼핑백, 스토어 |  |  |
+| icon_shoppingbag2_stacked_fill | IconShoppingbag2StackedFill | Weight=Fill | shopping bags, shopping, bags, stack, 쇼핑백, 쇼핑, 스택 |  |  |
+| icon_shoppingbag2_stacked_line | IconShoppingbag2StackedLine | Weight=Line | shopping bags, shopping, bags, stack, 쇼핑백, 쇼핑, 스택 |  |  |
+| icon_sidemirror_wave_fill | IconSidemirrorWaveFill | Weight=Fill | car, sidemirror, mirror, side, wave, 자동차, 사이드미러, 사이드, 미러, 전동, 중고차 |  |  |
+| icon_sidemirror_wave_line | IconSidemirrorWaveLine | Weight=Line | car, sidemirror, mirror, side, wave, 자동차, 사이드미러, 사이드, 미러, 전동, 중고차 |  |  |
+| icon_signboard_fill | IconSignboardFill | Weight=Fill | signboard, sign, information, notice, 광고, 간판, 표지판, 정보, 알림 |  |  |
+| icon_signboard_line | IconSignboardLine | Weight=Line | signboard, sign, information, notice, 광고, 간판, 표지판, 정보, 알림 |  |  |
+| icon_slash_circle_fill | IconSlashCircleFill | Weight=Fill | ban, cancel, circle, close, disabled, prohibition, slash, warn, 금지, 삭제, 원, 취소 |  |  |
+| icon_slash_circle_line | IconSlashCircleLine | Weight=Line | ban, cancel, circle, close, disabled, prohibition, slash, warn, 금지, 삭제, 원, 취소 |  |  |
+| icon_slash_semicircle2_fill | IconSlashSemicircle2Fill | Weight=Fill | 링크, 연결, 체인, chain, link, connection |  |  |
+| icon_slash_semicircle2_line | IconSlashSemicircle2Line | Weight=Line | 링크, 연결, 체인, chain, link, connection |  |  |
+| icon_slider2_horizontal_fill | IconSlider2HorizontalFill | Weight=Fill | adjust, control, filter, filter02, horizontal, slider, 가로, 설정, 슬라이더, 제어, 조절, 필터 |  |  |
+| icon_slider2_horizontal_line | IconSlider2HorizontalLine | Weight=Line | adjust, control, filter, filter02, horizontal, slider, 가로, 설정, 슬라이더, 제어, 조절, 필터 |  |  |
+| icon_smartkey_fill | IconSmartkeyFill | Weight=Fill | car, car_smart_key, key, smart key, 스마트키, 자동차, 중고차, 키 |  |  |
+| icon_smartkey_line | IconSmartkeyLine | Weight=Line | car, car_smart_key, key, smart key, 스마트키, 자동차, 중고차, 키 |  |  |
+| icon_sneaker_lifted_leftside_fill | IconSneakerLiftedLeftsideFill | Weight=Fill | 신발, 운동화, 왼쪽, 걸어서, 걷기, 동네걷기, 발, 운동, 만보기, 산책, shoes, sneakers, left, walking, walk, neighborhood walk, foot, exercise, pedometer |  |  |
+| icon_sneaker_lifted_leftside_line | IconSneakerLiftedLeftsideLine | Weight=Line | 신발, 운동화, 왼쪽, 걸어서, 걷기, 동네걷기, 발, 운동, 만보기, 산책, shoes, sneakers, left, walking, walk, neighborhood walk, foot, exercise, pedometer |  |  |
+| icon_sofa_fill | IconSofaFill | Weight=Fill | 의자, 소파, 라운지, 거실, 리빙, 가구, chair, sofa, lounge, living room, living, furniture |  |  |
+| icon_sofa_line | IconSofaLine | Weight=Line | 의자, 소파, 라운지, 거실, 리빙, 가구, chair, sofa, lounge, living room, living, furniture |  |  |
+| icon_sparkle_viewfinder_fill | IconSparkleViewfinderFill | Weight=Fill | camera, chat, horizontal line, qr, qrcode, qr코드, scan, scanner, viewfinder, 가로선, 뷰파인더, 스캐너, 스캔, 채팅, 카메라 |  |  |
+| icon_sparkle_viewfinder_line | IconSparkleViewfinderLine | Weight=Line | camera, chat, horizontal line, qr, qrcode, qr코드, scan, scanner, viewfinder, 가로선, 뷰파인더, 스캐너, 스캔, 채팅, 카메라 |  |  |
+| icon_sparkle2_fill | IconSparkle2Fill | Weight=Fill | ai, glitter, shine, sparkle, 글로벌, 글쓰기, 반짝임, 빛남, 자동화 |  |  |
+| icon_sparkle2_line | IconSparkle2Line | Weight=Line | ai, glitter, shine, sparkle, 글로벌, 글쓰기, 반짝임, 빛남, 자동화 |  |  |
+| icon_speaker_wave2_fill | IconSpeakerWave2Fill | Weight=Fill | volume, audio, on, sound, speaker, volume, volume_on, 볼륨, 소리, 스피커 |  |  |
+| icon_speaker_wave2_line | IconSpeakerWave2Line | Weight=Line | volume, audio, on, sound, speaker, volume, volume_on, 볼륨, 소리, 스피커 |  |  |
+| icon_speaker_wave2_slash_fill | IconSpeakerWave2SlashFill | Weight=Fill | mute, off, sound, speaker, volume, volume_off, 끄기, 끔, 볼륨, 소리, 스피커, 음소거 |  |  |
+| icon_speaker_wave2_slash_line | IconSpeakerWave2SlashLine | Weight=Line | mute, off, sound, speaker, volume, volume_off, 끄기, 끔, 볼륨, 소리, 스피커, 음소거 |  |  |
+| icon_speedometer_1x_fill | IconSpeedometer1xFill | Weight=Fill | speedometer, speed, 1x, normal, 속도계, 속도, 보통 |  |  |
+| icon_speedometer_1x_line | IconSpeedometer1xLine | Weight=Line | speedometer, speed, 1x, normal, 속도계, 속도, 보통 |  |  |
+| icon_speedometer_2x_fill | IconSpeedometer2xFill | Weight=Fill | speedometer, speed, 2x, double, fast, 속도계, 속도, 두배, 빠름 |  |  |
+| icon_speedometer_2x_line | IconSpeedometer2xLine | Weight=Line | speedometer, speed, 2x, double, fast, 속도계, 속도, 두배, 빠름 |  |  |
+| icon_speedometer_3x_fill | IconSpeedometer3xFill | Weight=Fill | speedometer, speed, 3x, triple, fastest, 속도계, 속도, 세배, 가장빠름 |  |  |
+| icon_speedometer_3x_line | IconSpeedometer3xLine | Weight=Line | speedometer, speed, 3x, triple, fastest, 속도계, 속도, 세배, 가장빠름 |  |  |
+| icon_speedometer_fill | IconSpeedometerFill | Weight=Fill | car, car_cruise_control, cruise, gauge, speed, speedometer, 속도, 속도계, 중고차, 크루즈 |  |  |
+| icon_speedometer_line | IconSpeedometerLine | Weight=Line | car, car_cruise_control, cruise, gauge, speed, speedometer, 속도, 속도계, 중고차, 크루즈 |  |  |
+| icon_splited_grid_square_fill | IconSplitedGridSquareFill | Weight=Fill | 평면도, 건물, 부동산, 공간, floor plan, building, real estate, space |  |  |
+| icon_splited_grid_square_line | IconSplitedGridSquareLine | Weight=Line | 평면도, 건물, 부동산, 공간, floor plan, building, real estate, space |  |  |
+| icon_spraybottle_sponge_fill | IconSpraybottleSpongeFill | Weight=Fill | cleaning, housekeeping, chores, clean, life, 청소, 집안일 |  |  |
+| icon_spraybottle_sponge_line | IconSpraybottleSpongeLine | Weight=Line | cleaning, housekeeping, chores, clean, life, 청소, 집안일 |  |  |
+| icon_square_splited_vertical_left_fill | IconSquareSplitedVerticalLeftFill | Weight=Fill | sidebar, layout, 사이드바, 레이아웃 |  |  |
+| icon_square_splited_vertical_left_line | IconSquareSplitedVerticalLeftLine | Weight=Line | sidebar, layout, 사이드바, 레이아웃 |  |  |
+| icon_square2_stacked_fill | IconSquare2StackedFill | Weight=Fill | copy, layer, square, stack, 레이어, 복사, 사각형, 스택, 카피 |  |  |
+| icon_square2_stacked_line | IconSquare2StackedLine | Weight=Line | copy, layer, square, stack, 레이어, 복사, 사각형, 스택, 카피 |  |  |
+| icon_squareline2_vertical_fill | IconSquareline2VerticalFill | Weight=Fill | card, layout, list, list_thumbnail, squares, stack, thumbnail, type, vertical, view, 레이아웃, 리스트, 목록, 뷰타입, 사각형, 세로, 스택, 썸네일, 카드 |  |  |
+| icon_squareline2_vertical_line | IconSquareline2VerticalLine | Weight=Line | card, layout, list, list_thumbnail, squares, stack, thumbnail, type, vertical, view, 레이아웃, 리스트, 목록, 뷰타입, 사각형, 세로, 스택, 썸네일, 카드 |  |  |
+| icon_star_fill | IconStarFill | Weight=Fill | favorite, interest_list, rating, star, starred, 별, 좋아요, 즐겨찾기, 평점 |  |  |
+| icon_star_line | IconStarLine | Weight=Line | favorite, interest_list, rating, star, starred, 별, 좋아요, 즐겨찾기, 평점 |  |  |
+| icon_steeringwheel_heatwave2_fill | IconSteeringwheelHeatwave2Fill | Weight=Fill | car, car_heated_steering_wheel, heat, steering wheel, warm, 열선, 중고차, 핸들 |  |  |
+| icon_steeringwheel_heatwave2_line | IconSteeringwheelHeatwave2Line | Weight=Line | car, car_heated_steering_wheel, heat, steering wheel, warm, 열선, 중고차, 핸들 |  |  |
+| icon_steps_fill | IconStepsFill | Weight=Fill | 계단, 복층, 2층, 층, 건물, stairs, duplex, second floor, floor, building |  |  |
+| icon_steps_line | IconStepsLine | Weight=Line | 계단, 복층, 2층, 층, 건물, stairs, duplex, second floor, floor, building |  |  |
+| icon_store_checkmark_fill | IconStoreCheckmarkFill | Weight=Fill | check, confirm, market, market_check, shop, store, 가게, 상점, 지점, 체크, 확인, 확정 |  |  |
+| icon_store_checkmark_line | IconStoreCheckmarkLine | Weight=Line | check, confirm, market, market_check, shop, store, 가게, 상점, 지점, 체크, 확인, 확정 |  |  |
+| icon_store_fill | IconStoreFill | Weight=Fill | building, market, shop, store, 가게, 건물, 마켓, 상점, 지점 |  |  |
+| icon_store_line | IconStoreLine | Weight=Line | building, market, shop, store, 가게, 건물, 마켓, 상점, 지점 |  |  |
+| icon_store_pen_fill | IconStorePenFill | Weight=Fill | edit, market, market_write, modify, shop, store, write, 가게, 동네생활, 상점, 수정, 지점, 편집, 활동 |  |  |
+| icon_store_pen_line | IconStorePenLine | Weight=Line | edit, market, market_write, modify, shop, store, write, 가게, 동네생활, 상점, 수정, 지점, 편집, 활동 |  |  |
+| icon_sun_fill | IconSunFill | Weight=Fill | day, sun, weather, 날씨, 낮, 태양 |  |  |
+| icon_sun_line | IconSunLine | Weight=Line | day, sun, weather, 날씨, 낮, 태양 |  |  |
+| icon_t_uppercase_serif_fill | IconTUppercaseSerifFill | Weight=Fill | T, font, letter, serif, text, type, typo, uppercase, write, 글, 글자, 대문자, 세리프, 알파벳, 작성, 타이포, 텍스트, 폰트 |  |  |
+| icon_t_uppercase_serif_line | IconTUppercaseSerifLine | Weight=Line | T, font, letter, serif, text, type, typo, uppercase, write, 글, 글자, 대문자, 세리프, 알파벳, 작성, 타이포, 텍스트, 폰트 |  |  |
+| icon_t_uppercase_t_lowercase_fill | IconTUppercaseTLowercaseFill | Weight=Fill | edit, font, letter, text, type, typo, write, size, 글, 글자, 알파벳, 작성, 타이포, 텍스트, 폰트, 확대, 편집, 크기 |  |  |
+| icon_t_uppercase_t_lowercase_line | IconTUppercaseTLowercaseLine | Weight=Line | edit, font, letter, text, type, typo, write, size, 글, 글자, 알파벳, 작성, 타이포, 텍스트, 폰트, 확대, 편집, 크기 |  |  |
+| icon_tag_fill | IconTagFill | Weight=Fill | keyword, label, tag, 라벨, 키워드, 태그, 택 |  |  |
+| icon_tag_line | IconTagLine | Weight=Line | keyword, label, tag, 라벨, 키워드, 태그, 택 |  |  |
+| icon_text_aligncenter_fill | IconTextAligncenterFill | Weight=Fill | text, align, center, 텍스트, 정렬, 가운데 |  |  |
+| icon_text_aligncenter_line | IconTextAligncenterLine | Weight=Line | text, align, center, 텍스트, 정렬, 가운데 |  |  |
+| icon_text_alignleft_fill | IconTextAlignleftFill | Weight=Fill | text, align, left, 텍스트, 정렬, 왼쪽 |  |  |
+| icon_text_alignleft_line | IconTextAlignleftLine | Weight=Line | text, align, left, 텍스트, 정렬, 왼쪽 |  |  |
+| icon_text_alignright_fill | IconTextAlignrightFill | Weight=Fill | text, align, right, 텍스트, 정렬, 오른쪽 |  |  |
+| icon_text_alignright_line | IconTextAlignrightLine | Weight=Line | text, align, right, 텍스트, 정렬, 오른쪽 |  |  |
+| icon_thumb_down_fill | IconThumbDownFill | Weight=Fill | bad, dislike, down, hand, thumb, thumb_down, 공감, 별로, 비추천, 손, 싫어요, 엄지 |  |  |
+| icon_thumb_down_line | IconThumbDownLine | Weight=Line | bad, dislike, down, hand, thumb, thumb_down, 공감, 별로, 비추천, 손, 싫어요, 엄지 |  |  |
+| icon_thumb_up_fill | IconThumbUpFill | Weight=Fill | good, hand, like, recommend, thumb, thumb_up, up, 공감, 손, 엄지, 좋아요, 최고, 추천 |  |  |
+| icon_thumb_up_line | IconThumbUpLine | Weight=Line | good, hand, like, recommend, thumb, thumb_up, up, 공감, 손, 엄지, 좋아요, 최고, 추천 |  |  |
+| icon_timer_10_fill | IconTimer10Fill | Weight=Fill | timer, time, 10 seconds, 타이머, 시간, 10초 |  |  |
+| icon_timer_10_line | IconTimer10Line | Weight=Line | timer, time, 10 seconds, 타이머, 시간, 10초 |  |  |
+| icon_timer_3_fill | IconTimer3Fill | Weight=Fill | timer, time, 3 seconds, 타이머, 시간, 3초 |  |  |
+| icon_timer_3_line | IconTimer3Line | Weight=Line | timer, time, 3 seconds, 타이머, 시간, 3초 |  |  |
+| icon_timer_fill | IconTimerFill | Weight=Fill | timer, time, clock, 타이머, 시간, 시계 |  |  |
+| icon_timer_line | IconTimerLine | Weight=Line | timer, time, clock, 타이머, 시간, 시계 |  |  |
+| icon_toolbox_fill | IconToolboxFill | Weight=Fill | bag, repair, tool, toolbox, toolkit, tools, 가방, 공구, 도구, 도구상자, 박스, 수리 |  |  |
+| icon_toolbox_line | IconToolboxLine | Weight=Line | bag, repair, tool, toolbox, toolkit, tools, 가방, 공구, 도구, 도구상자, 박스, 수리 |  |  |
+| icon_translation_fill | IconTranslationFill | Weight=Fill | language, translate, translation, 번역, 언어, 한영 |  |  |
+| icon_translation_line | IconTranslationLine | Weight=Line | language, translate, translation, 번역, 언어, 한영 |  |  |
+| icon_trashcan_fill | IconTrashcanFill | Weight=Fill | delete, remove, trash, trashcan, 버리기, 삭제, 제거, 휴지통 |  |  |
+| icon_trashcan_line | IconTrashcanLine | Weight=Line | delete, remove, trash, trashcan, 버리기, 삭제, 제거, 휴지통 |  |  |
+| icon_triangle_down_small_fill | IconTriangleDownSmallFill | Weight=Fill | arrow, arrow_drop_down, down, drop, more, small, triangle, unfold, 더보기, 드롭다운, 디스클로저, 삼각형, 아래, 작은, 펼치기, 화살표 |  |  |
+| icon_triangle_down_small_line | IconTriangleDownSmallLine | Weight=Line | arrow, arrow_drop_down, down, drop, more, small, triangle, unfold, 더보기, 드롭다운, 디스클로저, 삼각형, 아래, 작은, 펼치기, 화살표 |  |  |
+| icon_triangle_right_chatbubble_left_fill | IconTriangleRightChatbubbleLeftFill | Weight=Fill | bubble, chat, communication, message, play, short form, shortform, story, triangle, video, 동영상, 말풍선, 메시지, 미디어, 비디오, 삼각형, 소통, 숏폼, 스토리, 채팅 | 동네스토리 | service |
+| icon_triangle_right_chatbubble_left_line | IconTriangleRightChatbubbleLeftLine | Weight=Line | bubble, chat, communication, message, play, short form, shortform, story, triangle, video, 동영상, 말풍선, 메시지, 미디어, 비디오, 삼각형, 소통, 숏폼, 스토리, 채팅 | 동네스토리 | service |
+| icon_triangle_right_fill | IconTriangleRightFill | Weight=Fill | media, play, right, triangle, video, 동영상, 삼각형, 숏폼, 오른쪽, 재생 |  |  |
+| icon_triangle_right_line | IconTriangleRightLine | Weight=Line | media, play, right, triangle, video, 동영상, 삼각형, 숏폼, 오른쪽, 재생 |  |  |
+| icon_triangle_right_rectangle_splited_line_vertical_fill | IconTriangleRightRectangleSplitedLineVerticalFill | Weight=Fill | video, edit, rectangle, vertical, divide, 직사각형, 편집, 동영상, 나누기 |  |  |
+| icon_triangle_right_rectangle_splited_line_vertical_line | IconTriangleRightRectangleSplitedLineVerticalLine | Weight=Line | video, edit, rectangle, vertical, divide, 직사각형, 편집, 동영상, 나누기 |  |  |
+| icon_triangle_up_small_fill | IconTriangleUpSmallFill | Weight=Fill | arrow, arrow_drop_up, drop, fold, small, triangle, up, 디스클로저, 삼각형, 위, 작은, 접기, 화살표 |  |  |
+| icon_triangle_up_small_line | IconTriangleUpSmallLine | Weight=Line | arrow, arrow_drop_up, drop, fold, small, triangle, up, 디스클로저, 삼각형, 위, 작은, 접기, 화살표 |  |  |
+| icon_trophy_fill | IconTrophyFill | Weight=Fill | trophy, award, prize, winner, 트로피, 상, 수상 |  |  |
+| icon_trophy_line | IconTrophyLine | Weight=Line | trophy, award, prize, winner, 트로피, 상, 수상 |  |  |
+| icon_truck_fill | IconTruckFill | Weight=Fill | truck, delivery, shipping, transport, logistics, 트럭, 용달, 배달, 배송, 운송 |  |  |
+| icon_truck_line | IconTruckLine | Weight=Line | truck, delivery, shipping, transport, logistics, 트럭, 용달, 배달, 배송, 운송 |  |  |
+| icon_tshirt_bubble2_fill | IconTshirtBubble2Fill | Weight=Fill | tee, short, bubble, laundry, cleaning, dry, 세탁, 세탁소, 빨래, 거품, 반팔 |  |  |
+| icon_tshirt_bubble2_line | IconTshirtBubble2Line | Weight=Line | tee, short, bubble, laundry, cleaning, dry, 세탁, 세탁소, 빨래, 거품, 반팔 |  |  |
+| icon_u_uppercase_horizline_fill | IconUUppercaseHorizlineFill | Weight=Fill | edit, u, font, letter, text, type, typo, write, underline, 글, 글자, 알파벳, 작성, 타이포, 텍스트, 폰트, 밑줄, 편집 |  |  |
+| icon_u_uppercase_horizline_line | IconUUppercaseHorizlineLine | Weight=Line | edit, u, font, letter, text, type, typo, write, underline, 글, 글자, 알파벳, 작성, 타이포, 텍스트, 폰트, 밑줄, 편집 |  |  |
+| icon_vertline_coupon_fill | IconVertlineCouponFill | Weight=Fill | 쿠폰, 기프티콘, e쿠폰, coupon, gifticon, e-coupon |  |  |
+| icon_vertline_coupon_line | IconVertlineCouponLine | Weight=Line | 쿠폰, 기프티콘, e쿠폰, coupon, gifticon, e-coupon |  |  |
+| icon_vertline3_viewfinder_fill | IconVertline3ViewfinderFill | Weight=Fill | 바코드, 결제, 코드, 계산, barcode, payment, pay, code, checkout |  |  |
+| icon_vertline3_viewfinder_line | IconVertline3ViewfinderLine | Weight=Line | 바코드, 결제, 코드, 계산, barcode, payment, pay, code, checkout |  |  |
+| icon_vertline4_sparkle_fill | IconVertline4SparkleFill | Weight=Fill | 챗봇, 보이스, 음성, ai, 사운드, 소리, 자동, 상담, chatbot, voice, audio, sound, auto, consultation |  |  |
+| icon_vertline4_sparkle_line | IconVertline4SparkleLine | Weight=Line | 챗봇, 보이스, 음성, ai, 사운드, 소리, 자동, 상담, chatbot, voice, audio, sound, auto, consultation |  |  |
+| icon_vertrectangle_folded_fill | IconVertrectangleFoldedFill | Weight=Fill | document, file, info, note, paper, 노트, 문서, 정보, 파일 |  |  |
+| icon_vertrectangle_folded_line | IconVertrectangleFoldedLine | Weight=Line | document, file, info, note, paper, 노트, 문서, 정보, 파일 |  |  |
+| icon_vertrectangle2_horizontal_fill | IconVertrectangle2HorizontalFill | Weight=Fill | horizontal, pause, play, rectangle, shortform, vertical, video, 가로, 동영상, 비디오, 세로, 숏폼, 일시정지, 직사각형 |  |  |
+| icon_vertrectangle2_horizontal_line | IconVertrectangle2HorizontalLine | Weight=Line | horizontal, pause, play, rectangle, shortform, vertical, video, 가로, 동영상, 비디오, 세로, 숏폼, 일시정지, 직사각형 |  |  |
+| icon_votingstamp_fill | IconVotingstampFill | Weight=Fill | vote, stamp, 선거, 투표, 대선, 도장 |  |  |
+| icon_votingstamp_line | IconVotingstampLine | Weight=Line | vote, stamp, 선거, 투표, 대선, 도장 |  |  |
+| icon_wand_fill | IconWandFill | Weight=Fill | edit, image, magic, photo, photo_edit, tool, wand, 도구, 마법, 마법봉, 보정, 사진, 수정, 이미지, 편집 |  |  |
+| icon_wand_line | IconWandLine | Weight=Line | edit, image, magic, photo, photo_edit, tool, wand, 도구, 마법, 마법봉, 보정, 사진, 수정, 이미지, 편집 |  |  |
+| icon_wand_plus_circle_fill | IconWandPlusCircleFill | Weight=Fill | 마술봉, 에이전트, ai, 마법, 별, wand, agent, magic, star |  | service |
+| icon_wand_plus_circle_line | IconWandPlusCircleLine | Weight=Line | 마술봉, 에이전트, ai, 마법, 별, wand, agent, magic, star |  | service |
+| icon_washingmachine_fill | IconWashingmachineFill | Weight=Fill | 세탁기, 가전, 생활, 빨래, 세탁, washing machine, appliance, lifestyle, laundry, wash |  |  |
+| icon_washingmachine_line | IconWashingmachineLine | Weight=Line | 세탁기, 가전, 생활, 빨래, 세탁, washing machine, appliance, lifestyle, laundry, wash |  |  |
+| icon_window2_store_fill | IconWindow2StoreFill | Weight=Fill | biz, bizprofile, store, shop, retail, building, 비즈, 비즈프로필, 가게, 상점, 소매, 건물 | 비즈프로필 | service |
+| icon_window2_store_line | IconWindow2StoreLine | Weight=Line | biz, bizprofile, store, shop, retail, building, 비즈, 비즈프로필, 가게, 상점, 소매, 건물 | 비즈프로필 | service |
+| icon_window4_house_fill | IconWindow4HouseFill | Weight=Fill | home, house, property, real estate, realty, window, 부동산, 주택, 집, 창문, 홈 | 부동산 | service |
+| icon_window4_house_line | IconWindow4HouseLine | Weight=Line | home, house, property, real estate, realty, window, 부동산, 주택, 집, 창문, 홈 | 부동산 | service |
+| icon_won_arrow_clockwise_circular_fill | IconWonArrowClockwiseCircularFill | Weight=Fill | currency, exchange, money, pay, refund, rotate, won, 돈, 원, 통화, 환불, 환전, 회전 |  |  |
+| icon_won_arrow_clockwise_circular_line | IconWonArrowClockwiseCircularLine | Weight=Line | currency, exchange, money, pay, refund, rotate, won, 돈, 원, 통화, 환불, 환전, 회전 |  |  |
+| icon_won_circle_arrow_left_fill | IconWonCircleArrowLeftFill | Weight=Fill | 돈, 원, 페이, 송금, send, money, won |  |  |
+| icon_won_circle_arrow_left_line | IconWonCircleArrowLeftLine | Weight=Line | 돈, 원, 페이, 송금, send, money, won |  |  |
+| icon_won_circle_arrow_right_fill | IconWonCircleArrowRightFill | Weight=Fill | currency, money, money_send, pay, send, transfer, won, 돈, 보내기, 송금, 원, 이체, 전달, 통화 |  |  |
+| icon_won_circle_arrow_right_line | IconWonCircleArrowRightLine | Weight=Line | currency, money, money_send, pay, send, transfer, won, 돈, 보내기, 송금, 원, 이체, 전달, 통화 |  |  |
+| icon_won_circle_fill | IconWonCircleFill | Weight=Fill | cash, circle, coin, currency, korean won, money, money_won, pay, price, won, 가격, 금액, 돈, 송금, 원, 통화, 페이, 한국 원 |  |  |
+| icon_won_circle_line | IconWonCircleLine | Weight=Line | cash, circle, coin, currency, korean won, money, money_won, pay, price, won, 가격, 금액, 돈, 송금, 원, 통화, 페이, 한국 원 |  |  |
+| icon_won_fill | IconWonFill | Weight=Fill | currency, korean won, money, price, price_won, won, 가격, 돈, 원, 통화, 한국 원 |  |  |
+| icon_won_line | IconWonLine | Weight=Line | currency, korean won, money, price, price_won, won, 가격, 돈, 원, 통화, 한국 원 |  |  |
+| icon_won_shield_fill | IconWonShieldFill | Weight=Fill | confirmation_pay, financial security, protection, security, shield, won, 결제, 금융 보안, 방패, 보안, 보호, 에스크로, 에스크로결제, 원, 인증 |  |  |
+| icon_won_shield_line | IconWonShieldLine | Weight=Line | confirmation_pay, financial security, protection, security, shield, won, 결제, 금융 보안, 방패, 보안, 보호, 에스크로, 에스크로결제, 원, 인증 |  |  |
+| icon_wrench_fill | IconWrenchFill | Weight=Fill | construction, tool, repair, maintenance, fix, 도구, 수리, 유지보수 |  |  |
+| icon_wrench_line | IconWrenchLine | Weight=Line | construction, tool, repair, maintenance, fix, 도구, 수리, 유지보수 |  |  |
+| icon_xmark_circle_fill | IconXmarkCircleFill | Weight=Fill | cancel, circle, close, delete, info, remove, remove_circle, x, 검색, 닫기, 삭제, 엑스, 원, 제거, 지우기, 취소 |  |  |
+| icon_xmark_circle_line | IconXmarkCircleLine | Weight=Line | cancel, circle, close, delete, info, remove, remove_circle, x, 검색, 닫기, 삭제, 엑스, 원, 제거, 지우기, 취소 |  |  |
+| icon_xmark_fill | IconXmarkFill | Weight=Fill | cancel, close, delete, x, 곱하기, 닫기, 삭제, 엑스, 취소 |  |  |
+| icon_xmark_line | IconXmarkLine | Weight=Line | cancel, close, delete, x, 곱하기, 닫기, 삭제, 엑스, 취소 |  |  |
+| icon_xmark_scale_fill | IconXmarkScaleFill | Weight=Fill | 저울, 무게, 택배, 탈락, 실패, scale, weight, parcel, fail, failure |  |  |
+| icon_xmark_scale_line | IconXmarkScaleLine | Weight=Line | 저울, 무게, 택배, 탈락, 실패, scale, weight, parcel, fail, failure |  |  |
+| icon_yen_circle_arrow_right_fill | IconYenCircleArrowRightFill | Weight=Fill | currency, money, money_send, pay, send, transfer, yen, 돈, 보내기, 송금, 엔, 엔화, 이체, 전달, 통화 |  |  |
+| icon_yen_circle_arrow_right_line | IconYenCircleArrowRightLine | Weight=Line | currency, money, money_send, pay, send, transfer, yen, 돈, 보내기, 송금, 엔, 엔화, 이체, 전달, 통화 |  |  |
+| icon_yen_circle_fill | IconYenCircleFill | Weight=Fill | cash, circle, coin, currency, japan, yen, money, money_yen, pay, price, 가격, 금액, 돈, 송금, 엔, 엔화, 통화, 페이, 일본 |  |  |
+| icon_yen_circle_line | IconYenCircleLine | Weight=Line | cash, circle, coin, currency, japan, yen, money, money_yen, pay, price, 가격, 금액, 돈, 송금, 엔, 엔화, 통화, 페이, 일본 |  |  |
+| icon_yen_fill | IconYenFill | Weight=Fill | currency, japan, yen, money, price, price_yen, 가격, 돈, 엔화, 통화, 일본, 엔 |  |  |
+| icon_yen_line | IconYenLine | Weight=Line | currency, japan, yen, money, price, price_yen, 가격, 돈, 엔화, 통화, 일본, 엔 |  |  |
+
+## Multicolor Icons
+
+| Icon Name | React Component Name | Figma Name | Keywords | Services | Tags |
+| --- | --- | --- | --- | --- | --- |
+| icon_animal_face | IconAnimalFace | 🟢 icon_animal_face | 반려동물, 동물, 강아지, 고양이, 얼굴, animal, cat, dog, face |  |  |
+| icon_apple | IconApple | 🟢 [서비스아이콘] icon_apple | 사과, 과일, 농수산물, apple, fruit |  | service |
+| icon_arrow_up_right_shoppingbag_tilted | IconArrowUpRightShoppingbagTilted | 🟢 [서비스아이콘] icon_arrow_up_right_shoppingbag_tilted | 바로구매, 쇼핑백, 쇼핑, 중고거래, 거래, 구매, 서비스, 화살표, buynow, shopping bag, shopping, secondhand trade, trade, purchase, service, arrow |  | service |
+| icon_asterisk_horizrectangle_coolwave3 | IconAsteriskHorizrectangleCoolwave3 | 🟢 icon_asterisk_horizrectangle_coolwave3 | 에어컨, 냉방, 온도, 가전, 생활, air conditioner, cooling, temperature, appliance, lifestyle |  |  |
+| icon_book | IconBook | 🟢 [서비스아이콘] icon_book | book, housekeeping_book, read, reading, 읽기, 책 |  | service |
+| icon_box_flap | IconBoxFlap | 🟢 icon_box_flap | 박스, 택배, 상자, 짐, 이사, 포장, alba, box, parcel, package, luggage, move, packing |  |  |
+| icon_building2 | IconBuilding2 | 🟢 icon_building2 | 단지, 커뮤니티, 모임, building, community, 건물, 아파트 |  |  |
+| icon_building2_twosize | IconBuilding2Twosize | 🟢 icon_building2_twosize | 집, 주거, 빌딩, 마을, 동네, home, residence, building, village, neighborhood |  |  |
+| icon_camera | IconCamera | 🟢 icon_camera | camera, image, photo, picture, snap, 사진, 이미지, 촬영, 카메라, 포토 |  |  |
+| icon_car_frontside | IconCarFrontside | 🟢 [서비스아이콘] icon_car_frontside | automobile, car, cars, transportation, vehicle, vertical, 버티컬, 운송, 자동차, 중고차, 차, 차량 | 중고차 | service |
+| icon_car_frontside_bubble | IconCarFrontsideBubble | 🟢 [서비스아이콘] icon_car_frontside_bubble | automobile, car, cars, transportation, vehicle, bubble, wash, 운송, 자동차, 중고차, 차, 차량, 세차 | 세차 | service |
+| icon_card | IconCard | 🟢 icon_card | 당근페이, 카드, 결제, 체크카드, card, pay, money |  |  |
+| icon_cart | IconCart | 🟢 icon_cart | cart, shopping, shopping cart, 쇼핑, 쇼핑카트, 장바구니, 카트 |  |  |
+| icon_cart_items | IconCartItems | 🟢 [서비스아이콘] icon_cart_items | 커머스, 카트, 쇼핑, commerce, cart, shopping |  | service |
+| icon_cart_load | IconCartLoad | 🟢 icon_cart_load | alba, cart, load, box, move, 짐옮기기, 카트, 박스, 포장, 이사 |  |  |
+| icon_checkmark_calendar | IconCheckmarkCalendar | 🟢 icon_checkmark_calendar | calendar, schedule, 동네행사, 달력, 일정 |  |  |
+| icon_clover4 | IconClover4 | 🟢 icon_clover4 | 클로버, 네잎클로버, 행운, 럭키, 운, 식물, 잎, clover, four leaf clover, luck, lucky, fortune, plant, leaf |  |  |
+| icon_cup_heatwave | IconCupHeatwave | 🟢 icon_cup_heatwave | cafe, drink, cup, beverage, hot, coffee, tea, 카페, 음료, 뜨거운, 커피, 차, 컵 |  |  |
+| icon_cup_takeout | IconCupTakeout | 🟢 icon_cup_takeout | cafe, drink, cup, beverage, hot, coffee, tea, 카페, 음료, 뜨거운, 커피, 차, 컵 |  |  |
+| icon_cupcake | IconCupcake | 🟢 icon_cupcake | 컵케이크, 케이크, 디저트, 베이커리, 베이킹, cupcake, cake, dessert, bakery, party |  |  |
+| icon_diamond | IconDiamond | 🟢 icon_diamond | 다이아몬드, 혜택, 빛나는, 보석, 이벤트, 리워드, 보상, diamond, benefit, shining, jewel, event, reward |  |  |
+| icon_document_seal | IconDocumentSeal | 🟢 icon_document_seal | 증명서, 문서, 주민센터, paper, certification, verification |  |  |
+| icon_dome_pillar3 | IconDomePillar3 | 🟢 icon_dome_pillar3 | 공공기관, 기관, 건물, 빌딩, 관공서, 시청, 시설, public institution, institution, building, government office, city hall, facility |  |  |
+| icon_donut | IconDonut | 🟢 icon_donut | 도넛, 빵, 떡, 디저트, 후식, 베이커리, donut, bread, rice cake, dessert, bakery |  |  |
+| icon_duck_leftside | IconDuckLeftside | 🟢 icon_duck_leftside | 유아, 유아동, 아동, 어린이, 육아, 아기, 맘, 엄마, 아빠, 놀이, 유치원, infant, toddler, child, children, parenting, baby, mom, dad, play, kindergarten |  |  |
+| icon_dumbbell | IconDumbbell | 🟢 icon_dumbbell | fitness, gym, workout, exercise, 헬스, 체육관, 운동 |  |  |
+| icon_envelope | IconEnvelope | 🟢 icon_envelope | card, envelope, invite, letter, mail, message, 메시지, 메일, 초대, 편지 |  |  |
+| icon_eyebrow | IconEyebrow | 🟢 icon_eyebrow | 눈썹, 속눈썹, 뷰티, 메이크업, 케어, eyebrow, eyelash, brow, beauty, care |  |  |
+| icon_face_smile_circle | IconFaceSmileCircle | 🟢 icon_face_smile_circle | chatting, emoji, emoticon, face, happy, smile, 사람, 얼굴, 웃음, 이모지, 이모티콘, 채팅, 표정, 행복 |  |  |
+| icon_figure_walk | IconFigureWalk | 🟢 icon_figure_walk | figure, man, move, people, person, run, walk, 걷기, 걸어서, 사람, 유저, 이동, 도보 |  |  |
+| icon_fish_wave2 | IconFishWave2 | 🟢 icon_fish_wave2 | 붕어빵, 붕어, 물고기, 겨울, 간식, fish, winter, snack |  |  |
+| icon_flower | IconFlower | 🟢 icon_flower | 꽃, 꽃가게, 꽃집, 벗꽃, flower, florist, flower shop, cherry blossom |  |  |
+| icon_fork_spoon | IconForkSpoon | 🟢 icon_fork_spoon | cutlery, dining, eat, food, fork, restaurant, spoon, 가게, 레스토랑, 숟가락, 식기, 식당, 식사, 음식, 포크 |  |  |
+| icon_fork_spoon_bag | IconForkSpoonBag | 🟢 [서비스아이콘] icon_fork_spoon_bag | pickup, food delivery, takeaway, restaurant, food, 픽업, 음식 배달, 테이크 아웃, 레스토랑, 음식, 포장 | 픽업 | service |
+| icon_fraction_1_n_uppercase | IconFraction1NUppercase | 🟢 icon_fraction_1_n_uppercase | 더치페이, 결제, 당근페이, 계산, 돈, n, 1, dutch, pay, money |  |  |
+| icon_gamepad | IconGamepad | 🟢 icon_gamepad | 게임, 게임기, 컨트롤, 패드, 오락기, 조이스틱, 조종, game, console, control, pad, arcade machine, joystick, steering |  |  |
+| icon_gift | IconGift | 🟢 icon_gift | box, gift, present, voucher, 기프트, 상자, 선물, 쿠폰 |  |  |
+| icon_grid_dot5 | IconGridDot5 | 🟢 [서비스아이콘] icon_grid_dot5 | QR코드, QR오더, QR주문, 큐알, 큐알오더, 큐알주문, 큐알코드, 오더, 주문, 코드, QR, QR Code, QR Order, qrcode, qrorder |  | service |
+| icon_hand_drop | IconHandDrop | 🟢 icon_hand_drop | 마사지, 스파, 피부관리, 뷰티, 케어, massage, spa, therapy, wellness, beauty |  |  |
+| icon_horizline_viewfinder | IconHorizlineViewfinder | 🟢 icon_horizline_viewfinder | camera, chat, horizontal line, qr, qrcode, qr코드, scan, scanner, viewfinder, 가로선, 뷰파인더, 스캐너, 스캔, 채팅, 카메라 |  |  |
+| icon_hospital | IconHospital | 🟢 icon_hospital | 병원, 건물, 의료, medical, hospital, building, clinic |  |  |
+| icon_house_card | IconHouseCard | 🟢 icon_house_card | 월세결제, 월세, 결제, 카드, 페이, 부동산, card, pay, realty |  |  |
+| icon_icecreamcone | IconIcecreamcone | 🟢 icon_icecreamcone | 아이스크림, 콘, 소프트콘, 디저트, 후식, ice cream, cone, soft serve, dessert |  |  |
+| icon_linechart_up_xaxis | IconLinechartUpXaxis | 🟢 [서비스아이콘] icon_linechart_up_xaxis | ad, graph, boost, growth, increase, trend, statistics, data, 광고, 부스터, 부스트, 성장, 증가, 추세, 통계, 데이터, 이웃광고 | 이웃광고 | service |
+| icon_magnifyingglass | IconMagnifyingglass | 🟢 icon_magnifyingglass | find, magnifying glass, search, 검색, 돋보기, 찾기 |  |  |
+| icon_mask2_smile_stacked | IconMask2SmileStacked | 🟢 icon_mask2_smile_stacked | 얼굴, 마스크, 표정, 문화, 가면, 공연, 활동, 놀이, 스마일, face, mask, expression, culture, performance, activity, play, smile |  |  |
+| icon_megaphone_tilted | IconMegaphoneTilted | 🟢 [서비스아이콘] icon_megaphone_tilted | ad, 확성기, 메가폰, megaphone, 광고 | 광고 | service |
+| icon_monitor | IconMonitor | 🟢 icon_monitor | 모니터, 업무, 사무, 보조, 사무실, 화면, 디스플레이, 일, 회사, alba, monitor, work, task, office, assistant, support, screen, display, job, company, workplace |  |  |
+| icon_nailpolish | IconNailpolish | 🟢 icon_nailpolish | beauty, cosmetics, makeup, nail, polish, 뷰티, 화장품, 메이크업, 네일, 폴리쉬 |  |  |
+| icon_paintroller | IconPaintroller | 🟢 icon_paintroller | homerepair, paint, roller, tool, home improvement, 페인트, 롤러, 도구, 집수리, 수리, 시공 |  |  |
+| icon_palette | IconPalette | 🟢 icon_palette | class, art, design, color, palette, 과외, 취미, 수업, 미술, 디자인, 색상, 팔레트 |  |  |
+| icon_pencil | IconPencil | 🟢 icon_pencil | pencil, school, study, 과외, 수업, 교육, 학교, 대학교, 학원, 연필 |  |  |
+| icon_percent_arrowshape_down | IconPercentArrowshapeDown | 🟢 icon_percent_arrowshape_down | 당근초특가, 할인, 특가, discount, sale, down |  |  |
+| icon_person_magnifyingglass | IconPersonMagnifyingglass | 🟢 [서비스아이콘] icon_person_magnifyingglass | discover, explore, find, job, jobs, magnifying glass, person, search, vertical, 검색, 공고, 돋보기, 발견, 버티컬, 사람, 알바, 찾기, 탐색 | 알바 | service |
+| icon_person2_openarms | IconPerson2Openarms | 🟢 [서비스아이콘] icon_person2_openarms | people, community, group, welcome, 모임, 동네생활, 사람들, 커뮤니티, 그룹, 환영 | 모임 | service |
+| icon_pizza_slice | IconPizzaSlice | 🟢 icon_pizza_slice | 피자, 음식, 삼각형, pizza, food, triangle |  |  |
+| icon_plate_covered | IconPlateCovered | 🟢 icon_plate_covered | alba, job, restaurant, serving, plate, bell, order, food, 알바, 레스토랑, 서빙, 접시, 종, 주문, 음식 |  |  |
+| icon_post | IconPost | 🟢 icon_post | community, eco-friendly, leaf, nature, news, note, paper, person, post, 노트, 사람, 잎, 자연, 친환경, 커뮤니티, 포스트, 동네생활 |  |  |
+| icon_rocket | IconRocket | 🟢 [서비스아이콘] icon_rocket | 로켓, 구매, 판매, 거래, 출발, 우주, rocket, purchase, sale, trade, departure, space, autopilot |  | service |
+| icon_roundmeat_bottombone | IconRoundmeatBottombone | 🟢 icon_roundmeat_bottombone | 치킨, 닭, 다리, 닭다리, 고기, 음식, chicken, leg, drumstick, meat, food |  |  |
+| icon_scissors | IconScissors | 🟢 icon_scissors | beautyshop, hair, beauty, scissors, cut, tool, 미용실, 헤어샵, 가위, 자르기, 도구 |  |  |
+| icon_shoppingbag_items | IconShoppingbagItems | 🟢 [서비스아이콘] icon_shoppingbag_items | shopping, retail, products, goods, items, 중고거래, 커머스, 쇼핑, 소매, 제품, 상품 | 중고거래 | service |
+| icon_shoppingbag2_stacked | IconShoppingbag2Stacked | 🟢 icon_shoppingbag2_stacked | shopping bags, shopping, bags, stack, 한번에, 물건, 쇼핑백, 쇼핑, 스택 |  |  |
+| icon_sneaker_lifted_leftside | IconSneakerLiftedLeftside | 🟢 icon_sneaker_lifted_leftside | 신발, 운동화, 왼쪽, 걸어서, 걷기, 동네걷기, 발, 운동, 만보기, 산책, shoes, sneakers, left, walking, walk, neighborhood walk, foot, exercise, pedometer |  |  |
+| icon_sofa | IconSofa | 🟢 icon_sofa | 의자, 소파, 라운지, 거실, 리빙, 가구, chair, sofa, lounge, living room, living, furniture |  |  |
+| icon_sparkle2 | IconSparkle2 | 🟢 icon_sparkle2 | ai, glitter, shine, sparkle, 자동, 인공지능, 반짝임, 빛남, 자동화 |  |  |
+| icon_spraybottle_sponge | IconSpraybottleSponge | 🟢 icon_spraybottle_sponge | cleaning, housekeeping, chores, clean, life, 청소, 집안일 |  |  |
+| icon_star_calendar | IconStarCalendar | 🟢 icon_star_calendar | 달력, 이벤트, 별, calendar, event, star |  |  |
+| icon_tree | IconTree | 🟢 icon_tree | 나무, 자연, 잎, 숲, 공원, 환경, tree, nature, leaf, forest, park, environment |  |  |
+| icon_triangle_right_chatbubble_left | IconTriangleRightChatbubbleLeft | 🟢 [서비스아이콘] icon_triangle_right_chatbubble_left | bubble, chat, communication, message, play, short form, shortform, story, triangle, video, 동영상, 말풍선, 메시지, 미디어, 비디오, 삼각형, 소통, 숏폼, 스토리, 채팅 | 동네스토리 | service |
+| icon_truck | IconTruck | 🟢 icon_truck | truck, delivery, shipping, transport, logistics, 트럭, 용달, 배달, 배송, 운송 |  |  |
+| icon_tshirt_bubble2 | IconTshirtBubble2 | 🟢 [서비스아이콘] icon_tshirt_bubble2 | tee, short, bubble, laundry, cleaning, dry, 세탁, 세탁소, 빨래, 거품, 반팔 |  | service |
+| icon_vertrectangle_tiltedstacked | IconVertrectangleTiltedstacked | 🟢 [서비스아이콘] icon_vertrectangle_tiltedstacked | 한입뉴스, 뉴스레터, 카드, news, newsletter, cards |  | service |
+| icon_vest_horizstripe | IconVestHorizstripe | 🟢 [서비스아이콘] icon_vest_horizstripe | 조끼, 전문가, vest, expert |  | service |
+| icon_wand_plus_circle | IconWandPlusCircle | 🟢 [서비스아이콘] icon_wand_plus_circle | 마술봉, 에이전트, ai, 마법, 별, wand, agent, magic, star |  | service |
+| icon_warninglight | IconWarninglight | 🟢 icon_warninglight | 경고, 경고등, 신고, 문제, 긴급, 사이렌, 신호, 응급, warning, warning light, report, issue, emergency, siren, signal, urgent |  |  |
+| icon_window2_store | IconWindow2Store | 🟢 [서비스아이콘] icon_window2_store | biz, bizprofile, store, shop, retail, building, 비즈, 비즈프로필, 가게, 상점, 소매, 건물 | 비즈프로필 | service |
+| icon_window2_store_doubleband | IconWindow2StoreDoubleband | 🟢 icon_window2_store_doubleband |  |  |  |
+| icon_window4_house | IconWindow4House | 🟢 [서비스아이콘] icon_window4_house | home, house, property, real estate, realty, window, 부동산, 주택, 집, 창문, 홈 | 부동산 | service |
+| icon_won_circle | IconWonCircle | 🟢 icon_won_circle | cash, circle, coin, currency, korean won, money, money_won, pay, price, won, 가격, 금액, 돈, 송금, 원, 통화, 페이, 한국 원 |  |  |
+| icon_won_shield | IconWonShield | 🟢 icon_won_shield | confirmation_pay, financial security, protection, security, shield, won, 결제, 금융 보안, 방패, 보안, 보호, 에스크로, 에스크로결제, 원, 인증 |  |  |
+| icon_wrench | IconWrench | 🟢 icon_wrench | construction, tool, repair, maintenance, fix, 도구, 수리, 유지보수 |  |  |
+
+<Callout>
+  © 2025 Daangn Market. All rights reserved.
+  <br />본 아이콘의 저작권은 (주)당근마켓에 있으며, 허가 없이 복제, 배포, 전송,
+  전시 등의 행위를 금지합니다.
+</Callout>
