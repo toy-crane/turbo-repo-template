@@ -66,14 +66,16 @@ AI_GATEWAY_API_KEY=
 AI_GATEWAY_MODEL=
 SUPABASE_URL=
 SUPABASE_JWKS_URL=
+SUPABASE_PUBLISHABLE_KEY=
 ```
 
 - `AI_GATEWAY_API_KEY`는 Hono 서버와 Vercel 프로젝트만 읽는다.
 - `AI_GATEWAY_MODEL`은 구현할 때 AI Gateway의 최신 지원 목록에서 고른 `provider/model` 식별자다.
 - `SUPABASE_JWKS_URL`은 Hono가 모바일 access token을 검증하는 같은 Supabase 프로젝트의 JWKS 주소다.
+- `SUPABASE_PUBLISHABLE_KEY`는 공개 값이다. `withSupabase({ auth: "user" })`가 토큰 검증을 마친 뒤 그 사용자 권한으로 쓸 클라이언트를 만들 때 필요하다. 없으면 인증을 통과한 요청이 `500`으로 끝난다.
 - 로컬 값은 `apps/api/.env.local`에 두고 Git에 넣지 않는다.
 - Vercel의 Development, Preview와 Production 값은 해당 API 프로젝트에서 따로 설정한다.
-- Supabase secret key를 나중에 추가하더라도 서버에만 둔다. 이번 AI 경로에는 필요하지 않으며 관리자 클라이언트를 만들 이유로 사용하지 않는다.
+- 이 환경에는 실제 Supabase secret key를 두지 않는다. 관리자 클라이언트를 만들려는 `@supabase/server`의 요구는 자격 증명이 아닌 자리표시자로 채운다. 자세한 내용은 [AI 서버 경계](../../decisions/ai-server-boundary.md)에 있다.
 
 ### 모델 호출
 

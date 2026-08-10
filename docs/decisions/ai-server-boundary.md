@@ -7,13 +7,15 @@
 - 모바일 앱은 모델 제공자를 직접 호출하지 않고 Hono API를 호출한다.
 - 비용이 발생하는 AI API는 Supabase Auth 로그인 사용자의 access token을 요구한다.
 - Hono는 `@supabase/server/adapters/hono`의 `withSupabase({ auth: 'user' })`를 비용이 발생하는 AI 경로에 적용한다.
+- `apps/api`의 환경에는 실제 Supabase secret key를 두지 않는다. `@supabase/server`가 인증 방식과 무관하게 관리자 클라이언트를 만들면서 secret key를 요구하므로, 자격 증명이 아닌 자리표시자를 `env.secretKeys`로 넘겨 요구를 채운다.
 - Supabase Auth의 익명 로그인을 사용하지 않는다.
 
 ## 경계
 
 - 상태 확인처럼 모델을 호출하지 않고 설정값을 노출하지 않는 경로는 로그인 없이 제공할 수 있다.
 - 모델 제공자와 Vercel AI Gateway의 비밀 값은 서버만 소유한다.
-- Supabase secret key는 `apps/api`의 서버 환경만 소유한다. AI 요청은 `supabaseAdmin`을 사용하지 않고 로그인 사용자의 RLS가 적용되는 `supabase` 클라이언트를 사용한다.
+- AI 요청은 `supabaseAdmin`을 사용하지 않고 로그인 사용자의 RLS가 적용되는 `supabase` 클라이언트를 사용한다. 이 클라이언트를 만드는 데 필요한 `SUPABASE_PUBLISHABLE_KEY`는 공개 값이므로 서버 환경에 둔다.
+- 자리표시자는 자격 증명이 아니라 권한을 없애는 값이다. `sb_secret_` 형태를 쓰지 않으며, 나중에 누군가 `supabaseAdmin`을 호출하면 조용히 통과하지 않고 이 값으로 실패한다. 실제 secret key가 필요한 서버 기능이 생기면 그 경로의 결정으로 따로 정하고, AI 경로와 같은 환경에 둘지도 그때 정한다.
 - 이 결정은 모델 제공자와 모델, 대화 저장 방식, 사용량 제한 수치, AI와 무관한 서버 API의 소유권을 정하지 않는다.
 
 ## 이유
@@ -24,6 +26,7 @@
 
 - Vercel Functions가 Hono 또는 필요한 AI 응답 스트리밍을 안정적으로 지원하지 못할 때
 - `@supabase/server` Hono 어댑터가 필요한 인증 정책이나 권한 분리를 지원하지 못할 때
+- `@supabase/server`가 관리자 클라이언트를 필요할 때만 만들어 secret key 자리표시자가 필요 없어질 때
 - 다른 서버 앱이 생겨 AI API를 별도 앱으로 유지하는 비용이 이점보다 커질 때
 - 로그인 전 AI 체험이 제품 요구에 포함될 때
 - AI 기능과 모델 호출이 제품 범위에서 빠질 때
