@@ -19,10 +19,13 @@ Expo 모바일 앱과 Hono API를 하나의 AI 채팅 기능으로 완성한다.
 
 ### 현재 저장소에서 이어서 쓸 코드
 
-- [chat-transport.ts](../../../apps/mobile/src/features/chat/chat-transport.ts): `DefaultChatTransport`, `expo/fetch`와 요청마다 새 access token을 읽는 방식을 그대로 사용한다.
-- [home-screen.tsx](../../../apps/mobile/src/features/home/home-screen.tsx): 현재 `useChat` 연결, 중복 전송 방지, 다시 시도와 접근성 처리를 유지한다. 문자열로 합친 메시지 본문과 `ScrollView` 화면은 part 렌더러와 가상 목록으로 바꾼다.
-- [app.ts](../../../apps/api/src/app.ts): 기존 인증, UI message 검증, `streamText`와 UI message stream 응답을 유지한다. 여기에 요청의 `AbortSignal` 전달을 추가한다.
-- [app.test.ts](../../../apps/api/src/app.test.ts): 가짜 모델로 인증, 본문 검증과 스트림을 확인하는 기존 방식을 서버 동작 검증에도 사용한다.
+- [chat-transport.ts](../../../apps/mobile/src/features/chat/api/chat-transport.ts): `DefaultChatTransport`, `expo/fetch`와 요청마다 새 access token을 읽는 방식을 그대로 사용한다.
+- [use-chat-session.ts](../../../apps/mobile/src/features/chat/state/use-chat-session.ts): 현재 `useChat` 연결, 중복 전송 방지와 다시 시도 처리를 유지하고 중지, 편집 후 다시 보내기, 다시 생성을 추가한다.
+- [chat-panel.tsx](../../../apps/mobile/src/features/chat/ui/chat-panel.tsx): 현재 접근성 이름과 오류 표시를 유지한다. 문자열로 합친 메시지 본문과 `ScrollView` 화면은 part 렌더러와 가상 목록으로 바꾼다.
+- [home-screen.tsx](../../../apps/mobile/src/screens/home/home-screen.tsx): 인증 기능에서 받은 access token을 채팅 기능에 넘기는 현재 경계를 유지한다.
+- [route.ts](../../../apps/api/src/features/ai-chat/route.ts): 기존 인증, UI message 검증, `streamText`와 UI message stream 응답을 유지한다. 여기에 요청의 `AbortSignal` 전달을 추가한다.
+- [app.ts](../../../apps/api/src/app.ts): AI 채팅 라우트 조립과 안전한 공통 오류 응답을 유지한다.
+- [app.test.ts](../../../apps/api/src/app.test.ts)와 [chat-panel.test.tsx](../../../apps/mobile/src/features/chat/ui/chat-panel.test.tsx): 가짜 모델과 가짜 transport로 서버 스트림과 모바일 채팅 동작을 확인하는 기존 방식을 새 기능 검증에도 사용한다.
 
 ### 외부 코드에서 가져올 방식
 
