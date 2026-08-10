@@ -114,7 +114,11 @@ export function HomeScreen() {
   }, [draft, isBusy, run, sendMessage]);
 
   const retry = useCallback(() => {
-    if (isBusy) {
+    // The same session check `send` makes. Without it a retry pressed after
+    // the session went away sends a request with no Authorization header, and
+    // the 401 comes back as the same "try again later" message the person is
+    // already looking at.
+    if (!currentSession.current || isBusy) {
       return;
     }
 
@@ -154,7 +158,7 @@ export function HomeScreen() {
           </Text>
           <Button
             accessibilityLabel={chatLabels.retry}
-            isDisabled={isBusy}
+            isDisabled={isBusy || !session}
             onPress={retry}
             variant="tertiary"
           >
