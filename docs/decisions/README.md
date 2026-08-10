@@ -7,6 +7,7 @@
 - [모바일 인증](mobile-authentication.md): 모바일 로그인 제공자, 인증 세션, 계정 연결, 로그아웃 또는 로컬 인증 검증 경로를 변경할 때 읽는다.
 - [모바일 코드 구조](mobile-code-architecture.md): 모바일 영역 구분, 기능 내부 책임, 폴더 구조 또는 import 경계를 변경할 때 읽는다.
 - [모바일 개발 런타임](mobile-development-runtime.md): 모바일 앱의 Expo SDK, 지원 플랫폼, Development Build 런타임 또는 배포 경계를 변경할 때 읽는다.
+- [모바일 환경 설정](mobile-environment-configuration.md): 모바일 공개 환경 변수의 필수 여부, 검증 위치, 접근 방식 또는 검증 도구를 변경할 때 읽는다.
 - [모바일 색상 시맨틱](mobile-color-semantics.md): 모바일 색상 이름, 시맨틱 토큰, 화면 모드 또는 플랫폼별 색상 매핑을 변경할 때 읽는다.
 - [모바일 아이콘 렌더링](mobile-icon-rendering.md): RN UI, 네이티브 셸 또는 `@expo/ui` 안에서 아이콘 렌더러와 플랫폼별 심벌을 선택할 때 읽는다.
 - [모바일 원격 데이터 상태](mobile-remote-data.md): 모바일에서 Supabase 원격 데이터의 조회, 캐시, 데이터 변경 또는 비동기 상태 관리를 변경할 때 읽는다.
