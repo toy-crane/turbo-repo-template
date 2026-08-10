@@ -100,24 +100,21 @@ export function classifyAuthError(error: unknown): AuthFailure {
   if (error instanceof NoProviderCredentialError) {
     return {
       kind: "noProviderCredential",
-      message:
-        "Google 로그인을 마치지 못했습니다. 기기에 Google 계정이 있는지 확인한 뒤 다시 시도해 주세요.",
+      message: "기기에 Google 계정이 있는지 확인한 뒤 다시 시도해 주세요.",
     };
   }
 
   if (error instanceof MissingProviderTokenError) {
     return {
       kind: "missingToken",
-      message:
-        "로그인 제공자가 인증 토큰을 주지 않았습니다. 다시 시도해 주세요.",
+      message: "잠시 후 다시 시도해 주세요.",
     };
   }
 
   if (isNetworkError(error)) {
     return {
       kind: "network",
-      message:
-        "네트워크에 연결하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.",
+      message: "연결을 확인하고 다시 시도해 주세요.",
     };
   }
 
@@ -126,7 +123,7 @@ export function classifyAuthError(error: unknown): AuthFailure {
   if (RATE_LIMIT_CODES.has(code) || readStatus(error) === TOO_MANY_REQUESTS) {
     return {
       kind: "rateLimited",
-      message: "요청이 너무 잦습니다. 잠시 뒤에 다시 시도해 주세요.",
+      message: "잠시 후 다시 시도해 주세요.",
     };
   }
 
@@ -135,14 +132,14 @@ export function classifyAuthError(error: unknown): AuthFailure {
   if (code === "otp_expired" || code === "otp_disabled") {
     return {
       kind: "invalidCode",
-      message: "코드가 맞지 않거나 만료되었습니다. 코드를 다시 받아 주세요.",
+      message: "코드를 다시 입력해 주세요.",
     };
   }
 
   if (INVALID_EMAIL_CODES.has(code)) {
     return {
       kind: "invalidEmail",
-      message: "이메일 주소를 다시 확인해 주세요.",
+      message: "이메일 주소를 다시 입력해 주세요.",
     };
   }
 
@@ -151,7 +148,7 @@ export function classifyAuthError(error: unknown): AuthFailure {
   return {
     kind: "unknown",
     message: message
-      ? `로그인하지 못했습니다: ${message}`
-      : "로그인하지 못했습니다. 다시 시도해 주세요.",
+      ? `다시 시도해 주세요. (${message})`
+      : "다시 시도해 주세요.",
   };
 }

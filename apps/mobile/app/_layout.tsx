@@ -13,6 +13,7 @@ import {
   useAuthSession,
 } from "@/features/auth/state/auth-session";
 import { SessionCheckingScreen } from "@/features/auth/ui/session-checking-screen";
+import { SetupNeededScreen } from "@/features/auth/ui/setup-needed-screen";
 
 const heroUIConfig = {
   devInfo: { stylingPrinciples: false },
@@ -20,10 +21,14 @@ const heroUIConfig = {
 
 function ThemedRootLayout() {
   const { background } = useAppTheme();
-  const { status } = useAuthSession();
+  const { problem, status } = useAuthSession();
 
   if (status === "checking") {
     return <SessionCheckingScreen background={background} />;
+  }
+
+  if (status === "misconfigured") {
+    return <SetupNeededScreen problem={problem ?? ""} />;
   }
 
   return (

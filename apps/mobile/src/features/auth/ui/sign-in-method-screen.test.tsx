@@ -13,7 +13,7 @@ import {
   resetFakeSupabase,
 } from "@/shared/test/fake-supabase";
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
-import { SignInScreen } from "./sign-in-screen";
+import { SignInMethodScreen } from "./sign-in-method-screen";
 
 jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
@@ -23,7 +23,6 @@ jest.mock("@/shared/supabase/client", () => ({
 }));
 
 const EMAIL = "reader@example.test";
-const CODE = "048860";
 
 const googleSuccess = {
   data: {
@@ -65,12 +64,10 @@ const appleCancelled = Object.assign(
   { code: "ERR_REQUEST_CANCELED" }
 );
 
-const resendAgainMessage = /다시 받아/;
 const missingWebClientIdMessage = /EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID/;
 const invalidIdTokenMessage = /Invalid ID token/;
 const hexNonce = /^[0-9a-f]{64}$/;
 const noGoogleAccountMessage = /Google 계정이 있는지/;
-const alreadySentMessage = /이미 보낸 코드를 입력해 주세요/;
 
 const originalEnv = {
   ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
@@ -78,6 +75,7 @@ const originalEnv = {
 };
 
 let fake: FakeSupabase;
+let chooseEmail: jest.Mock<() => void>;
 
 /**
  * Hashes with Node rather than the app's own helper, so the assertion holds the
@@ -87,34 +85,14 @@ function sha256Hex(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-/**
- * React flushes a state update after the event returns, so a press that reads
- * state written by the previous line has to wait for that flush. Without this,
- * pressing right after typing sees the old value.
- */
-async function type(label: string, text: string) {
-  await act(() => {
-    fireEvent.changeText(screen.getByLabelText(label), text);
-  });
-}
-
 async function press(label: string) {
   await act(() => {
     fireEvent.press(screen.getByLabelText(label));
   });
 }
 
-function renderSignIn() {
-  return renderWithHeroUI(<SignInScreen />);
-}
-
-async function reachCodeStep() {
-  await renderSignIn();
-
-  await type("이메일", EMAIL);
-  await press("이메일로 계속하기");
-
-  return await screen.findByLabelText("인증 코드");
+function renderMethods() {
+  return renderWithHeroUI(<SignInMethodScreen onChooseEmail={chooseEmail} />);
 }
 
 beforeEach(() => {
@@ -136,6 +114,7 @@ beforeEach(() => {
     "web.apps.googleusercontent.com";
   process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID =
     "ios.apps.googleusercontent.com";
+  chooseEmail = jest.fn<() => void>();
   fake = resetFakeSupabase();
 });
 
@@ -153,158 +132,18 @@ afterEach(() => {
   }
 });
 
-test("이메일을 제출하면 같은 흐름 안에서 코드 입력으로 넘어간다", async () => {
-  await reachCodeStep();
+test("이메일을 고르면 다음 화면으로 넘긴다", async () => {
+  await renderMethods();
 
-  expect(fake.auth.signInWithOtp).toHaveBeenCalledWith({
-    email: EMAIL,
-    options: { shouldCreateUser: true },
-  });
-  expect(screen.getByLabelText("인증 코드")).toBeOnTheScreen();
+  await press("이메일로 계속하기");
+
+  expect(chooseEmail).toHaveBeenCalledTimes(1);
+  // The address itself belongs to the next screen, so this one asks for none.
   expect(screen.queryByLabelText("이메일")).toBeNull();
 });
 
-test("이메일 형식이 잘못되면 보내지 않고 입력 옆에 알린다", async () => {
-  await renderSignIn();
-
-  await type("이메일", "reader");
-  await press("이메일로 계속하기");
-
-  expect(await screen.findByTestId("sign-in-error-email")).toBeOnTheScreen();
-  expect(fake.auth.signInWithOtp).not.toHaveBeenCalled();
-});
-
-test("여섯 자리를 채우면 코드를 확인한다", async () => {
-  await reachCodeStep();
-
-  await type("인증 코드", CODE);
-
-  await waitFor(() => {
-    expect(fake.auth.verifyOtp).toHaveBeenCalledWith({
-      email: EMAIL,
-      token: CODE,
-      type: "email",
-    });
-  });
-});
-
-test("맞지 않는 코드는 다시 받으라고 알리고 다시 시도할 수 있다", async () => {
-  await reachCodeStep();
-
-  fake.auth.verifyOtp.mockResolvedValueOnce({
-    data: { session: null, user: null },
-    error: Object.assign(new Error("Token has expired or is invalid"), {
-      code: "otp_expired",
-    }),
-  } as never);
-
-  await type("인증 코드", CODE);
-
-  const message = await screen.findByTestId("sign-in-error-code");
-
-  expect(message).toHaveTextContent(resendAgainMessage);
-
-  // The screen is usable again: the confirm button is no longer stuck pending.
-  await press("코드 확인");
-
-  await waitFor(() => {
-    expect(fake.auth.verifyOtp).toHaveBeenCalledTimes(2);
-  });
-});
-
-test("코드 다시 받기는 대기 시간이 끝나야 누를 수 있다", async () => {
-  jest.useFakeTimers();
-
-  try {
-    await reachCodeStep();
-
-    const resend = screen.getByLabelText("코드 다시 받기");
-
-    expect(resend).toHaveTextContent("60초 뒤에 코드 다시 받기");
-
-    await press("코드 다시 받기");
-
-    expect(fake.auth.signInWithOtp).toHaveBeenCalledTimes(1);
-
-    await act(() => {
-      jest.advanceTimersByTime(60_000);
-    });
-
-    expect(screen.getByLabelText("코드 다시 받기")).toHaveTextContent(
-      "코드 다시 받기"
-    );
-
-    await press("코드 다시 받기");
-
-    await waitFor(() => {
-      expect(fake.auth.signInWithOtp).toHaveBeenCalledTimes(2);
-    });
-  } finally {
-    jest.useRealTimers();
-  }
-});
-
-test("전송 한도에 걸려도 이미 받은 코드를 넣을 수 있게 한다", async () => {
-  fake.auth.signInWithOtp.mockResolvedValueOnce({
-    data: { session: null, user: null },
-    error: Object.assign(new Error("email rate limit exceeded"), {
-      code: "over_email_send_rate_limit",
-      status: 429,
-    }),
-  } as never);
-
-  await renderSignIn();
-
-  await type("이메일", EMAIL);
-  await press("이메일로 계속하기");
-
-  // The code from the earlier send is still valid, so the input has to open.
-  expect(await screen.findByLabelText("인증 코드")).toBeOnTheScreen();
-  expect(await screen.findByTestId("sign-in-error-code")).toHaveTextContent(
-    alreadySentMessage
-  );
-});
-
-test("다시 받기가 전송 한도에 걸리면 대기 시간을 다시 건다", async () => {
-  jest.useFakeTimers();
-
-  try {
-    await reachCodeStep();
-
-    await act(() => {
-      jest.advanceTimersByTime(60_000);
-    });
-
-    fake.auth.signInWithOtp.mockResolvedValueOnce({
-      data: { session: null, user: null },
-      error: Object.assign(new Error("email rate limit exceeded"), {
-        status: 429,
-      }),
-    } as never);
-
-    await press("코드 다시 받기");
-
-    // Without a fresh countdown the button would stay open and invite another
-    // rejected request straight away.
-    expect(screen.getByLabelText("코드 다시 받기")).toHaveTextContent(
-      "60초 뒤에 코드 다시 받기"
-    );
-  } finally {
-    jest.useRealTimers();
-  }
-});
-
-test("다른 이메일을 쓰겠다고 하면 첫 단계로 돌아간다", async () => {
-  await reachCodeStep();
-
-  await press("다른 이메일 사용");
-
-  expect(await screen.findByLabelText("이메일")).toBeOnTheScreen();
-  expect(screen.queryByLabelText("인증 코드")).toBeNull();
-});
-
 test("Google 로그인은 시도마다 새 nonce를 만들고 원본을 Supabase에 넘긴다", async () => {
-  await renderSignIn();
+  await renderMethods();
 
   await press("Google로 계속하기");
 
@@ -330,7 +169,7 @@ test("Google 로그인은 시도마다 새 nonce를 만들고 원본을 Supabase
 });
 
 test("제공자 이름과 이미지는 비어 있는 프로필 값만 채운다", async () => {
-  await renderSignIn();
+  await renderMethods();
 
   await press("Google로 계속하기");
 
@@ -359,7 +198,7 @@ test("Google 계정 선택을 취소하면 오류를 띄우지 않는다", async
     .mocked(GoogleOneTapSignIn.presentExplicitSignIn)
     .mockResolvedValueOnce(googleCancelled);
 
-  await renderSignIn();
+  await renderMethods();
 
   await press("Google로 계속하기");
 
@@ -374,7 +213,7 @@ test("Google 계정 선택을 취소하면 오류를 띄우지 않는다", async
 test("Apple 로그인은 해시 nonce를 Apple에, 원본을 Supabase에 넘긴다", async () => {
   jest.mocked(signInAsync).mockResolvedValueOnce(appleCredential as never);
 
-  await renderSignIn();
+  await renderMethods();
 
   await press("Apple로 계속하기");
 
@@ -400,7 +239,7 @@ test("Apple 로그인은 해시 nonce를 Apple에, 원본을 Supabase에 넘긴�
 test("Apple 로그인을 취소하면 오류를 띄우지 않는다", async () => {
   jest.mocked(signInAsync).mockRejectedValueOnce(appleCancelled);
 
-  await renderSignIn();
+  await renderMethods();
 
   await press("Apple로 계속하기");
 
@@ -417,7 +256,7 @@ test("Google이 자격 정보를 찾지 못하면 취소와 달리 안내를 보
     .mocked(GoogleOneTapSignIn.presentExplicitSignIn)
     .mockResolvedValueOnce(googleNoCredential);
 
-  await renderSignIn();
+  await renderMethods();
 
   await press("Google로 계속하기");
 
@@ -438,7 +277,7 @@ test("Android는 자격 정보를 찾을 때까지 계정 목록을 넓혀 간�
       .mocked(GoogleOneTapSignIn.createAccount)
       .mockResolvedValueOnce(googleNoCredential);
 
-    await renderSignIn();
+    await renderMethods();
 
     await press("Google로 계속하기");
 
@@ -457,7 +296,7 @@ test("Android는 자격 정보를 찾을 때까지 계정 목록을 넓혀 간�
 test("Google 설정이 없으면 설정 오류로 구분해 알린다", async () => {
   delete process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
-  await renderSignIn();
+  await renderMethods();
 
   await press("Google로 계속하기");
 
@@ -473,7 +312,7 @@ test("Supabase 검증이 실패해도 버튼이 진행 상태에 남지 않는�
     error: new Error("Invalid ID token"),
   } as never);
 
-  await renderSignIn();
+  await renderMethods();
 
   await press("Google로 계속하기");
 
@@ -488,45 +327,42 @@ test("Supabase 검증이 실패해도 버튼이 진행 상태에 남지 않는�
   });
 });
 
-test("코드를 보내는 동안 같은 버튼을 다시 실행하지 않는다", async () => {
+test("로그인이 진행 중이면 같은 버튼을 다시 실행하지 않는다", async () => {
   let release = () => {
     // Replaced by the pending implementation below.
   };
 
-  fake.auth.signInWithOtp.mockImplementationOnce(
+  jest.mocked(GoogleOneTapSignIn.presentExplicitSignIn).mockImplementationOnce(
     () =>
       new Promise((resolve) => {
-        release = () =>
-          resolve({ data: { session: null, user: null }, error: null });
+        release = () => resolve(googleSuccess);
       })
   );
 
-  await renderSignIn();
+  await renderMethods();
 
-  await type("이메일", EMAIL);
-
-  const submit = screen.getByLabelText("이메일로 계속하기");
+  const google = screen.getByLabelText("Google로 계속하기");
 
   // All three inside one act, so React never re-renders between them. That is
   // the impatient tap this guards against.
   await act(() => {
-    fireEvent.press(submit);
-    fireEvent.press(submit);
-    fireEvent.press(submit);
+    fireEvent.press(google);
+    fireEvent.press(google);
+    fireEvent.press(google);
   });
 
   await act(() => {
     release();
   });
 
-  expect(fake.auth.signInWithOtp).toHaveBeenCalledTimes(1);
+  expect(GoogleOneTapSignIn.presentExplicitSignIn).toHaveBeenCalledTimes(1);
 });
 
 test("Apple 버튼은 iOS에서만 보여준다", async () => {
   const platform = jest.replaceProperty(Platform, "OS", "android");
 
   try {
-    await renderSignIn();
+    await renderMethods();
 
     expect(screen.queryByLabelText("Apple로 계속하기")).toBeNull();
     expect(screen.getByLabelText("Google로 계속하기")).toBeOnTheScreen();
@@ -539,7 +375,7 @@ test("Apple 버튼은 iOS 로그인 화면에 있다", async () => {
   const platform = jest.replaceProperty(Platform, "OS", "ios");
 
   try {
-    await renderSignIn();
+    await renderMethods();
 
     expect(screen.getByLabelText("Apple로 계속하기")).toBeOnTheScreen();
   } finally {

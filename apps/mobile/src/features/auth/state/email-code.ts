@@ -1,7 +1,4 @@
-import {
-  OTP_EXPIRY_MINUTES,
-  OTP_LENGTH,
-} from "@/features/auth/config/email-otp";
+import { OTP_LENGTH } from "@/features/auth/config/email-otp";
 
 /**
  * What the sign-in form does with the address and the code before either one
@@ -31,11 +28,13 @@ export function isCompleteCode(value: string): boolean {
 }
 
 export function formatResendLabel(secondsLeft: number): string {
-  return secondsLeft > 0
-    ? `${secondsLeft}초 뒤에 코드 다시 받기`
-    : "코드 다시 받기";
+  return secondsLeft > 0 ? `${secondsLeft}초 후 다시 받기` : "코드 다시 받기";
 }
 
+/**
+ * "주소로" rather than a particle glued to the address: Korean picks 으로 or 로
+ * by the last sound, and an email can end in either.
+ */
 export function describeCodeSent(email: string): string {
-  return `${email}으로 ${OTP_LENGTH}자리 코드를 보냈습니다. 코드는 ${OTP_EXPIRY_MINUTES}분 동안 쓸 수 있습니다.`;
+  return `${email} 주소로 보냈어요.`;
 }
