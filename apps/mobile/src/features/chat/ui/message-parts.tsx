@@ -71,7 +71,7 @@ function FilePart({ part }: { part: FileUIPart }) {
         <Text className="font-medium text-surface-foreground" selectable>
           {fileDisplayName(part)}
         </Text>
-        <Text className="text-muted-foreground text-xs">{part.mediaType}</Text>
+        <Text className="text-muted text-xs">{part.mediaType}</Text>
       </View>
       <Pressable
         accessibilityLabel={`${fileDisplayName(part)} 파일 열기`}
@@ -101,7 +101,7 @@ function SourceUrlPart({ part }: { part: SourceUrlUIPart }) {
       <Text className="font-medium text-surface-foreground" selectable>
         {part.title ?? part.url}
       </Text>
-      <Text className="text-muted-foreground text-xs" numberOfLines={1}>
+      <Text className="text-muted text-xs" numberOfLines={1}>
         {part.url}
       </Text>
     </Pressable>
@@ -117,7 +117,7 @@ function SourceDocumentPart({ part }: { part: SourceDocumentUIPart }) {
       <Text className="font-medium text-surface-foreground" selectable>
         {part.title}
       </Text>
-      <Text className="text-muted-foreground text-xs">
+      <Text className="text-muted text-xs">
         {part.filename ?? part.mediaType}
       </Text>
     </View>
@@ -141,7 +141,7 @@ function DefaultToolPart({ part }: { part: AnyToolUIPart }) {
     >
       <View className="flex-row items-center justify-between">
         <Text className="font-medium text-surface-foreground">{toolName}</Text>
-        <Text className="text-muted-foreground text-xs">
+        <Text className="text-muted text-xs">
           {toolStateLabels[part.state]}
         </Text>
       </View>
@@ -236,7 +236,7 @@ export function MessagePart({
   if (isDataUIPart(part)) {
     return (
       <Text
-        className="text-muted-foreground text-sm"
+        className="text-muted text-sm"
         testID={`chat-part-unsupported-${messageId}`}
       >
         아직 표시할 수 없는 내용입니다.
@@ -246,7 +246,7 @@ export function MessagePart({
 
   return (
     <Text
-      className="text-muted-foreground text-sm"
+      className="text-muted text-sm"
       testID={`chat-part-unsupported-${messageId}`}
     >
       아직 표시할 수 없는 내용입니다.

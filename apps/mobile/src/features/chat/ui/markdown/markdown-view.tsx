@@ -28,7 +28,7 @@ const headingClassByDepth: Record<number, string> = {
   3: "mt-3 mb-1 font-semibold text-foreground text-lg",
   4: "mt-3 mb-1 font-semibold text-base text-foreground",
   5: "mt-2 mb-1 font-semibold text-base text-foreground",
-  6: "mt-2 mb-1 font-semibold text-base text-muted-foreground",
+  6: "mt-2 mb-1 font-semibold text-base text-muted",
 };
 
 const BODY_TEXT_CLASS = "text-base text-foreground leading-6";

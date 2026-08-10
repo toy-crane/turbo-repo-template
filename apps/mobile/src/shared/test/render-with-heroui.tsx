@@ -23,6 +23,7 @@ const testThemeVariables = {
   "--color-danger-soft-hover": "#fee2e2",
   "--color-default-hover": "#e5e7eb",
   "--color-foreground": "#111114",
+  "--color-muted": "#6b7280",
   "--color-success": "#16a34a",
   "--color-success-foreground": "#ffffff",
   "--color-surface": "#ffffff",

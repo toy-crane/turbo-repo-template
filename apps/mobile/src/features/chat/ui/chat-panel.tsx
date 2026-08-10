@@ -40,7 +40,7 @@ function EmptyConversation() {
       <Text className="font-semibold text-2xl text-foreground">
         무엇을 도와드릴까요?
       </Text>
-      <Text className="text-center text-muted-foreground">
+      <Text className="text-center text-muted">
         궁금한 것을 입력하면 AI가 바로 답합니다.
       </Text>
     </View>
@@ -191,9 +191,7 @@ export function ChatPanel({
               className="flex-row items-center justify-between"
               testID="chat-editing"
             >
-              <Text className="text-muted-foreground text-sm">
-                메시지를 수정하는 중
-              </Text>
+              <Text className="text-muted text-sm">메시지를 수정하는 중</Text>
               <Pressable
                 accessibilityLabel={chatLabels.cancelEdit}
                 accessibilityRole="button"
@@ -212,7 +210,7 @@ export function ChatPanel({
               testID="chat-generating"
             >
               <Spinner size="sm" />
-              <Text className="text-muted-foreground text-sm">
+              <Text className="text-muted text-sm">
                 {chatLabels.generating}
               </Text>
             </View>

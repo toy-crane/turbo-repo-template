@@ -73,7 +73,7 @@ export function CodeBlock({ code }: { code: string }) {
           testID="chat-code-copy"
         >
           {/* The copied state is words, not a color, so every reader gets it. */}
-          <Text className="text-muted-foreground text-xs">
+          <Text className="text-muted text-xs">
             {copied ? "복사됨" : "코드 복사"}
           </Text>
         </Pressable>
