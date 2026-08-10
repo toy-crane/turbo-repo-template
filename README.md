@@ -541,16 +541,16 @@ Supabase URL과 publishable key는 사용자가 직접 설정합니다.
 로컬 값과 원격 값도 자동으로 전환하지 않습니다.
 
 두 변수는 앱을 빌드하거나 시작할 때 모두 필요합니다.
-[apps/mobile/src/shared/supabase/env.ts](apps/mobile/src/shared/supabase/env.ts)는 `@t3-oss/env-core`로 두 변수를 선언합니다.
-Expo가 앱 설정을 읽을 때 `apps/mobile/app.config.ts`가 값을 검사합니다.
-따라서 `expo start`, `expo prebuild`, `expo run:*`, `expo export`는 값이 없거나 형식이 잘못되면 문제의 변수 이름을 보여주고 종료합니다.
-실행 중인 앱도 같은 검사를 수행하고 오류를 화면에 표시합니다.
-무선으로 배포한 번들에서도 같은 오류를 확인할 수 있습니다.
+Expo가 앱 설정을 읽을 때 [apps/mobile/app.config.ts](apps/mobile/app.config.ts)가 두 값을 확인합니다.
+따라서 `expo start`, `expo prebuild`, `expo run:*`, `expo export`는 값이 없으면 문제의 변수 이름을 보여주고 종료합니다.
+앱 안에서는 [apps/mobile/src/shared/supabase/client.ts](apps/mobile/src/shared/supabase/client.ts)가 같은 두 값을 읽고, 값이 없거나 주소에 `http://`나 `https://`가 빠져 있으면 같은 안내를 담은 오류를 냅니다.
 
-환경 변수를 추가하려면 [apps/mobile/src/shared/supabase/env.ts](apps/mobile/src/shared/supabase/env.ts)에 선언합니다.
-Supabase secret key, 데이터베이스 URL, 빌드 시점의 업로드 토큰처럼 기기에 전달하면 안 되는 값은 `server` 블록에 둡니다.
-`server` 블록의 변수에는 `EXPO_PUBLIC_` 접두사를 붙이지 않습니다.
-비밀 값을 `client` 블록에 넣거나 앱 코드에서 읽으면 검사가 실패하므로 모든 설치본에 값이 배포되는 일을 막을 수 있습니다.
+새 환경 변수는 그 값을 쓰는 코드 옆에서 `process.env.EXPO_PUBLIC_...`으로 직접 읽습니다.
+이름은 반드시 그대로 적습니다. Expo가 번들할 때 이 표현을 값으로 바꿔치기하므로, 이름을 조립하거나 `process.env[name]`처럼 읽으면 기기에서 `undefined`가 됩니다.
+새 이름은 [apps/mobile/.env.example](apps/mobile/.env.example)에도 넣습니다.
+
+Supabase secret key, 데이터베이스 URL, 빌드 시점의 업로드 토큰처럼 기기에 전달하면 안 되는 값에는 `EXPO_PUBLIC_` 접두사를 붙이지 않습니다.
+Expo는 접두사가 붙은 값만 번들에 넣습니다. 접두사가 없는 값은 앱 코드에서 읽어도 `undefined`이므로 모든 설치본에 값이 배포되는 일이 없습니다.
 
 ### 세션 저장 위치
 
