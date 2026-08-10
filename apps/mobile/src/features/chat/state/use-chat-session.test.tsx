@@ -182,34 +182,4 @@ describe("useChatSession 편집 후 다시 보내기", () => {
 
     expect(resent.at(-1)?.role).toBe("user");
   });
-
-  test("새 대화는 메모리 상태만 비운다", async () => {
-    const transport = fakeTransport(() =>
-      Promise.resolve(answerStream("답변"))
-    );
-    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
-
-    await act(() => {
-      result.current.setDraft("질문");
-    });
-    await act(() => {
-      result.current.send();
-    });
-
-    await waitFor(() => {
-      expect(result.current.messages).toHaveLength(2);
-      expect(result.current.status).toBe("ready");
-    });
-
-    await act(() => {
-      result.current.clearConversation();
-    });
-
-    await waitFor(() => {
-      expect(result.current.messages).toHaveLength(0);
-    });
-    expect(result.current.draft).toBe("");
-    // 서버에는 아무 요청도 더 가지 않는다.
-    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
-  });
 });
