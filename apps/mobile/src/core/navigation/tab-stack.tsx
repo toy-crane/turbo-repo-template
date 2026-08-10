@@ -4,12 +4,6 @@ import { Platform } from "react-native";
 import { useAppTheme } from "@/core/theme/app-theme-bridge";
 
 interface TabStackProps {
-  /**
-   * Whether the title uses the collapsing iOS Large Title. Chat-style screens
-   * pinned to the bottom keep a compact bar instead, because their scroll
-   * position lives at the end and a large title would never collapse.
-   */
-  largeTitle?: boolean;
   routeName: string;
   title: string;
 }
@@ -29,26 +23,19 @@ export function getTabStackScreenOptions(
   };
 }
 
-export function getTabStackRouteOptions(title: string, largeTitle = true) {
+export function getTabStackRouteOptions(title: string) {
   return {
-    headerLargeTitleEnabled: largeTitle,
+    headerLargeTitleEnabled: true,
     title,
   };
 }
 
-export function TabStack({
-  largeTitle = true,
-  routeName,
-  title,
-}: TabStackProps) {
+export function TabStack({ routeName, title }: TabStackProps) {
   const { background, foreground } = useAppTheme();
 
   return (
     <Stack screenOptions={getTabStackScreenOptions({ background, foreground })}>
-      <Stack.Screen
-        name={routeName}
-        options={getTabStackRouteOptions(title, largeTitle)}
-      />
+      <Stack.Screen name={routeName} options={getTabStackRouteOptions(title)} />
     </Stack>
   );
 }

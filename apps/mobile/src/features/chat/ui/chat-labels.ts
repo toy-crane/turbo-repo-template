@@ -3,6 +3,7 @@
  * The same table lives in the repository README; change both together.
  */
 export const chatLabels = {
+  back: "뒤로 가기",
   cancelEdit: "편집 취소",
   copyCode: "코드 복사",
   copyMessage: "메시지 복사",
