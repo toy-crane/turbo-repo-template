@@ -7,11 +7,6 @@ import {
   type OneTapResponse,
 } from "react-native-nitro-google-signin";
 import {
-  GOOGLE_IOS_CLIENT_ID_ENV,
-  GOOGLE_WEB_CLIENT_ID_ENV,
-  resolveGoogleEnv,
-} from "@/features/auth/config/google-env";
-import {
   AuthConfigurationError,
   MissingProviderTokenError,
   NoProviderCredentialError,
@@ -61,16 +56,19 @@ async function signInOnAndroid(): Promise<OneTapResponse> {
 export async function signInWithGoogle(): Promise<
   ProviderSignInResult | undefined
 > {
-  const { iosClientId, webClientId } = resolveGoogleEnv();
+  // Read as static `process.env.X` expressions: that is the one form Expo
+  // replaces with a literal while bundling. A blank value counts as unset.
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim();
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim();
 
   // The Web client id is what the ID token is issued for on both platforms, so
   // it is required even though no browser is involved.
   if (!webClientId) {
-    throw configurationError(GOOGLE_WEB_CLIENT_ID_ENV);
+    throw configurationError("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID");
   }
 
   if (Platform.OS === "ios" && !iosClientId) {
-    throw configurationError(GOOGLE_IOS_CLIENT_ID_ENV);
+    throw configurationError("EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID");
   }
 
   const nonce = await createSignInNonce();
