@@ -10,13 +10,14 @@ import {
 import type { PropsWithChildren } from "react";
 import { Platform } from "react-native";
 
-import { AppQueryProvider } from "@/core/providers/app-query-provider";
-import { AppThemeBridge } from "@/core/theme/app-theme-bridge";
 import {
   createFakeSession,
   resetFakeSupabase,
 } from "@/shared/test/fake-supabase";
 import { SettingsScreen } from "./settings-screen";
+
+/** The foreground colour the root layout would hand this screen. */
+const FOREGROUND = "#111114";
 
 jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
@@ -86,33 +87,15 @@ jest.mock("@expo/ui", () => {
   };
 });
 
-jest.mock("heroui-native/hooks", () => ({
-  useThemeColor: () => ["#F4F4F6", "#111114", "#FFFFFF"],
-}));
-
-jest.mock("uniwind", () => ({
-  useUniwind: () => ({ hasAdaptiveThemes: true, theme: "light" }),
-}));
-
 beforeEach(() => {
   resetFakeSupabase({ session: createFakeSession() });
 });
 
-function renderSettings(queryClient?: QueryClient) {
-  const screenTree = (
-    <AppThemeBridge>
-      <SettingsScreen />
-    </AppThemeBridge>
-  );
-
+function renderSettings(queryClient: QueryClient = new QueryClient()) {
   return render(
-    queryClient ? (
-      <QueryClientProvider client={queryClient}>
-        {screenTree}
-      </QueryClientProvider>
-    ) : (
-      <AppQueryProvider>{screenTree}</AppQueryProvider>
-    )
+    <QueryClientProvider client={queryClient}>
+      <SettingsScreen foreground={FOREGROUND} />
+    </QueryClientProvider>
   );
 }
 
@@ -202,7 +185,7 @@ test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 �
     expect(screen.getAllByText("Haptics")).toHaveLength(1);
     // Android's @expo/ui text does not follow the app's appearance on its own,
     // so the screen has to hand it the same foreground colour.
-    expect(screen.getByText("Version")).toHaveStyle({ color: "#111114" });
+    expect(screen.getByText("Version")).toHaveStyle({ color: FOREGROUND });
     expect(screen.getByTestId("preferences-section")).toHaveStyle({
       paddingTop: 24,
     });

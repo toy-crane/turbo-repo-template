@@ -1,6 +1,5 @@
 import type { Database } from "@repo/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { QueryClient } from "@tanstack/react-query";
 
 import { signOutOfGoogle } from "./google-sign-in";
 
@@ -12,14 +11,11 @@ import { signOutOfGoogle } from "./google-sign-in";
  * all, and Google gets a local one so its account picker comes back next time.
  * Withdrawing provider consent and signing out everywhere are separate features.
  *
- * Every step after the Supabase call runs even if an earlier one failed. The
- * cache in particular has to be emptied no matter what, or the next person to
- * sign in on this device reads the previous user's data out of it.
+ * The provider step runs even when Supabase failed, so a dead local session
+ * cannot leave Google signed in behind it. Emptying the query cache belongs to
+ * the sign-out state, which runs it whatever this call did.
  */
-export async function signOut(
-  client: SupabaseClient<Database>,
-  queryClient: QueryClient
-): Promise<void> {
+export async function signOut(client: SupabaseClient<Database>): Promise<void> {
   let failure: unknown;
 
   try {
@@ -38,8 +34,6 @@ export async function signOut(
     // Google's SDK raises when configure() never ran, which is the normal state
     // for a project that only uses email. Nothing to recover from.
   }
-
-  queryClient.clear();
 
   if (failure) {
     throw failure;

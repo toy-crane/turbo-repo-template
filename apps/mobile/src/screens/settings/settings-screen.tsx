@@ -8,51 +8,29 @@ import {
   Text,
 } from "@expo/ui";
 import { listSectionMargins } from "@expo/ui/swift-ui/modifiers";
-import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
-import { useCallback, useRef, useState } from "react";
+import { useState } from "react";
 import { Platform } from "react-native";
 
-import { useAppTheme } from "@/core/theme/app-theme-bridge";
-import { signOut } from "@/features/auth/sign-out";
-import { getSupabaseClient } from "@/shared/supabase/client";
+import { useSignOut } from "@/features/auth/state/use-sign-out";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
 const contentTopSpacing = 24;
 
-export function SettingsScreen() {
+/**
+ * The app's settings.
+ *
+ * The foreground colour arrives as a prop: the app theme belongs to the root
+ * layout, and a screen does not reach up into it.
+ */
+export function SettingsScreen({ foreground }: { foreground: string }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const [signOutFailure, setSignOutFailure] = useState<string | undefined>();
-  const queryClient = useQueryClient();
-  const signingOut = useRef<"idle" | "running">("idle");
-  const { foreground } = useAppTheme();
-
-  const requestSignOut = useCallback(async () => {
-    // The ref, not the state, is what blocks the second press: two taps in the
-    // same frame both read the state from before the first one.
-    if (signingOut.current === "running") {
-      return;
-    }
-
-    signingOut.current = "running";
-    setIsSigningOut(true);
-    setSignOutFailure(undefined);
-
-    try {
-      await signOut(getSupabaseClient(), queryClient);
-    } catch (error) {
-      // Reaching this means the local session survived, so this screen is still
-      // on top and can offer the retry.
-      setSignOutFailure(
-        `로그아웃을 끝내지 못했습니다. 다시 시도해 주세요. (${error instanceof Error ? error.message : String(error)})`
-      );
-    } finally {
-      signingOut.current = "idle";
-      setIsSigningOut(false);
-    }
-  }, [queryClient]);
+  const {
+    failure: signOutFailure,
+    isSigningOut,
+    requestSignOut,
+  } = useSignOut();
   // Android's @expo/ui text does not follow the app's appearance on its own, so
   // the screen passes the same foreground colour the rest of the app uses.
   const androidTextStyle =

@@ -1,7 +1,5 @@
 import { View } from "react-native";
 
-import { useAppTheme } from "@/core/theme/app-theme-bridge";
-
 /**
  * What the app shows while it reads the stored session.
  *
@@ -9,10 +7,11 @@ import { useAppTheme } from "@/core/theme/app-theme-bridge";
  * itself. Showing the sign-in screen here would flash it at every returning
  * user, and showing the app would hand protected screens to someone who turns
  * out to be signed out.
+ *
+ * The colour arrives as a prop because the app theme belongs to the root
+ * layout, and a feature does not reach up into it.
  */
-export function SessionCheckingScreen() {
-  const { background } = useAppTheme();
-
+export function SessionCheckingScreen({ background }: { background: string }) {
   return (
     <View
       accessibilityLabel="로그인 상태 확인 중"

@@ -1,7 +1,7 @@
 import { loadProjectEnv } from "@expo/env";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
-import { toIosUrlScheme } from "./src/features/auth/google-env.ts";
+import { toIosUrlScheme } from "./src/features/auth/config/google-env.ts";
 import { resolveSupabaseEnv } from "./src/shared/supabase/env.ts";
 
 /**

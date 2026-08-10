@@ -1,14 +1,16 @@
 import { describe, expect, test } from "@jest/globals";
 
 import {
+  OTP_LENGTH,
+  RESEND_COOLDOWN_SECONDS,
+} from "@/features/auth/config/email-otp";
+import {
   formatResendLabel,
   isCompleteCode,
   isValidEmail,
   normalizeEmail,
-  OTP_LENGTH,
-  RESEND_COOLDOWN_SECONDS,
   toCodeDigits,
-} from "./email-otp";
+} from "./email-code";
 
 describe("normalizeEmail", () => {
   test("공백과 대문자를 정리한다", () => {
