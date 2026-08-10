@@ -1,12 +1,45 @@
-import { Stack } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
-import { useCallback } from "react";
-import { Alert, Platform } from "react-native";
+import { useThemeColor } from "heroui-native/hooks";
+import { useCallback, useLayoutEffect } from "react";
+import { Alert, Platform, Pressable, Text, View } from "react-native";
 
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
 import { chatLabels } from "@/features/chat/ui/chat-labels";
 import { ChatPanel } from "@/features/chat/ui/chat-panel";
+import { Icon } from "@/shared/ui/icon/icon";
+import { ProfileAvatarButton } from "./profile-avatar-button";
+
+function openSettings() {
+  router.push("/settings");
+}
+
+function NewChatButton({ onPress }: { onPress: () => void }) {
+  const foreground = useThemeColor("foreground");
+
+  return (
+    <Pressable
+      accessibilityLabel={chatLabels.newChat}
+      accessibilityRole="button"
+      onPress={onPress}
+      // Explicit values, not classes: header views live outside the styled
+      // screen tree.
+      style={{
+        alignItems: "center",
+        height: 44,
+        justifyContent: "center",
+        minWidth: 44,
+      }}
+    >
+      {Platform.OS === "ios" ? (
+        <Icon name="newChat" size={22} tintColor={foreground} />
+      ) : (
+        <Text style={{ color: foreground, fontSize: 16 }}>새 대화</Text>
+      )}
+    </Pressable>
+  );
+}
 
 /**
  * Home is where the chat feature meets the signed-in session.
@@ -21,6 +54,7 @@ export function HomeScreen() {
   const { session } = useAuthSession();
   const chat = useChatSession(session?.access_token);
   const headerHeight = useHeaderHeight();
+  const navigation = useNavigation();
 
   const { clearConversation, isBusy, messages } = chat;
   const confirmNewChat = useCallback(() => {
@@ -44,28 +78,26 @@ export function HomeScreen() {
     );
   }, [clearConversation, isBusy, messages.length]);
 
+  // `headerRight` instead of `Stack.Toolbar`: the toolbar hosts its items in
+  // Jetpack Compose on Android, and a plain sized pressable in that host
+  // crashes Compose's constraint measurement outright.
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={{ alignItems: "center", flexDirection: "row" }}>
+          <NewChatButton onPress={confirmNewChat} />
+          <ProfileAvatarButton onPress={openSettings} />
+        </View>
+      ),
+    });
+  }, [confirmNewChat, navigation]);
+
+  // Only iOS draws content under a translucent header; Android's app bar
+  // already sits above the screen, so an extra inset would double the gap.
   return (
-    <>
-      {/*
-        Only iOS draws content under a translucent header; Android's app bar
-        already sits above the screen, so an extra inset would double the gap.
-      */}
-      <ChatPanel
-        chat={chat}
-        topInset={Platform.OS === "ios" ? headerHeight : 0}
-      />
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button
-          accessibilityLabel={chatLabels.newChat}
-          onPress={confirmNewChat}
-        >
-          {Platform.OS === "ios" ? (
-            <Stack.Toolbar.Icon sf="square.and.pencil" />
-          ) : (
-            <Stack.Toolbar.Label>새 대화</Stack.Toolbar.Label>
-          )}
-        </Stack.Toolbar.Button>
-      </Stack.Toolbar>
-    </>
+    <ChatPanel
+      chat={chat}
+      topInset={Platform.OS === "ios" ? headerHeight : 0}
+    />
   );
 }
