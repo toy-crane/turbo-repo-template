@@ -1,0 +1,70 @@
+{
+  "skill_name": "create-app-assets",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/create-app-assets 앱 아이콘을 만들어줘. 아직 bun run setup은 실행하지 않았고 앱 설명도 정하지 않았어.",
+      "expected_output": "The response stops before image generation or asset edits, explains that project setup must be completed first, and asks for no visual preference prematurely.",
+      "files": [],
+      "expectations": [
+        "It does not invoke image generation or create preview images.",
+        "It does not modify active assets, Expo config, or tests.",
+        "It identifies bun run setup as the first unmet requirement.",
+        "It does not ask for colors, symbols, or mood before setup is complete."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "/create-app-assets 첨부한 설정이 이 평가에서 준비된 현재 프로젝트 상태야. setup은 끝났어. 이 앱은 가족이 함께 장보기 목록을 관리하는 앱이야. 기존 로고나 꼭 지킬 색은 없어. 앱 아이콘을 만들어줘.",
+      "expected_output": "The response inspects the configured app, develops three materially distinct icon concepts, uses imagegen for one separate square preview per concept, leaves active assets and config untouched, and waits for one concept selection.",
+      "files": [
+        "evals/fixtures/configured-project.md"
+      ],
+      "expectations": [
+        "It grounds the concepts in the configured app identity and the supplied one-line purpose.",
+        "It creates exactly three materially distinct concepts rather than color variations of one mark.",
+        "It uses imagegen and returns one separate square preview for each concept instead of a collage.",
+        "It checks that each primary symbol remains legible at 60 by 60 pixels.",
+        "It does not modify active assets, Expo config, or tests before selection and final approval.",
+        "It asks the user to select or reject a concept and waits."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "/create-app-assets 첨부한 설정과 2번 시안이 이 평가의 현재 프로젝트 상태야. 내가 2번 컨셉을 선택했어. 상징은 그대로 두고 배경만 조금 더 따뜻하게 바꿔줘.",
+      "expected_output": "The response edits the selected concept with the prior image as reference, changes only the background warmth, shows the new preview, and waits for the user's reaction without applying platform assets or asking for final approval yet.",
+      "files": [
+        "evals/fixtures/configured-project.md",
+        "evals/fixtures/concept-2.png"
+      ],
+      "expectations": [
+        "It preserves the selected symbol, composition, and other confirmed properties.",
+        "It changes only background warmth in this iteration.",
+        "It uses the selected preview as an image-editing reference instead of regenerating from text alone.",
+        "It does not modify active assets, Expo config, or tests.",
+        "It waits for the user's reaction after showing the revision and does not request final approval until a later turn has created, recomposed, compared, and shown the source layers."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "/create-app-assets 첨부한 설정, 승인 기록, 원본 레이어가 이 평가의 현재 프로젝트 상태야. 보여준 레이어 합성 시안을 최종 승인할게. 프로젝트에 반영하고 검증까지 해줘.",
+      "expected_output": "The response turns only the approved concept into preserved source artwork, an Apple Icon Composer icon, distinct Android adaptive layers, and a splash asset; updates Expo config and tests; then completes static, build, and device verification without adding store marketing assets.",
+      "files": [
+        "evals/fixtures/configured-project.md",
+        "evals/fixtures/final-approval.md",
+        "evals/fixtures/source-background.svg",
+        "evals/fixtures/source-foreground.svg",
+        "evals/fixtures/source-monochrome.svg"
+      ],
+      "expectations": [
+        "It preserves the final prompt, palette, and source layers in the project.",
+        "It creates AppIcon.icon with a background and transparent foreground by default and configures ios.icon without replacing the top-level icon path with the .icon directory.",
+        "It creates distinct Android foreground, background, and monochrome assets and verifies common launcher masks and themed icons.",
+        "It creates a splash symbol derived from the approved mark while preserving the configured light and dark backgrounds.",
+        "It updates or adds config tests that assert every configured asset path exists.",
+        "It runs repository checks, Expo prebuild, Apple asset compilation, and available iOS and Android visual checks.",
+        "It does not create store screenshots, a Play feature graphic, install SnapAI, or request an external image-provider key."
+      ]
+    }
+  ]
+}
