@@ -108,9 +108,7 @@ function MessageActions({
         testID={`chat-copy-${message.id}`}
       />
       {/* Copied is words, not a color, so every reader gets the signal. */}
-      {copied ? (
-        <Text className="text-muted-foreground text-xs">복사됨</Text>
-      ) : null}
+      {copied ? <Text className="text-muted text-xs">복사됨</Text> : null}
       {editAction ? (
         <ActionButton
           disabled={editDisabled}
