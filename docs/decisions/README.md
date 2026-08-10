@@ -3,6 +3,7 @@
 - [AI 채팅 프로토콜](ai-chat-protocol.md): AI 요청 경로, 스트리밍 응답 형식, 모바일 채팅 상태 또는 AI SDK UI message 사용 방식을 변경할 때 읽는다.
 - [AI 모델 라우팅](ai-model-routing.md): AI Gateway, 모델 제공자, 모델 식별자 또는 provider fallback 방식을 변경할 때 읽는다.
 - [AI 서버 경계](ai-server-boundary.md): AI API의 런타임, 배포 위치, 호출 주체 또는 인증 요구를 변경할 때 읽는다.
+- [Hono 코드 구조](hono-code-architecture.md): Hono 기능 경계, 라우트 조립, 폴더 구조 또는 import 경계를 변경할 때 읽는다.
 - [모바일 인증](mobile-authentication.md): 모바일 로그인 제공자, 인증 세션, 계정 연결, 로그아웃 또는 로컬 인증 검증 경로를 변경할 때 읽는다.
 - [모바일 코드 구조](mobile-code-architecture.md): 모바일 업무 영역, 책임 단계, 폴더 구조 또는 import 경계를 변경할 때 읽는다.
 - [모바일 개발 런타임](mobile-development-runtime.md): 모바일 앱의 Expo SDK, 지원 플랫폼, Development Build 런타임 또는 배포 경계를 변경할 때 읽는다.
