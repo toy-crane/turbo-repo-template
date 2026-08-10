@@ -1,7 +1,6 @@
 import { describe, expect, test } from "@jest/globals";
 
 import {
-  AuthConfigurationError,
   classifyAuthError,
   MissingProviderTokenError,
   NoProviderCredentialError,
@@ -28,15 +27,6 @@ describe("classifyAuthError", () => {
         Object.assign(new Error("cancelled"), { code: "SIGN_IN_CANCELLED" })
       )
     ).toEqual({ kind: "cancelled", message: "" });
-  });
-
-  test("설정 오류는 그대로 전하며 다시 시도하라고 말하지 않는다", () => {
-    const failure = classifyAuthError(
-      new AuthConfigurationError("Google client ID가 없습니다.")
-    );
-
-    expect(failure.kind).toBe("configuration");
-    expect(failure.message).toBe("Google client ID가 없습니다.");
   });
 
   test("토큰이 빠진 응답은 따로 구분한다", () => {

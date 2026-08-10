@@ -2,8 +2,6 @@ import { describe, expect, test } from "@jest/globals";
 
 import { toIosUrlScheme } from "./google-url-scheme";
 
-const iosClientIdVariable = /EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID/;
-
 describe("toIosUrlScheme", () => {
   test("iOS client ID를 뒤집은 URL scheme으로 바꾼다", () => {
     expect(toIosUrlScheme("123-abc.apps.googleusercontent.com")).toBe(
@@ -15,9 +13,5 @@ describe("toIosUrlScheme", () => {
     expect(toIosUrlScheme("  123-abc.apps.googleusercontent.com  ")).toBe(
       "com.googleusercontent.apps.123-abc"
     );
-  });
-
-  test("iOS client ID가 아닌 값은 어느 변수가 잘못됐는지 알려준다", () => {
-    expect(() => toIosUrlScheme("123-abc")).toThrow(iosClientIdVariable);
   });
 });

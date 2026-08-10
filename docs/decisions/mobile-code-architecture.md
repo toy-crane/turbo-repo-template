@@ -7,7 +7,7 @@
 - 다섯 책임을 `apps/mobile/src` 전체에 적용하는 최상위 기술 폴더로 만들지 않는다.
 - 영역 사이의 의존은 `app → core, screens, features, shared`, `core → features, shared`, `screens → features, shared`, `features → shared` 방향으로만 흐른다.
 - 영역을 넘는 import는 `@/*` 별칭을 쓴다. `@/*`는 `apps/mobile/src/*`를 가리킨다. 다만 `app.config.ts`가 가져오는 모듈과 그 모듈이 다시 가져오는 파일은 예외다. Expo CLI의 설정 로더는 tsconfig 별칭을 읽지 않으므로 확장자를 붙인 상대 경로를 쓴다.
-- 환경 변수는 값을 쓰는 코드가 `process.env.EXPO_PUBLIC_...`으로 직접 읽는다. 검증 라이브러리도, 값을 감싸는 별도 모듈도 두지 않는다. 값이 없을 때 무엇을 할지는 그 값을 쓰는 코드가 정한다.
+- 모바일 환경 변수의 소유권과 접근 방식은 [모바일 환경 설정](mobile-environment-configuration.md) 결정 계약을 따른다.
 
 ## 경계
 

@@ -10,7 +10,6 @@
 
 export type AuthFailureKind =
   | "cancelled"
-  | "configuration"
   | "invalidCode"
   | "invalidEmail"
   | "missingToken"
@@ -24,9 +23,6 @@ export interface AuthFailure {
   /** Empty for `cancelled`, which the screen shows nothing for. */
   message: string;
 }
-
-/** The project has not set this provider up yet. Retrying cannot help. */
-export class AuthConfigurationError extends Error {}
 
 /** The provider reported success but handed back no ID token. */
 export class MissingProviderTokenError extends Error {}
@@ -102,10 +98,6 @@ export function isEmailSendRateLimit(error: unknown): boolean {
 }
 
 export function classifyAuthError(error: unknown): AuthFailure {
-  if (error instanceof AuthConfigurationError) {
-    return { kind: "configuration", message: error.message };
-  }
-
   if (CANCELLED_CODES.has(readStringField(error, "code") ?? "")) {
     return { kind: "cancelled", message: "" };
   }

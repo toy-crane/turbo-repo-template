@@ -1,3 +1,4 @@
+import { getMobileEnv } from "@env";
 import { Platform } from "react-native";
 import {
   GoogleOneTapSignIn,
@@ -7,18 +8,11 @@ import {
   type OneTapResponse,
 } from "react-native-nitro-google-signin";
 import {
-  AuthConfigurationError,
   MissingProviderTokenError,
   NoProviderCredentialError,
 } from "./auth-errors";
 import { createSignInNonce } from "./nonce";
 import type { ProviderSignInResult } from "./provider-sign-in";
-
-function configurationError(variable: string): AuthConfigurationError {
-  return new AuthConfigurationError(
-    `Google 로그인 설정이 없습니다. apps/mobile/.env.local에 ${variable}을 넣고 앱을 다시 빌드하세요. README.md "Google 로그인 준비"를 참고하세요.`
-  );
-}
 
 /**
  * Android reaches Google through Credential Manager. Each step opens a wider
@@ -56,20 +50,7 @@ async function signInOnAndroid(): Promise<OneTapResponse> {
 export async function signInWithGoogle(): Promise<
   ProviderSignInResult | undefined
 > {
-  // Read as static `process.env.X` expressions: that is the one form Expo
-  // replaces with a literal while bundling. A blank value counts as unset.
-  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim();
-  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim();
-
-  // The Web client id is what the ID token is issued for on both platforms, so
-  // it is required even though no browser is involved.
-  if (!webClientId) {
-    throw configurationError("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID");
-  }
-
-  if (Platform.OS === "ios" && !iosClientId) {
-    throw configurationError("EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID");
-  }
+  const env = getMobileEnv();
 
   const nonce = await createSignInNonce();
 
@@ -77,9 +58,9 @@ export async function signInWithGoogle(): Promise<
   // basic identity is requested: no extra scopes, no offline access, no
   // serverAuthCode.
   GoogleOneTapSignIn.configure({
-    iosClientId,
+    iosClientId: env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     nonce: nonce.hashed,
-    webClientId,
+    webClientId: env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   });
 
   const response =

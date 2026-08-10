@@ -530,6 +530,9 @@ Supabase URL과 publishable key는 사용자가 직접 설정합니다.
    EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
    ```
 
+   이 두 값만으로는 모바일 앱을 실행할 수 없습니다. 같은 파일의 API URL과 Google client ID도
+   [AI 채팅 API](#ai-채팅-api)와 [Google 로그인 준비](#3-google-로그인-준비)에 따라 모두 설정합니다.
+
 5. 모바일 Development Build를 실행합니다.
 
    ```bash
@@ -540,14 +543,14 @@ Supabase URL과 publishable key는 사용자가 직접 설정합니다.
 `bun run setup`, `bun run db:start`와 모바일 실행 명령은 환경 변수 파일을 만들거나 덮어쓰지 않습니다.
 로컬 값과 원격 값도 자동으로 전환하지 않습니다.
 
-두 변수는 앱을 빌드하거나 시작할 때 모두 필요합니다.
-Expo가 앱 설정을 읽을 때 [apps/mobile/app.config.ts](apps/mobile/app.config.ts)가 두 값을 확인합니다.
-따라서 `expo start`, `expo prebuild`, `expo run:*`, `expo export`는 값이 없으면 문제의 변수 이름을 보여주고 종료합니다.
-앱 안에서는 [apps/mobile/src/shared/supabase/client.ts](apps/mobile/src/shared/supabase/client.ts)가 같은 두 값을 읽고, 값이 없거나 주소에 `http://`나 `https://`가 빠져 있으면 같은 안내를 담은 오류를 냅니다.
+모바일 앱은 [apps/mobile/.env.example](apps/mobile/.env.example)에 선언한 다섯 값을 모두 필요로 합니다.
+[apps/mobile/env.ts](apps/mobile/env.ts)가 Zod로 누락, 빈 값과 형식을 한 번에 확인합니다.
+Expo가 앱 설정을 읽을 때 [apps/mobile/app.config.ts](apps/mobile/app.config.ts)가 같은 계약을 확인합니다.
+따라서 `expo start`, `expo prebuild`, `expo run:*`, `expo export`는 하나라도 잘못되면 모든 문제의 변수 이름과 이유를 보여주고 종료합니다.
 
-새 환경 변수는 그 값을 쓰는 코드 옆에서 `process.env.EXPO_PUBLIC_...`으로 직접 읽습니다.
-이름은 반드시 그대로 적습니다. Expo가 번들할 때 이 표현을 값으로 바꿔치기하므로, 이름을 조립하거나 `process.env[name]`처럼 읽으면 기기에서 `undefined`가 됩니다.
-새 이름은 [apps/mobile/.env.example](apps/mobile/.env.example)에도 넣습니다.
+앱 코드는 검증된 환경 설정만 사용합니다. 새 공개 환경 변수는 [apps/mobile/env.ts](apps/mobile/env.ts)의
+스키마와 정적으로 나열한 `process.env.EXPO_PUBLIC_...` 입력, [apps/mobile/.env.example](apps/mobile/.env.example)에 함께 추가합니다.
+Expo가 번들할 때 점 표기법으로 직접 적은 이름만 값으로 바꾸므로 이름을 조립하거나 `process.env[name]`처럼 읽지 않습니다.
 
 Supabase secret key, 데이터베이스 URL, 빌드 시점의 업로드 토큰처럼 기기에 전달하면 안 되는 값에는 `EXPO_PUBLIC_` 접두사를 붙이지 않습니다.
 Expo는 접두사가 붙은 값만 번들에 넣습니다. 접두사가 없는 값은 앱 코드에서 읽어도 `undefined`이므로 모든 설치본에 값이 배포되는 일이 없습니다.
