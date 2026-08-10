@@ -190,6 +190,10 @@
 
   .glyph { width: 20px; height: 20px; flex: none; display: block }
 
+  .divider { display: flex; align-items: center; gap: 12px; padding: 2px 0 }
+  .divider hr { flex: 1; height: 1px; border: 0; background: var(--border); margin: 0 }
+  .divider span { font-size: 14px; color: var(--muted) }
+
 
   .emailblock { display: flex; flex-direction: column; gap: 8px; flex: none }
   .field {
@@ -287,6 +291,8 @@
           <svg class="glyph" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.54c-.02-2.4 1.96-3.55 2.05-3.61-1.12-1.63-2.86-1.86-3.48-1.89-1.48-.15-2.89.87-3.64.87-.75 0-1.91-.85-3.14-.83-1.61.02-3.1.94-3.93 2.38-1.68 2.91-.43 7.21 1.2 9.57.8 1.15 1.75 2.44 3 2.39 1.21-.05 1.67-.78 3.13-.78 1.46 0 1.87.78 3.14.76 1.3-.02 2.12-1.17 2.91-2.33.92-1.34 1.3-2.63 1.32-2.7-.03-.01-2.53-.97-2.56-3.83zM14.7 5.1c.66-.81 1.11-1.93.99-3.05-.95.04-2.11.64-2.8 1.44-.61.71-1.15 1.85-1.01 2.94 1.07.08 2.15-.54 2.82-1.33z"/></svg>
           <span>Apple로 계속하기</span>
         </button>
+        <div class="divider"><hr><span>또는</span><hr></div>
+
         <button class="btn-login" data-component="new:LoginButton">이메일로 계속하기</button>
       </div>
     </div>
@@ -306,7 +312,6 @@
       <div class="body">
         <div class="headblock">
           <h1 class="title" data-component="Text">이메일 주소를 입력해 주세요</h1>
-          <p class="subtitle" data-component="Text">인증 코드를 보낼게요.</p>
         </div>
 
         <div class="emailblock">

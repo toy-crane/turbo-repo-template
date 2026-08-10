@@ -1,54 +1,23 @@
-import { type ReactNode, useEffect, useState } from "react";
-import { Keyboard, Platform, Text, View } from "react-native";
+import type { ReactNode } from "react";
+import { Text, View } from "react-native";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**
  * The shape all three sign-in screens share: what to do at the top, the main
  * action at the bottom.
  *
- * The footer is a sibling of the body rather than the end of a scroll view, so
- * the keyboard pushes it up instead of covering it. That was the whole reason
- * the old single screen hid its own submit button.
+ * The footer rides on `KeyboardStickyView`, which moves it with the keyboard
+ * rather than resizing anything around it. React Native's own
+ * `KeyboardAvoidingView` compares its measured frame against the keyboard's
+ * position on screen, and inside a native stack the header throws that
+ * comparison off, so the footer stayed under the keyboard. Expo's keyboard
+ * guide names this library for anything past a prototype.
  */
 
 const BOTTOM_PADDING = 12;
 const SIDE_PADDING = 24;
 const TOP_PADDING = 16;
-
-/**
- * How much of the screen the keyboard is covering.
- *
- * `KeyboardAvoidingView` is the usual answer, but inside a native stack screen
- * it measures its own frame against the keyboard's window position and the
- * header throws that comparison off, so the footer stayed put. The height on
- * its own needs no such comparison: this container ends at the bottom of the
- * screen, so padding it by the keyboard's height lifts the footer to exactly
- * the keyboard's top whether or not the screen has a header.
- */
-function useKeyboardHeight(): number {
-  const [height, setHeight] = useState(0);
-
-  useEffect(() => {
-    // iOS reports the frame before the animation so the footer travels with the
-    // keyboard; Android only has the "did" events.
-    const isIOS = Platform.OS === "ios";
-    const shown = Keyboard.addListener(
-      isIOS ? "keyboardWillShow" : "keyboardDidShow",
-      (event) => setHeight(event.endCoordinates.height)
-    );
-    const hidden = Keyboard.addListener(
-      isIOS ? "keyboardWillHide" : "keyboardDidHide",
-      () => setHeight(0)
-    );
-
-    return () => {
-      shown.remove();
-      hidden.remove();
-    };
-  }, []);
-
-  return height;
-}
 
 export function AuthScreen({
   children,
@@ -69,13 +38,9 @@ export function AuthScreen({
   title: string;
 }) {
   const insets = useSafeAreaInsets();
-  const keyboardHeight = useKeyboardHeight();
 
   return (
-    <View
-      className="flex-1 bg-background"
-      style={{ paddingBottom: keyboardHeight }}
-    >
+    <View className="flex-1 bg-background">
       <View
         className="flex-1 gap-4 px-6 pt-2"
         style={isRoot ? { paddingTop: insets.top + TOP_PADDING } : undefined}
@@ -87,20 +52,24 @@ export function AuthScreen({
         {children}
       </View>
 
-      <View
-        className="gap-2.5 px-6 pt-3"
-        style={{
-          // The keyboard takes over the home indicator's space while it is up,
-          // so the safe-area inset would only add a gap under the button.
-          paddingBottom: keyboardHeight
-            ? BOTTOM_PADDING
-            : Math.max(insets.bottom, BOTTOM_PADDING),
-          paddingLeft: SIDE_PADDING,
-          paddingRight: SIDE_PADDING,
-        }}
+      {/*
+        The home indicator's space is the keyboard's while it is up, so the
+        safe-area inset only applies when the keyboard is closed.
+      */}
+      <KeyboardStickyView
+        offset={{ closed: 0, opened: BOTTOM_PADDING - insets.bottom }}
       >
-        {footer}
-      </View>
+        <View
+          className="gap-2.5 pt-3"
+          style={{
+            paddingBottom: Math.max(insets.bottom, BOTTOM_PADDING),
+            paddingLeft: SIDE_PADDING,
+            paddingRight: SIDE_PADDING,
+          }}
+        >
+          {footer}
+        </View>
+      </KeyboardStickyView>
     </View>
   );
 }
@@ -125,5 +94,22 @@ export function AuthError({
     >
       {children}
     </Text>
+  );
+}
+
+/**
+ * Splits the two provider buttons from the email one.
+ *
+ * They are different kinds of choice: the first two hand the account to Google
+ * or Apple, the third stays here. Without the rule the three read as one list
+ * where any button could be any of those things.
+ */
+export function AuthDivider() {
+  return (
+    <View className="flex-row items-center gap-3 py-1">
+      <View className="h-px flex-1 bg-border" />
+      <Text className="text-muted text-sm">또는</Text>
+      <View className="h-px flex-1 bg-border" />
+    </View>
   );
 }

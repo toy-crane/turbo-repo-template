@@ -5,7 +5,7 @@ import { TextField } from "heroui-native/text-field";
 import { View } from "react-native";
 
 import { useEmailRequest } from "@/features/auth/state/use-email-request";
-import { AuthError, AuthScreen, AuthSubtitle } from "./auth-screen";
+import { AuthError, AuthScreen } from "./auth-screen";
 import { signInLabels } from "./sign-in-labels";
 
 /**
@@ -34,7 +34,6 @@ export function SignInEmailScreen({
           <Button.Label>{signInLabels.submitEmail}</Button.Label>
         </Button>
       }
-      subtitle={<AuthSubtitle>인증 코드를 보낼게요.</AuthSubtitle>}
       title="이메일 주소를 입력해 주세요"
     >
       <View className="gap-2">

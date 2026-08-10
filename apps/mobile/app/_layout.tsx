@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { getSettingsSheetOptions } from "@/core/navigation/settings-sheet";
 import { QueryProvider } from "@/core/providers/query-provider";
@@ -61,15 +62,21 @@ function ThemedRootLayout() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryProvider>
-        <HeroUINativeProvider config={heroUIConfig}>
-          <AppThemeBridge>
-            <AuthSessionProvider>
-              <ThemedRootLayout />
-            </AuthSessionProvider>
-          </AppThemeBridge>
-        </HeroUINativeProvider>
-      </QueryProvider>
+      {/*
+        Wraps everything below it, including navigation, because the keyboard
+        views inside screens read their position from this provider.
+      */}
+      <KeyboardProvider>
+        <QueryProvider>
+          <HeroUINativeProvider config={heroUIConfig}>
+            <AppThemeBridge>
+              <AuthSessionProvider>
+                <ThemedRootLayout />
+              </AuthSessionProvider>
+            </AppThemeBridge>
+          </HeroUINativeProvider>
+        </QueryProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

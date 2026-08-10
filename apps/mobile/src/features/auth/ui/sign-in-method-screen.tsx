@@ -2,7 +2,7 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 import { useProviderSignIn } from "@/features/auth/state/use-provider-sign-in";
-import { AuthError, AuthScreen } from "./auth-screen";
+import { AuthDivider, AuthError, AuthScreen } from "./auth-screen";
 import { LoginButton } from "./login-button";
 import { signInLabels } from "./sign-in-labels";
 
@@ -42,6 +42,8 @@ export function SignInMethodScreen({
               testID="sign-in-apple"
             />
           ) : null}
+
+          <AuthDivider />
 
           <LoginButton
             isDisabled={provider.isBusy}

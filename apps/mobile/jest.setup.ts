@@ -162,6 +162,12 @@ jest.mock("react-native-nitro-google-signin", () => {
   };
 });
 
+// The library ships its own stand-in for the native side, which is what lets a
+// screen using KeyboardStickyView render without a device keyboard.
+jest.mock("react-native-keyboard-controller", () =>
+  require("react-native-keyboard-controller/jest")
+);
+
 jest.mock("react-native-worklets", () =>
   require("react-native-worklets/src/mock")
 );
