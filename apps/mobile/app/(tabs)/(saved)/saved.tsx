@@ -1,4 +1,4 @@
-import { SavedScreen } from "../../../src/features/saved/saved-screen";
+import { SavedScreen } from "@/screens/saved/saved-screen";
 
 export default function SavedRoute() {
   return <SavedScreen />;

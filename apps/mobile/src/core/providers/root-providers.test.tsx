@@ -1,12 +1,15 @@
 import { beforeEach, expect, jest, test } from "@jest/globals";
 import { renderRouter, screen } from "expo-router/testing-library";
 
-import { createFakeSession, resetFakeSupabase } from "../test/fake-supabase";
+import {
+  createFakeSession,
+  resetFakeSupabase,
+} from "@/shared/test/fake-supabase";
 
-jest.mock("../supabase/client", () => ({
+jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
     (
-      require("../test/fake-supabase") as typeof import("../test/fake-supabase")
+      require("@/shared/test/fake-supabase") as typeof import("@/shared/test/fake-supabase")
     ).getFakeSupabase().client,
 }));
 
@@ -14,7 +17,7 @@ beforeEach(() => {
   resetFakeSupabase({ session: createFakeSession() });
 });
 
-jest.mock("../features/home/home-screen", () => {
+jest.mock("@/screens/home/home-screen", () => {
   const React = require("react") as typeof import("react");
   const { View } = require("react-native") as typeof import("react-native");
   const { useQueryClient } =

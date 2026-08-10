@@ -1,6 +1,6 @@
 import { View } from "react-native";
 
-import { useAppTheme } from "../../theme/app-theme-bridge";
+import { useAppTheme } from "@/core/theme/app-theme-bridge";
 
 /**
  * What the app shows while it reads the stored session.

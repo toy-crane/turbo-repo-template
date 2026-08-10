@@ -4,6 +4,12 @@
     "strict": true,
     // app.config.ts is loaded by the Expo CLI, not bundled by Metro, and its
     // loader only resolves a relative import when the extension is explicit.
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    // Every import that crosses one of the four src areas uses this. Metro
+    // reads it directly, so nothing else has to be configured for the app;
+    // Jest maps the same prefix in jest.config.mjs.
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }

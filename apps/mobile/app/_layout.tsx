@@ -5,15 +5,14 @@ import { StatusBar } from "expo-status-bar";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { getSettingsSheetOptions } from "@/core/navigation/settings-sheet";
+import { AppQueryProvider } from "@/core/providers/app-query-provider";
+import { AppThemeBridge, useAppTheme } from "@/core/theme/app-theme-bridge";
 import {
   AuthSessionProvider,
   useAuthSession,
-} from "../src/features/auth/auth-session";
-import { SessionCheckingScreen } from "../src/features/auth/session-checking-screen";
-import { getSettingsSheetOptions } from "../src/navigation/settings-sheet";
-import { AppQueryProvider } from "../src/query/app-query-provider";
-import { SupabaseGate } from "../src/supabase/supabase-gate";
-import { AppThemeBridge, useAppTheme } from "../src/theme/app-theme-bridge";
+} from "@/features/auth/auth-session";
+import { SessionCheckingScreen } from "@/features/auth/session-checking-screen";
 
 const heroUIConfig = {
   devInfo: { stylingPrinciples: false },
@@ -60,11 +59,9 @@ export default function RootLayout() {
       <AppQueryProvider>
         <HeroUINativeProvider config={heroUIConfig}>
           <AppThemeBridge>
-            <SupabaseGate>
-              <AuthSessionProvider>
-                <ThemedRootLayout />
-              </AuthSessionProvider>
-            </SupabaseGate>
+            <AuthSessionProvider>
+              <ThemedRootLayout />
+            </AuthSessionProvider>
           </AppThemeBridge>
         </HeroUINativeProvider>
       </AppQueryProvider>

@@ -1,7 +1,7 @@
 import { router, Stack } from "expo-router";
 import { Platform } from "react-native";
 
-import { SettingsScreen } from "../src/features/settings/settings-screen";
+import { SettingsScreen } from "@/screens/settings/settings-screen";
 
 function dismissSettings() {
   router.dismiss();

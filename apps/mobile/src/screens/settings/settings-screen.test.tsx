@@ -10,15 +10,18 @@ import {
 import type { PropsWithChildren } from "react";
 import { Platform } from "react-native";
 
-import { AppQueryProvider } from "../../query/app-query-provider";
-import { createFakeSession, resetFakeSupabase } from "../../test/fake-supabase";
-import { AppThemeBridge } from "../../theme/app-theme-bridge";
+import { AppQueryProvider } from "@/core/providers/app-query-provider";
+import { AppThemeBridge } from "@/core/theme/app-theme-bridge";
+import {
+  createFakeSession,
+  resetFakeSupabase,
+} from "@/shared/test/fake-supabase";
 import { SettingsScreen } from "./settings-screen";
 
-jest.mock("../../supabase/client", () => ({
+jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
     (
-      require("../../test/fake-supabase") as typeof import("../../test/fake-supabase")
+      require("@/shared/test/fake-supabase") as typeof import("@/shared/test/fake-supabase")
     ).getFakeSupabase().client,
 }));
 
@@ -75,8 +78,11 @@ jest.mock("@expo/ui", () => {
           testID,
         })
       ),
-    Text: ({ children }: PropsWithChildren) =>
-      React.createElement(NativeText, null, children),
+    Text: ({
+      children,
+      textStyle,
+    }: PropsWithChildren<{ textStyle?: import("react-native").TextStyle }>) =>
+      React.createElement(NativeText, { style: textStyle }, children),
   };
 });
 
@@ -180,6 +186,12 @@ test("로그아웃이 실패해도 이전 사용자의 캐시는 남기지 않�
   expect(await screen.findByTestId("sign-out-error")).toBeOnTheScreen();
 });
 
+test("iOS 설정 텍스트는 네이티브 기본 색상을 그대로 쓴다", async () => {
+  await renderSettings();
+
+  expect(screen.getByText("Version").props.style).toBeUndefined();
+});
+
 test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 표시한다", async () => {
   const platform = jest.replaceProperty(Platform, "OS", "android");
 
@@ -188,6 +200,9 @@ test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 �
 
     expect(screen.getAllByText("Notifications")).toHaveLength(1);
     expect(screen.getAllByText("Haptics")).toHaveLength(1);
+    // Android's @expo/ui text does not follow the app's appearance on its own,
+    // so the screen has to hand it the same foreground colour.
+    expect(screen.getByText("Version")).toHaveStyle({ color: "#111114" });
     expect(screen.getByTestId("preferences-section")).toHaveStyle({
       paddingTop: 24,
     });

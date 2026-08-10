@@ -6,18 +6,21 @@ import {
   waitFor,
 } from "expo-router/testing-library";
 
-import { createFakeSession, resetFakeSupabase } from "../../test/fake-supabase";
+import {
+  createFakeSession,
+  resetFakeSupabase,
+} from "@/shared/test/fake-supabase";
 
-jest.mock("../../supabase/client", () => ({
+jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
     (
-      require("../../test/fake-supabase") as typeof import("../../test/fake-supabase")
+      require("@/shared/test/fake-supabase") as typeof import("@/shared/test/fake-supabase")
     ).getFakeSupabase().client,
 }));
 
 // The tab screens pull in native UI this test does not need; the route names
 // are what it checks.
-jest.mock("../home/home-screen", () => {
+jest.mock("@/screens/home/home-screen", () => {
   const React = require("react") as typeof import("react");
   const { View } = require("react-native") as typeof import("react-native");
 

@@ -2,7 +2,7 @@ import { loadProjectEnv } from "@expo/env";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 import { toIosUrlScheme } from "./src/features/auth/google-env.ts";
-import { resolveSupabaseEnv } from "./src/supabase/env.ts";
+import { resolveSupabaseEnv } from "./src/shared/supabase/env.ts";
 
 /**
  * Static values stay in app.json; this file only adds a build-time gate.

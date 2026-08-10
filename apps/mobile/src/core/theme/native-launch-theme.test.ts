@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "@jest/globals";
 
-import appConfig from "../../app.json";
+import appConfig from "../../../app.json";
 
 // biome-ignore lint/correctness/noGlobalDirnameFilename: Jest transpiles this test as CommonJS.
-const globalCss = readFileSync(join(__dirname, "../../global.css"), "utf8");
+const globalCss = readFileSync(join(__dirname, "../../../global.css"), "utf8");
 
 describe("native launch theme", () => {
   test("네이티브 스플래시가 light와 dark 앱 배경을 각각 사용한다", () => {

@@ -1,6 +1,6 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-import { appTabs } from "../../src/navigation/app-tabs";
+import { appTabs } from "@/core/navigation/app-tabs";
 
 export default function TabLayout() {
   return (

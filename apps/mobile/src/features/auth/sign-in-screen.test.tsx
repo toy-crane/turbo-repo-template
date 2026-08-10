@@ -8,15 +8,18 @@ import {
   type OneTapResponse,
 } from "react-native-nitro-google-signin";
 
-import { AppQueryProvider } from "../../query/app-query-provider";
-import { type FakeSupabase, resetFakeSupabase } from "../../test/fake-supabase";
-import { renderWithHeroUI } from "../../test/render-with-heroui";
+import { AppQueryProvider } from "@/core/providers/app-query-provider";
+import {
+  type FakeSupabase,
+  resetFakeSupabase,
+} from "@/shared/test/fake-supabase";
+import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { SignInScreen } from "./sign-in-screen";
 
-jest.mock("../../supabase/client", () => ({
+jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
     (
-      require("../../test/fake-supabase") as typeof import("../../test/fake-supabase")
+      require("@/shared/test/fake-supabase") as typeof import("@/shared/test/fake-supabase")
     ).getFakeSupabase().client,
 }));
 

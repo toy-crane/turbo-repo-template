@@ -17,7 +17,7 @@ import { Platform, ScrollView, Text, useColorScheme, View } from "react-native";
 import { GoogleSignInButton } from "react-native-nitro-google-signin";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getSupabaseClient } from "../../supabase/client";
+import { getSupabaseClient } from "@/shared/supabase/client";
 import { signInWithApple } from "./apple-sign-in";
 import { type AuthFailure, classifyAuthError } from "./auth-errors";
 import {

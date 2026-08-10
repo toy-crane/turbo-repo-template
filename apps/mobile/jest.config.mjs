@@ -1,7 +1,10 @@
 /** @type {import("jest").Config} */
 const config = {
   moduleNameMapper: {
-    "\\.css$": "<rootDir>/src/test/style-mock.ts",
+    "\\.css$": "<rootDir>/src/shared/test/style-mock.ts",
+    // The same prefix tsconfig.json declares for Metro. Jest resolves modules
+    // on its own, so a test that mocks "@/..." needs this to find the file.
+    "^@/(.*)$": "<rootDir>/src/$1",
   },
   preset: "jest-expo",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
