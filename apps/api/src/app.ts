@@ -28,6 +28,22 @@ export interface AppDependencies {
 
 const UNAUTHORIZED_STATUS = 401;
 
+/**
+ * The only way this server writes a failure down.
+ *
+ * Name and message, never the error object. An AI SDK call error carries the
+ * request it sent as its own property, so printing the object would copy the
+ * person's whole conversation into the server log.
+ */
+function logFailure(method: string, path: string, error: unknown): void {
+  console.error(
+    "Request failed on",
+    method,
+    path,
+    error instanceof Error ? `${error.name}: ${error.message}` : "unknown error"
+  );
+}
+
 export function createApp(dependencies: AppDependencies = {}): Hono {
   // Built once per app rather than per request, and applied to the AI route
   // only. An `app.use('*')` middleware would run before route middleware and
@@ -70,6 +86,14 @@ export function createApp(dependencies: AppDependencies = {}): Hono {
     const result = streamText({
       messages: await convertToModelMessages(messages.data),
       model: dependencies.model ?? resolveModelId(),
+      // A provider failure after the response has started does not throw, so
+      // `app.onError` never sees it. Without this the AI SDK's own default
+      // runs `console.error(error)` on an error whose properties carry the
+      // request it sent — the person's whole conversation — straight into the
+      // server log.
+      onError: ({ error }) => {
+        logFailure(c.req.method, c.req.path, error);
+      },
     });
 
     // The standalone helpers, not `result.toUIMessageStreamResponse()`: the
@@ -93,16 +117,7 @@ export function createApp(dependencies: AppDependencies = {}): Hono {
     // and neither belongs in a response the app can read. It does belong in
     // the server's own log, though — without this the generic response is the
     // only trace the failure leaves.
-    //
-    // Only the name and the message, never the error object. An AI SDK call
-    // error carries the request it sent, which is the person's whole
-    // conversation; printing the object would copy that into the server log.
-    console.error(
-      "Unhandled error on",
-      c.req.method,
-      c.req.path,
-      error instanceof Error ? `${error.name}: ${error.message}` : "unknown"
-    );
+    logFailure(c.req.method, c.req.path, error);
 
     return c.json({ error: "Internal server error." }, 500);
   });
