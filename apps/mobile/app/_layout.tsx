@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { getSettingsSheetOptions } from "@/core/navigation/settings-sheet";
 import { QueryProvider } from "@/core/providers/query-provider";
@@ -13,6 +14,7 @@ import {
   useAuthSession,
 } from "@/features/auth/state/auth-session";
 import { SessionCheckingScreen } from "@/features/auth/ui/session-checking-screen";
+import { SetupNeededScreen } from "@/features/auth/ui/setup-needed-screen";
 
 const heroUIConfig = {
   devInfo: { stylingPrinciples: false },
@@ -20,10 +22,14 @@ const heroUIConfig = {
 
 function ThemedRootLayout() {
   const { background } = useAppTheme();
-  const { status } = useAuthSession();
+  const { problem, status } = useAuthSession();
 
   if (status === "checking") {
     return <SessionCheckingScreen background={background} />;
+  }
+
+  if (status === "misconfigured") {
+    return <SetupNeededScreen problem={problem ?? ""} />;
   }
 
   return (
@@ -56,15 +62,21 @@ function ThemedRootLayout() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryProvider>
-        <HeroUINativeProvider config={heroUIConfig}>
-          <AppThemeBridge>
-            <AuthSessionProvider>
-              <ThemedRootLayout />
-            </AuthSessionProvider>
-          </AppThemeBridge>
-        </HeroUINativeProvider>
-      </QueryProvider>
+      {/*
+        Wraps everything below it, including navigation, because the keyboard
+        views inside screens read their position from this provider.
+      */}
+      <KeyboardProvider>
+        <QueryProvider>
+          <HeroUINativeProvider config={heroUIConfig}>
+            <AppThemeBridge>
+              <AuthSessionProvider>
+                <ThemedRootLayout />
+              </AuthSessionProvider>
+            </AppThemeBridge>
+          </HeroUINativeProvider>
+        </QueryProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

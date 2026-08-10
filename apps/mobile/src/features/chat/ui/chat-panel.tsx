@@ -81,9 +81,7 @@ export function ChatPanel({
       {chat.isBusy ? (
         <View className="flex-row items-center gap-2" testID="chat-generating">
           <Spinner size="sm" />
-          <Text className="text-muted-foreground text-sm">
-            {chatLabels.generating}
-          </Text>
+          <Text className="text-muted text-sm">{chatLabels.generating}</Text>
         </View>
       ) : null}
 

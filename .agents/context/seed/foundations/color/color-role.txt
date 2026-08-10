@@ -1,0 +1,241 @@
+# Roles
+URL: /foundations/color/color-role
+Source: https://github.com/daangn/seed-design/blob/dev/docs/content/foundations/color/color-role.mdx
+
+역할이 부여된 색상은 색상에 특정 기능적 역할(주요 액션, 오류, 정보 등)을 할당하여 사용자 인터페이스 전반에 걸쳐 일관성, 명확성, 접근성을 보장합니다.
+
+SEED의 역할 기반 색상 시스템은 Property(속성), Role(역할), Variant(변형), State(상태) 체계로 구성되어 있습니다.
+
+<Image src="/foundations/color/color-role/role-1.webp" alt="Color Role 규칙" />
+
+## Property (속성) \[#property-속성]
+
+Foreground, Background, Stroke 세 가지 기본 속성으로 시작합니다.
+
+<Image src="/foundations/color/color-role/property-1.webp" alt="Property 규칙" />
+
+### Background \[#background]
+
+전체 화면 또는 UI의 배경에 사용하는 색상입니다.
+
+### Foreground \[#foreground]
+
+텍스트, 아이콘 등 UI의 전경 요소에 사용하는 색상입니다.
+
+### Stroke \[#stroke]
+
+경계를 구분하는 선 또는 UI 요소의 윤곽선에 사용하는 색상입니다.
+
+## Role (역할) \[#role-역할]
+
+전경, 배경, 스트로크의 기본 카테고리에 더해 brand, neutral, positive와 같은 특정 역할을 포함합니다. 이러한 역할 키워드는 색상 간의 기능적, 의미적 차이를 표현할 수 있는 레이어를 추가합니다. 일부 역할은 여러 카테고리에 걸쳐 적용될 수 있으며(e.g. [$color.fg.brand](/foundations/design-token/reference/%24color.fg.brand), [$color.bg.brand-solid](/foundations/design-token/reference/%24color.bg.brand-solid), [$color.stroke.brand-solid](/foundations/design-token/reference/%24color.stroke.brand-solid)), 사용자 인터페이스 전반에 걸쳐 일관된 사용을 보장합니다.
+
+### Brand \[#brand]
+
+Brand 색상은 브랜드와 관련된 요소들이 즉각적으로 인식될 수 있도록 돕습니다. 또한, 화면에서 가장 중요한 액션을 강조하는데 사용할 수 있습니다.
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-brand-1.webp" alt="Brand Role 규칙" />
+
+  - [$color.fg.brand](/foundations/design-token/reference/%24color.fg.brand)
+  - [$color.bg.brand-solid](/foundations/design-token/reference/%24color.bg.brand-solid)
+  - [$color.bg.brand-solid-pressed](/foundations/design-token/reference/%24color.bg.brand-solid-pressed)
+  - [$color.stroke.brand-solid](/foundations/design-token/reference/%24color.stroke.brand-solid)
+</Grid>
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-brand-2.webp" alt="Brand Role 규칙" />
+</Grid>
+
+### Neutral \[#neutral]
+
+Neutral 색상은 일반적인 콘텐츠에 사용되는 기본 색상입니다. 주목도가 가장 높지는 않지만, 여전히 가시성이 필요한 요소에 사용됩니다.
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-neutral-1.webp" alt="Neutral Role 규칙" />
+
+  - [$color.fg.neutral](/foundations/design-token/reference/%24color.fg.neutral)
+  - [$color.fg.neutral-muted](/foundations/design-token/reference/%24color.fg.neutral-muted)
+  - [$color.fg.neutral-subtle](/foundations/design-token/reference/%24color.fg.neutral-subtle)
+  - [$color.fg.neutral-inverted](/foundations/design-token/reference/%24color.fg.neutral-inverted)
+  - [$color.bg.neutral-solid](/foundations/design-token/reference/%24color.bg.neutral-solid)
+  - [$color.bg.neutral-weak](/foundations/design-token/reference/%24color.bg.neutral-weak)
+</Grid>
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-neutral-2.webp" alt="Neutral Role 규칙" />
+</Grid>
+
+### Positive \[#positive]
+
+Positive 색상은 성공적인 작업, 확인, 또는 긍정적인 상태를 나타내는 데 사용됩니다.
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-positive-1.webp" alt="Positive Role 규칙" />
+
+  - [$color.fg.positive](/foundations/design-token/reference/%24color.fg.positive)
+  - [$color.fg.positive-contrast](/foundations/design-token/reference/%24color.fg.positive-contrast)
+  - [$color.bg.positive-solid](/foundations/design-token/reference/%24color.bg.positive-solid)
+  - [$color.bg.positive-solid-pressed](/foundations/design-token/reference/%24color.bg.positive-solid-pressed)
+</Grid>
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-positive-2.webp" alt="Positive Role 규칙" />
+</Grid>
+
+### Warning \[#warning]
+
+Warning 색상은 사용자의 주의가 필요한 경고 메시지나 안내 사항을 전달하는 데 사용됩니다.
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-warning-1.webp" alt="Warning Role 규칙" />
+
+  - [$color.fg.warning](/foundations/design-token/reference/%24color.fg.warning)
+  - [$color.fg.warning-contrast](/foundations/design-token/reference/%24color.fg.warning-contrast)
+  - [$color.bg.warning-solid](/foundations/design-token/reference/%24color.bg.warning-solid)
+  - [$color.bg.warning-weak](/foundations/design-token/reference/%24color.bg.warning-weak)
+</Grid>
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-warning-2.webp" alt="Warning Role 규칙" />
+</Grid>
+
+### Critical \[#critical]
+
+Critical 색상은 오류, 경고 또는 중요한 문제를 나타내는 데 사용됩니다. 사용자에게 부정적인 상태나 문제를 명확히 전달하여 즉각적인 주의를 끌 수 있습니다.
+
+<Grid>
+  ![$color.fg.critical-contrast 및 $color.bg.critical-weak 사용 예시](https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/2a0f4360-06e6-4205-a6db-680c739c4e34)
+
+  - [$color.fg.critical](/foundations/design-token/reference/%24color.fg.critical)
+  - [$color.fg.critical-contrast](/foundations/design-token/reference/%24color.fg.critical-contrast)
+  - [$color.bg.critical-solid](/foundations/design-token/reference/%24color.bg.critical-solid)
+  - [$color.bg.critical-weak](/foundations/design-token/reference/%24color.bg.critical-weak)
+</Grid>
+
+<Grid>
+  ![$color.bg.critical-solid 사용 예시](https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/bf82d2ac-56b3-45f7-9c98-349346f97727)
+</Grid>
+
+### Informative \[#informative]
+
+Informative 색상은 사용자에게 유용한 정보를 제공하거나 상태를 설명할 때 사용됩니다. 이러한 색상은 정보 전달을 직관적으로 만들어 줍니다.
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-informative-1.webp" alt="Informative Role 규칙" />
+
+  - [$color.fg.informative](/foundations/design-token/reference/%24color.fg.informative)
+  - [$color.fg.informative-contrast](/foundations/design-token/reference/%24color.fg.informative-contrast)
+  - [$color.bg.informative-solid](/foundations/design-token/reference/%24color.bg.informative-solid)
+  - [$color.bg.informative-weak](/foundations/design-token/reference/%24color.bg.informative-weak)
+</Grid>
+
+<Grid>
+  <Image src="/foundations/color/color-role/role-informative-2.webp" alt="Informative Role 규칙" />
+</Grid>
+
+## Layer \[#layer]
+
+레이어 색상은 인터페이스의 깊이와 계층 구조를 나타내는 데 사용됩니다. UI에서 다양한 레이어를 시각적으로 구분하는 데 도움을 줍니다.
+
+![라이트 모드와 다크 모드에서의 레이어 색상](https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/c78e439e-521b-47e3-9abe-fd44960b7326)
+
+![레이어 색상의 사용 예시](https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/89bb4b0a-96e3-4c0c-9dd0-9802f7b1fe87)
+
+## Variant \[#variant]
+
+같은 역할을 가진 색상이라도 의도에 따라 다양한 변형이 필요할 수 있습니다. 예를 들어, Positive 역할을 가진 배경은 낮은 강조도를 가진 [$color.bg.positive-weak](/foundations/design-token/reference/%24color.bg.positive-weak) 또는 높은 강조도를 가진 [$color.bg.positive-solid](/foundations/design-token/reference/%24color.bg.positive-solid) 같은 변형을 가질 수 있습니다.
+
+## Status \[#status]
+
+UI 요소의 상태에 따라 색상이 변할 수 있습니다. 예를 들어, 버튼을 눌렀을 때 색상 변화로 사용자에게 상호작용이 발생했음을 [표현](/foundations/state)할 수 있습니다.
+
+## Tokens \[#tokens]
+
+### Foreground \[#foreground-1]
+
+| Token | theme-light | theme-dark |
+| --- | --- | --- |
+| $color.fg.brand | $color.palette.carrot-600 | $color.palette.carrot-700 |
+| $color.fg.brand-contrast | $color.palette.carrot-700 | $color.palette.carrot-700 |
+| $color.fg.critical | $color.palette.red-700 | $color.palette.red-700 |
+| $color.fg.critical-contrast | $color.palette.red-900 | $color.palette.red-900 |
+| $color.fg.disabled | $color.palette.gray-500 | $color.palette.gray-500 |
+| $color.fg.informative | $color.palette.blue-700 | $color.palette.blue-700 |
+| $color.fg.informative-contrast | $color.palette.blue-900 | $color.palette.blue-900 |
+| $color.fg.neutral | $color.palette.gray-1000 | $color.palette.gray-1000 |
+| $color.fg.neutral-inverted | $color.palette.gray-00 | $color.palette.gray-100 |
+| $color.fg.neutral-muted | $color.palette.gray-800 | $color.palette.gray-800 |
+| $color.fg.neutral-subtle | $color.palette.gray-700 | $color.palette.gray-700 |
+| $color.fg.placeholder | $color.palette.gray-600 | $color.palette.gray-600 |
+| $color.fg.positive | $color.palette.green-700 | $color.palette.green-700 |
+| $color.fg.positive-contrast | $color.palette.green-900 | $color.palette.green-900 |
+| $color.fg.warning | $color.palette.yellow-700 | $color.palette.yellow-700 |
+| $color.fg.warning-contrast | $color.palette.yellow-900 | $color.palette.yellow-900 |
+
+### Background \[#background-1]
+
+| Token | theme-light | theme-dark |
+| --- | --- | --- |
+| $color.bg.brand-solid | $color.palette.carrot-600 | $color.palette.carrot-700 |
+| $color.bg.brand-solid-pressed | $color.palette.carrot-700 | $color.palette.carrot-800 |
+| $color.bg.brand-weak | $color.palette.carrot-100 | $color.palette.carrot-100 |
+| $color.bg.brand-weak-pressed | $color.palette.carrot-200 | $color.palette.carrot-200 |
+| $color.bg.critical-solid | $color.palette.red-700 | $color.palette.red-600 |
+| $color.bg.critical-solid-pressed | $color.palette.red-800 | $color.palette.red-700 |
+| $color.bg.critical-weak | $color.palette.red-100 | $color.palette.red-100 |
+| $color.bg.critical-weak-pressed | $color.palette.red-200 | $color.palette.red-200 |
+| $color.bg.disabled | $color.palette.gray-200 | $color.palette.gray-300 |
+| $color.bg.informative-solid | $color.palette.blue-700 | $color.palette.blue-600 |
+| $color.bg.informative-solid-pressed | $color.palette.blue-800 | $color.palette.blue-700 |
+| $color.bg.informative-weak | $color.palette.blue-100 | $color.palette.blue-100 |
+| $color.bg.informative-weak-pressed | $color.palette.blue-200 | $color.palette.blue-200 |
+| $color.bg.layer-basement | $color.palette.gray-200 | $color.palette.gray-00 |
+| $color.bg.layer-default | $color.palette.gray-00 | $color.palette.gray-100 |
+| $color.bg.layer-default-pressed | $color.palette.gray-100 | $color.palette.gray-300 |
+| $color.bg.layer-fill | $color.palette.gray-100 | $color.palette.gray-200 |
+| $color.bg.layer-floating | $color.palette.gray-00 | $color.palette.gray-200 |
+| $color.bg.layer-floating-pressed | $color.palette.gray-100 | $color.palette.gray-300 |
+| $color.bg.magic-weak | #f9f2ee | #201f1f |
+| $color.bg.neutral-inverted | $color.palette.gray-900 | $color.palette.gray-1000 |
+| $color.bg.neutral-inverted-pressed | $color.palette.gray-800 | $color.palette.gray-800 |
+| $color.bg.neutral-solid | $color.palette.gray-1000 | $color.palette.gray-300 |
+| $color.bg.neutral-weak | $color.palette.gray-200 | $color.palette.gray-300 |
+| $color.bg.neutral-weak-alpha | $color.palette.static-black-alpha-200 | $color.palette.static-white-alpha-200 |
+| $color.bg.neutral-weak-alpha-pressed | $color.palette.static-black-alpha-300 | $color.palette.static-white-alpha-300 |
+| $color.bg.neutral-weak-pressed | $color.palette.gray-300 | $color.palette.gray-400 |
+| $color.bg.overlay | $color.palette.static-black-alpha-700 | $color.palette.static-black-alpha-700 |
+| $color.bg.overlay-muted | $color.palette.static-black-alpha-500 | $color.palette.static-black-alpha-500 |
+| $color.bg.positive-solid | $color.palette.green-700 | $color.palette.green-500 |
+| $color.bg.positive-solid-pressed | $color.palette.green-800 | $color.palette.green-600 |
+| $color.bg.positive-weak | $color.palette.green-100 | $color.palette.green-100 |
+| $color.bg.positive-weak-pressed | $color.palette.green-200 | $color.palette.green-200 |
+| $color.bg.transparent | #00000000 | #ffffff00 |
+| $color.bg.transparent-pressed | $color.palette.static-black-alpha-100 | $color.palette.static-white-alpha-50 |
+| $color.bg.transparent-selected | $color.palette.static-black-alpha-200 | $color.palette.static-white-alpha-100 |
+| $color.bg.transparent-selected-pressed | $color.palette.static-black-alpha-300 | $color.palette.static-white-alpha-200 |
+| $color.bg.warning-solid | $color.palette.yellow-300 | $color.palette.yellow-800 |
+| $color.bg.warning-solid-pressed | $color.palette.yellow-400 | $color.palette.yellow-900 |
+| $color.bg.warning-weak | $color.palette.yellow-100 | $color.palette.yellow-100 |
+| $color.bg.warning-weak-pressed | $color.palette.yellow-200 | $color.palette.yellow-200 |
+
+### Stroke \[#stroke-1]
+
+| Token | theme-light | theme-dark |
+| --- | --- | --- |
+| $color.stroke.brand-solid | $color.palette.carrot-700 | $color.palette.carrot-700 |
+| $color.stroke.brand-weak | $color.palette.carrot-300 | $color.palette.carrot-300 |
+| $color.stroke.critical-solid | $color.palette.red-700 | $color.palette.red-700 |
+| $color.stroke.critical-weak | $color.palette.red-300 | $color.palette.red-300 |
+| $color.stroke.focus-ring | $color.palette.blue-600 | $color.palette.blue-600 |
+| $color.stroke.informative-solid | $color.palette.blue-700 | $color.palette.blue-700 |
+| $color.stroke.informative-weak | $color.palette.blue-300 | $color.palette.blue-300 |
+| $color.stroke.neutral-contrast | $color.palette.gray-1000 | $color.palette.gray-1000 |
+| $color.stroke.neutral-muted | $color.palette.static-black-alpha-300 | $color.palette.static-white-alpha-100 |
+| $color.stroke.neutral-solid | $color.palette.gray-800 | $color.palette.gray-800 |
+| $color.stroke.neutral-subtle | $color.palette.static-black-alpha-200 | $color.palette.static-white-alpha-50 |
+| $color.stroke.neutral-weak | $color.palette.gray-400 | $color.palette.gray-400 |
+| $color.stroke.positive-solid | $color.palette.green-700 | $color.palette.green-700 |
+| $color.stroke.positive-weak | $color.palette.green-300 | $color.palette.green-300 |
+| $color.stroke.warning-solid | $color.palette.yellow-700 | $color.palette.yellow-700 |
+| $color.stroke.warning-weak | $color.palette.yellow-300 | $color.palette.yellow-300 |

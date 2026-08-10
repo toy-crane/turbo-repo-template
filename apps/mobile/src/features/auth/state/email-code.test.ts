@@ -56,7 +56,7 @@ describe("isCompleteCode", () => {
 describe("formatResendLabel", () => {
   test("남은 시간이 있으면 초를 보여준다", () => {
     expect(formatResendLabel(RESEND_COOLDOWN_SECONDS)).toBe(
-      "60초 뒤에 코드 다시 받기"
+      "60초 후 다시 받기"
     );
   });
 

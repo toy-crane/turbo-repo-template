@@ -1,0 +1,31 @@
+# SEED Foundations - LLM Reference
+
+색상, 타이포그래피, 간격 등 디자인 파운데이션
+
+## Documents
+
+- [Overview (color)](https://seed-design.io/llms/foundations/color.txt): SEED 색상 시스템은 접근성을 고려하며 제품의 계층, 상태, 브랜드를 표현할 수 있도록 돕습니다.
+- [Roles](https://seed-design.io/llms/foundations/color/color-role.txt): 역할이 부여된 색상은 색상에 특정 기능적 역할(주요 액션, 오류, 정보 등)을 할당하여 사용자 인터페이스 전반에 걸쳐 일관성, 명확성, 접근성을 보장합니다.
+- [Palette](https://seed-design.io/llms/foundations/color/palette.txt)
+- [Overview (design-token)](https://seed-design.io/llms/foundations/design-token.txt): 디자인 토큰은 디자인 결정을 사람과 기계가 이해할 수 있는 방식으로 인코딩하는 방법입니다.
+- [Reference](https://seed-design.io/llms/foundations/design-token/reference.txt): SEED 디자인 토큰의 전체 목록을 제공합니다.
+- [Elevation](https://seed-design.io/llms/foundations/elevation.txt): UI 요소 간의 상대적인 깊이와 계층 구조를 시각적으로 표현하는 디자인 원칙입니다.
+- [Gradient](https://seed-design.io/llms/foundations/gradient.txt): 그라디언트는 배경과 아이콘 등에서 입체감이나 AI 기능을 표현할 때 사용하는 색상 토큰입니다.
+- [Overview (iconography)](https://seed-design.io/llms/foundations/iconography.txt): 아이콘은 사용자가 복잡한 정보나 기능을 빠르게 이해할 수 있도록 도와주는 디자인 요소입니다.
+- [Library](https://seed-design.io/llms/foundations/iconography/library.txt)
+- [Usage](https://seed-design.io/llms/foundations/iconography/usage.txt): 아이콘과 다른 디자인 요소 간의 상호작용 및 아이콘 사용 방법에 대해 설명합니다.
+- [Inclusive Design](https://seed-design.io/llms/foundations/inclusive-design.txt): SEED는 모든 사용자가 제품을 쉽게 접근하고 사용할 수 있도록 돕습니다.
+- [International Design](https://seed-design.io/llms/foundations/international-design.txt): SEED는 전 세계에서 똑같이 유용하고 가치있는 경험을 제공할 수 있도록 돕습니다.
+- [Layout](https://seed-design.io/llms/foundations/layout.txt): 레이아웃은 제품의 콘텐츠를 구조화하고 일관된 사용자 경험을 제공하기 위한 시각적 뼈대입니다. SEED는 다양한 화면 밀도와 디바이스 환경에 대응할 수 있도록 유연한 그리드 시스템과 중단점(Breakpoint)을 제공합니다.
+- [Motion](https://seed-design.io/llms/foundations/motion.txt): 모션은 유저 인터페이스의 표현력을 높이고 쉽게 사용할 수 있도록 도와줍니다.
+- [Radius](https://seed-design.io/llms/foundations/radius.txt): Radius는 컴포넌트 혹은 콘텐츠 모서리의 둥글기를 표현합니다.
+- [Spacing](https://seed-design.io/llms/foundations/spacing.txt): Spacing은 컴포넌트 혹은 콘텐츠 간의 간격을 표현합니다.
+- [State](https://seed-design.io/llms/foundations/state.txt): 상태 표현은 컴포넌트 또는 상호작용 가능한 요소의 상태 또는 가능성을 사용자에게 전달합니다.
+- [Typography](https://seed-design.io/llms/foundations/typography.txt): 타이포그래피는 콘텐츠를 명확하고 효율적으로 표현하기 위한 디자인 요소입니다.
+- [Voice and Tone](https://seed-design.io/llms/foundations/voice-and-tone.txt): 당근에서 일관되게 말하는 방법을 소개합니다.
+- [Writing](https://seed-design.io/llms/foundations/writing.txt): 당근에서 일관되게 글쓰는 방법을 소개합니다.
+
+## Related Sections
+
+- [Components](https://seed-design.io/components/llms.txt): 컴포넌트 디자인 스펙
+- [React Library](https://seed-design.io/react/llms.txt): React 컴포넌트 라이브러리

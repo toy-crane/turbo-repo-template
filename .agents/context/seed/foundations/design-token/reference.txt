@@ -1,0 +1,379 @@
+# Reference
+URL: /foundations/design-token/reference
+Source: https://github.com/daangn/seed-design/blob/dev/docs/content/foundations/design-token/reference.mdx
+
+SEED 디자인 토큰의 전체 목록을 제공합니다.
+
+## Color
+
+| Token | theme-light | theme-dark |
+| --- | --- | --- |
+| $color.palette.gray-00 | #ffffff | #000000 |
+| $color.palette.gray-100 | #f7f8f9 | #16171b |
+| $color.palette.gray-200 | #f3f4f5 | #1d2025 |
+| $color.palette.gray-300 | #eeeff1 | #2b2e35 |
+| $color.palette.gray-400 | #dcdee3 | #393d46 |
+| $color.palette.gray-500 | #d1d3d8 | #5b606a |
+| $color.palette.gray-600 | #b0b3ba | #868b94 |
+| $color.palette.gray-700 | #868b94 | #b0b3ba |
+| $color.palette.gray-800 | #555d6d | #dcdee3 |
+| $color.palette.gray-900 | #2a3038 | #e9eaec |
+| $color.palette.gray-1000 | #1a1c20 | #f3f4f5 |
+| $color.palette.carrot-100 | #fff2ec | #31241f |
+| $color.palette.carrot-200 | #ffe8db | #4b291c |
+| $color.palette.carrot-300 | #ffd5c0 | #6b311c |
+| $color.palette.carrot-400 | #ffb999 | #923600 |
+| $color.palette.carrot-500 | #ff9364 | #bd4201 |
+| $color.palette.carrot-600 | #ff6600 | #e65200 |
+| $color.palette.carrot-700 | #e14d00 | #ff6600 |
+| $color.palette.carrot-800 | #b93901 | #ff9e65 |
+| $color.palette.carrot-900 | #862b00 | #eecebc |
+| $color.palette.carrot-1000 | #471601 | #f4eeea |
+| $color.palette.blue-100 | #eff6ff | #202742 |
+| $color.palette.blue-200 | #e2edfc | #1e3352 |
+| $color.palette.blue-300 | #cbdffa | #1a4275 |
+| $color.palette.blue-400 | #aacefd | #0f559e |
+| $color.palette.blue-500 | #85b8fd | #1964d8 |
+| $color.palette.blue-600 | #5e98fe | #1e82eb |
+| $color.palette.blue-700 | #217cf9 | #41a2f9 |
+| $color.palette.blue-800 | #135fcd | #83bcf9 |
+| $color.palette.blue-900 | #0b4596 | #b9d7fb |
+| $color.palette.blue-1000 | #032451 | #e5f0fe |
+| $color.palette.red-100 | #fdf0f0 | #322323 |
+| $color.palette.red-200 | #fde7e7 | #4f2624 |
+| $color.palette.red-300 | #fed4d2 | #742826 |
+| $color.palette.red-400 | #feb7b3 | #a12621 |
+| $color.palette.red-500 | #fe928d | #ca2319 |
+| $color.palette.red-600 | #fc6a66 | #f73526 |
+| $color.palette.red-700 | #fa342c | #ff6e60 |
+| $color.palette.red-800 | #ca1d13 | #ffa299 |
+| $color.palette.red-900 | #921708 | #f8c5c3 |
+| $color.palette.red-1000 | #4a1209 | #fdf2f2 |
+| $color.palette.green-100 | #edfaf6 | #202926 |
+| $color.palette.green-200 | #d9f6e9 | #20362e |
+| $color.palette.green-300 | #b9e9d2 | #20493b |
+| $color.palette.green-400 | #7ddcb3 | #19604c |
+| $color.palette.green-500 | #42c593 | #117956 |
+| $color.palette.green-600 | #10ab7d | #1b946d |
+| $color.palette.green-700 | #079171 | #22b27f |
+| $color.palette.green-800 | #00745f | #35ce9a |
+| $color.palette.green-900 | #075445 | #93e5c0 |
+| $color.palette.green-1000 | #0a2b24 | #d4f6ef |
+| $color.palette.yellow-100 | #fff7de | #302819 |
+| $color.palette.yellow-200 | #fdefb9 | #413218 |
+| $color.palette.yellow-300 | #fbdc65 | #543e15 |
+| $color.palette.yellow-400 | #e9c647 | #714e15 |
+| $color.palette.yellow-500 | #d4ab28 | #91601b |
+| $color.palette.yellow-600 | #c49725 | #b6720d |
+| $color.palette.yellow-700 | #9b7821 | #ca901c |
+| $color.palette.yellow-800 | #755b22 | #dab156 |
+| $color.palette.yellow-900 | #4f3e1f | #e5d49b |
+| $color.palette.yellow-1000 | #2c2512 | #f7f0cd |
+| $color.palette.purple-100 | #f5f3fe | #28213b |
+| $color.palette.purple-200 | #efeafe | #3b2873 |
+| $color.palette.purple-300 | #e1d8ff | #443081 |
+| $color.palette.purple-400 | #d0c0ff | #5a3bb1 |
+| $color.palette.purple-500 | #b8a1ff | #764fd9 |
+| $color.palette.purple-600 | #9f84fb | #8e6bee |
+| $color.palette.purple-700 | #8969ea | #a78df0 |
+| $color.palette.purple-800 | #6d50cb | #beadf2 |
+| $color.palette.purple-900 | #50379b | #d9cefa |
+| $color.palette.purple-1000 | #29175d | #f0edfc |
+| $color.palette.static-black | #000000 | #000000 |
+| $color.palette.static-black-alpha-100 | #00000007 | #00000007 |
+| $color.palette.static-black-alpha-200 | #0000000c | #0000000c |
+| $color.palette.static-black-alpha-300 | #00000010 | #00000010 |
+| $color.palette.static-black-alpha-400 | #00000021 | #00000021 |
+| $color.palette.static-black-alpha-500 | #0000002c | #0000002c |
+| $color.palette.static-black-alpha-600 | #0000004c | #0000004c |
+| $color.palette.static-black-alpha-700 | #00000074 | #00000074 |
+| $color.palette.static-black-alpha-800 | #000000a2 | #000000a2 |
+| $color.palette.static-black-alpha-900 | #000000d0 | #000000d0 |
+| $color.palette.static-black-alpha-1000 | #000000e3 | #000000e3 |
+| $color.palette.static-white | #ffffff | #ffffff |
+| $color.palette.static-white-alpha-50 | #ffffff0d | #ffffff0d |
+| $color.palette.static-white-alpha-100 | #ffffff17 | #ffffff17 |
+| $color.palette.static-white-alpha-200 | #ffffff20 | #ffffff20 |
+| $color.palette.static-white-alpha-300 | #ffffff2e | #ffffff2e |
+| $color.palette.static-white-alpha-400 | #ffffff3d | #ffffff3d |
+| $color.palette.static-white-alpha-500 | #ffffff60 | #ffffff60 |
+| $color.palette.static-white-alpha-600 | #ffffff8b | #ffffff8b |
+| $color.palette.static-white-alpha-700 | #ffffffb3 | #ffffffb3 |
+| $color.palette.static-white-alpha-800 | #ffffffde | #ffffffde |
+| $color.palette.static-white-alpha-900 | #ffffffea | #ffffffea |
+| $color.palette.static-white-alpha-1000 | #fffffff4 | #fffffff4 |
+| $color.fg.brand | $color.palette.carrot-600 | $color.palette.carrot-700 |
+| $color.fg.brand-contrast | $color.palette.carrot-700 | $color.palette.carrot-700 |
+| $color.fg.critical | $color.palette.red-700 | $color.palette.red-700 |
+| $color.fg.critical-contrast | $color.palette.red-900 | $color.palette.red-900 |
+| $color.fg.disabled | $color.palette.gray-500 | $color.palette.gray-500 |
+| $color.fg.informative | $color.palette.blue-700 | $color.palette.blue-700 |
+| $color.fg.informative-contrast | $color.palette.blue-900 | $color.palette.blue-900 |
+| $color.fg.neutral | $color.palette.gray-1000 | $color.palette.gray-1000 |
+| $color.fg.neutral-inverted | $color.palette.gray-00 | $color.palette.gray-100 |
+| $color.fg.neutral-muted | $color.palette.gray-800 | $color.palette.gray-800 |
+| $color.fg.neutral-subtle | $color.palette.gray-700 | $color.palette.gray-700 |
+| $color.fg.placeholder | $color.palette.gray-600 | $color.palette.gray-600 |
+| $color.fg.positive | $color.palette.green-700 | $color.palette.green-700 |
+| $color.fg.positive-contrast | $color.palette.green-900 | $color.palette.green-900 |
+| $color.fg.warning | $color.palette.yellow-700 | $color.palette.yellow-700 |
+| $color.fg.warning-contrast | $color.palette.yellow-900 | $color.palette.yellow-900 |
+| $color.bg.brand-solid | $color.palette.carrot-600 | $color.palette.carrot-700 |
+| $color.bg.brand-solid-pressed | $color.palette.carrot-700 | $color.palette.carrot-800 |
+| $color.bg.brand-weak | $color.palette.carrot-100 | $color.palette.carrot-100 |
+| $color.bg.brand-weak-pressed | $color.palette.carrot-200 | $color.palette.carrot-200 |
+| $color.bg.critical-solid | $color.palette.red-700 | $color.palette.red-600 |
+| $color.bg.critical-solid-pressed | $color.palette.red-800 | $color.palette.red-700 |
+| $color.bg.critical-weak | $color.palette.red-100 | $color.palette.red-100 |
+| $color.bg.critical-weak-pressed | $color.palette.red-200 | $color.palette.red-200 |
+| $color.bg.disabled | $color.palette.gray-200 | $color.palette.gray-300 |
+| $color.bg.informative-solid | $color.palette.blue-700 | $color.palette.blue-600 |
+| $color.bg.informative-solid-pressed | $color.palette.blue-800 | $color.palette.blue-700 |
+| $color.bg.informative-weak | $color.palette.blue-100 | $color.palette.blue-100 |
+| $color.bg.informative-weak-pressed | $color.palette.blue-200 | $color.palette.blue-200 |
+| $color.bg.layer-basement | $color.palette.gray-200 | $color.palette.gray-00 |
+| $color.bg.layer-default | $color.palette.gray-00 | $color.palette.gray-100 |
+| $color.bg.layer-default-pressed | $color.palette.gray-100 | $color.palette.gray-300 |
+| $color.bg.layer-fill | $color.palette.gray-100 | $color.palette.gray-200 |
+| $color.bg.layer-floating | $color.palette.gray-00 | $color.palette.gray-200 |
+| $color.bg.layer-floating-pressed | $color.palette.gray-100 | $color.palette.gray-300 |
+| $color.bg.magic-weak | #f9f2ee | #201f1f |
+| $color.bg.neutral-inverted | $color.palette.gray-900 | $color.palette.gray-1000 |
+| $color.bg.neutral-inverted-pressed | $color.palette.gray-800 | $color.palette.gray-800 |
+| $color.bg.neutral-solid | $color.palette.gray-1000 | $color.palette.gray-300 |
+| $color.bg.neutral-weak | $color.palette.gray-200 | $color.palette.gray-300 |
+| $color.bg.neutral-weak-alpha | $color.palette.static-black-alpha-200 | $color.palette.static-white-alpha-200 |
+| $color.bg.neutral-weak-alpha-pressed | $color.palette.static-black-alpha-300 | $color.palette.static-white-alpha-300 |
+| $color.bg.neutral-weak-pressed | $color.palette.gray-300 | $color.palette.gray-400 |
+| $color.bg.overlay | $color.palette.static-black-alpha-700 | $color.palette.static-black-alpha-700 |
+| $color.bg.overlay-muted | $color.palette.static-black-alpha-500 | $color.palette.static-black-alpha-500 |
+| $color.bg.positive-solid | $color.palette.green-700 | $color.palette.green-500 |
+| $color.bg.positive-solid-pressed | $color.palette.green-800 | $color.palette.green-600 |
+| $color.bg.positive-weak | $color.palette.green-100 | $color.palette.green-100 |
+| $color.bg.positive-weak-pressed | $color.palette.green-200 | $color.palette.green-200 |
+| $color.bg.transparent | #00000000 | #ffffff00 |
+| $color.bg.transparent-pressed | $color.palette.static-black-alpha-100 | $color.palette.static-white-alpha-50 |
+| $color.bg.transparent-selected | $color.palette.static-black-alpha-200 | $color.palette.static-white-alpha-100 |
+| $color.bg.transparent-selected-pressed | $color.palette.static-black-alpha-300 | $color.palette.static-white-alpha-200 |
+| $color.bg.warning-solid | $color.palette.yellow-300 | $color.palette.yellow-800 |
+| $color.bg.warning-solid-pressed | $color.palette.yellow-400 | $color.palette.yellow-900 |
+| $color.bg.warning-weak | $color.palette.yellow-100 | $color.palette.yellow-100 |
+| $color.bg.warning-weak-pressed | $color.palette.yellow-200 | $color.palette.yellow-200 |
+| $color.stroke.brand-solid | $color.palette.carrot-700 | $color.palette.carrot-700 |
+| $color.stroke.brand-weak | $color.palette.carrot-300 | $color.palette.carrot-300 |
+| $color.stroke.critical-solid | $color.palette.red-700 | $color.palette.red-700 |
+| $color.stroke.critical-weak | $color.palette.red-300 | $color.palette.red-300 |
+| $color.stroke.focus-ring | $color.palette.blue-600 | $color.palette.blue-600 |
+| $color.stroke.informative-solid | $color.palette.blue-700 | $color.palette.blue-700 |
+| $color.stroke.informative-weak | $color.palette.blue-300 | $color.palette.blue-300 |
+| $color.stroke.neutral-contrast | $color.palette.gray-1000 | $color.palette.gray-1000 |
+| $color.stroke.neutral-muted | $color.palette.static-black-alpha-300 | $color.palette.static-white-alpha-100 |
+| $color.stroke.neutral-solid | $color.palette.gray-800 | $color.palette.gray-800 |
+| $color.stroke.neutral-subtle | $color.palette.static-black-alpha-200 | $color.palette.static-white-alpha-50 |
+| $color.stroke.neutral-weak | $color.palette.gray-400 | $color.palette.gray-400 |
+| $color.stroke.positive-solid | $color.palette.green-700 | $color.palette.green-700 |
+| $color.stroke.positive-weak | $color.palette.green-300 | $color.palette.green-300 |
+| $color.stroke.warning-solid | $color.palette.yellow-700 | $color.palette.yellow-700 |
+| $color.stroke.warning-weak | $color.palette.yellow-300 | $color.palette.yellow-300 |
+| $color.manner-temp.l1.bg | #f1f2f3 | #292929 |
+| $color.manner-temp.l1.text | #757b85 | #b8b8b9 |
+| $color.manner-temp.l10.bg | #ffebee | #34040a |
+| $color.manner-temp.l10.text | #cb0123 | #fb6f82 |
+| $color.manner-temp.l2.bg | #f8f4ec | #332605 |
+| $color.manner-temp.l2.text | #ab863f | #f5db97 |
+| $color.manner-temp.l3.bg | #fff5e5 | #372b01 |
+| $color.manner-temp.l3.text | #e08a00 | #fdda65 |
+| $color.manner-temp.l4.bg | #fff3e5 | #372301 |
+| $color.manner-temp.l4.text | #f57e00 | #fbbe55 |
+| $color.manner-temp.l5.bg | #fff1e5 | #371f01 |
+| $color.manner-temp.l5.text | #ff7300 | #faac4b |
+| $color.manner-temp.l6.bg | #fff0e5 | #351b03 |
+| $color.manner-temp.l6.text | #ff6600 | #fc9855 |
+| $color.manner-temp.l7.bg | #ffefe5 | #371701 |
+| $color.manner-temp.l7.text | #ff5100 | #f97a25 |
+| $color.manner-temp.l8.bg | #ffeee5 | #380f00 |
+| $color.manner-temp.l8.text | #ff3300 | #fe6a34 |
+| $color.manner-temp.l9.bg | #fdeded | #380500 |
+| $color.manner-temp.l9.text | #e82c45 | #fe6a5d |
+| $color.banner.blue | #e1f7ff | #0d2a3a |
+| $color.banner.cool-gray | #ebf1f5 | #242c33 |
+| $color.banner.green | #f0fbe5 | #1e361c |
+| $color.banner.orange | #fff2e1 | #42230a |
+| $color.banner.pink | #ffebf1 | #3b172c |
+| $color.banner.purple | #f5ecff | #2e1e45 |
+| $color.banner.red | #ffecee | #3a0f15 |
+| $color.banner.teal | #e6faf6 | #143633 |
+| $color.banner.warm-gray | #f2f0ee | #2f2b27 |
+| $color.banner.yellow | #fffae1 | #3e2b00 |
+
+## Dimension
+
+| Token | default |
+| --- | --- |
+| $dimension.x0_5 | 2px |
+| $dimension.x1 | 4px |
+| $dimension.x1_5 | 6px |
+| $dimension.x2 | 8px |
+| $dimension.x2_5 | 10px |
+| $dimension.x3 | 12px |
+| $dimension.x3_5 | 14px |
+| $dimension.x4 | 16px |
+| $dimension.x4_5 | 18px |
+| $dimension.x5 | 20px |
+| $dimension.x6 | 24px |
+| $dimension.x7 | 28px |
+| $dimension.x8 | 32px |
+| $dimension.x9 | 36px |
+| $dimension.x10 | 40px |
+| $dimension.x12 | 48px |
+| $dimension.x13 | 52px |
+| $dimension.x14 | 56px |
+| $dimension.x16 | 64px |
+| $dimension.spacing-x.between-chips | $dimension.x2 |
+| $dimension.spacing-x.global-gutter | $dimension.x4 |
+| $dimension.spacing-y.component-default | $dimension.x3 |
+| $dimension.spacing-y.nav-to-title | $dimension.x5 |
+| $dimension.spacing-y.screen-bottom | $dimension.x14 |
+| $dimension.spacing-y.between-text | $dimension.x1_5 |
+
+## Duration
+
+| Token | default |
+| --- | --- |
+| $duration.d1 | 50ms |
+| $duration.d2 | 100ms |
+| $duration.d3 | 150ms |
+| $duration.d4 | 200ms |
+| $duration.d5 | 250ms |
+| $duration.d6 | 300ms |
+| $duration.color-transition | $duration.d3 |
+| $duration.pressed-scale | $duration.d3 |
+
+## Font Size
+
+| Token | default |
+| --- | --- |
+| $font-size.t1 | 0.6875rem (11px) |
+| $font-size.t2 | 0.75rem (12px) |
+| $font-size.t3 | 0.8125rem (13px) |
+| $font-size.t4 | 0.875rem (14px) |
+| $font-size.t5 | 1rem (16px) |
+| $font-size.t6 | 1.125rem (18px) |
+| $font-size.t7 | 1.25rem (20px) |
+| $font-size.t8 | 1.375rem (22px) |
+| $font-size.t9 | 1.5rem (24px) |
+| $font-size.t10 | 1.625rem (26px) |
+| $font-size.t11 | 1.75rem (28px) |
+| $font-size.t12 | 2rem (32px) |
+| $font-size.t13 | 2.5rem (40px) |
+| $font-size.t14 | 3rem (48px) |
+| $font-size.t1-static | 11px |
+| $font-size.t2-static | 12px |
+| $font-size.t3-static | 13px |
+| $font-size.t4-static | 14px |
+| $font-size.t5-static | 16px |
+| $font-size.t6-static | 18px |
+| $font-size.t7-static | 20px |
+| $font-size.t8-static | 22px |
+| $font-size.t9-static | 24px |
+| $font-size.t10-static | 26px |
+| $font-size.t11-static | 28px |
+| $font-size.t12-static | 32px |
+| $font-size.t13-static | 40px |
+| $font-size.t14-static | 48px |
+
+## Font Weight
+
+| Token | default |
+| --- | --- |
+| $font-weight.regular | 400 |
+| $font-weight.medium | 500 |
+| $font-weight.bold | 700 |
+
+## Gradient
+
+| Token | theme-light | theme-dark |
+| --- | --- | --- |
+| $gradient.glow-magic | [{"color":"#fef6f7","position":0},{"color":"#fef0e7","position":0.8},{"color":"#f9f7f5","position":1}] | [{"color":"#2d252d","position":0},{"color":"#3a312b","position":0.8},{"color":"#333232","position":1}] |
+| $gradient.glow-magic-pressed | [{"color":"#fbf0f2","position":0},{"color":"#ffe8db","position":0.8},{"color":"#f5f2ef","position":1}] | [{"color":"#3e333e","position":0},{"color":"#51453e","position":0.8},{"color":"#434242","position":1}] |
+| $gradient.highlight-magic | [{"color":"#ff6600","position":0.2},{"color":"#d25aca","position":1}] | [{"color":"#ff6600","position":0.2},{"color":"#d25aca","position":1}] |
+| $gradient.highlight-magic-pressed | [{"color":"#e14f00","position":0.2},{"color":"#ae58bf","position":1}] | [{"color":"#ff9e65","position":0.2},{"color":"#e89bee","position":1}] |
+| $gradient.shimmer-magic | [{"color":"#fff9f500","position":0},{"color":"#fff9f5cc","position":0.46},{"color":"#fff9f5cc","position":0.54},{"color":"#fff9f500","position":1}] | [{"color":"#fff9f500","position":0},{"color":"#fff9f51a","position":0.46},{"color":"#fff9f51a","position":0.54},{"color":"#fff9f500","position":1}] |
+| $gradient.shimmer-neutral | [{"color":"#ffffff00","position":0},{"color":"#ffffffab","position":0.46},{"color":"#ffffffab","position":0.54},{"color":"#ffffff00","position":1}] | [{"color":"#ffffff00","position":0},{"color":"#ffffff1a","position":0.46},{"color":"#ffffff1a","position":0.54},{"color":"#ffffff00","position":1}] |
+
+## Line Height
+
+| Token | default |
+| --- | --- |
+| $line-height.t1 | 0.9375rem (15px) |
+| $line-height.t2 | 1rem (16px) |
+| $line-height.t3 | 1.125rem (18px) |
+| $line-height.t4 | 1.1875rem (19px) |
+| $line-height.t5 | 1.375rem (22px) |
+| $line-height.t6 | 1.5rem (24px) |
+| $line-height.t7 | 1.6875rem (27px) |
+| $line-height.t8 | 1.875rem (30px) |
+| $line-height.t9 | 2rem (32px) |
+| $line-height.t10 | 2.1875rem (35px) |
+| $line-height.t11 | 2.375rem (38px) |
+| $line-height.t12 | 2.625rem (42px) |
+| $line-height.t13 | 3.25rem (52px) |
+| $line-height.t14 | 3.75rem (60px) |
+| $line-height.t1-static | 15px |
+| $line-height.t2-static | 16px |
+| $line-height.t3-static | 18px |
+| $line-height.t4-static | 19px |
+| $line-height.t5-static | 22px |
+| $line-height.t6-static | 24px |
+| $line-height.t7-static | 27px |
+| $line-height.t8-static | 30px |
+| $line-height.t9-static | 32px |
+| $line-height.t10-static | 35px |
+| $line-height.t11-static | 38px |
+| $line-height.t12-static | 42px |
+| $line-height.t13-static | 52px |
+| $line-height.t14-static | 60px |
+
+## Radius
+
+| Token | default |
+| --- | --- |
+| $radius.r0_5 | 2px |
+| $radius.r1 | 4px |
+| $radius.r1_5 | 6px |
+| $radius.r2 | 8px |
+| $radius.r2_5 | 10px |
+| $radius.r3 | 12px |
+| $radius.r3_5 | 14px |
+| $radius.r4 | 16px |
+| $radius.r5 | 20px |
+| $radius.r6 | 24px |
+| $radius.full | 9999px |
+
+## Scale
+
+| Token | preferred | reduced |
+| --- | --- | --- |
+| $scale.s95 | 0.95 | 1 |
+| $scale.s97 | 0.97 | 1 |
+| $scale.s98 | 0.98 | 1 |
+
+## Shadow
+
+| Token | theme-light | theme-dark |
+| --- | --- | --- |
+| $shadow.s1 | [{"color":"#00000014","offsetX":{"value":0,"unit":"px"},"offsetY":{"value":1,"unit":"px"},"blur":{"value":4,"unit":"px"},"spread":{"value":0,"unit":"px"}}] | [{"color":"#00000080","offsetX":{"value":0,"unit":"px"},"offsetY":{"value":1,"unit":"px"},"blur":{"value":4,"unit":"px"},"spread":{"value":0,"unit":"px"}}] |
+| $shadow.s2 | [{"color":"#0000001a","offsetX":{"value":0,"unit":"px"},"offsetY":{"value":2,"unit":"px"},"blur":{"value":10,"unit":"px"},"spread":{"value":0,"unit":"px"}}] | [{"color":"#000000ad","offsetX":{"value":0,"unit":"px"},"offsetY":{"value":2,"unit":"px"},"blur":{"value":10,"unit":"px"},"spread":{"value":0,"unit":"px"}}] |
+| $shadow.s3 | [{"color":"#0000001f","offsetX":{"value":0,"unit":"px"},"offsetY":{"value":4,"unit":"px"},"blur":{"value":16,"unit":"px"},"spread":{"value":0,"unit":"px"}}] | [{"color":"#000000cc","offsetX":{"value":0,"unit":"px"},"offsetY":{"value":4,"unit":"px"},"blur":{"value":16,"unit":"px"},"spread":{"value":0,"unit":"px"}}] |
+
+## Timing Function
+
+| Token | default |
+| --- | --- |
+| $timing-function.linear | cubic-bezier(0, 0, 1, 1) |
+| $timing-function.easing | cubic-bezier(0.35, 0, 0.35, 1) |
+| $timing-function.enter | cubic-bezier(0, 0, 0.15, 1) |
+| $timing-function.exit | cubic-bezier(0.35, 0, 1, 1) |
+| $timing-function.enter-expressive | cubic-bezier(0.03, 0.4, 0.1, 1) |
+| $timing-function.exit-expressive | cubic-bezier(0.35, 0, 0.95, 0.55) |
+| $timing-function.pressed-scale | cubic-bezier(0, 0, 0.15, 1) |

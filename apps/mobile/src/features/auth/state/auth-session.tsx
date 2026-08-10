@@ -23,9 +23,15 @@ import { getSupabaseClient } from "@/shared/supabase/client";
  * every returning user, and rendering the app first would show protected
  * screens to someone who turns out to be signed out.
  */
-export type AuthStatus = "checking" | "signedIn" | "signedOut";
+export type AuthStatus =
+  | "checking"
+  | "misconfigured"
+  | "signedIn"
+  | "signedOut";
 
 export interface AuthSessionState {
+  /** Only set for `misconfigured`, which the sign-in screen cannot recover from. */
+  problem?: string;
   session: Session | null;
   status: AuthStatus;
 }
@@ -57,7 +63,22 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    const { auth } = getSupabaseClient();
+    let auth: ReturnType<typeof getSupabaseClient>["auth"];
+
+    try {
+      ({ auth } = getSupabaseClient());
+    } catch (error) {
+      // Opening the sign-in screen here would be a lie: no credentials this
+      // person types can reach a Supabase that was never configured.
+      setState({
+        problem: error instanceof Error ? error.message : String(error),
+        session: null,
+        status: "misconfigured",
+      });
+
+      return;
+    }
+
     let mounted = true;
 
     const apply = (session: Session | null) => {
