@@ -404,7 +404,9 @@ bun run agent-device:doctor
    SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
    ```
 
-2. 서버를 실행합니다. 다른 포트를 쓰려면 `BUN_PORT`를 지정합니다.
+2. 서버를 실행합니다. 3900 포트로 뜹니다.
+   Next.js가 3000을 잡고 겹칠 때마다 1씩 올려 찾기 때문에 3000번대 앞쪽을 피했습니다.
+   다른 포트를 쓰려면 `BUN_PORT`를 지정합니다.
 
    ```bash
    bun run --cwd apps/api dev
@@ -415,8 +417,8 @@ bun run agent-device:doctor
 
    | 실행 대상 | `EXPO_PUBLIC_API_URL` | `EXPO_PUBLIC_SUPABASE_URL` |
    | --- | --- | --- |
-   | iOS Simulator | `http://127.0.0.1:3000` | `http://127.0.0.1:54321` |
-   | Android Emulator | `http://10.0.2.2:3000` | `http://10.0.2.2:54321` |
+   | iOS Simulator | `http://127.0.0.1:3900` | `http://127.0.0.1:54321` |
+   | Android Emulator | `http://10.0.2.2:3900` | `http://10.0.2.2:54321` |
 
    값을 바꾼 뒤에는 Metro를 다시 시작해야 번들에 반영됩니다.
 

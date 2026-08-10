@@ -5,7 +5,7 @@
   "scripts": {
     "check": "ultracite check .",
     "check-types": "tsc --noEmit",
-    "dev": "bun run --hot src/index.ts",
+    "dev": "BUN_PORT=3900 bun run --hot src/index.ts",
     "fix": "ultracite fix .",
     "test": "bun test"
   },
