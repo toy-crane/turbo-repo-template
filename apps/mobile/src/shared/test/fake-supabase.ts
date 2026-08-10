@@ -21,9 +21,16 @@ export interface RecordedUpdate {
   values: Record<string, unknown>;
 }
 
+/** The one profile row a select can read back, as the database stores it. */
+export interface FakeProfileRow {
+  avatar_url: string | null;
+  display_name: string | null;
+}
+
 export interface FakeSupabaseOptions {
   /** Makes getSession hang until settleSession() runs, for the checking state. */
   holdSession?: boolean;
+  profile?: FakeProfileRow;
   session?: Session | null;
   sessionError?: Error;
 }
@@ -123,7 +130,22 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
     }),
   };
 
+  const profileRow: FakeProfileRow = options.profile ?? {
+    avatar_url: null,
+    display_name: null,
+  };
+
   const from = jest.fn((table: string) => ({
+    // Only the shape the app reads today: one row, chosen by id. The filters go
+    // unrecorded because the policy, not the query, is what scopes the read.
+    select: (_columns: string) => {
+      const builder = {
+        eq: () => builder,
+        single: () => Promise.resolve({ data: profileRow, error: null }),
+      };
+
+      return builder;
+    },
     update: (values: Record<string, unknown>) => {
       const record: RecordedUpdate = { filters: [], table, values };
 

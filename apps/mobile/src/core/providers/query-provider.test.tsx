@@ -3,7 +3,7 @@ import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
 
-import { AppQueryProvider } from "./app-query-provider";
+import { QueryProvider } from "./query-provider";
 
 function QueryClientProbe({
   onClient,
@@ -17,16 +17,16 @@ function QueryClientProbe({
 
 async function mountProbe(onClient: (client: QueryClient) => void) {
   const view = await render(
-    <AppQueryProvider>
+    <QueryProvider>
       <QueryClientProbe onClient={onClient} />
-    </AppQueryProvider>
+    </QueryProvider>
   );
 
   expect(screen.getByText("probe")).toBeOnTheScreen();
   await view.unmount();
 }
 
-describe("AppQueryProvider", () => {
+describe("QueryProvider", () => {
   test("자식 트리에 query client를 제공한다", async () => {
     let client: QueryClient | undefined;
 

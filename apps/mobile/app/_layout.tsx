@@ -6,7 +6,7 @@ import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { getSettingsSheetOptions } from "@/core/navigation/settings-sheet";
-import { AppQueryProvider } from "@/core/providers/app-query-provider";
+import { QueryProvider } from "@/core/providers/query-provider";
 import { AppThemeBridge, useAppTheme } from "@/core/theme/app-theme-bridge";
 import {
   AuthSessionProvider,
@@ -56,7 +56,7 @@ function ThemedRootLayout() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppQueryProvider>
+      <QueryProvider>
         <HeroUINativeProvider config={heroUIConfig}>
           <AppThemeBridge>
             <AuthSessionProvider>
@@ -64,7 +64,7 @@ export default function RootLayout() {
             </AuthSessionProvider>
           </AppThemeBridge>
         </HeroUINativeProvider>
-      </AppQueryProvider>
+      </QueryProvider>
     </GestureHandlerRootView>
   );
 }

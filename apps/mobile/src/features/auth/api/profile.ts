@@ -3,6 +3,36 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ProviderIdentity } from "./provider-sign-in";
 
+/** The profile values a screen shows. The row itself holds more. */
+export interface UserProfile {
+  avatarUrl: string | null;
+  displayName: string | null;
+}
+
+/**
+ * Reads the signed-in person's own profile.
+ *
+ * No user id filter beyond `eq("id", userId)` is needed for safety: the
+ * `profiles_select_own` policy already limits the rows this key can read. The
+ * filter is what makes the read a single row rather than a scan.
+ */
+export async function readProfile(
+  client: SupabaseClient<Database>,
+  userId: string
+): Promise<UserProfile> {
+  const { data, error } = await client
+    .from("profiles")
+    .select("avatar_url, display_name")
+    .eq("id", userId)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return { avatarUrl: data.avatar_url, displayName: data.display_name };
+}
+
 /**
  * Offers the provider's name and picture as starting values for a profile that
  * has none.
