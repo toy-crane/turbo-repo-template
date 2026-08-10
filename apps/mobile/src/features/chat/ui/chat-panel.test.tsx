@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react-native";
 import type { UIMessageChunk } from "ai";
 import { simulateReadableStream } from "ai";
+import { setStringAsync } from "expo-clipboard";
 
 import { createChatTransport } from "@/features/chat/api/chat-transport";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
@@ -18,6 +19,54 @@ import { ChatPanel, chatLabels } from "./chat-panel";
 jest.mock("@/features/chat/api/chat-transport", () => ({
   createChatTransport: jest.fn(),
 }));
+
+/**
+ * The virtual list never becomes interactive under Jest: its containers wait
+ * for native layout and stay behind `pointerEvents: "none"` forever, which
+ * silently swallows every press inside a row. These tests are about content
+ * and behavior, not virtualization — the real list runs in device
+ * verification — so the mock maps the data straight through `renderItem`.
+ */
+jest.mock("@legendapp/list/keyboard", () => {
+  const React = require("react") as typeof import("react");
+  const { ScrollView } =
+    require("react-native") as typeof import("react-native");
+
+  return {
+    KeyboardAwareLegendList: React.forwardRef(
+      (
+        props: {
+          data?: { id: string }[];
+          renderItem: (info: {
+            index: number;
+            item: unknown;
+          }) => React.ReactNode;
+          testID?: string;
+        },
+        _ref
+      ) =>
+        React.createElement(
+          ScrollView,
+          { testID: props.testID },
+          (props.data ?? []).map((item, index) =>
+            React.createElement(
+              React.Fragment,
+              { key: item.id },
+              props.renderItem({ index, item })
+            )
+          )
+        )
+    ),
+    useKeyboardChatComposerInset: () => ({
+      contentInsetEndAdjustment: { value: 0 },
+      onComposerLayout: () => undefined,
+    }),
+    useKeyboardScrollToEnd: () => ({
+      freeze: { value: false },
+      scrollMessageToEnd: () => Promise.resolve(),
+    }),
+  };
+});
 
 /**
  * Counts how often each message's parts actually render. `MessagePart` sits
@@ -118,17 +167,6 @@ function renderChat(accessToken: string | undefined) {
   return renderWithHeroUI(<TestChat accessToken={accessToken} />);
 }
 
-/**
- * The virtual list draws rows only after it learns its size, which never
- * happens on its own under Jest. Firing one layout event stands in for the
- * native measurement.
- */
-function layoutList() {
-  fireEvent(screen.getByTestId("chat-list"), "layout", {
-    nativeEvent: { layout: { height: 800, width: 400, x: 0, y: 0 } },
-  });
-}
-
 describe("ChatPanel", () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -154,8 +192,6 @@ describe("ChatPanel", () => {
 
     await user.type(screen.getByLabelText(chatLabels.input), "안녕");
     await user.press(screen.getByLabelText(chatLabels.send));
-
-    layoutList();
 
     await waitFor(() => {
       expect(screen.getByText("안녕")).toBeOnTheScreen();
@@ -190,8 +226,6 @@ describe("ChatPanel", () => {
       expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
     });
 
-    layoutList();
-
     await waitFor(() => {
       expect(screen.getByText("안녕")).toBeOnTheScreen();
     });
@@ -222,8 +256,6 @@ describe("ChatPanel", () => {
     });
 
     await user.press(screen.getByLabelText(chatLabels.retry));
-
-    layoutList();
 
     await waitFor(() => {
       expect(screen.getByText("안녕하세요")).toBeOnTheScreen();
@@ -307,8 +339,6 @@ describe("ChatPanel", () => {
     expect(transport.sendMessages).toHaveBeenCalledTimes(1);
 
     release?.();
-
-    layoutList();
 
     await waitFor(() => {
       expect(screen.getByText("안녕하세요")).toBeOnTheScreen();
@@ -395,8 +425,6 @@ describe("ChatPanel", () => {
     answer.push({ id: "0", type: "text-start" });
     answer.push({ delta: "부분 답변", id: "0", type: "text-delta" });
 
-    layoutList();
-
     await waitFor(() => {
       expect(screen.getByText("부분 답변")).toBeOnTheScreen();
     });
@@ -461,8 +489,6 @@ describe("ChatPanel", () => {
     await user.type(screen.getByLabelText(chatLabels.input), "혼합 스트림");
     await user.press(screen.getByLabelText(chatLabels.send));
 
-    layoutList();
-
     await waitFor(() => {
       expect(screen.getByText("마지막 정리")).toBeOnTheScreen();
     });
@@ -485,6 +511,151 @@ describe("ChatPanel", () => {
     ]);
   });
 
+  test("모든 메시지를 복사할 수 있고 복사됨 피드백이 보인다", async () => {
+    const transport = fakeTransport(() =>
+      Promise.resolve(answerStream(["복사할 답변"]))
+    );
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "복사할 질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByText("복사할 답변")).toBeOnTheScreen();
+    });
+
+    const copyButtons = screen.getAllByLabelText(chatLabels.copyMessage);
+
+    // 사용자 메시지와 AI 답변 둘 다 복사 버튼이 있다.
+    expect(copyButtons).toHaveLength(2);
+
+    await user.press(copyButtons[1] as never);
+
+    expect(jest.mocked(setStringAsync)).toHaveBeenCalledWith("복사할 답변");
+    await waitFor(() => {
+      expect(screen.getByText("복사됨")).toBeOnTheScreen();
+    });
+  });
+
+  test("마지막 사용자 메시지에만 편집이 보이고 취소하면 초안이 복원된다", async () => {
+    let attempt = 0;
+    const transport = fakeTransport(() => {
+      attempt += 1;
+
+      return Promise.resolve(answerStream([`답변 ${attempt}`]));
+    });
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "첫 질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByText("답변 1")).toBeOnTheScreen();
+    });
+
+    await user.type(screen.getByLabelText(chatLabels.input), "둘째 질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByText("답변 2")).toBeOnTheScreen();
+    });
+
+    // 사용자 메시지가 둘이어도 편집 버튼은 하나뿐이다.
+    expect(screen.getAllByLabelText(chatLabels.editResend)).toHaveLength(1);
+
+    // 쓰다 만 초안이 있는 채로 편집을 시작하면 원문이 입력창을 채운다.
+    await user.type(screen.getByLabelText(chatLabels.input), "쓰다 만 초안");
+    await user.press(screen.getByLabelText(chatLabels.editResend));
+
+    expect(screen.getByTestId("chat-editing")).toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.input)).toHaveDisplayValue(
+      "둘째 질문"
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.cancelEdit));
+
+    expect(screen.queryByTestId("chat-editing")).not.toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.input)).toHaveDisplayValue(
+      "쓰다 만 초안"
+    );
+  });
+
+  test("마지막 AI 답변에만 다시 생성이 보이고 누르면 재요청한다", async () => {
+    let attempt = 0;
+    const transport = fakeTransport(() => {
+      attempt += 1;
+
+      return Promise.resolve(answerStream([`답변 ${attempt}`]));
+    });
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "첫 질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByText("답변 1")).toBeOnTheScreen();
+    });
+
+    expect(screen.getAllByLabelText(chatLabels.regenerate)).toHaveLength(1);
+
+    await user.press(screen.getByLabelText(chatLabels.regenerate));
+
+    await waitFor(() => {
+      expect(screen.getByText("답변 2")).toBeOnTheScreen();
+    });
+
+    expect(transport.sendMessages).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText("답변 1")).not.toBeOnTheScreen();
+  });
+
+  test("생성 중에는 편집과 다시 생성이 비활성이다", async () => {
+    const answer = controlledStream();
+    const transport = fakeTransport(() => Promise.resolve(answer.stream));
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    answer.push({ type: "start" });
+    answer.push({ id: "0", type: "text-start" });
+    answer.push({ delta: "진행 중", id: "0", type: "text-delta" });
+
+    await waitFor(() => {
+      expect(screen.getByText("진행 중")).toBeOnTheScreen();
+    });
+
+    expect(screen.getByLabelText(chatLabels.editResend)).toBeDisabled();
+    expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
+
+    answer.push({ id: "0", type: "text-end" });
+    answer.push({ type: "finish" });
+    answer.close();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(chatLabels.regenerate)).toBeEnabled();
+    });
+  });
+
   test("스트리밍 중에는 스트리밍 중인 메시지 행만 다시 렌더링한다", async () => {
     let attempt = 0;
     const second = controlledStream();
@@ -505,16 +676,9 @@ describe("ChatPanel", () => {
     await user.type(screen.getByLabelText(chatLabels.input), "첫 질문");
     await user.press(screen.getByLabelText(chatLabels.send));
 
-    layoutList();
-
     await waitFor(() => {
       expect(screen.getByText("첫 답변")).toBeOnTheScreen();
     });
-
-    // Everything rendered so far belongs to the finished exchange.
-    const baseline = new Map(mockPartRenderCounts);
-
-    expect(baseline.size).toBeGreaterThan(0);
 
     await user.type(screen.getByLabelText(chatLabels.input), "둘째 질문");
     await user.press(screen.getByLabelText(chatLabels.send));
@@ -527,11 +691,31 @@ describe("ChatPanel", () => {
       expect(screen.getByText("둘째")).toBeOnTheScreen();
     });
 
+    // From here on the only thing happening is streaming chunks: the send
+    // itself (which legitimately re-renders rows once for the action locks)
+    // is behind us, and the finish transition comes after the measurement.
+    const baseline = new Map(mockPartRenderCounts);
+
+    expect(baseline.size).toBeGreaterThan(0);
+
     second.push({ delta: " 답변", id: "0", type: "text-delta" });
 
     await waitFor(() => {
       expect(screen.getByText("둘째 답변")).toBeOnTheScreen();
     });
+
+    second.push({ delta: " 계속", id: "0", type: "text-delta" });
+
+    await waitFor(() => {
+      expect(screen.getByText("둘째 답변 계속")).toBeOnTheScreen();
+    });
+
+    // Only the streaming message's row rendered again.
+    const grown = [...mockPartRenderCounts].filter(
+      ([messageId, count]) => count !== baseline.get(messageId)
+    );
+
+    expect(grown).toHaveLength(1);
 
     second.push({ id: "0", type: "text-end" });
     second.push({ type: "finish" });
@@ -540,11 +724,5 @@ describe("ChatPanel", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("chat-generating")).not.toBeOnTheScreen();
     });
-
-    // The second exchange streamed in, and the first exchange's rows never
-    // rendered again.
-    for (const [messageId, count] of baseline) {
-      expect(mockPartRenderCounts.get(messageId)).toBe(count);
-    }
   });
 });

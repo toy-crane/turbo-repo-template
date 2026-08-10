@@ -349,6 +349,11 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 | `답변을 만드는 중` | 답변 생성 중 표시 |
 | `다시 보내기` | 실패한 요청 재시도 버튼 |
 | `코드 복사` | AI 답변 코드 블록의 복사 버튼 |
+| `메시지 복사` | 각 메시지 아래 복사 버튼 |
+| `편집 후 다시 보내기` | 마지막 사용자 메시지의 편집 버튼 |
+| `편집 취소` | 편집 중 표시 옆 취소 버튼 |
+| `다시 생성` | 마지막 AI 답변의 다시 생성 버튼 |
+| `새 대화` | Home 헤더의 새 대화 버튼 |
 
 온보딩 화면의 요소에는 `testID`도 있습니다.
 `onboarding-nickname`, `onboarding-username`, `onboarding-username-checking`,

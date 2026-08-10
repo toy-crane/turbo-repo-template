@@ -15,6 +15,9 @@ import {
  * the same.
  */
 const icons = {
+  copy: { material: "contentCopy", sf: "doc.on.doc" },
+  edit: { material: "edit", sf: "pencil" },
+  regenerate: { material: "refresh", sf: "arrow.clockwise" },
   scrollToLatest: { material: "keyboardArrowDown", sf: "chevron.down" },
   send: { material: "arrowUpward", sf: "arrow.up" },
   stop: { material: "stop", sf: "stop.fill" },

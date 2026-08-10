@@ -166,7 +166,9 @@ describe("MessagePart", () => {
     expect(screen.getByText("확인을 기다리는 중")).toBeOnTheScreen();
     expect(screen.queryByText("승인")).not.toBeOnTheScreen();
     expect(screen.queryByText("거절")).not.toBeOnTheScreen();
-    expect(screen.queryByRole("button")).not.toBeOnTheScreen();
+    // 도구 part 안에는 누를 것이 없다. 남는 버튼은 행의 메시지 복사뿐이다.
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByRole("button")).toHaveAccessibleName("메시지 복사");
   });
 
   test("step-start는 아무것도 그리지 않고 data part는 기본 표시로 남는다", async () => {
