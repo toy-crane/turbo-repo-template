@@ -50,7 +50,7 @@ flowchart LR
 - `GET /health`는 인증과 모델 호출 없이 `{ "status": "ok" }`를 반환한다. 이 경로는 배포와 서버 실행 상태만 확인한다.
 - `POST /ai/chat`은 AI SDK UI message 형식의 메시지만 받는다.
 - `POST /ai/chat`은 `@supabase/server/adapters/hono`의 `withSupabase({ auth: "user" })`를 경로에 직접 적용한다.
-- 인증을 통과한 요청은 UI message를 모델 입력으로 바꾸고 `streamText()` 결과를 `toUIMessageStreamResponse()`로 반환한다.
+- 인증을 통과한 요청은 UI message를 모델 입력으로 바꾸고 `streamText()` 결과를 `createUIMessageStreamResponse({ stream: toUIMessageStream({ stream: result.stream }) })`로 반환한다.
 - 요청 본문에 모델, 제공자, API key, system prompt 또는 도구 설정을 받지 않는다. 이 값은 서버가 소유한다.
 - 본문 형식이 잘못되면 모델을 호출하지 않고 `400`을 반환한다.
 - access token이 없거나 유효하지 않으면 모델을 호출하지 않고 `401`을 반환한다.

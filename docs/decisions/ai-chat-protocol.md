@@ -4,7 +4,7 @@
 
 - 첫 AI API는 `POST /ai/chat`으로 제공하는 스트리밍 채팅 API다.
 - 요청과 응답은 Vercel AI SDK의 UI message 프로토콜을 사용한다.
-- Hono 서버는 `streamText()`의 결과를 `toUIMessageStreamResponse()`로 반환한다.
+- Hono 서버는 `streamText()`의 결과를 `createUIMessageStreamResponse({ stream: toUIMessageStream({ stream: result.stream }) })`로 반환한다. `ai` 패키지가 내보내는 두 헬퍼를 사용하고, 결과 객체에 붙은 변환 메서드는 사용하지 않는다.
 - 모바일 앱은 `@ai-sdk/react`의 `useChat()`과 `expo/fetch`로 응답을 스트리밍한다.
 - 첫 버전의 대화는 `useChat()`의 메모리 상태에만 둔다. 앱을 다시 시작하면 대화가 사라진다.
 
@@ -20,6 +20,8 @@
 ## 이유
 
 Vercel AI SDK의 UI message 프로토콜은 텍스트뿐 아니라 추론, 도구 호출과 사용자 정의 데이터를 순서가 있는 message part로 전달한다. `useChat()`이 이 프로토콜의 전송과 채팅 상태를 처리하므로 모바일과 서버가 별도 스트림 형식과 상태 관리 코드를 만들지 않아도 된다. Expo SDK 57은 스트리밍에 필요한 `expo/fetch`를 제공한다. 대화를 저장하지 않으면 대화 소유권, 재개, 동기화와 삭제 규칙을 위한 데이터 구조를 만들지 않아도 된다. 최소 자동 테스트와 기기 확인은 새 테스트 계층을 추가하지 않고 서버 계약과 양쪽 모바일 런타임을 확인한다.
+
+응답을 만드는 방법은 AI SDK 7이 권장하는 형태를 따른다. 결과 객체의 `toUIMessageStreamResponse()`와 `toUIMessageStream()`은 7에서 deprecated이며 다음 major에서 사라진다. 두 방식이 내보내는 바이트는 같고, 제공자 오류 원문을 가리는 기본 동작도 `toUIMessageStream`이 그대로 갖고 있다. 헬퍼를 쓰면 스트림을 결과 객체에서 떼어 낼 수 있어 나중에 스트림을 감싸거나 바꿔 끼우기도 쉽다.
 
 ## 재검토 조건
 
