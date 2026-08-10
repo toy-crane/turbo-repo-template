@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create App Assets"
+  short_description: "Create approved iOS and Android app assets"
+  default_prompt: "Use $create-app-assets to create and apply app icons and splash assets for this mobile app."
