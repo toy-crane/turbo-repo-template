@@ -61,3 +61,14 @@ completed
 - `Stack.Toolbar`를 다시 썼다. 위 기록의 두 함정은 원인이 달랐다. `Toolbar.Button`은 중첩 `Toolbar.Icon` 대신 `icon` prop에 값을 넘기면 그려진다(iOS는 SF Symbol 이름, Android는 이미지). Compose 측정 크래시는 `Toolbar.View`가 담은 React Native 뷰가 폭을 정하지 못해서 생기므로, 프로필 사진은 iOS에만 두고 Android는 아이콘 버튼을 쓴다.
 - `Stack.Toolbar`는 자식을 엘리먼트 타입으로 읽는다. 항목을 별도 컴포넌트로 감싸면 통째로 버려서 iOS 아바타가 사라졌다. 항목은 라우트 파일에 그대로 편다.
 - 탭 안에서 `NativeTabs`의 `hidden`으로 탭바를 감추면 Android에서 비운 자리가 남아 그 위의 모든 터치를 삼킨다. 전송 버튼이 눌리지 않았고, 그 자리는 감춘 탭의 프레임과 정확히 겹쳤다. 대화 화면을 루트 스택으로 올려 네이티브 push가 탭바를 덮게 했다.
+
+## 코드 리뷰 후속
+
+리뷰가 확인한 15건을 모두 처리했다. 셋(새 대화 초기화가 오류 상태를 남기는 것, 목록이 비면 최신 메시지 버튼이 굳는 것, 무동작인데 활성으로 보이는 새 대화 버튼)은 대화 화면을 분리하면서 코드 자체가 사라졌다. 나머지는 고치고 각각 돌연변이로 테스트가 잡는 것을 확인했다.
+
+- 가상 목록은 행을 키, 그 행의 item, `extraData`로만 메모한다. 테스트 대역을 같은 계약으로 고치자 편집 취소가 초안을 지우는 결함이 기존 테스트로 바로 드러났다. 초안은 `extraData`에 넣을 수 없으므로(글자마다 대화 전체를 다시 그린다) `startEdit`이 초안과 편집 상태를 ref로 읽는다.
+- AI SDK의 `regenerate`는 `messageId`가 없으면 역할과 무관하게 목록의 마지막 항목을 다시 만든다. "없으면 마지막 assistant를 재생성한다"는 문서 주석과 구현이 다르다.
+- `makeRequest`는 실패를 promise 거부가 아니라 상태로 바꾼다. 그래서 지워진 답변 복구는 `catch`가 아니라 `onError`에 있어야 한다.
+- 여러 줄 입력창은 return을 줄바꿈으로 삼켜 `onSubmitEditing`을 부르지 않는다. `submitBehavior="submit"`이 있어야 예전처럼 return이 전송이 된다.
+- `accessibilityRole="alert"`는 React Native에서 알림을 만들지 않는다. Android는 역할 설명 문자열로 쓰고 iOS는 아무 trait에도 매핑하지 않는다. 생성 중과 실패는 `announceForAccessibility`로 직접 말한다.
+- `keyboardShouldPersistTaps`를 빼고 Android에서 재현해 보면 첫 탭이 그대로 먹힌다. 이 동작은 iOS 쪽이다. 되돌린 상태의 iOS 재현은 확인하지 못했다.
