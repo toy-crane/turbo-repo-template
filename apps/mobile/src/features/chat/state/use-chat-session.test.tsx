@@ -245,4 +245,88 @@ describe("useChatSession 편집 후 다시 보내기", () => {
 
     expect(resent.map(textOf)).toEqual(["첫 질문"]);
   });
+
+  test("다시 생성이 실패하면 지워졌던 답변을 되돌려 놓는다", async () => {
+    let attempt = 0;
+
+    fakeTransport(() => {
+      attempt += 1;
+
+      return attempt === 1
+        ? Promise.resolve(answerStream("멈춰서 남긴 답변"))
+        : Promise.reject(new Error("network is down"));
+    });
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => {
+      result.current.setDraft("질문");
+    });
+    await act(() => {
+      result.current.send();
+    });
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready");
+    });
+
+    await act(() => {
+      result.current.regenerateLast();
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBeDefined();
+    });
+
+    // AI SDK는 요청을 보내기 전에 다시 만들 답변을 먼저 지운다. 요청이 실패하면
+    // 그 글자를 되찾을 방법이 없으므로 대화를 원래대로 돌려놓는다.
+    expect(result.current.messages.map(textOf)).toEqual([
+      "질문",
+      "멈춰서 남긴 답변",
+    ]);
+  });
+
+  test("여러 턴이 쌓인 뒤 편집해도 이전 대화는 남고 마지막 턴만 교체된다", async () => {
+    let attempt = 0;
+    const transport = fakeTransport(() => {
+      attempt += 1;
+
+      return Promise.resolve(answerStream(`답변 ${attempt}`));
+    });
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    const ask = async (question: string) => {
+      await act(() => {
+        result.current.setDraft(question);
+      });
+      await act(() => {
+        result.current.send();
+      });
+      await waitFor(() => {
+        expect(result.current.status).toBe("ready");
+      });
+    };
+
+    await ask("첫 질문");
+    await ask("둘째 질문");
+
+    await act(() => {
+      result.current.startEdit();
+    });
+    await act(() => {
+      result.current.setDraft("고친 둘째 질문");
+    });
+    await act(() => {
+      result.current.send();
+    });
+    await waitFor(() => {
+      expect(transport.sendMessages).toHaveBeenCalledTimes(3);
+    });
+
+    // 첫 턴은 그대로 남고 마지막 사용자 메시지만 교체된다. 목록을 통째로
+    // 비우면 모델은 방금 시작한 대화처럼 답한다.
+    expect(sentMessages(transport, 2).map(textOf)).toEqual([
+      "첫 질문",
+      "답변 1",
+      "고친 둘째 질문",
+    ]);
+  });
 });
