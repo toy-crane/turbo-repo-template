@@ -17,14 +17,18 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         contentStyle: { backgroundColor: background },
+        // "minimal" is UIKit's own back-button mode: the chevron with no label.
+        // The label would name the screen behind, which repeats what the
+        // heading on this one already says.
+        headerBackButtonDisplayMode: "minimal",
         headerShadowVisible: false,
         headerStyle: { backgroundColor: background },
         headerTitle: "",
       }}
     >
       <Stack.Screen name="sign-in" options={{ headerShown: false }} />
-      <Stack.Screen name="email" options={{ headerBackTitle: "로그인" }} />
-      <Stack.Screen name="code" options={{ headerBackTitle: "이메일" }} />
+      <Stack.Screen name="email" />
+      <Stack.Screen name="code" />
     </Stack>
   );
 }
