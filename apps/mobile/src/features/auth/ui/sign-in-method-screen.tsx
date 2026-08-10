@@ -57,6 +57,7 @@ export function SignInMethodScreen({
           ) : null}
         </>
       }
+      isRoot
       subtitle={
         <AuthSubtitle>
           로그인하면 저장한 내용을 어느 기기에서나 볼 수 있어요.

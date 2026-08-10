@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
+import { type ReactNode, useEffect, useState } from "react";
+import { Keyboard, Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**
@@ -13,27 +13,73 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const BOTTOM_PADDING = 12;
 const SIDE_PADDING = 24;
+const TOP_PADDING = 16;
+
+/**
+ * How much of the screen the keyboard is covering.
+ *
+ * `KeyboardAvoidingView` is the usual answer, but inside a native stack screen
+ * it measures its own frame against the keyboard's window position and the
+ * header throws that comparison off, so the footer stayed put. The height on
+ * its own needs no such comparison: this container ends at the bottom of the
+ * screen, so padding it by the keyboard's height lifts the footer to exactly
+ * the keyboard's top whether or not the screen has a header.
+ */
+function useKeyboardHeight(): number {
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    // iOS reports the frame before the animation so the footer travels with the
+    // keyboard; Android only has the "did" events.
+    const isIOS = Platform.OS === "ios";
+    const shown = Keyboard.addListener(
+      isIOS ? "keyboardWillShow" : "keyboardDidShow",
+      (event) => setHeight(event.endCoordinates.height)
+    );
+    const hidden = Keyboard.addListener(
+      isIOS ? "keyboardWillHide" : "keyboardDidHide",
+      () => setHeight(0)
+    );
+
+    return () => {
+      shown.remove();
+      hidden.remove();
+    };
+  }, []);
+
+  return height;
+}
 
 export function AuthScreen({
   children,
   footer,
+  isRoot,
   subtitle,
   title,
 }: {
   children?: ReactNode;
   footer: ReactNode;
+  /**
+   * True for the first screen of the stack, which shows no native header.
+   * Without a header there is nothing holding the title clear of the status
+   * bar, so this screen has to keep that space itself.
+   */
+  isRoot?: boolean;
   subtitle?: ReactNode;
   title: string;
 }) {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <View
       className="flex-1 bg-background"
-      style={{ flex: 1 }}
+      style={{ paddingBottom: keyboardHeight }}
     >
-      <View className="flex-1 gap-4 px-6 pt-2">
+      <View
+        className="flex-1 gap-4 px-6 pt-2"
+        style={isRoot ? { paddingTop: insets.top + TOP_PADDING } : undefined}
+      >
         <View className="gap-2.5 pt-2">
           <Text className="font-bold text-3xl text-foreground">{title}</Text>
           {subtitle}
@@ -44,14 +90,18 @@ export function AuthScreen({
       <View
         className="gap-2.5 px-6 pt-3"
         style={{
-          paddingBottom: Math.max(insets.bottom, BOTTOM_PADDING),
+          // The keyboard takes over the home indicator's space while it is up,
+          // so the safe-area inset would only add a gap under the button.
+          paddingBottom: keyboardHeight
+            ? BOTTOM_PADDING
+            : Math.max(insets.bottom, BOTTOM_PADDING),
           paddingLeft: SIDE_PADDING,
           paddingRight: SIDE_PADDING,
         }}
       >
         {footer}
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
