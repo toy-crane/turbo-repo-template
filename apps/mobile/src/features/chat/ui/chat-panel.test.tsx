@@ -354,7 +354,7 @@ describe("ChatPanel", () => {
 
     expect(screen.getByText("무엇을 도와드릴까요?")).toBeOnTheScreen();
     expect(
-      screen.getByText("궁금한 것을 입력하면 AI가 바로 답합니다.")
+      screen.getByText("궁금한 것을 입력하면 AI가 바로 답해요.")
     ).toBeOnTheScreen();
     expect(screen.queryByTestId("chat-list")).not.toBeOnTheScreen();
   });

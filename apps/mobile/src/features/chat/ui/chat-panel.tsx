@@ -41,7 +41,7 @@ function EmptyConversation() {
         무엇을 도와드릴까요?
       </Text>
       <Text className="text-center text-muted">
-        궁금한 것을 입력하면 AI가 바로 답합니다.
+        궁금한 것을 입력하면 AI가 바로 답해요.
       </Text>
     </View>
   );
@@ -191,7 +191,7 @@ export function ChatPanel({
               className="flex-row items-center justify-between"
               testID="chat-editing"
             >
-              <Text className="text-muted text-sm">메시지를 수정하는 중</Text>
+              <Text className="text-muted text-sm">메시지를 고치는 중</Text>
               <Pressable
                 accessibilityLabel={chatLabels.cancelEdit}
                 accessibilityRole="button"
@@ -223,7 +223,7 @@ export function ChatPanel({
                 className="text-danger text-sm"
                 testID="chat-error"
               >
-                답변을 받지 못했습니다. 잠시 뒤에 다시 시도해 주세요.
+                잠시 뒤에 다시 보내 주세요.
               </Text>
               <Button
                 accessibilityLabel={chatLabels.retry}

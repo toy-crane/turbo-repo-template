@@ -239,7 +239,7 @@ export function MessagePart({
         className="text-muted text-sm"
         testID={`chat-part-unsupported-${messageId}`}
       >
-        아직 표시할 수 없는 내용입니다.
+        아직 보여줄 수 없는 내용이에요.
       </Text>
     );
   }
@@ -249,7 +249,7 @@ export function MessagePart({
       className="text-muted text-sm"
       testID={`chat-part-unsupported-${messageId}`}
     >
-      아직 표시할 수 없는 내용입니다.
+      아직 보여줄 수 없는 내용이에요.
     </Text>
   );
 }

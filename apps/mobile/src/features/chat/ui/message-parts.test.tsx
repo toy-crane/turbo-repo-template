@@ -179,7 +179,7 @@ describe("MessagePart", () => {
     ] as UIMessage["parts"]);
 
     expect(
-      screen.getByText("아직 표시할 수 없는 내용입니다.")
+      screen.getByText("아직 보여줄 수 없는 내용이에요.")
     ).toBeOnTheScreen();
     expect(screen.getByText("뒤 텍스트")).toBeOnTheScreen();
   });
