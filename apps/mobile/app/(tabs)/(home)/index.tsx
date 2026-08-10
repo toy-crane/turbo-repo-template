@@ -1,21 +1,7 @@
-import { router, Stack } from "expo-router";
-
 import { HomeScreen } from "@/screens/home/home-screen";
-import { ProfileAvatarButton } from "@/screens/home/profile-avatar-button";
 
-function openSettings() {
-  router.push("/settings");
-}
-
+// The header tools moved into HomeScreen: they act on the chat session it
+// owns, and one toolbar must own the whole right side.
 export default function HomeRoute() {
-  return (
-    <>
-      <HomeScreen />
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.View hidesSharedBackground>
-          <ProfileAvatarButton onPress={openSettings} />
-        </Stack.Toolbar.View>
-      </Stack.Toolbar>
-    </>
-  );
+  return <HomeScreen />;
 }

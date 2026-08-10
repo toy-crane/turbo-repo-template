@@ -23,38 +23,34 @@ jest.mock("expo-router/react-navigation", () => ({
   useHeaderHeight: () => 64,
 }));
 
-// Outside a navigator the toolbar cannot reach a native header, so the stub
-// renders its button as a plain pressable the test can press.
-jest.mock("expo-router", () => {
+/**
+ * Outside a navigator there is no native header, so the navigation stub keeps
+ * the `headerRight` element and the harness renders it next to the screen —
+ * the same pieces a real header would show, in pressable form.
+ */
+const mockSetOptions = jest.fn();
+
+jest.mock("expo-router", () => ({
+  router: { push: jest.fn() },
+  useNavigation: () => ({ setOptions: mockSetOptions }),
+}));
+
+// The avatar reads the profile through react-query, so a plain pressable
+// stands in; what Home owns is the wiring from its press to the settings
+// route.
+jest.mock("./profile-avatar-button", () => {
   const React = require("react") as typeof import("react");
-  const { Pressable, Text, View } =
+  const { Pressable } =
     require("react-native") as typeof import("react-native");
 
-  const Toolbar = Object.assign(
-    ({ children }: { children?: React.ReactNode }) =>
-      React.createElement(View, null, children),
-    {
-      Button: ({
-        accessibilityLabel,
-        children,
+  return {
+    ProfileAvatarButton: ({ onPress }: { onPress: () => void }) =>
+      React.createElement(Pressable, {
+        accessibilityLabel: "Open settings",
+        accessibilityRole: "button",
         onPress,
-      }: {
-        accessibilityLabel?: string;
-        children?: React.ReactNode;
-        onPress?: () => void;
-      }) =>
-        React.createElement(
-          Pressable,
-          { accessibilityLabel, accessibilityRole: "button", onPress },
-          children
-        ),
-      Icon: () => null,
-      Label: ({ children }: { children?: React.ReactNode }) =>
-        React.createElement(Text, null, children),
-    }
-  );
-
-  return { Stack: { Toolbar } };
+      }),
+  };
 });
 
 // Home only wires the session to the panel, so the panel is stood in for and
@@ -102,6 +98,26 @@ function session(accessToken: string): Session {
   } as Session;
 }
 
+/** Renders the screen plus whatever it registered as the header's right side. */
+async function renderHomeWithHeader() {
+  const view = await renderWithHeroUI(<HomeScreen />);
+  const options = mockSetOptions.mock.calls.at(-1)?.[0] as
+    | { headerRight?: () => React.ReactElement }
+    | undefined;
+  const header = options?.headerRight?.();
+
+  if (header) {
+    await view.rerender(
+      <>
+        <HomeScreen />
+        {header}
+      </>
+    );
+  }
+
+  return view;
+}
+
 beforeEach(() => {
   mockUseAuthSession.mockReturnValue({
     session: session("test-access-token"),
@@ -145,7 +161,7 @@ test("메시지가 있으면 새 대화는 복구 불가 확인을 거쳐 초기
     .mockImplementation(() => undefined);
   const user = userEvent.setup();
 
-  await renderWithHeroUI(<HomeScreen />);
+  await renderHomeWithHeader();
   await user.press(screen.getByLabelText(chatLabels.newChat));
 
   expect(alertSpy).toHaveBeenCalledTimes(1);
@@ -170,12 +186,24 @@ test("대화가 비어 있으면 확인 없이 그대로 둔다", async () => {
     .mockImplementation(() => undefined);
   const user = userEvent.setup();
 
-  await renderWithHeroUI(<HomeScreen />);
+  await renderHomeWithHeader();
   await user.press(screen.getByLabelText(chatLabels.newChat));
 
   expect(alertSpy).not.toHaveBeenCalled();
 
   alertSpy.mockRestore();
+});
+
+test("아바타를 누르면 Settings 경로를 연다", async () => {
+  const { router } = jest.requireMock("expo-router") as {
+    router: { push: jest.Mock };
+  };
+  const user = userEvent.setup();
+
+  await renderHomeWithHeader();
+  await user.press(screen.getByLabelText("Open settings"));
+
+  expect(router.push).toHaveBeenCalledWith("/settings");
 });
 
 test("생성 중에는 새 대화가 동작하지 않는다", async () => {
@@ -191,7 +219,7 @@ test("생성 중에는 새 대화가 동작하지 않는다", async () => {
     .mockImplementation(() => undefined);
   const user = userEvent.setup();
 
-  await renderWithHeroUI(<HomeScreen />);
+  await renderHomeWithHeader();
   await user.press(screen.getByLabelText(chatLabels.newChat));
 
   expect(alertSpy).not.toHaveBeenCalled();

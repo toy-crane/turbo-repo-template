@@ -17,6 +17,7 @@ import {
 const icons = {
   copy: { material: "contentCopy", sf: "doc.on.doc" },
   edit: { material: "edit", sf: "pencil" },
+  newChat: { material: "editSquare", sf: "square.and.pencil" },
   regenerate: { material: "refresh", sf: "arrow.clockwise" },
   scrollToLatest: { material: "keyboardArrowDown", sf: "chevron.down" },
   send: { material: "arrowUpward", sf: "arrow.up" },
