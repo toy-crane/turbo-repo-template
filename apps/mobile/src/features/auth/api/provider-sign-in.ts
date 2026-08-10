@@ -27,7 +27,7 @@ export async function completeProviderSignIn(
   client: SupabaseClient<Database>,
   provider: "apple" | "google",
   result: ProviderSignInResult
-): Promise<void> {
+): Promise<string | undefined> {
   const { data, error } = await client.auth.signInWithIdToken({
     nonce: result.rawNonce,
     provider,
@@ -38,7 +38,14 @@ export async function completeProviderSignIn(
     throw error;
   }
 
-  if (data.user) {
-    await fillEmptyProfileValues(client, data.user.id, result.identity);
+  if (!data.user) {
+    return;
   }
+
+  await fillEmptyProfileValues(client, data.user.id, result.identity);
+
+  // The caller needs the id to refresh what it already read. Signing in makes
+  // the session live, and the profile is read the moment it is — which can
+  // happen before the name above lands.
+  return data.user.id;
 }

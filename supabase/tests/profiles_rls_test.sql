@@ -78,7 +78,7 @@ SELECT throws_ok(
 
 SELECT throws_ok(
   $$update public.profiles
-    set display_name = repeat('a', 101)
+    set display_name = repeat('a', 31)
     where id = '11111111-1111-4111-8111-111111111111'$$,
   '23514',
   NULL,

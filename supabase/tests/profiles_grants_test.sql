@@ -2,7 +2,7 @@
 -- the behaviour, so a grant that widens by accident fails here even when no
 -- query happens to notice it.
 BEGIN;
-SELECT plan(15);
+SELECT plan(22);
 
 SELECT has_table('public', 'profiles', 'public.profiles exists');
 
@@ -45,11 +45,16 @@ SELECT table_privs_are(
   'authenticated holds no table-wide privilege beyond SELECT'
 );
 
--- Only these two columns are the user's to change. id and created_at are
+-- Only these three columns are the user's to change. id and created_at are
 -- identity and history; updated_at is set by the trigger.
 SELECT column_privs_are(
   'public', 'profiles', 'display_name', 'authenticated', ARRAY['SELECT', 'UPDATE'],
   'authenticated can read and write display_name'
+);
+
+SELECT column_privs_are(
+  'public', 'profiles', 'username', 'authenticated', ARRAY['SELECT', 'UPDATE'],
+  'authenticated can read and write username'
 );
 
 SELECT column_privs_are(
@@ -80,6 +85,43 @@ SELECT function_privs_are(
 SELECT function_privs_are(
   'public', 'set_updated_at', ARRAY[]::name[], 'authenticated', ARRAY[]::text[],
   'authenticated cannot execute set_updated_at'
+);
+
+-- The two availability functions are SECURITY DEFINER and read every profile
+-- row, so who may call them is the whole of their access control. anon holds the
+-- publishable key that ships inside the app bundle and must not be able to probe
+-- which account ids exist.
+SELECT function_privs_are(
+  'public', 'username_status', ARRAY['text']::name[], 'anon', ARRAY[]::text[],
+  'anon cannot execute username_status'
+);
+
+SELECT function_privs_are(
+  'public', 'username_status', ARRAY['text']::name[], 'authenticated', ARRAY['EXECUTE'],
+  'a signed-in user can execute username_status'
+);
+
+SELECT function_privs_are(
+  'public', 'available_usernames', ARRAY['text[]']::name[], 'anon', ARRAY[]::text[],
+  'anon cannot execute available_usernames'
+);
+
+SELECT function_privs_are(
+  'public', 'available_usernames', ARRAY['text[]']::name[], 'authenticated', ARRAY['EXECUTE'],
+  'a signed-in user can execute available_usernames'
+);
+
+-- This one is not SECURITY DEFINER: the check constraint on profiles.username
+-- calls it as whoever is writing the row, so the write roles need EXECUTE or
+-- saving a profile fails on privileges instead of on the rule.
+SELECT function_privs_are(
+  'public', 'is_reserved_username', ARRAY['text']::name[], 'anon', ARRAY[]::text[],
+  'anon cannot execute is_reserved_username'
+);
+
+SELECT function_privs_are(
+  'public', 'is_reserved_username', ARRAY['text']::name[], 'authenticated', ARRAY['EXECUTE'],
+  'a signed-in user can execute is_reserved_username'
 );
 
 SELECT * FROM finish();

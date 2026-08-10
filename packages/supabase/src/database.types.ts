@@ -41,6 +41,7 @@ export type Database = {
           display_name: string | null
           id: string
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -48,6 +49,7 @@ export type Database = {
           display_name?: string | null
           id: string
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -55,6 +57,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -63,7 +66,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      available_usernames: { Args: { candidates: string[] }; Returns: string[] }
+      is_reserved_username: { Args: { candidate: string }; Returns: boolean }
+      username_status: { Args: { candidate: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

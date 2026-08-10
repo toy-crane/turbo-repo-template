@@ -39,7 +39,7 @@ revoke all on table public.profiles from anon, authenticated, service_role;
 -- guards `id`; this also covers `created_at`, which a policy cannot express.
 -- `updated_at` is the database's to set, through the trigger.
 grant select on table public.profiles to authenticated;
-grant update (display_name, avatar_url) on table public.profiles to authenticated;
+grant update (display_name, avatar_url, username) on table public.profiles to authenticated;
 
 -- The backend role bypasses RLS and is reached only with the secret key.
 grant all on table public.profiles to service_role;

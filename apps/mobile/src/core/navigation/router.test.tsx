@@ -72,8 +72,13 @@ test("/에서 Home 탭의 첫 화면을 표시한다", async () => {
   const router = renderRouter("./app", { initialUrl: "/" });
   await router;
 
+  // Opening the app waits for the session and then the profile, so the first
+  // frame is deliberately neither screen.
+  await waitFor(() => {
+    expect(screen.getByLabelText("Home placeholder")).toBeOnTheScreen();
+  });
+
   expect(router.getPathname()).toBe("/");
-  expect(screen.getByLabelText("Home placeholder")).toBeOnTheScreen();
 });
 
 test("Home 이니셜 아바타가 Settings page sheet 경로를 연다", async () => {
