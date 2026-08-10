@@ -8,9 +8,13 @@ interface ProviderButtonProps {
   testID?: string;
 }
 
-// Placeholder public values. The Supabase singleton reads these at import time,
-// so every test that mounts the root layout needs them set. Real values live in
-// the developer's untracked apps/mobile/.env.local.
+// Placeholder public values. Tests use the same complete contract as the app
+// without reading the developer's untracked apps/mobile/.env.local.
+process.env.EXPO_PUBLIC_API_URL = "http://127.0.0.1:3900";
+process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID =
+  "123456789-ios.apps.googleusercontent.com";
+process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID =
+  "123456789-web.apps.googleusercontent.com";
 process.env.EXPO_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321";
 process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_test_only";
 

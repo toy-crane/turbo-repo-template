@@ -9,6 +9,7 @@
     // reads it directly, so nothing else has to be configured for the app;
     // Jest maps the same prefix in jest.config.mjs.
     "paths": {
+      "@env": ["./env.ts"],
       "@/*": ["./src/*"]
     }
   }
