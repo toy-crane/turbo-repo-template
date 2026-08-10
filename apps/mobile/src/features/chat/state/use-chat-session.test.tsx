@@ -28,6 +28,14 @@ function answerStream(text: string): ReadableStream<UIMessageChunk> {
   });
 }
 
+function neverEndingStream(): ReadableStream<UIMessageChunk> {
+  return simulateReadableStream({
+    chunkDelayInMs: null,
+    chunks: [{ type: "start" }] as UIMessageChunk[],
+    initialDelayInMs: null,
+  });
+}
+
 function fakeTransport(respond: () => Promise<ReadableStream<UIMessageChunk>>) {
   const transport = {
     reconnectToStream: () => Promise.resolve(null),
@@ -181,5 +189,60 @@ describe("useChatSession 편집 후 다시 보내기", () => {
     const resent = sentMessages(transport, 1);
 
     expect(resent.at(-1)?.role).toBe("user");
+  });
+
+  test("답변 뒤에 보낸 질문을 중지해도 다시 생성은 그 답변만 새로 만든다", async () => {
+    let attempt = 0;
+    const transport = fakeTransport(() => {
+      attempt += 1;
+
+      // 두 번째 요청은 첫 조각도 오기 전에 중지되는 상황을 만든다.
+      return Promise.resolve(
+        attempt === 2 ? neverEndingStream() : answerStream(`답변 ${attempt}`)
+      );
+    });
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => {
+      result.current.setDraft("첫 질문");
+    });
+    await act(() => {
+      result.current.send();
+    });
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready");
+    });
+
+    await act(() => {
+      result.current.setDraft("둘째 질문");
+    });
+    await act(() => {
+      result.current.send();
+    });
+    await waitFor(() => {
+      expect(transport.sendMessages).toHaveBeenCalledTimes(2);
+    });
+    await act(() => {
+      result.current.stop();
+    });
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready");
+    });
+
+    // 목록의 마지막은 이제 사용자 메시지다. 다시 생성 버튼은 그 앞의 답변에 붙어 있다.
+    expect(result.current.messages.at(-1)?.role).toBe("user");
+
+    await act(() => {
+      result.current.regenerateLast();
+    });
+    await waitFor(() => {
+      expect(transport.sendMessages).toHaveBeenCalledTimes(3);
+    });
+
+    // 다시 만드는 대상은 "답변 1"이므로 재요청은 "첫 질문"에서 끊긴다.
+    // messageId를 넘기지 않으면 마지막 항목인 "둘째 질문"을 답하게 된다.
+    const resent = sentMessages(transport, 2);
+
+    expect(resent.map(textOf)).toEqual(["첫 질문"]);
   });
 });

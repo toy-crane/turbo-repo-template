@@ -106,6 +106,24 @@ describe("MarkdownView", () => {
     expect(mockOpenBrowser).not.toHaveBeenCalled();
   });
 
+  test("참조 링크와 이미지도 읽을 수 있는 글자를 남긴다", async () => {
+    const markdown = [
+      "문서를 [여기][ref]에서 보세요.",
+      "",
+      "![매출 추이 그래프](https://example.com/chart.png)",
+      "",
+      "[ref]: https://example.com/docs",
+    ].join("\n");
+
+    await renderWithHeroUI(<MarkdownView markdown={markdown} />);
+
+    // 참조 링크는 value가 없고 children에만 글자가 있다. 이걸 놓치면 문장
+    // 중간에서 단어가 통째로 빠진다.
+    expect(screen.getByText("여기")).toBeOnTheScreen();
+    // 이미지는 value도 children도 없다. alt라도 남아야 내용을 잃지 않는다.
+    expect(screen.getByText("매출 추이 그래프")).toBeOnTheScreen();
+  });
+
   test("열린 코드 펜스 같은 미완성 구문도 그리고, 끝나면 최종 형태로 정리한다", async () => {
     const streaming = "코드를 보여드릴게요.\n\n```ts\nconst a = 1;";
     const view = await renderWithHeroUI(<MarkdownView markdown={streaming} />);

@@ -26,7 +26,17 @@ jest.mock("@/features/chat/api/chat-transport", () => ({
  * silently swallows every press inside a row. These tests are about content
  * and behavior, not virtualization — the real list runs in device
  * verification — so the mock maps the data straight through `renderItem`.
+ *
+ * It does keep the one part of virtualization the panel has to live with: a
+ * row is cached on its key, its own item and `extraData`, and never on
+ * `renderItem` identity (`react-native.mjs:5605-5607`). A row whose inputs did
+ * not change keeps the element it rendered before, closures and all, so a
+ * value the panel forgets to put in `extraData` goes stale here exactly as it
+ * does on a device.
  */
+/** The props the panel last handed the list, for the contract test below. */
+const mockListProps: { keyboardShouldPersistTaps?: string } = {};
+
 jest.mock("@legendapp/list/keyboard", () => {
   const React = require("react") as typeof import("react");
   const { ScrollView } =
@@ -37,6 +47,8 @@ jest.mock("@legendapp/list/keyboard", () => {
       (
         props: {
           data?: { id: string }[];
+          extraData?: unknown;
+          keyboardShouldPersistTaps?: string;
           renderItem: (info: {
             index: number;
             item: unknown;
@@ -44,18 +56,47 @@ jest.mock("@legendapp/list/keyboard", () => {
           testID?: string;
         },
         _ref
-      ) =>
-        React.createElement(
+      ) => {
+        mockListProps.keyboardShouldPersistTaps =
+          props.keyboardShouldPersistTaps;
+
+        const rows = React.useRef(
+          new Map<
+            string,
+            {
+              element: React.ReactNode;
+              extraData: unknown;
+              item: { id: string };
+            }
+          >()
+        );
+
+        return React.createElement(
           ScrollView,
           { testID: props.testID },
-          (props.data ?? []).map((item, index) =>
-            React.createElement(
+          (props.data ?? []).map((item, index) => {
+            const cached = rows.current.get(item.id);
+            const element =
+              cached &&
+              cached.item === item &&
+              cached.extraData === props.extraData
+                ? cached.element
+                : props.renderItem({ index, item });
+
+            rows.current.set(item.id, {
+              element,
+              extraData: props.extraData,
+              item,
+            });
+
+            return React.createElement(
               React.Fragment,
               { key: item.id },
-              props.renderItem({ index, item })
-            )
-          )
-        )
+              element
+            );
+          })
+        );
+      }
     ),
     useKeyboardChatComposerInset: () => ({
       contentInsetEndAdjustment: { value: 0 },
@@ -540,6 +581,30 @@ describe("ChatPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("복사됨")).toBeOnTheScreen();
     });
+  });
+
+  test("키보드가 열려 있어도 목록 안 버튼이 한 번에 눌리게 한다", async () => {
+    const transport = fakeTransport(() =>
+      Promise.resolve(answerStream(["답변"]))
+    );
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByText("답변")).toBeOnTheScreen();
+    });
+
+    // 실제 목록만 아는 동작이라 화면으로는 확인할 수 없다. React Native 기본값
+    // "never"는 키보드가 열린 동안 첫 탭을 키보드 닫기에 써버리고, 메시지 작업
+    // 버튼은 모두 이 목록 안에 있다.
+    expect(mockListProps.keyboardShouldPersistTaps).toBe("handled");
   });
 
   test("마지막 사용자 메시지에만 편집이 보이고 취소하면 초안이 복원된다", async () => {

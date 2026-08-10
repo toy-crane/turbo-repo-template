@@ -142,6 +142,11 @@ export function ChatPanel({
             Platform.OS === "ios" ? "interactive" : "on-drag"
           }
           keyboardLiftBehavior="whenAtEnd"
+          // React Native defaults to "never", which spends the first tap on
+          // dismissing the keyboard. Every message action lives inside this
+          // list, so without this they all need two taps while the composer
+          // is open.
+          keyboardShouldPersistTaps="handled"
           keyExtractor={keyOfMessage}
           maintainScrollAtEnd
           maintainScrollAtEndThreshold={FOLLOW_END_THRESHOLD}
