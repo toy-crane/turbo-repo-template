@@ -2,15 +2,16 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 import { useProviderSignIn } from "@/features/auth/state/use-provider-sign-in";
-import { AuthError, AuthScreen, AuthSubtitle } from "./auth-screen";
+import { AuthError, AuthScreen } from "./auth-screen";
 import { LoginButton } from "./login-button";
 import { signInLabels } from "./sign-in-labels";
 
 /**
  * The first screen of the auth stack: which way in.
  *
- * It holds no input. Email gets its own screen so this one stays a choice, and
- * so the buttons can sit where the thumb is.
+ * It holds no input and no explaining. Email gets its own screen so this one
+ * stays a choice, the buttons sit where the thumb is, and the app name is the
+ * only thing above them.
  */
 export function SignInMethodScreen({
   onChooseEmail,
@@ -58,11 +59,6 @@ export function SignInMethodScreen({
         </>
       }
       isRoot
-      subtitle={
-        <AuthSubtitle>
-          로그인하면 저장한 내용을 어느 기기에서나 볼 수 있어요.
-        </AuthSubtitle>
-      }
       title={appName}
     />
   );

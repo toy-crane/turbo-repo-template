@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Pressable, Text, useColorScheme, View } from "react-native";
+import { Pressable, Text, useColorScheme } from "react-native";
 
 import { AppleMark, GoogleMark } from "./brand-marks";
 
@@ -85,9 +85,4 @@ export function LoginButton({
       </Text>
     </Pressable>
   );
-}
-
-/** Keeps the three buttons an even stack the screen can drop into its footer. */
-export function LoginButtonStack({ children }: { children: React.ReactNode }) {
-  return <View className="gap-2.5">{children}</View>;
 }
