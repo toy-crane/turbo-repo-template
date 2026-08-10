@@ -6,6 +6,16 @@ import {
 } from "@/features/auth/api/auth-errors";
 
 /**
+ * What happened to a press.
+ *
+ * `skipped` is its own outcome rather than a second meaning for failure: the
+ * guard drops a press while another action is already running, and a caller
+ * that reads that as a failure will undo work the first press is still doing.
+ * `cancelled` is the person closing a provider sheet, which is a decision.
+ */
+export type ActionOutcome = "cancelled" | "failed" | "ok" | "skipped";
+
+/**
  * One entry point for every sign-in action, shared by the three screens.
  *
  * It is what keeps a second press from starting a second attempt, and what
@@ -20,11 +30,10 @@ export interface GuardedAction<Action extends string> {
   /** Which control the person is waiting on. */
   pending: Action | undefined;
   /**
-   * Resolves true when the work finished without a failure, so a caller can
-   * move on only when it actually succeeded. A press that was swallowed
-   * because another action was already running resolves false.
+   * Names what happened so each caller can react to the outcome it cares
+   * about. Only `ok` means the work reached the server and finished.
    */
-  run: (action: Action, work: () => Promise<void>) => Promise<boolean>;
+  run: (action: Action, work: () => Promise<void>) => Promise<ActionOutcome>;
   setFailure: (failure: AuthFailure) => void;
 }
 
@@ -44,7 +53,7 @@ export function useGuardedAction<
     // same frame both read the state from before the first one, so a state
     // check would let the second through and start a second sign-in.
     if (running.current !== undefined) {
-      return false;
+      return "skipped" as const;
     }
 
     running.current = action;
@@ -54,17 +63,19 @@ export function useGuardedAction<
     try {
       await work();
 
-      return true;
+      return "ok" as const;
     } catch (error) {
       const classified = classifyAuthError(error);
 
       // Closing a provider sheet is a decision, not a failure. Saying
       // something went wrong would be both untrue and alarming.
-      if (classified.kind !== "cancelled") {
-        setFailure(classified);
+      if (classified.kind === "cancelled") {
+        return "cancelled" as const;
       }
 
-      return false;
+      setFailure(classified);
+
+      return "failed" as const;
     } finally {
       running.current = undefined;
       setPending(undefined);

@@ -165,4 +165,28 @@ test("코드를 보내는 동안 같은 버튼을 다시 실행하지 않는다"
   });
 
   expect(fake.auth.signInWithOtp).toHaveBeenCalledTimes(1);
+  // The swallowed presses must not advance either: each one that slipped
+  // through would push another code screen for a code that was never sent.
+  expect(onSent).toHaveBeenCalledTimes(1);
+});
+
+test("전송 한도가 아닌 429는 넘어가지 않는다", async () => {
+  fake.auth.signInWithOtp.mockResolvedValueOnce({
+    data: { session: null, user: null },
+    error: Object.assign(new Error("too many requests"), {
+      code: "over_request_rate_limit",
+      status: 429,
+    }),
+  } as never);
+
+  await renderEmail();
+
+  await type("이메일", EMAIL);
+  await press("인증 코드 받기");
+
+  // Only the email-send limit means a code is already in their inbox. The
+  // project-wide limiter says nothing was sent, so claiming otherwise on the
+  // next screen would leave them waiting for mail that never arrives.
+  expect(await screen.findByTestId("sign-in-error-email")).toBeOnTheScreen();
+  expect(onSent).not.toHaveBeenCalled();
 });

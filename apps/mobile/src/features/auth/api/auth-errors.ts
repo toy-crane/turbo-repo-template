@@ -88,6 +88,19 @@ function isNetworkError(error: unknown): boolean {
   );
 }
 
+/**
+ * True only for the limit that means "a code went out to this address very
+ * recently", which is the one case where the person already holds a usable
+ * code and should be sent on to type it.
+ *
+ * Deliberately narrower than the `rateLimited` classification: that one also
+ * covers the project-wide request limiter and any bare 429, neither of which
+ * tells us a code was ever sent.
+ */
+export function isEmailSendRateLimit(error: unknown): boolean {
+  return readStringField(error, "code") === "over_email_send_rate_limit";
+}
+
 export function classifyAuthError(error: unknown): AuthFailure {
   if (error instanceof AuthConfigurationError) {
     return { kind: "configuration", message: error.message };

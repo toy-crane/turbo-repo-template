@@ -10,6 +10,14 @@ import { useAppTheme } from "@/core/theme/app-theme-bridge";
  * is what owns the back control — the screens do not draw one of their own.
  * Titles stay empty because each screen states its own job in a large heading.
  */
+/**
+ * Anchors the stack to the first screen, so anything that opens `email` or
+ * `code` directly — a deep link, a redirect, a restored navigation state —
+ * still has the method screen beneath it. Without this the back chevron has
+ * nowhere to go and Google and Apple become unreachable.
+ */
+export const unstable_settings = { anchor: "sign-in" };
+
 export default function AuthLayout() {
   const { background } = useAppTheme();
 

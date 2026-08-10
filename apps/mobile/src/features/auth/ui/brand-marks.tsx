@@ -38,9 +38,16 @@ export function GoogleMark() {
 
 /**
  * Apple's mark. Apple allows it in black or white only, matched to the button
- * background, which is why this one takes the colour the button is using.
+ * background, so the prop is that choice rather than a colour: a caller cannot
+ * hand it the button's grey text colour by mistake.
  */
-export function AppleMark({ color }: { color: string }) {
+export function AppleMark({ tone }: { tone: "black" | "white" }) {
+  const color = tone === "black" ? "#000000" : "#FFFFFF";
+
+  return <AppleGlyph color={color} />;
+}
+
+function AppleGlyph({ color }: { color: string }) {
   return (
     <Svg height={MARK_SIZE} viewBox="0 0 24 24" width={MARK_SIZE}>
       <Path

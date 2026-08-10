@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { AuthFailure } from "@/features/auth/api/auth-errors";
 import { sendEmailCode, verifyEmailCode } from "@/features/auth/api/email-otp";
@@ -29,52 +29,48 @@ export interface CodeVerify {
  *
  * A wrong code clears the boxes rather than leaving the person to delete six
  * digits themselves, and `resetCount` tells the input to take focus again so
- * they can type straight away.
+ * they can type straight away. A press the guard skipped is left alone: it
+ * never reached the server, so there is nothing to undo.
  */
 export function useCodeVerify(email: string): CodeVerify {
   const [code, setCode] = useState("");
+  // A deadline rather than a running count. JS timers stop while the app is in
+  // the background, and this flow sends the person to their mail app: a
+  // decrementing counter would resume where it froze and keep the button
+  // locked long after the server's window had passed.
+  const [deadline, setDeadline] = useState(
+    () => Date.now() + RESEND_COOLDOWN_SECONDS * SECOND_MS
+  );
   const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN_SECONDS);
   const [resetCount, setResetCount] = useState(0);
   const { clearFailure, failure, isBusy, pending, run } =
     useGuardedAction<CodeAction>();
-  const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
-  const stopCountdown = useCallback(() => {
-    if (timer.current !== undefined) {
-      clearInterval(timer.current);
-      timer.current = undefined;
-    }
-  }, []);
-
-  const startCountdown = useCallback(() => {
-    stopCountdown();
-    setSecondsLeft(RESEND_COOLDOWN_SECONDS);
-    timer.current = setInterval(() => {
-      setSecondsLeft((remaining) => {
-        if (remaining <= 1) {
-          stopCountdown();
-
-          return 0;
-        }
-
-        return remaining - 1;
-      });
-    }, SECOND_MS);
-  }, [stopCountdown]);
-
-  // The code was sent just before this screen opened, so the wait starts here.
+  // The effect owns the interval, so React clears it on unmount and on every
+  // new deadline. Nothing outside can leave one running.
   useEffect(() => {
-    startCountdown();
+    const tick = () => {
+      setSecondsLeft(
+        Math.max(Math.ceil((deadline - Date.now()) / SECOND_MS), 0)
+      );
+    };
 
-    return stopCountdown;
-  }, [startCountdown, stopCountdown]);
+    tick();
+
+    const timer = setInterval(tick, SECOND_MS);
+
+    return () => clearInterval(timer);
+  }, [deadline]);
 
   const verify = useCallback(
     (value: string) => {
       run("verify", () =>
         verifyEmailCode(getSupabaseClient(), email, toCodeDigits(value))
-      ).then((ok) => {
-        if (!ok) {
+      ).then((outcome) => {
+        // Only a code the server actually rejected gets cleared. A press the
+        // guard skipped never reached the server, and wiping the field for it
+        // would delete digits while the first attempt is still in flight.
+        if (outcome === "failed") {
           // Leaving the wrong digits in place would make the person delete six
           // characters before they could try again.
           setCode("");
@@ -100,14 +96,21 @@ export function useCodeVerify(email: string): CodeVerify {
   );
 
   const resend = useCallback(() => {
-    run("resend", () => sendEmailCode(getSupabaseClient(), email)).then(() => {
-      // Restarted either way: the server counts a send the app could not
-      // complete, and the countdown is the app's promise about the next one.
-      setCode("");
-      startCountdown();
-      setResetCount((count) => count + 1);
-    });
-  }, [email, run, startCountdown]);
+    run("resend", () => sendEmailCode(getSupabaseClient(), email)).then(
+      (outcome) => {
+        // Only a send that reached the server restarts the wait. Locking the
+        // button for another minute after a failed send would leave the person
+        // with no code and no way to ask for one.
+        if (outcome !== "ok") {
+          return;
+        }
+
+        setCode("");
+        setDeadline(Date.now() + RESEND_COOLDOWN_SECONDS * SECOND_MS);
+        setResetCount((count) => count + 1);
+      }
+    );
+  }, [email, run]);
 
   return {
     changeCode,

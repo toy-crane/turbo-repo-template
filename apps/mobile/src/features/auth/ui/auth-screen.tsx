@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -41,16 +41,28 @@ export function AuthScreen({
 
   return (
     <View className="flex-1 bg-background">
-      <View
-        className="flex-1 gap-4 px-6 pt-2"
-        style={isRoot ? { paddingTop: insets.top + TOP_PADDING } : undefined}
+      {/*
+        A scroll view rather than a fixed box: at large Dynamic Type or on a
+        short device the title, subtitle and input can outgrow the space left
+        above the keyboard, and without this the overflow is simply unreachable.
+        `keyboardDismissMode="on-drag"` is also the only way off a numeric
+        keypad, which has no dismiss key of its own.
+      */}
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="gap-4 px-6 pt-2"
+        contentContainerStyle={
+          isRoot ? { paddingTop: insets.top + TOP_PADDING } : undefined
+        }
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
       >
         <View className="gap-2.5 pt-2">
           <Text className="font-bold text-3xl text-foreground">{title}</Text>
           {subtitle}
         </View>
         {children}
-      </View>
+      </ScrollView>
 
       {/*
         The footer keeps the home indicator's space as bottom padding, which is
@@ -60,7 +72,10 @@ export function AuthScreen({
         footer back down toward the keyboard.
       */}
       <KeyboardStickyView
-        offset={{ closed: 0, opened: insets.bottom - BOTTOM_PADDING }}
+        offset={{
+          closed: 0,
+          opened: Math.max(insets.bottom, BOTTOM_PADDING) - BOTTOM_PADDING,
+        }}
       >
         <View
           className="gap-2.5 pt-3"

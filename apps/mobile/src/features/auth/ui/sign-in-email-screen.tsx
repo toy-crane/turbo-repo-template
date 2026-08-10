@@ -37,7 +37,7 @@ export function SignInEmailScreen({
       title="이메일 주소를 입력해 주세요"
     >
       <View className="gap-2">
-        <TextField>
+        <TextField isInvalid={form.failure !== undefined}>
           <Input
             accessibilityLabel={signInLabels.email}
             autoCapitalize="none"
@@ -45,7 +45,11 @@ export function SignInEmailScreen({
             autoFocus
             inputMode="email"
             onChangeText={form.changeEmail}
-            onSubmitEditing={form.submit}
+            // Guarded like the button below it: the return key is the same
+            // action, so it must not reach states the button declares closed.
+            onSubmitEditing={
+              form.isBusy || !form.isSendable ? undefined : form.submit
+            }
             placeholder="you@example.com"
             returnKeyType="send"
             testID="sign-in-email"

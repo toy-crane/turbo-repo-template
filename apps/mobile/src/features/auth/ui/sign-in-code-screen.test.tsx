@@ -124,21 +124,15 @@ test("코드 다시 받기는 대기 시간이 끝나야 누를 수 있다", asy
 
   await renderCode();
 
-  const resend = screen.getByLabelText("코드 다시 받기");
-
-  expect(resend).toHaveTextContent("60초 후 다시 받기");
-
-  await press("코드 다시 받기");
+  // The remaining wait is the whole message, so it has to reach a screen
+  // reader as well as the eye — the accessible name carries the countdown.
+  await press("60초 후 다시 받기");
 
   expect(fake.auth.signInWithOtp).not.toHaveBeenCalled();
 
   await act(() => {
     jest.advanceTimersByTime(60_000);
   });
-
-  expect(screen.getByLabelText("코드 다시 받기")).toHaveTextContent(
-    "코드 다시 받기"
-  );
 
   await press("코드 다시 받기");
 
@@ -162,11 +156,65 @@ test("다시 받으면 대기 시간을 새로 건다", async () => {
   await press("코드 다시 받기");
 
   // Without a fresh countdown the button would stay open and invite another
-  // rejected request straight away.
+  // request the server would refuse.
   await waitFor(() => {
-    expect(screen.getByLabelText("코드 다시 받기")).toHaveTextContent(
-      "60초 후 다시 받기"
-    );
+    expect(screen.getByLabelText("60초 후 다시 받기")).toBeOnTheScreen();
+  });
+});
+
+test("보내지 못한 다시 받기는 대기 시간을 걸지 않는다", async () => {
+  jest.useFakeTimers();
+
+  fake.auth.signInWithOtp.mockResolvedValueOnce({
+    data: { session: null, user: null },
+    error: Object.assign(new Error("Network request failed"), {
+      name: "AuthRetryableFetchError",
+    }),
+  } as never);
+
+  await renderCode();
+
+  await act(() => {
+    jest.advanceTimersByTime(60_000);
+  });
+
+  await press("코드 다시 받기");
+
+  // Locking the button for another minute after a send that never reached the
+  // server would leave the person with no code and no way to ask for one.
+  await waitFor(() => {
+    expect(screen.getByTestId("sign-in-error-code")).toBeOnTheScreen();
+  });
+
+  expect(screen.getByLabelText("코드 다시 받기")).toBeOnTheScreen();
+});
+
+test("코드를 확인하는 동안 진행 중임을 보여준다", async () => {
+  let release = () => {
+    // Replaced by the pending implementation below.
+  };
+
+  fake.auth.verifyOtp.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        release = () =>
+          resolve({
+            data: { session: null, user: null },
+            error: null,
+          } as never);
+      })
+  );
+
+  await renderCode();
+
+  await type("인증 코드", CODE);
+
+  // Verification starts on its own once the sixth digit lands, so without a
+  // sign of progress the screen would simply freeze for the round trip.
+  expect(await screen.findByTestId("sign-in-code-checking")).toBeOnTheScreen();
+
+  await act(() => {
+    release();
   });
 });
 

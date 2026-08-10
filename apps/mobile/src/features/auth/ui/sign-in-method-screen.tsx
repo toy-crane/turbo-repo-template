@@ -26,6 +26,7 @@ export function SignInMethodScreen({
       footer={
         <>
           <LoginButton
+            isBusy={provider.pending === "google"}
             isDisabled={provider.isBusy}
             label={signInLabels.google}
             onPress={provider.startGoogle}
@@ -35,6 +36,7 @@ export function SignInMethodScreen({
 
           {Platform.OS === "ios" ? (
             <LoginButton
+              isBusy={provider.pending === "apple"}
               isDisabled={provider.isBusy}
               label={signInLabels.apple}
               onPress={provider.startApple}

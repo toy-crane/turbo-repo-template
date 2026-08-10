@@ -1,5 +1,6 @@
 import { Button } from "heroui-native/button";
 import { InputOTP, REGEXP_ONLY_DIGITS } from "heroui-native/input-otp";
+import { Spinner } from "heroui-native/spinner";
 import { View } from "react-native";
 
 import { OTP_LENGTH } from "@/features/auth/config/email-otp";
@@ -33,14 +34,17 @@ function pastedCode(pasted: string): string {
  * The component's own slot is a fixed 44pt, which left the group short of the
  * screen and reading as accidentally left-aligned.
  */
-function renderSlots({ slots }: { slots: { index: number }[] }) {
-  return slots.map((slot) => (
-    <InputOTP.Slot
-      className="h-14 w-auto flex-1"
-      index={slot.index}
-      key={slot.index}
-    />
-  ));
+function slotRenderer(isInvalid: boolean) {
+  const outline = isInvalid ? "border-2 border-danger" : "";
+
+  return ({ slots }: { slots: { index: number }[] }) =>
+    slots.map((slot) => (
+      <InputOTP.Slot
+        className={`h-14 w-auto flex-1 ${outline}`}
+        index={slot.index}
+        key={slot.index}
+      />
+    ));
 }
 
 export function SignInCodeScreen({ email }: { email: string }) {
@@ -51,7 +55,9 @@ export function SignInCodeScreen({ email }: { email: string }) {
     <AuthScreen
       footer={
         <Button
-          accessibilityLabel={signInLabels.resend}
+          // The countdown is the whole message, so the accessible name has to
+          // carry it too; a fixed name would read the same for all 60 seconds.
+          accessibilityLabel={formatResendLabel(form.secondsLeft)}
           isDisabled={form.isBusy || isWaiting}
           onPress={form.resend}
           variant="tertiary"
@@ -79,8 +85,25 @@ export function SignInCodeScreen({ email }: { email: string }) {
           }}
           value={form.code}
         >
-          <InputOTP.Group className="w-full">{renderSlots}</InputOTP.Group>
+          <InputOTP.Group className="w-full">
+            {slotRenderer(form.failure !== undefined)}
+          </InputOTP.Group>
         </InputOTP>
+
+        {/*
+          Verification starts on its own once the sixth digit lands, so without
+          this the screen would simply freeze for the whole round trip.
+        */}
+        {form.pending === "verify" ? (
+          <View
+            accessibilityLabel="코드 확인 중"
+            accessible
+            className="flex-row items-center gap-2"
+            testID="sign-in-code-checking"
+          >
+            <Spinner size="sm" />
+          </View>
+        ) : null}
 
         {form.failure ? (
           <AuthError testID="sign-in-error-code">

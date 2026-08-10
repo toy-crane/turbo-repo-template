@@ -1,5 +1,10 @@
 import { useCallback } from "react";
-import { Pressable, Text, useColorScheme } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  useColorScheme,
+} from "react-native";
 
 import { AppleMark, GoogleMark } from "./brand-marks";
 
@@ -36,12 +41,15 @@ const COLORS = {
 export type LoginProvider = "apple" | "email" | "google";
 
 export function LoginButton({
+  isBusy,
   isDisabled,
   label,
   onPress,
   provider,
   testID,
 }: {
+  /** True while THIS button's sign-in is running, not any sibling's. */
+  isBusy?: boolean;
   isDisabled?: boolean;
   label: string;
   onPress: () => void;
@@ -72,15 +80,33 @@ export function LoginButton({
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
+      accessibilityState={{ busy: isBusy, disabled: isDisabled }}
       disabled={isDisabled}
       onPress={onPress}
       style={style}
       testID={testID}
     >
-      {provider === "google" ? <GoogleMark /> : null}
-      {provider === "apple" ? <AppleMark color={colors.text} /> : null}
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600" }}>
+      {isBusy ? <ActivityIndicator color={colors.text} size="small" /> : null}
+      {provider === "google" && !isBusy ? <GoogleMark /> : null}
+      {provider === "apple" && !isBusy ? (
+        <AppleMark tone={scheme === "dark" ? "white" : "black"} />
+      ) : null}
+      {/*
+        The row is a fixed height, so the label has to stay inside it. Without
+        the cap and the shrink, a large system text size pushes the text past
+        the rounded border instead of fitting.
+      */}
+      <Text
+        adjustsFontSizeToFit
+        maxFontSizeMultiplier={1.6}
+        numberOfLines={1}
+        style={{
+          color: colors.text,
+          flexShrink: 1,
+          fontSize: 16,
+          fontWeight: "600",
+        }}
+      >
         {label}
       </Text>
     </Pressable>
