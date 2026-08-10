@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { inspect } from "node:util";
 
-import type { LanguageModelV4StreamPart } from "@ai-sdk/provider";
+import { APICallError, type LanguageModelV4StreamPart } from "@ai-sdk/provider";
 import { withSupabase } from "@supabase/server/adapters/hono";
 import { MockLanguageModelV4, simulateReadableStream } from "ai/test";
 import type { MiddlewareHandler } from "hono";
@@ -145,6 +146,48 @@ describe("POST /ai/chat", () => {
 
     expect(response.status).toBe(400);
     expect(model.doStreamCalls).toHaveLength(0);
+  });
+
+  test("keeps the conversation out of the log when the provider fails", async () => {
+    const secret = "내-주민등록번호-900101-1234567";
+    // The shape the AI SDK actually produces: the error carries the request it
+    // sent, so anything that prints the object prints the conversation.
+    const model = new MockLanguageModelV4({
+      doStream: () =>
+        Promise.reject(
+          new APICallError({
+            message: "Unauthorized",
+            requestBodyValues: {
+              messages: [{ content: secret, role: "user" }],
+            },
+            responseBody: '{"error":"bad key"}',
+            statusCode: 401,
+            url: "https://ai-gateway.example/v1/chat",
+          })
+        ),
+    });
+    const app = createApp({ auth: allowUser, model });
+    const written: string[] = [];
+    const realError = console.error;
+
+    // `inspect`, not `String`: that is what a console does with an object, and
+    // it is the step that would expose the error's own properties.
+    console.error = (...parts: unknown[]) => {
+      written.push(parts.map((part) => inspect(part, { depth: 6 })).join(" "));
+    };
+
+    try {
+      const response = await app.request(
+        chatRequest({ messages: [userMessage(secret)] })
+      );
+
+      await response.text();
+    } finally {
+      console.error = realError;
+    }
+
+    expect(written.join("\n")).not.toContain(secret);
+    expect(written.join("\n")).toContain("Request failed on");
   });
 
   test("rejects a body that is not an AI SDK message list", async () => {
