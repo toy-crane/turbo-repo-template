@@ -1,5 +1,7 @@
 import type { UIMessage } from "ai";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
+
+import { MarkdownView } from "./markdown/markdown-view";
 
 type MessagePartValue = UIMessage["parts"][number];
 
@@ -20,6 +22,16 @@ export function MessagePart({
   role: UIMessage["role"];
 }) {
   if (part.type === "text") {
+    // Only the AI's answers carry Markdown; what the person typed stays
+    // exactly as they typed it.
+    if (role === "assistant") {
+      return (
+        <View testID="chat-message-assistant">
+          <MarkdownView markdown={part.text} />
+        </View>
+      );
+    }
+
     return (
       <Text
         className={

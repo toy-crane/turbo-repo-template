@@ -184,6 +184,16 @@ jest.mock("expo-symbols", () => {
   };
 });
 
+// Native clipboard and browser sheets do not exist under Jest. Tests assert
+// against these functions to prove what would have been copied or opened.
+jest.mock("expo-clipboard", () => ({
+  setStringAsync: jest.fn(() => Promise.resolve(true)),
+}));
+
+jest.mock("expo-web-browser", () => ({
+  openBrowserAsync: jest.fn(() => Promise.resolve({ type: "dismiss" })),
+}));
+
 jest.mock("react-native-worklets", () =>
   require("react-native-worklets/src/mock")
 );

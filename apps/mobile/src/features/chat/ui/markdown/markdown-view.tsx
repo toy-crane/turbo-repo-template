@@ -1,0 +1,269 @@
+/**
+ * biome-ignore-all lint/suspicious/noArrayIndexKey: a streaming message only
+ * ever appends blocks or grows the last one, so the position inside the tree
+ * is the stable identity for every node.
+ */
+import { openBrowserAsync } from "expo-web-browser";
+import type {
+  BlockContent,
+  DefinitionContent,
+  PhrasingContent,
+  RootContent,
+  Table,
+} from "mdast";
+import { useCallback, useMemo } from "react";
+import { ScrollView, Text, View } from "react-native";
+
+import { CodeBlock, InlineCode } from "./code-block";
+import { parseMarkdown } from "./parse-markdown";
+
+/**
+ * Static class maps rather than assembled strings: Uniwind only sees classes
+ * it can find in the source, and a lookup keeps every node style in one
+ * place.
+ */
+const headingClassByDepth: Record<number, string> = {
+  1: "mt-4 mb-2 font-bold text-2xl text-foreground",
+  2: "mt-4 mb-2 font-bold text-foreground text-xl",
+  3: "mt-3 mb-1 font-semibold text-foreground text-lg",
+  4: "mt-3 mb-1 font-semibold text-base text-foreground",
+  5: "mt-2 mb-1 font-semibold text-base text-foreground",
+  6: "mt-2 mb-1 font-semibold text-base text-muted-foreground",
+};
+
+const BODY_TEXT_CLASS = "text-base text-foreground leading-6";
+const TABLE_CELL_WIDTH = 144;
+
+function openLink(url: string) {
+  // The in-app browser sheet only understands web addresses; anything else is
+  // quietly ignored rather than crashing the message.
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    openBrowserAsync(url).catch(() => undefined);
+  }
+}
+
+function LinkText({
+  children,
+  url,
+}: {
+  children: React.ReactNode;
+  url: string;
+}) {
+  const open = useCallback(() => {
+    openLink(url);
+  }, [url]);
+
+  return (
+    <Text
+      accessibilityRole="link"
+      className="text-link underline"
+      onPress={open}
+      suppressHighlighting
+    >
+      {children}
+    </Text>
+  );
+}
+
+/** Phrasing content becomes nested Text nodes, so styles inherit. */
+function renderInline(
+  nodes: PhrasingContent[],
+  parentKey: string
+): React.ReactNode[] {
+  return nodes.map((node, index) => {
+    const key = `${parentKey}-${node.type}-${index}`;
+
+    switch (node.type) {
+      case "break":
+        return "\n";
+      case "emphasis":
+        return (
+          <Text className="italic" key={key}>
+            {renderInline(node.children, key)}
+          </Text>
+        );
+      case "inlineCode":
+        return <InlineCode key={key} value={node.value} />;
+      case "link":
+        return (
+          <LinkText key={key} url={node.url}>
+            {renderInline(node.children, key)}
+          </LinkText>
+        );
+      case "strong":
+        return (
+          <Text className="font-semibold" key={key}>
+            {renderInline(node.children, key)}
+          </Text>
+        );
+      case "text":
+        return node.value;
+      default:
+        return "value" in node ? node.value : null;
+    }
+  });
+}
+
+function MarkdownTable({
+  node,
+  parentKey,
+}: {
+  node: Table;
+  parentKey: string;
+}) {
+  const [headerRow, ...bodyRows] = node.children;
+
+  return (
+    <ScrollView
+      className="my-2"
+      horizontal
+      showsHorizontalScrollIndicator
+      testID="chat-markdown-table"
+    >
+      <View className="rounded-lg border border-separator">
+        {headerRow ? (
+          <View className="flex-row border-separator border-b">
+            {headerRow.children.map((cell, cellIndex) => (
+              <View
+                className="px-3 py-2"
+                key={`${parentKey}-h-${cellIndex}`}
+                style={{ width: TABLE_CELL_WIDTH }}
+              >
+                <Text className="font-semibold text-foreground text-sm">
+                  {renderInline(cell.children, `${parentKey}-h-${cellIndex}`)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+        {bodyRows.map((row, rowIndex) => (
+          <View
+            className={
+              rowIndex < bodyRows.length - 1
+                ? "flex-row border-separator border-b"
+                : "flex-row"
+            }
+            key={`${parentKey}-r-${rowIndex}`}
+          >
+            {row.children.map((cell, cellIndex) => (
+              <View
+                className="px-3 py-2"
+                key={`${parentKey}-r-${rowIndex}-${cellIndex}`}
+                style={{ width: TABLE_CELL_WIDTH }}
+              >
+                <Text className="text-foreground text-sm" selectable>
+                  {renderInline(
+                    cell.children,
+                    `${parentKey}-r-${rowIndex}-${cellIndex}`
+                  )}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+function renderListItemContent(
+  nodes: (BlockContent | DefinitionContent)[],
+  parentKey: string
+) {
+  return nodes.map((node, index) => (
+    <BlockNode
+      key={`${parentKey}-${index}`}
+      node={node}
+      parentKey={`${parentKey}-${index}`}
+    />
+  ));
+}
+
+function BlockNode({
+  node,
+  parentKey,
+}: {
+  node: RootContent;
+  parentKey: string;
+}) {
+  switch (node.type) {
+    case "blockquote":
+      return (
+        <View className="my-1 border-muted border-l-4 pl-3">
+          {node.children.map((child, index) => (
+            <BlockNode
+              key={`${parentKey}-${index}`}
+              node={child}
+              parentKey={`${parentKey}-${index}`}
+            />
+          ))}
+        </View>
+      );
+    case "code":
+      return <CodeBlock code={node.value} />;
+    case "heading":
+      return (
+        <Text
+          className={headingClassByDepth[node.depth] ?? BODY_TEXT_CLASS}
+          selectable
+        >
+          {renderInline(node.children, parentKey)}
+        </Text>
+      );
+    case "list": {
+      const start = node.start ?? 1;
+
+      return (
+        <View className="my-1 gap-1">
+          {node.children.map((item, index) => (
+            <View className="flex-row" key={`${parentKey}-${index}`}>
+              <Text className={`${BODY_TEXT_CLASS} w-6`}>
+                {node.ordered ? `${start + index}.` : "•"}
+              </Text>
+              <View className="flex-1">
+                {renderListItemContent(item.children, `${parentKey}-${index}`)}
+              </View>
+            </View>
+          ))}
+        </View>
+      );
+    }
+    case "paragraph":
+      return (
+        <Text className={`${BODY_TEXT_CLASS} my-1`} selectable>
+          {renderInline(node.children, parentKey)}
+        </Text>
+      );
+    case "table":
+      return <MarkdownTable node={node} parentKey={parentKey} />;
+    case "thematicBreak":
+      return <View className="my-3 h-px bg-separator" />;
+    default:
+      return "value" in node && typeof node.value === "string" ? (
+        <Text className={BODY_TEXT_CLASS} selectable>
+          {node.value}
+        </Text>
+      ) : null;
+  }
+}
+
+/**
+ * An AI answer's text part, drawn as Markdown.
+ *
+ * Parsing is memoized on the text, so a row whose content did not change
+ * never re-parses; the memoized message row above this keeps other rows from
+ * re-rendering at all while one message streams.
+ */
+export function MarkdownView({ markdown }: { markdown: string }) {
+  const tree = useMemo(() => parseMarkdown(markdown), [markdown]);
+
+  return (
+    <View testID="chat-markdown">
+      {tree.children.map((node, index) => (
+        // Position is the stable identity: streaming only ever appends or
+        // grows the last block, so earlier keys keep their nodes.
+        <BlockNode key={`b-${index}`} node={node} parentKey={`b-${index}`} />
+      ))}
+    </View>
+  );
+}

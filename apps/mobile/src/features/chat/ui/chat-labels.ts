@@ -3,6 +3,7 @@
  * The same table lives in the repository README; change both together.
  */
 export const chatLabels = {
+  copyCode: "코드 복사",
   generating: "답변을 만드는 중",
   input: "메시지",
   retry: "다시 보내기",
