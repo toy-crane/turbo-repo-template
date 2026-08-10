@@ -12,8 +12,21 @@ Expo 모바일 앱과 Hono API를 하나의 AI 채팅 기능으로 완성한다.
 - [모바일 개발 런타임](../../decisions/mobile-development-runtime.md)
 - [모바일 UI 렌더러 경계](../../decisions/mobile-ui-renderer-boundaries.md)
 - [모바일 색상 시맨틱](../../decisions/mobile-color-semantics.md)
+- [모바일 아이콘 렌더링](../../decisions/mobile-icon-rendering.md)
 - [모바일 타이포그래피](../../decisions/mobile-typography.md)
 - [모바일 테스트와 런타임 검증](../../decisions/mobile-testing-and-verification.md)
+
+## 확정한 구현 방식
+
+작업 분해 시점에 확정해 모든 작업이 공유하는 방식이다.
+
+- `편집 후 다시 보내기`는 하단 입력창을 재사용한다. 편집을 누르면 입력창에 원문을 채우고 편집 중 표시와 취소를 보여준다. 말풍선 안에서 편집하지 않는다.
+- 스트리밍 중에도 Markdown으로 그린다. 다시 해석은 스트리밍 중인 메시지 한 개로 한정하고 갱신 주기를 제한한다.
+- Markdown은 mdast 계열 파서로 직접 구현한다. 참고 코드 `chat-template`은 라이선스가 없으므로 방식만 참고하고 코드를 복사하지 않는다.
+- 코드 블록은 문법 강조 없이 시스템 monospace 글꼴, 가로 스크롤과 복사 버튼을 제공한다.
+- 링크는 `expo-web-browser` 인앱 브라우저 시트로 연다.
+- `새 대화` 확인은 플랫폼 기본 Alert를 사용하고, 새 대화 버튼은 Home 헤더 도구 막대에 둔다.
+- 서버는 `toUIMessageStream`에 `sendReasoning: false`를 명시해 텍스트 전용 응답 계약을 지킨다.
 
 ## 구현 참고 코드
 
