@@ -91,9 +91,32 @@ function renderInline(
       case "text":
         return node.value;
       default:
-        return "value" in node ? node.value : null;
+        return renderInlineFallback(node, key);
     }
   });
+}
+
+/**
+ * Whatever the cases above did not name, drawn from whatever the node carries.
+ *
+ * Reading `value` alone loses whole words mid-sentence: a reference link
+ * (`[여기][ref]`) keeps its text in `children` and has no `value`, and an
+ * image has neither — only `alt`. Both have to leave something readable
+ * behind rather than a hole in the paragraph.
+ */
+function renderInlineFallback(
+  node: PhrasingContent,
+  key: string
+): React.ReactNode {
+  if ("children" in node && node.children.length > 0) {
+    return <Text key={key}>{renderInline(node.children, key)}</Text>;
+  }
+
+  if ("value" in node) {
+    return node.value;
+  }
+
+  return "alt" in node && node.alt ? node.alt : null;
 }
 
 function MarkdownTable({

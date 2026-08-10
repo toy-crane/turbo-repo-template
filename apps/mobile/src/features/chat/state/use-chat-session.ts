@@ -84,12 +84,21 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   const isBusy = status === "streaming" || status === "submitted";
   const running = useRef<ChatAction | undefined>(undefined);
 
-  // Read through a ref where a callback only needs the list at call time:
-  // depending on `messages` directly would recreate the callback on every
-  // streamed chunk and drag the rows holding it into every re-render.
+  // Read through a ref where a callback only needs the value at call time.
+  //
+  // Two reasons. Depending on `messages` directly would recreate the callback
+  // on every streamed chunk and drag the rows holding it into every
+  // re-render. And the virtual list caches a row until its own item or the
+  // list's `extraData` changes, so a callback that changes with the draft
+  // would leave every row holding a stale one — the draft cannot go into
+  // `extraData` without re-rendering the whole conversation on each keystroke.
   const messagesRef = useRef(messages);
+  const draftRef = useRef(draft);
+  const editingRef = useRef(editing);
 
   messagesRef.current = messages;
+  draftRef.current = draft;
+  editingRef.current = editing;
 
   /**
    * One entry point for both requests this screen can start.
@@ -161,19 +170,23 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     stopChat();
   }, [isBusy, stopChat]);
 
+  // A message row holds this one, so it reads the draft and the edit flag at
+  // press time instead of depending on them. `isBusy` may stay a dependency:
+  // it is in the list's `extraData`, so rows do get a fresh copy when it
+  // changes.
   const startEdit = useCallback(() => {
     const lastUser = messagesRef.current.findLast(
       (message) => message.role === "user"
     );
 
-    if (!lastUser || isBusy || editing) {
+    if (!lastUser || isBusy || editingRef.current) {
       return;
     }
 
-    draftBeforeEdit.current = draft;
+    draftBeforeEdit.current = draftRef.current;
     setDraft(textOfMessage(lastUser));
     setEditing(true);
-  }, [draft, editing, isBusy]);
+  }, [isBusy]);
 
   const cancelEdit = useCallback(() => {
     if (!editing) {
@@ -191,7 +204,19 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
       return;
     }
 
-    run("retry", () => regenerate());
+    // Name the message. Without an id the AI SDK regenerates whatever sits
+    // last in the list whatever its role, so a conversation whose tail is a
+    // user message (send, then stop before the first chunk) would answer that
+    // message instead of remaking the answer this button belongs to.
+    const lastAssistant = messagesRef.current.findLast(
+      (message) => message.role === "assistant"
+    );
+
+    if (!lastAssistant) {
+      return;
+    }
+
+    run("retry", () => regenerate({ messageId: lastAssistant.id }));
   }, [regenerate, run, status]);
 
   return {
