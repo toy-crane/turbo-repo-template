@@ -10,19 +10,19 @@ iOS와 Android Development Build에서 사용자는 재구축된 대화 화면�
 
 ## 완료 조건
 
-- [ ] 새 의존성을 설치하고 iOS·Android Development Build를 각 1회 재빌드한다. `@legendapp/list` v3, `react-native-keyboard-controller`는 최신 호환 버전, `expo-symbols`·`expo-clipboard`·`expo-web-browser`는 `bunx expo install`로 SDK 호환 버전을 쓴다. 이후 작업(03, 05)이 쓸 clipboard·web-browser도 재빌드를 한 번으로 묶기 위해 여기서 설치한다.
-- [ ] 루트 레이아웃에 `KeyboardProvider`가 들어가고, jest 설정이 갱신된다(`transformIgnorePatterns`에 `@legendapp`, `jest.setup.ts`에 `react-native-keyboard-controller/jest` 공식 목).
-- [ ] 공용 `Icon` 컴포넌트(`src/shared/ui/icon/`)가 아이콘 결정을 구현한다. iOS는 `SymbolView`, Android는 `material-paths.ts`의 Material Symbols path 데이터를 `react-native-svg`로 그리고 Apache-2.0 출처 표기를 같은 파일에 둔다.
-- [ ] 대화가 비어 있으면 제목과 짧은 안내만 보인다. 추천 질문은 없다.
-- [ ] 입력창이 여러 줄로 늘어나 정해진 최대 높이에서 멈춘다. 공백뿐인 메시지는 전송되지 않고, 연속 탭 중복 전송은 기존 `running` ref 가드가 계속 막는다.
-- [ ] 전송을 시작하면 입력을 비우고 사용자 메시지를 바로 표시한다. 키보드는 목록에서 끌어내려 닫을 수 있다.
-- [ ] `submitted`와 `streaming` 동안 전송 버튼이 생성 중지 버튼으로 바뀌고, 중지하면 부분 답변을 남긴 채 입력 가능한 상태로 돌아온다.
-- [ ] 메시지 목록이 가상 목록으로 바뀌고 `message.parts`를 종류·순서대로 그린다. 텍스트 part는 선택 가능한 일반 텍스트, 미지원 part는 앱을 중단시키지 않는 기본 표시다. 문자열로 합치던 `messageText`는 삭제한다.
-- [ ] 사용자가 아래 근처를 볼 때만 새 메시지와 스트리밍을 따라가고, 이전 내용을 읽는 중에는 화면을 강제로 옮기지 않으며, 아래에서 멀어지면 최신 메시지로 이동 버튼이 보이고 동작한다.
-- [ ] 스트리밍 중 다른 메시지 행이 다시 렌더링되지 않는 것을 렌더 횟수 카운터 테스트로 확인한다(`useChat`의 `throttle` + memo 행. 참조가 유지되지 않으면 커스텀 비교 함수로 대응).
-- [ ] `chatLabels`가 `ui/chat-labels.ts`로 옮겨지고(기존 import 경로 재수출 유지) `생성 중지`, `최신 메시지로 이동` 이름이 `chatLabels`와 README 접근성 표에 같은 커밋으로 추가된다.
-- [ ] 기존 채팅 컴포넌트 테스트의 6개 동작(전송·스트리밍, 실패 후 다시 시도, 재요청, 토큰 상실, 토큰 없음, 중복 탭)이 새 구조에서도 통과하고, 중지·빈 대화·공백 차단·버튼 전환 테스트가 추가된다.
-- [ ] `HomeScreen`이 `useChatSession`을 소유하고 `ChatPanel`에 세션 객체를 넘긴다. 인증에서 access token을 받아 채팅에 넘기는 경계는 `HomeScreen` 안에 그대로 남는다.
+- [x] 새 의존성을 설치하고 iOS·Android Development Build를 각 1회 재빌드한다. `@legendapp/list` v3, `react-native-keyboard-controller`는 최신 호환 버전, `expo-symbols`·`expo-clipboard`·`expo-web-browser`는 `bunx expo install`로 SDK 호환 버전을 쓴다. 이후 작업(03, 05)이 쓸 clipboard·web-browser도 재빌드를 한 번으로 묶기 위해 여기서 설치한다.
+- [x] 루트 레이아웃에 `KeyboardProvider`가 들어가고, jest 설정이 갱신된다(`transformIgnorePatterns`에 `@legendapp`, `jest.setup.ts`에 `react-native-keyboard-controller/jest` 공식 목).
+- [x] 공용 `Icon` 컴포넌트(`src/shared/ui/icon/`)가 아이콘 결정을 구현한다. iOS는 `SymbolView`, Android는 `material-paths.ts`의 Material Symbols path 데이터를 `react-native-svg`로 그리고 Apache-2.0 출처 표기를 같은 파일에 둔다.
+- [x] 대화가 비어 있으면 제목과 짧은 안내만 보인다. 추천 질문은 없다.
+- [x] 입력창이 여러 줄로 늘어나 정해진 최대 높이에서 멈춘다. 공백뿐인 메시지는 전송되지 않고, 연속 탭 중복 전송은 기존 `running` ref 가드가 계속 막는다.
+- [x] 전송을 시작하면 입력을 비우고 사용자 메시지를 바로 표시한다. 키보드는 목록에서 끌어내려 닫을 수 있다.
+- [x] `submitted`와 `streaming` 동안 전송 버튼이 생성 중지 버튼으로 바뀌고, 중지하면 부분 답변을 남긴 채 입력 가능한 상태로 돌아온다.
+- [x] 메시지 목록이 가상 목록으로 바뀌고 `message.parts`를 종류·순서대로 그린다. 텍스트 part는 선택 가능한 일반 텍스트, 미지원 part는 앱을 중단시키지 않는 기본 표시다. 문자열로 합치던 `messageText`는 삭제한다.
+- [x] 사용자가 아래 근처를 볼 때만 새 메시지와 스트리밍을 따라가고, 이전 내용을 읽는 중에는 화면을 강제로 옮기지 않으며, 아래에서 멀어지면 최신 메시지로 이동 버튼이 보이고 동작한다.
+- [x] 스트리밍 중 다른 메시지 행이 다시 렌더링되지 않는 것을 렌더 횟수 카운터 테스트로 확인한다(`useChat`의 `throttle` + memo 행. 참조가 유지되지 않으면 커스텀 비교 함수로 대응).
+- [x] `chatLabels`가 `ui/chat-labels.ts`로 옮겨지고(기존 import 경로 재수출 유지) `생성 중지`, `최신 메시지로 이동` 이름이 `chatLabels`와 README 접근성 표에 같은 커밋으로 추가된다.
+- [x] 기존 채팅 컴포넌트 테스트의 6개 동작(전송·스트리밍, 실패 후 다시 시도, 재요청, 토큰 상실, 토큰 없음, 중복 탭)이 새 구조에서도 통과하고, 중지·빈 대화·공백 차단·버튼 전환 테스트가 추가된다.
+- [x] `HomeScreen`이 `useChatSession`을 소유하고 `ChatPanel`에 세션 객체를 넘긴다. 인증에서 access token을 받아 채팅에 넘기는 경계는 `HomeScreen` 안에 그대로 남는다.
 
 ## 제약
 
@@ -48,9 +48,16 @@ iOS와 Android Development Build에서 사용자는 재구축된 대화 화면�
 ## 상태
 
 <!-- 이후 값: `in-progress`, `completed`, `blocked` -->
-pending
+completed
 
 ## 실행 결과
 
-- 검증: —
-- 선행 조건: —
+- 검증: `bun run check`, `bun run check-types`, `bun run test`(113개) 모두 통과. iOS(iPhone 17 Pro)와 Android(mobile_shell_verify_api35) Development Build를 각 1회 재빌드해 설치했다.
+- 기기 검증(agent-device, 플랫폼별 이메일 코드 로그인 → 채팅 → 세션 종료):
+  - iOS: 여러 줄 입력이 최대 높이(120)에서 멈추고 내부 스크롤로 전환, 전송 시 입력 비움과 사용자 메시지 즉시 표시, 토큰 단위 스트리밍(버퍼링 없음, 스트리밍 헤더 불필요), 생성 중지 시 부분 답변 유지와 API 서버 `Request aborted on POST /ai/chat` 로그, 위로 스크롤 중 강제 이동 없음, 최신 메시지로 이동 버튼 표시·동작, 키보드 끌어내려 닫기, 다크 모드·XXXL 글자·고대비에서 핵심 동작 확인.
+  - Android: 스트리밍 끝 따라가기, 이전 내용 읽는 중 새 답변이 화면을 옮기지 않음, 최신 메시지로 이동 버튼 표시·동작, 생성 중지 시 서버 중단 로그(2번째), 다크 모드 확인. Material Symbols path 아이콘 렌더링 확인.
+- jest 가상 목록 프로브: `estimatedListSize`만으로는 행이 그려지지 않고, 테스트 하네스에서 `layout` 이벤트 발화 + `waitFor` 한 틱이면 행이 그려진다. 테스트 전용 목은 필요 없다.
+- `Stack.Toolbar` 프로브: `HomeScreen` 컴포넌트 내부에서 등록한 `Stack.Toolbar`가 iOS 헤더에 정상 표시된다. 작업 05는 `HomeScreen` 내부 등록을 쓴다.
+- 결정 이탈 기록: iOS Large Title은 이 화면에서 유지하지 않는다. `KeyboardChatScrollView`가 `contentInset`을 직접 구동해 UIKit 자동 inset·제목 축소가 연결되지 않고, 대화 화면은 스크롤 위치가 항상 끝에 있어 접히는 Large Title이 의미가 없다. Home만 컴팩트 헤더(`largeTitle={false}`)를 쓰고 목록 상단 inset은 `useHeaderHeight` 값으로 지정했다(Activity·Saved는 Large Title 유지).
+- 잔여 항목: Android 키보드 끌어내려 닫기는 표준 `on-drag` 모드로 구현했으나 에뮬레이터 Gboard 온보딩 UI가 겹쳐 시각 확인은 못 했다. 모션 줄이기 설정은 시뮬레이터 CLI가 지원하지 않아 애니메이션 미의존 설계(텍스트 상태 표시)로 갈음했다.
+- 선행 조건: 01 완료(중지의 서버 절반). 기기 검증에서 종단 간 중지가 실제로 확인됐다.
