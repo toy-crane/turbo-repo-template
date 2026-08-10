@@ -53,3 +53,11 @@ completed
 - 배치 변경 기록: `Stack.Toolbar`는 쓰지 못했다. Android의 `Stack.Toolbar.Button`은 이미지 아이콘 없이는 null을 그리고(텍스트 레이블 미지원), 커스텀 `Stack.Toolbar.View`는 Jetpack Compose 제약 측정 크래시(`Can't represent a width of 520192...`)를 일으켰다. 대신 `navigation.setOptions({ headerRight })`로 새 대화 버튼과 아바타를 한 곳에서 그린다(iOS는 SF Symbol, Android는 텍스트 레이블 — 작업 원안 유지). 이에 따라 아바타 등록도 라우트 파일에서 `HomeScreen`으로 옮겼고 라우터 테스트의 아바타 press 검증은 home-screen 테스트로 이동했다.
 - jest 한계 기록: 가상 목록 컨테이너는 jest에서 네이티브 레이아웃을 받지 못해 `pointerEvents: "none"` 뒤에 남고 행 내부 press가 조용히 무시된다. 02의 대응 사다리 마지막 단계대로 chat-panel 테스트는 데이터를 그대로 매핑하는 목록 목을 쓴다(실제 목록 동작은 기기 검증이 담당).
 - 선행 조건: 02의 행·입력창·세션 소유 구조를 그대로 사용했다.
+
+## 이후 변경
+
+사용자 요청으로 화면 구조를 바꿨다. 대화는 Home이 아니라 루트 스택의 `/chat` 화면이 소유한다. Home은 시작 화면만 두고, 헤더의 새 대화 버튼이 대화 화면을 민다. 대화가 화면 수명과 같아지면서 초기화 확인 Alert와 `clearConversation`은 호출자가 없어져 지웠다.
+
+- `Stack.Toolbar`를 다시 썼다. 위 기록의 두 함정은 원인이 달랐다. `Toolbar.Button`은 중첩 `Toolbar.Icon` 대신 `icon` prop에 값을 넘기면 그려진다(iOS는 SF Symbol 이름, Android는 이미지). Compose 측정 크래시는 `Toolbar.View`가 담은 React Native 뷰가 폭을 정하지 못해서 생기므로, 프로필 사진은 iOS에만 두고 Android는 아이콘 버튼을 쓴다.
+- `Stack.Toolbar`는 자식을 엘리먼트 타입으로 읽는다. 항목을 별도 컴포넌트로 감싸면 통째로 버려서 iOS 아바타가 사라졌다. 항목은 라우트 파일에 그대로 편다.
+- 탭 안에서 `NativeTabs`의 `hidden`으로 탭바를 감추면 Android에서 비운 자리가 남아 그 위의 모든 터치를 삼킨다. 전송 버튼이 눌리지 않았고, 그 자리는 감춘 탭의 프레임과 정확히 겹쳤다. 대화 화면을 루트 스택으로 올려 네이티브 push가 탭바를 덮게 했다.

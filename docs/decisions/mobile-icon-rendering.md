@@ -7,11 +7,14 @@
 - React Native 화면의 아이콘은 공용 `Icon` 컴포넌트(`src/shared/ui/icon/`)가 렌더링한다. iOS는 `expo-symbols` 직접 의존성의 `SymbolView`로 SF Symbol을 그리고, Android는 필요한 Material Symbols의 path 데이터를 저장소 안 TypeScript 레코드로 두고 `react-native-svg`로 그린다.
 - `Icon`도 하나의 아이콘 의미에 iOS SF Symbol 이름과 Android Material Symbol path를 함께 정의한다. iOS 전용 문자열만 공유 코드에 남기지 않는 규칙은 RN 화면에도 동일하게 적용한다.
 - `@expo/ui`의 `Host` 안에 아이콘이 필요하면 공통 `Icon`을 사용한다. `SymbolView`를 `Host` 안에 삽입하지 않는다.
+- `Stack.Toolbar` 버튼의 아이콘은 `src/shared/ui/icon/toolbar-icons.tsx`가 한곳에서 정의한다. iOS는 SF Symbol 이름을, Android는 `assets/toolbar/`의 PNG를 `icon` prop으로 넘긴다. 중첩 `Stack.Toolbar.Icon`은 사용하지 않는다.
+- 툴바용 PNG는 `Icon`이 path로 그리는 것과 같은 Material Symbols 글리프를 1x, 2x, 3x로 내보낸 것이다. 같은 출처 표기를 파일에 함께 둔다.
 - 시스템 심벌로 표현할 수 없는 브랜드 로고나 고유 그래픽만 이미지 또는 SVG 파일로 제공한다.
 
 ## 경계
 
 - 범용 아이콘 폰트나 서드파티 아이콘 디자인 시스템은 RN 화면에도 추가하지 않는다.
+- 툴바 PNG는 `Stack.Toolbar` 버튼 전용이다. RN 화면 아이콘은 계속 `Icon`이 그린다. Android 툴바는 Compose로 그려서 RN 뷰를 담으면 폭을 정하지 못하므로, 툴바 안에 `Stack.Toolbar.View`로 RN 뷰를 넣지 않는다.
 - 저장소에 두는 Material Symbols path 데이터는 실제로 쓰는 아이콘만 담고 Apache-2.0 출처 표기를 같은 파일에 둔다. `.svg` 파일 자산이나 metro 변환기는 추가하지 않는다.
 - 플랫폼별 심벌의 세부 모양이 다른 것은 의도된 차이다. Home, Activity, Settings처럼 의미와 접근성 라벨은 플랫폼 사이에서 동일하게 유지한다.
 - 아이콘 색상은 적용되는 표면의 시맨틱 색상을 사용한다. 탭의 선택·비선택 색상과 애니메이션은 탭 컴포넌트가 소유한다.

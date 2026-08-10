@@ -25,8 +25,6 @@ export interface ChatSession {
   cancelEdit: () => void;
   /** False while there is no token to send, so a retry cannot go out naked. */
   canRetry: boolean;
-  /** Empties the conversation in memory. The server is never told. */
-  clearConversation: () => void;
   draft: string;
   /** True while the composer holds the last user message for rewriting. */
   editing: boolean;
@@ -196,20 +194,9 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     run("retry", () => regenerate());
   }, [regenerate, run, status]);
 
-  const clearConversation = useCallback(() => {
-    if (isBusy) {
-      return;
-    }
-
-    setMessages([]);
-    setDraft("");
-    setEditing(false);
-  }, [isBusy, setMessages]);
-
   return {
     cancelEdit,
     canRetry: !(isBusy || accessToken === undefined),
-    clearConversation,
     draft,
     editing,
     error,
