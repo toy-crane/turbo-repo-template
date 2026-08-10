@@ -10,6 +10,12 @@ jest.mock("@/features/auth/state/auth-session", () => ({
   useAuthSession: jest.fn(),
 }));
 
+// The screen only forwards the measured header height, and there is no real
+// navigator in this test to measure one.
+jest.mock("expo-router/react-navigation", () => ({
+  useHeaderHeight: () => 64,
+}));
+
 jest.mock("@/features/chat/state/use-chat-session", () => ({
   useChatSession: jest.fn(),
 }));

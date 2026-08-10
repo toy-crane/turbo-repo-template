@@ -27,8 +27,15 @@ describe("getTabStackScreenOptions", () => {
   });
 
   test("현재 native Stack Large Title 옵션을 사용한다", () => {
-    expect(getTabStackRouteOptions("Home")).toEqual({
+    expect(getTabStackRouteOptions("Saved")).toEqual({
       headerLargeTitleEnabled: true,
+      title: "Saved",
+    });
+  });
+
+  test("채팅처럼 아래에 고정된 화면은 컴팩트 헤더를 쓸 수 있다", () => {
+    expect(getTabStackRouteOptions("Home", false)).toEqual({
+      headerLargeTitleEnabled: false,
       title: "Home",
     });
   });
