@@ -44,7 +44,7 @@ beforeEach(() => {
 
 test("프로필 이름의 첫 글자를 아바타에 보여준다", async () => {
   resetFakeSupabase({
-    profile: { avatar_url: null, display_name: "루비" },
+    profile: { avatar_url: null, display_name: "루비", username: "ruby" },
     session: createFakeSession(),
   });
 

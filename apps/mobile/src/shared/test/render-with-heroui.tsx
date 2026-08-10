@@ -4,6 +4,8 @@ import type { ReactElement } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Uniwind } from "uniwind";
 
+import { QueryProvider } from "@/core/providers/query-provider";
+
 // Fixed metrics rather than the device's: a screen that reads insets should
 // render the same way on every machine that runs the tests.
 const testSafeAreaMetrics = {
@@ -20,6 +22,7 @@ const testThemeVariables = {
   "--color-danger-soft-hover": "#fee2e2",
   "--color-default-hover": "#e5e7eb",
   "--color-success": "#16a34a",
+  "--color-success-foreground": "#ffffff",
   "--color-warning": "#ca8a04",
   "--theme": "default",
 };
@@ -29,11 +32,16 @@ Uniwind.updateCSSVariables("dark", testThemeVariables);
 
 function withProviders(element: ReactElement) {
   return (
-    <SafeAreaProvider initialMetrics={testSafeAreaMetrics}>
-      <HeroUINativeProviderRaw config={{ animation: "disable-all" }}>
-        {element}
-      </HeroUINativeProviderRaw>
-    </SafeAreaProvider>
+    // The query cache is one of the app's providers, so a screen rendered here
+    // finds the same thing it finds at runtime rather than throwing the moment
+    // it reads remote state.
+    <QueryProvider>
+      <SafeAreaProvider initialMetrics={testSafeAreaMetrics}>
+        <HeroUINativeProviderRaw config={{ animation: "disable-all" }}>
+          {element}
+        </HeroUINativeProviderRaw>
+      </SafeAreaProvider>
+    </QueryProvider>
   );
 }
 

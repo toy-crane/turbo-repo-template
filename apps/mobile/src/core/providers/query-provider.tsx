@@ -1,7 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
-const queryClient = new QueryClient();
+/**
+ * The app's one cache. Exported so a test can empty it between cases: it
+ * outlives any render on purpose, which is exactly what would carry one test's
+ * profile into the next.
+ */
+export const queryClient = new QueryClient();
 
 export function QueryProvider({ children }: { children: ReactNode }) {
   return (
