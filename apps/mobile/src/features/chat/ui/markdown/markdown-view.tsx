@@ -3,7 +3,6 @@
  * ever appends blocks or grows the last one, so the position inside the tree
  * is the stable identity for every node.
  */
-import { openBrowserAsync } from "expo-web-browser";
 import type {
   BlockContent,
   DefinitionContent,
@@ -14,6 +13,7 @@ import type {
 import { useCallback, useMemo } from "react";
 import { ScrollView, Text, View } from "react-native";
 
+import { openExternalLink } from "../open-link";
 import { CodeBlock, InlineCode } from "./code-block";
 import { parseMarkdown } from "./parse-markdown";
 
@@ -34,14 +34,6 @@ const headingClassByDepth: Record<number, string> = {
 const BODY_TEXT_CLASS = "text-base text-foreground leading-6";
 const TABLE_CELL_WIDTH = 144;
 
-function openLink(url: string) {
-  // The in-app browser sheet only understands web addresses; anything else is
-  // quietly ignored rather than crashing the message.
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    openBrowserAsync(url).catch(() => undefined);
-  }
-}
-
 function LinkText({
   children,
   url,
@@ -50,7 +42,7 @@ function LinkText({
   url: string;
 }) {
   const open = useCallback(() => {
-    openLink(url);
+    openExternalLink(url);
   }, [url]);
 
   return (
