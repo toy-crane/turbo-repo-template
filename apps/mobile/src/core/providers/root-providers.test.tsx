@@ -1,5 +1,5 @@
 import { beforeEach, expect, jest, test } from "@jest/globals";
-import { renderRouter, screen } from "expo-router/testing-library";
+import { renderRouter, screen, waitFor } from "expo-router/testing-library";
 
 import {
   createFakeSession,
@@ -38,5 +38,9 @@ test("root provider tree가 화면에 query client를 제공한다", async () =>
   const router = renderRouter("./app", { initialUrl: "/" });
   await router;
 
-  expect(screen.getByLabelText("Query client reachable")).toBeOnTheScreen();
+  // Opening the app waits for the session and then the profile, so the first
+  // frame is deliberately neither screen.
+  await waitFor(() => {
+    expect(screen.getByLabelText("Query client reachable")).toBeOnTheScreen();
+  });
 });

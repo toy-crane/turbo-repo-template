@@ -23,6 +23,33 @@ const SEPARATED_EVERY = 3;
 export type NicknameProblem = "empty" | "tooLong";
 export type UsernameProblem = "charset" | "tooLong" | "tooShort";
 
+/** Everything that can stand between a typed id and a saved one. */
+export type UsernameTrouble =
+  | UsernameProblem
+  | "checkFailed"
+  | "reserved"
+  | "taken";
+
+/**
+ * Each one says what to do rather than what went wrong, and none of them names
+ * a rule the screen is not otherwise showing. There is no message for a
+ * well-formed, free id: a green check is the whole answer.
+ */
+export const USERNAME_MESSAGES: Record<UsernameTrouble, string> = {
+  charset: "영문 소문자, 숫자, 밑줄(_)만 사용할 수 있어요.",
+  checkFailed: "아이디를 확인하지 못했어요. 다시 시도해 주세요.",
+  reserved: "사용할 수 없는 아이디예요.",
+  taken: "이미 사용 중인 아이디예요.",
+  tooLong: "20자 이하로 입력해 주세요.",
+  tooShort: "3자 이상 입력해 주세요.",
+};
+
+/**
+ * The only nickname message. An empty field disables the button and says
+ * nothing: the person has not typed yet, so there is nothing to correct.
+ */
+export const NICKNAME_TOO_LONG_MESSAGE = "30자 이하로 입력해 주세요.";
+
 /**
  * Counts what a person sees as one letter, near enough.
  *
@@ -70,9 +97,11 @@ export function normalizeUsernameInput(raw: string): string {
  * to add a third character sends them somewhere that cannot work. `ab` really
  * is only too short.
  */
-export function checkUsernameFormat(value: string): UsernameProblem | undefined {
+export function checkUsernameFormat(
+  value: string
+): UsernameProblem | undefined {
   if (value.length === 0) {
-    return undefined;
+    return;
   }
 
   if (!USERNAME_SHAPE.test(value)) {

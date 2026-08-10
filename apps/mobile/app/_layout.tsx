@@ -6,13 +6,12 @@ import { HeroUINativeProvider } from "heroui-native/provider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
+import { useProtectedArea } from "@/core/navigation/protected-area";
 import { getSettingsSheetOptions } from "@/core/navigation/settings-sheet";
 import { QueryProvider } from "@/core/providers/query-provider";
 import { AppThemeBridge, useAppTheme } from "@/core/theme/app-theme-bridge";
-import {
-  AuthSessionProvider,
-  useAuthSession,
-} from "@/features/auth/state/auth-session";
+import { AuthSessionProvider } from "@/features/auth/state/auth-session";
+import { ProfileUnavailableScreen } from "@/features/auth/ui/profile-unavailable-screen";
 import { SessionCheckingScreen } from "@/features/auth/ui/session-checking-screen";
 import { SetupNeededScreen } from "@/features/auth/ui/setup-needed-screen";
 
@@ -22,14 +21,18 @@ const heroUIConfig = {
 
 function ThemedRootLayout() {
   const { background } = useAppTheme();
-  const { problem, status } = useAuthSession();
+  const { area, problem, retryProfile } = useProtectedArea();
 
-  if (status === "checking") {
+  if (area === "checking") {
     return <SessionCheckingScreen background={background} />;
   }
 
-  if (status === "misconfigured") {
+  if (area === "misconfigured") {
     return <SetupNeededScreen problem={problem ?? ""} />;
+  }
+
+  if (area === "profileUnavailable") {
+    return <ProfileUnavailableScreen onRetry={retryProfile} />;
   }
 
   return (
@@ -38,7 +41,8 @@ function ThemedRootLayout() {
         The guards decide which group exists at all, so there is no screen to
         navigate away from and no redirect to write. Expo Router also drops the
         history of a group whose guard turns false, which is what keeps a signed
-        out person from swiping back into a protected screen.
+        out person from swiping back into a protected screen — and what closes
+        onboarding the moment the profile is finished.
       */}
       <Stack
         screenOptions={{
@@ -46,11 +50,14 @@ function ThemedRootLayout() {
           headerShown: false,
         }}
       >
-        <Stack.Protected guard={status === "signedIn"}>
+        <Stack.Protected guard={area === "app"}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="settings" options={getSettingsSheetOptions()} />
         </Stack.Protected>
-        <Stack.Protected guard={status === "signedOut"}>
+        <Stack.Protected guard={area === "onboarding"}>
+          <Stack.Screen name="(onboarding)" />
+        </Stack.Protected>
+        <Stack.Protected guard={area === "signedOut"}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
       </Stack>
