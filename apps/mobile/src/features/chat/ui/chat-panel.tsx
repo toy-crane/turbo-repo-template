@@ -8,8 +8,15 @@ import type { UIMessage } from "ai";
 import { Button } from "heroui-native/button";
 import { useThemeColor } from "heroui-native/hooks";
 import { Spinner } from "heroui-native/spinner";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Platform, Pressable, Text, TextInput, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  AccessibilityInfo,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -86,6 +93,27 @@ export function ChatPanel({
 
   const hasMessages = chat.messages.length > 0;
   const canSend = chat.draft.trim().length > 0;
+
+  // `accessibilityRole="alert"` announces nothing in React Native: Android
+  // turns it into a role description string and iOS maps it to no trait at
+  // all. Generating and failing are the two states a screen reader user has
+  // no other way to notice, so the panel says them out loud itself.
+  const announced = useRef<string | undefined>(undefined);
+  const spoken = chat.error
+    ? chatLabels.errorAnnouncement
+    : (chat.isBusy && chatLabels.generating) || undefined;
+
+  useEffect(() => {
+    if (spoken === announced.current) {
+      return;
+    }
+
+    announced.current = spoken;
+
+    if (spoken !== undefined) {
+      AccessibilityInfo.announceForAccessibility(spoken);
+    }
+  }, [spoken]);
 
   // Only the last user message can be rewritten and only the last answer can
   // be regenerated; every earlier message keeps constant props so its
@@ -193,6 +221,7 @@ export function ChatPanel({
         >
           {chat.editing ? (
             <View
+              accessibilityLiveRegion="polite"
               className="flex-row items-center justify-between"
               testID="chat-editing"
             >
@@ -211,6 +240,7 @@ export function ChatPanel({
 
           {chat.isBusy ? (
             <View
+              accessibilityLiveRegion="polite"
               className="flex-row items-center gap-2"
               testID="chat-generating"
             >
@@ -224,6 +254,7 @@ export function ChatPanel({
           {chat.error ? (
             <View className="gap-2">
               <Text
+                accessibilityLiveRegion="assertive"
                 accessibilityRole="alert"
                 className="text-danger text-sm"
                 testID="chat-error"
@@ -247,8 +278,16 @@ export function ChatPanel({
               className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
               multiline
               onChangeText={chat.setDraft}
+              onSubmitEditing={chat.send}
               placeholder="무엇이든 물어보세요"
+              returnKeyType="send"
               style={{ maxHeight: INPUT_MAX_HEIGHT }}
+              // Multiline is for growing with a long message, not for writing
+              // one line at a time: a multiline input defaults to inserting a
+              // newline, which leaves a hardware keyboard with no way to send
+              // at all. The return key sends, the way it did when this was a
+              // single-line field.
+              submitBehavior="submit"
               testID="chat-input"
               value={chat.draft}
             />

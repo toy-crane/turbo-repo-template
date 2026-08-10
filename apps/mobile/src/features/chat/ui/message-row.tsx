@@ -1,14 +1,12 @@
 import type { UIMessage } from "ai";
-import { setStringAsync } from "expo-clipboard";
 import { useThemeColor } from "heroui-native/hooks";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { Icon, type IconName } from "@/shared/ui/icon/icon";
 import { chatLabels } from "./chat-labels";
 import { MessagePart } from "./message-parts";
-
-const COPIED_FEEDBACK_MS = 2000;
+import { useCopyFeedback } from "./use-copy-feedback";
 
 /** The message body the clipboard gets: text parts joined by blank lines. */
 function copyTextOf(message: UIMessage): string {
@@ -69,35 +67,7 @@ function MessageActions({
   regenerateAction?: () => void;
   regenerateDisabled: boolean;
 }) {
-  const [copied, setCopied] = useState(false);
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined
-  );
-
-  useEffect(
-    () => () => {
-      if (resetTimer.current !== undefined) {
-        clearTimeout(resetTimer.current);
-      }
-    },
-    []
-  );
-
-  const copy = useCallback(() => {
-    setStringAsync(copyTextOf(message))
-      .then(() => {
-        setCopied(true);
-
-        if (resetTimer.current !== undefined) {
-          clearTimeout(resetTimer.current);
-        }
-
-        resetTimer.current = setTimeout(() => {
-          setCopied(false);
-        }, COPIED_FEEDBACK_MS);
-      })
-      .catch(() => undefined);
-  }, [message]);
+  const { copied, copy } = useCopyFeedback(() => copyTextOf(message));
 
   return (
     <View className="flex-row items-center">

@@ -9,6 +9,7 @@ import {
 import type { UIMessageChunk } from "ai";
 import { simulateReadableStream } from "ai";
 import { setStringAsync } from "expo-clipboard";
+import { AccessibilityInfo } from "react-native";
 
 import { createChatTransport } from "@/features/chat/api/chat-transport";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
@@ -581,6 +582,55 @@ describe("ChatPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("복사됨")).toBeOnTheScreen();
     });
+  });
+
+  test("입력창에서 return 키로도 보낸다", async () => {
+    const transport = fakeTransport(() =>
+      Promise.resolve(answerStream(["답변"]))
+    );
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    const input = screen.getByLabelText(chatLabels.input);
+
+    await user.type(input, "질문");
+
+    // 여러 줄 입력창은 기본적으로 return을 줄바꿈으로 삼켜 onSubmitEditing을
+    // 부르지 않는다. 이 설정이 없으면 하드웨어 키보드에서 보낼 방법이 없다.
+    expect(input.props.submitBehavior).toBe("submit");
+
+    fireEvent(input, "submitEditing");
+
+    await waitFor(() => {
+      expect(transport.sendMessages).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.getByText("질문")).toBeOnTheScreen();
+  });
+
+  test("요청이 실패하면 화면 낭독기에 소리 내어 알린다", async () => {
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+
+    useTransport(fakeTransport(() => Promise.reject(new Error("network"))));
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
+    });
+
+    // accessibilityRole="alert"는 React Native에서 아무 알림도 만들지 않는다.
+    expect(announce).toHaveBeenCalledWith(chatLabels.errorAnnouncement);
+
+    announce.mockRestore();
   });
 
   test("키보드가 열려 있어도 목록 안 버튼이 한 번에 눌리게 한다", async () => {

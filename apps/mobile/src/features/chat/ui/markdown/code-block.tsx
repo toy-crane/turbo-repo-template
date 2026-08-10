@@ -1,8 +1,7 @@
-import { setStringAsync } from "expo-clipboard";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 
 import { chatLabels } from "../chat-labels";
+import { useCopyFeedback } from "../use-copy-feedback";
 
 /**
  * The one and only monospace declaration in the app: the typography decision
@@ -12,8 +11,6 @@ const CODE_FONT_FAMILY = Platform.select({
   default: "monospace",
   ios: "Menlo",
 });
-
-const COPIED_FEEDBACK_MS = 2000;
 
 /** Inline code inside a sentence. Same font rule, no copy control. */
 export function InlineCode({ value }: { value: string }) {
@@ -32,35 +29,7 @@ export function InlineCode({ value }: { value: string }) {
  * and a button that copies exactly this block.
  */
 export function CodeBlock({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined
-  );
-
-  useEffect(
-    () => () => {
-      if (resetTimer.current !== undefined) {
-        clearTimeout(resetTimer.current);
-      }
-    },
-    []
-  );
-
-  const copy = useCallback(() => {
-    setStringAsync(code)
-      .then(() => {
-        setCopied(true);
-
-        if (resetTimer.current !== undefined) {
-          clearTimeout(resetTimer.current);
-        }
-
-        resetTimer.current = setTimeout(() => {
-          setCopied(false);
-        }, COPIED_FEEDBACK_MS);
-      })
-      .catch(() => undefined);
-  }, [code]);
+  const { copied, copy } = useCopyFeedback(() => code);
 
   return (
     <View className="my-2 rounded-xl bg-surface-secondary">

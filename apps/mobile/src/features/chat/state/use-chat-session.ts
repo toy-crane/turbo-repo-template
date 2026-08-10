@@ -55,6 +55,12 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState(false);
 
+  // A request that threw before it reached the chat store, so the screen has
+  // something to show instead of a button that quietly does nothing.
+  const [requestError, setRequestError] = useState<Error | undefined>(
+    undefined
+  );
+
   // What the person had typed before pressing edit, so cancel can restore it.
   const draftBeforeEdit = useRef("");
 
@@ -68,6 +74,10 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     () => createChatTransport(() => currentToken.current),
     []
   );
+
+  // The conversation as it stood before a regenerate dropped the answer it is
+  // about to replace. Set only while such a request is in flight.
+  const beforeRegenerate = useRef<UIMessage[] | undefined>(undefined);
   const {
     error,
     messages,
@@ -77,9 +87,24 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     status,
     stop: stopChat,
   } = useChat({
+    // Failing does not reject the promise the request returned — the AI SDK
+    // turns it into chat state — so putting the dropped answer back has to
+    // happen here.
+    onError: () => {
+      if (beforeRegenerate.current !== undefined) {
+        setMessagesRef.current?.(beforeRegenerate.current);
+        beforeRegenerate.current = undefined;
+      }
+    },
     throttle: STREAM_UPDATE_INTERVAL_MS,
     transport,
   });
+
+  // `onError` is built before `setMessages` exists, so it reaches it through
+  // a ref rather than capturing an undefined binding.
+  const setMessagesRef = useRef<typeof setMessages | undefined>(undefined);
+
+  setMessagesRef.current = setMessages;
 
   const isBusy = status === "streaming" || status === "submitted";
   const running = useRef<ChatAction | undefined>(undefined);
@@ -106,6 +131,11 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
    * The ref, not the status, is what stops a double tap: two presses in the
    * same frame both read the status from before the first one, so a status
    * check alone would let the second through and send the message twice.
+   *
+   * A rejection has to land somewhere the screen can show. `sendMessage`
+   * turns a failed request into chat state on its own, but `regenerate`
+   * throws before the request starts, and an unhandled rejection is a LogBox
+   * warning in development and nothing at all in release.
    */
   const run = useCallback((action: ChatAction, work: () => Promise<void>) => {
     if (running.current !== undefined) {
@@ -113,9 +143,16 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     }
 
     running.current = action;
-    work().finally(() => {
-      running.current = undefined;
-    });
+    setRequestError(undefined);
+    work()
+      .catch((cause: unknown) => {
+        setRequestError(
+          cause instanceof Error ? cause : new Error(String(cause))
+        );
+      })
+      .finally(() => {
+        running.current = undefined;
+      });
   }, []);
 
   const send = useCallback(() => {
@@ -216,7 +253,16 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
       return;
     }
 
-    run("retry", () => regenerate({ messageId: lastAssistant.id }));
+    // The AI SDK drops the message being remade before it sends anything, so
+    // a failed request would take a stopped answer's text with it and leave
+    // no way back. `onError` puts this back.
+    beforeRegenerate.current = messagesRef.current;
+
+    run("retry", () =>
+      regenerate({ messageId: lastAssistant.id }).finally(() => {
+        beforeRegenerate.current = undefined;
+      })
+    );
   }, [regenerate, run, status]);
 
   return {
@@ -224,7 +270,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     canRetry: !(isBusy || accessToken === undefined),
     draft,
     editing,
-    error,
+    error: error ?? requestError,
     isBusy,
     messages,
     regenerateLast,
