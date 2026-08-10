@@ -11,8 +11,8 @@ import { AppThemeBridge, useAppTheme } from "@/core/theme/app-theme-bridge";
 import {
   AuthSessionProvider,
   useAuthSession,
-} from "@/features/auth/auth-session";
-import { SessionCheckingScreen } from "@/features/auth/session-checking-screen";
+} from "@/features/auth/state/auth-session";
+import { SessionCheckingScreen } from "@/features/auth/ui/session-checking-screen";
 
 const heroUIConfig = {
   devInfo: { stylingPrinciples: false },
@@ -23,7 +23,7 @@ function ThemedRootLayout() {
   const { status } = useAuthSession();
 
   if (status === "checking") {
-    return <SessionCheckingScreen />;
+    return <SessionCheckingScreen background={background} />;
   }
 
   return (

@@ -8,7 +8,7 @@ import { TextField } from "heroui-native/text-field";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
-import { useAuthSession } from "@/features/auth/auth-session";
+import { useAuthSession } from "@/features/auth/state/auth-session";
 import { createChatTransport } from "@/features/chat/chat-transport";
 
 /** Which request is in flight. Also what blocks a second one. */

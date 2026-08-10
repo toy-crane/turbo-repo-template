@@ -6,17 +6,16 @@ import {
   isSuccessResponse,
   type OneTapResponse,
 } from "react-native-nitro-google-signin";
-
+import {
+  GOOGLE_IOS_CLIENT_ID_ENV,
+  GOOGLE_WEB_CLIENT_ID_ENV,
+  resolveGoogleEnv,
+} from "@/features/auth/config/google-env";
 import {
   AuthConfigurationError,
   MissingProviderTokenError,
   NoProviderCredentialError,
 } from "./auth-errors";
-import {
-  GOOGLE_IOS_CLIENT_ID_ENV,
-  GOOGLE_WEB_CLIENT_ID_ENV,
-  resolveGoogleEnv,
-} from "./google-env";
 import { createSignInNonce } from "./nonce";
 import type { ProviderSignInResult } from "./provider-sign-in";
 

@@ -8,7 +8,6 @@ import {
   type OneTapResponse,
 } from "react-native-nitro-google-signin";
 
-import { AppQueryProvider } from "@/core/providers/app-query-provider";
 import {
   type FakeSupabase,
   resetFakeSupabase,
@@ -106,11 +105,7 @@ async function press(label: string) {
 }
 
 function renderSignIn() {
-  return renderWithHeroUI(
-    <AppQueryProvider>
-      <SignInScreen />
-    </AppQueryProvider>
-  );
+  return renderWithHeroUI(<SignInScreen />);
 }
 
 async function reachCodeStep() {

@@ -1,6 +1,7 @@
 import { router, Stack } from "expo-router";
 import { Platform } from "react-native";
 
+import { useAppTheme } from "@/core/theme/app-theme-bridge";
 import { SettingsScreen } from "@/screens/settings/settings-screen";
 
 function dismissSettings() {
@@ -33,9 +34,11 @@ function SettingsToolbar() {
 }
 
 export default function SettingsRoute() {
+  const { foreground } = useAppTheme();
+
   return (
     <>
-      <SettingsScreen />
+      <SettingsScreen foreground={foreground} />
       <SettingsToolbar />
     </>
   );
