@@ -147,6 +147,65 @@ describe("HomeScreen chat", () => {
     expect(screen.getByLabelText(chatLabels.retry)).toBeEnabled();
   });
 
+  test("다시 보내기를 누르면 실제로 다시 요청한다", async () => {
+    let attempt = 0;
+    const transport = fakeTransport(() => {
+      attempt += 1;
+
+      return attempt === 1
+        ? Promise.reject(new Error("network is down"))
+        : Promise.resolve(answerStream(["안녕하세요"]));
+    });
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderWithHeroUI(<HomeScreen />);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "안녕");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
+    });
+
+    await user.press(screen.getByLabelText(chatLabels.retry));
+
+    await waitFor(() => {
+      expect(screen.getByText("안녕하세요")).toBeOnTheScreen();
+    });
+
+    expect(transport.sendMessages).toHaveBeenCalledTimes(2);
+  });
+
+  test("세션이 사라지면 다시 보내기를 막는다", async () => {
+    const transport = fakeTransport(() =>
+      Promise.reject(new Error("network is down"))
+    );
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderWithHeroUI(<HomeScreen />);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "안녕");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
+    });
+
+    // The session goes away while the error is on screen. Typing is what makes
+    // the screen render again with the new provider value.
+    mockUseAuthSession.mockReturnValue({ session: null, status: "signedOut" });
+    await user.type(screen.getByLabelText(chatLabels.input), "다시");
+
+    expect(screen.getByLabelText(chatLabels.retry)).toBeDisabled();
+    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
+  });
+
   test("세션이 없으면 요청을 보내지 않는다", async () => {
     mockUseAuthSession.mockReturnValue({ session: null, status: "signedOut" });
 
