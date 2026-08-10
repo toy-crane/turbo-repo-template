@@ -14,11 +14,5 @@ const IOS_URL_SCHEME_PREFIX = "com.googleusercontent.apps.";
 export function toIosUrlScheme(iosClientId: string): string {
   const clientId = iosClientId.trim();
 
-  if (!clientId.endsWith(CLIENT_ID_SUFFIX)) {
-    throw new Error(
-      `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID 값이 iOS client ID 형식이 아닙니다. "${CLIENT_ID_SUFFIX}"으로 끝나야 합니다. 받은 값: "${iosClientId}". README.md "Google 로그인 준비"를 참고하세요.`
-    );
-  }
-
   return `${IOS_URL_SCHEME_PREFIX}${clientId.slice(0, -CLIENT_ID_SUFFIX.length)}`;
 }

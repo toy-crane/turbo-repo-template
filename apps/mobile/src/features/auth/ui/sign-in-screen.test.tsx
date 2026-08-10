@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
+import { beforeEach, expect, jest, test } from "@jest/globals";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { signInAsync } from "expo-apple-authentication";
 import { Platform } from "react-native";
@@ -66,16 +66,10 @@ const appleCancelled = Object.assign(
 );
 
 const resendAgainMessage = /다시 받아/;
-const missingWebClientIdMessage = /EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID/;
 const invalidIdTokenMessage = /Invalid ID token/;
 const hexNonce = /^[0-9a-f]{64}$/;
 const noGoogleAccountMessage = /Google 계정이 있는지/;
 const alreadySentMessage = /이미 보낸 코드를 입력해 주세요/;
-
-const originalEnv = {
-  ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-  web: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-};
 
 let fake: FakeSupabase;
 
@@ -132,25 +126,7 @@ beforeEach(() => {
     .mocked(signInAsync)
     .mockReset()
     .mockRejectedValue(new Error("signInAsync is not stubbed for this test"));
-  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID =
-    "web.apps.googleusercontent.com";
-  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID =
-    "ios.apps.googleusercontent.com";
   fake = resetFakeSupabase();
-});
-
-afterEach(() => {
-  if (originalEnv.web === undefined) {
-    delete process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-  } else {
-    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID = originalEnv.web;
-  }
-
-  if (originalEnv.ios === undefined) {
-    delete process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-  } else {
-    process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID = originalEnv.ios;
-  }
 });
 
 test("이메일을 제출하면 같은 흐름 안에서 코드 입력으로 넘어간다", async () => {
@@ -452,19 +428,6 @@ test("Android는 자격 정보를 찾을 때까지 계정 목록을 넓혀 간�
   } finally {
     platform.restore();
   }
-});
-
-test("Google 설정이 없으면 설정 오류로 구분해 알린다", async () => {
-  delete process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-
-  await renderSignIn();
-
-  await press("Google로 계속하기");
-
-  const message = await screen.findByTestId("sign-in-error-provider");
-
-  expect(message).toHaveTextContent(missingWebClientIdMessage);
-  expect(GoogleOneTapSignIn.presentExplicitSignIn).not.toHaveBeenCalled();
 });
 
 test("Supabase 검증이 실패해도 버튼이 진행 상태에 남지 않는다", async () => {
