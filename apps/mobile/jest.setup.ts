@@ -172,6 +172,18 @@ jest.mock("react-native-keyboard-controller", () =>
   require("react-native-keyboard-controller/jest")
 );
 
+// `SymbolView` is a native view with no Jest implementation. A plain view is
+// enough: icons are decorative, and tests find controls by accessibility name.
+jest.mock("expo-symbols", () => {
+  const React = require("react") as typeof import("react");
+  const { View } = require("react-native") as typeof import("react-native");
+
+  return {
+    SymbolView: (props: { name?: string; testID?: string }) =>
+      React.createElement(View, { testID: props.testID }),
+  };
+});
+
 jest.mock("react-native-worklets", () =>
   require("react-native-worklets/src/mock")
 );

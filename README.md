@@ -344,6 +344,8 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 | `로그아웃` | 설정 화면 |
 | `메시지` | Home 채팅 입력 |
 | `보내기` | Home 채팅 전송 버튼 |
+| `생성 중지` | 생성 중 전송 버튼 자리의 중지 버튼 |
+| `최신 메시지로 이동` | 대화 아래에서 멀어지면 나타나는 버튼 |
 | `답변을 만드는 중` | 답변 생성 중 표시 |
 | `다시 보내기` | 실패한 요청 재시도 버튼 |
 
@@ -354,7 +356,7 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 후보 버튼은 세 개가 같은 `testID`를 쓰고, 접근성 이름은 후보 값 자체입니다.
 
 채팅 화면의 요소에는 `testID`도 있습니다.
-`chat-input`, `chat-send`, `chat-generating`, `chat-error`, `chat-message-user`, `chat-message-assistant`입니다.
+`chat-input`, `chat-send`, `chat-stop`, `chat-list`, `chat-scroll-to-latest`, `chat-generating`, `chat-error`, `chat-message-user`, `chat-message-assistant`입니다.
 메시지 `testID`는 말풍선이 아니라 글자에 붙어 있어서 `get text`가 답변 자체를 돌려줍니다.
 대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 앱을 다시 시작해 대화를 비우고 한 건만 보냅니다.
 
