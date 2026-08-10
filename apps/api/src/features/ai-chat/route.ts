@@ -9,7 +9,10 @@ import {
 } from "ai";
 import { Hono, type MiddlewareHandler } from "hono";
 
-import { logRequestFailure } from "../../shared/safe-error-log";
+import {
+  logRequestAbort,
+  logRequestFailure,
+} from "../../shared/safe-error-log";
 import { resolveModelId } from "./config";
 
 export interface AiChatDependencies {
@@ -60,8 +63,14 @@ export function createAiChatRoutes(dependencies: AiChatDependencies = {}) {
     }
 
     const result = streamText({
+      // The request's own signal: when the app stops generation or the
+      // connection drops, the model call stops burning tokens with it.
+      abortSignal: c.req.raw.signal,
       messages: await convertToModelMessages(messages.data),
       model: dependencies.model ?? resolveModelId(),
+      onAbort: () => {
+        logRequestAbort(c.req.method, c.req.path);
+      },
       // A provider failure after the response has started does not throw, so
       // `app.onError` never sees it. Without this the AI SDK's own default runs
       // `console.error(error)` on an error whose properties carry the request
@@ -77,7 +86,13 @@ export function createAiChatRoutes(dependencies: AiChatDependencies = {}) {
     // major. Same bytes on the wire, and `toUIMessageStream` still masks
     // provider error text by default.
     return createUIMessageStreamResponse({
-      stream: toUIMessageStream({ stream: result.stream }),
+      stream: toUIMessageStream({
+        // Explicit rather than the default: the response contract is text
+        // only, and it has to hold even if `AI_GATEWAY_MODEL` is switched to
+        // a reasoning model later.
+        sendReasoning: false,
+        stream: result.stream,
+      }),
     });
   });
 }
