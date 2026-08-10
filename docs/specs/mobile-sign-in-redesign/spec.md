@@ -154,5 +154,12 @@
   바꿀 때 원문을 다시 확인한다.
 - Supabase가 틀린 코드와 만료된 코드에 같은 오류를 돌려준다. 그래서 화면은 만료를
   구분해 말하지 않는다. 한 시간 뒤에 돌아온 사용자는 다시 받기 링크로만 회수한다.
-- `InputOTP`의 붙여넣기 동작은 라이브러리 내부 구현에 기댄다. HeroUI Native를 올릴 때
-  `maxLength`와 `pasteTransformer` 처리 방식을 다시 확인한다.
+- 붙여넣기는 코드만 담긴 클립보드에서만 여섯 칸을 다 채운다. 이건 고치지 않고 남기는
+  제한이다. `InputOTP`는 여섯 칸 뒤에 투명한 입력 하나를 두고 거기에 코드 길이만큼
+  `maxLength`를 건다. 웹 원본은 `paste` 이벤트를 가로채 값이 들어가기 전에 변환하지만
+  React Native에는 그 이벤트가 없어서, OS가 자른 뒤의 값만 `pasteTransformer`에 온다.
+  `textInputProps`는 `maxLength`를 타입에서 제외해 이 상한을 끌 수 없다.
+  원본 라이브러리의 같은 요구와 그 해법은
+  [input-otp #53](https://github.com/guilhermerodz/input-otp/issues/53)에, 구조적 제약은
+  [input-otp #32](https://github.com/guilhermerodz/input-otp/issues/32)에 있다.
+  완전히 풀려면 여섯 칸 입력을 직접 만들어야 한다.
