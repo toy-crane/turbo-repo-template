@@ -4,7 +4,7 @@
 -- the only thing that can write a profile. A direct PostgREST call, a future
 -- server, or a hand-written statement has to land in the same place.
 BEGIN;
-SELECT plan(31);
+SELECT plan(35);
 
 INSERT INTO auth.users (id, email)
 VALUES
@@ -54,6 +54,15 @@ SELECT throws_ok(
   'a nickname of only spaces is rejected'
 );
 
+-- The accepted end of the range, so a rule that quietly tightened to a longer
+-- minimum would fail here rather than pass everything.
+SELECT lives_ok(
+  $$update public.profiles
+    set display_name = '민'
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'a one character nickname is accepted'
+);
+
 -- ── account id format ──
 SELECT throws_ok(
   $$update public.profiles set username = 'ab'
@@ -94,6 +103,20 @@ SELECT lives_ok(
   $$update public.profiles set username = '_toy__crane_'
     where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
   'underscores are allowed at the start, the end and in a row'
+);
+
+-- Both ends of the accepted range. Without these a pattern that tightened to
+-- {4,19} would still pass every rejection test above.
+SELECT lives_ok(
+  $$update public.profiles set username = 'abc'
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'exactly 3 characters is accepted'
+);
+
+SELECT lives_ok(
+  $$update public.profiles set username = repeat('a', 20)
+    where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'$$,
+  'exactly 20 characters is accepted'
 );
 
 SELECT lives_ok(
@@ -246,6 +269,23 @@ SELECT is(
   ),
   10,
   'one call answers for at most ten candidates'
+);
+
+-- `text[]` accepts any number of dimensions, so the limit has to hold for a
+-- shape the caller was never expected to send. Slicing the argument would let
+-- this one through: 2 by 6 cuts to 2 by 6 and answers for all twelve.
+SELECT is(
+  array_length(
+    public.available_usernames(
+      ARRAY[
+        ARRAY['free01', 'free02', 'free03', 'free04', 'free05', 'free06'],
+        ARRAY['free07', 'free08', 'free09', 'free10', 'free11', 'free12']
+      ]
+    ),
+    1
+  ),
+  10,
+  'the ten candidate limit holds for a multi-dimensional array too'
 );
 
 SELECT is(

@@ -79,6 +79,11 @@ create trigger profiles_set_updated_at
 --
 -- Reserved is decided before taken so a name the product keeps for itself reads
 -- as unavailable rather than as somebody else's.
+--
+-- "Taken" counts every row, including the caller's own. That is right for
+-- onboarding, where the caller has no id yet. A screen that lets someone change
+-- an id they already hold has to exclude their own row here, or keeping their
+-- current id will read as taken.
 create function public.username_status(candidate text)
 returns text
 language sql
@@ -109,10 +114,15 @@ grant execute on function public.username_status(text) to authenticated;
 -- pressed. Order is preserved: the caller's preference decides what appears
 -- first.
 --
--- The slice is a limit on how much guessing one call can do. Availability
--- checks are inherently a way to probe which ids exist, and a caller that could
--- pass a thousand candidates at once would turn one request into a thousand
--- answers.
+-- The ten is a limit on how much guessing one call can do. Availability checks
+-- are inherently a way to probe which ids exist, and a caller that could pass a
+-- thousand candidates at once would turn one request into a thousand answers.
+--
+-- It is taken after unnest rather than by slicing the argument. `text[]` does
+-- not fix the number of dimensions, and `candidates[1:10]` cuts only the first
+-- one — a 2 by 11 array would walk straight past the limit while looking like
+-- it obeyed. unnest flattens whatever shape arrived, so counting there counts
+-- what the function actually answers for.
 create function public.available_usernames(candidates text[])
 returns text[]
 language sql
@@ -121,7 +131,12 @@ stable
 set search_path = ''
 as $$
   select coalesce(array_agg(entry.candidate order by entry.position), '{}'::text[])
-  from unnest(candidates[1:10]) with ordinality as entry(candidate, position)
+  from (
+    select candidate, position
+    from unnest(candidates) with ordinality as flattened(candidate, position)
+    order by position
+    limit 10
+  ) as entry
   where entry.candidate ~ '^[a-z0-9_]{3,20}$'
     and not public.is_reserved_username(entry.candidate)
     and not exists (

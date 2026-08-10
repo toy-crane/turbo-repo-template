@@ -12,6 +12,14 @@
 -- public.available_usernames reads profiles.username, and the column is added
 -- further down. Without it the function would fail to create.
 --
+-- Grants: the three REVOKE ... FROM anon lines are added by hand. The diff
+-- writes only REVOKE ... FROM PUBLIC, which is enough here because anon holds
+-- no direct grant on these functions in this database. It is not enough
+-- everywhere: a database whose default privileges hand new public functions to
+-- anon gives it a grant of its own, and revoking from PUBLIC leaves that in
+-- place. supabase/schemas/README.md describes the same gap for tables, and
+-- 20260809060236_create_profiles.sql corrects it there the same way.
+--
 -- Locks and rewrites: every ADD CONSTRAINT here takes ACCESS EXCLUSIVE and
 -- reads every row, and the display_name rule is dropped and re-added rather
 -- than widened. That is free because public.profiles is empty in this
@@ -36,7 +44,12 @@ CREATE FUNCTION public.available_usernames (
   SET search_path TO ''
   AS $function$
   select coalesce(array_agg(entry.candidate order by entry.position), '{}'::text[])
-  from unnest(candidates[1:10]) with ordinality as entry(candidate, position)
+  from (
+    select candidate, position
+    from unnest(candidates) with ordinality as flattened(candidate, position)
+    order by position
+    limit 10
+  ) as entry
   where entry.candidate ~ '^[a-z0-9_]{3,20}$'
     and not public.is_reserved_username(entry.candidate)
     and not exists (
@@ -47,6 +60,8 @@ $function$;
 COMMENT ON FUNCTION public.available_usernames(text[]) IS 'Filters a caller''s candidate account ids down to the free ones, in the order given. At most 10 per call.';
 
 REVOKE ALL ON FUNCTION public.available_usernames(text[]) FROM PUBLIC;
+
+REVOKE ALL ON FUNCTION public.available_usernames(text[]) FROM anon;
 
 GRANT ALL ON FUNCTION public.available_usernames(text[]) TO authenticated;
 
@@ -66,6 +81,8 @@ $function$;
 COMMENT ON FUNCTION public.is_reserved_username(text) IS 'True for account ids the product keeps for itself. Derived projects extend the list here.';
 
 REVOKE ALL ON FUNCTION public.is_reserved_username(text) FROM PUBLIC;
+
+REVOKE ALL ON FUNCTION public.is_reserved_username(text) FROM anon;
 
 GRANT ALL ON FUNCTION public.is_reserved_username(text) TO authenticated;
 
@@ -93,6 +110,8 @@ $function$;
 COMMENT ON FUNCTION public.username_status(text) IS 'One of available, taken, reserved, invalid for a candidate account id. Exposes no profile rows.';
 
 REVOKE ALL ON FUNCTION public.username_status(text) FROM PUBLIC;
+
+REVOKE ALL ON FUNCTION public.username_status(text) FROM anon;
 
 GRANT ALL ON FUNCTION public.username_status(text) TO authenticated;
 
