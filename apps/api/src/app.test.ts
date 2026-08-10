@@ -73,6 +73,89 @@ function chatRequest(body: unknown, token?: string): Request {
   });
 }
 
+/** Polls until the stream-side effect of an abort has had time to land. */
+function until(predicate: () => boolean, timeoutMs = 1000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const deadline = Date.now() + timeoutMs;
+    const tick = () => {
+      if (predicate()) {
+        resolve();
+
+        return;
+      }
+
+      if (Date.now() > deadline) {
+        reject(new Error("Condition did not become true in time"));
+
+        return;
+      }
+
+      setTimeout(tick, 10);
+    };
+
+    tick();
+  });
+}
+
+/**
+ * A model whose stream never ends on its own, so the only way the call can
+ * stop is the abort under test. The signal `doStream` actually received stays
+ * readable on `doStreamCalls` afterwards.
+ */
+function neverEndingModel(): MockLanguageModelV4 {
+  return new MockLanguageModelV4({
+    doStream: () =>
+      Promise.resolve({
+        stream: new ReadableStream<LanguageModelV4StreamPart>({
+          start(controller) {
+            controller.enqueue({ type: "stream-start", warnings: [] });
+            controller.enqueue({ id: "0", type: "text-start" });
+            controller.enqueue({
+              delta: "첫 조각",
+              id: "0",
+              type: "text-delta",
+            });
+            // Never closes: a finish would end the request without the abort.
+          },
+        }),
+      }),
+  });
+}
+
+/**
+ * Sends an authenticated chat request wired to an AbortController, reads the
+ * first body chunk so the stream is really flowing, then aborts.
+ */
+async function abortMidStream(
+  app: ReturnType<typeof createApp>,
+  message: string
+): Promise<void> {
+  const controller = new AbortController();
+  const request = new Request(`http://localhost${CHAT_PATH}`, {
+    body: JSON.stringify({ messages: [userMessage(message)] }),
+    headers: { "content-type": "application/json" },
+    method: "POST",
+    signal: controller.signal,
+  });
+
+  const response = await app.request(request);
+
+  expect(response.status).toBe(200);
+
+  const reader = response.body?.getReader();
+
+  if (!reader) {
+    throw new Error("Response has no body to read");
+  }
+
+  await reader.read();
+  controller.abort();
+
+  // Reading past the abort surfaces the cancellation; the error itself is the
+  // expected outcome, not a failure of the test.
+  await reader.read().catch(() => undefined);
+}
+
 function userMessage(text: string) {
   return {
     id: "m1",
@@ -198,5 +281,104 @@ describe("POST /ai/chat", () => {
 
     expect(response.status).toBe(400);
     expect(model.doStreamCalls).toHaveLength(0);
+  });
+
+  test("passes the request abort through to the model call", async () => {
+    const model = neverEndingModel();
+    const app = createApp({ auth: allowUser, model });
+
+    await abortMidStream(app, "안녕");
+
+    // `streamText` may hand the model a derived signal, so the check is that
+    // the signal it received fired, not that it is the request's own object.
+    await until(() => model.doStreamCalls[0]?.abortSignal?.aborted === true);
+  });
+
+  test("logs an abort as method and path only", async () => {
+    const secret = "내-주민등록번호-900101-1234567";
+    const model = neverEndingModel();
+    const app = createApp({ auth: allowUser, model });
+    const written: string[] = [];
+    const realLog = console.log;
+    const realError = console.error;
+
+    console.log = (...parts: unknown[]) => {
+      written.push(parts.map((part) => inspect(part, { depth: 6 })).join(" "));
+    };
+    console.error = (...parts: unknown[]) => {
+      written.push(parts.map((part) => inspect(part, { depth: 6 })).join(" "));
+    };
+
+    try {
+      await abortMidStream(app, secret);
+      await until(() =>
+        written.some((line) => line.includes("Request aborted on"))
+      );
+    } finally {
+      console.log = realLog;
+      console.error = realError;
+    }
+
+    const log = written.join("\n");
+
+    expect(log).toContain("Request aborted on");
+    expect(log).toContain("POST");
+    expect(log).toContain(CHAT_PATH);
+    expect(log).not.toContain(secret);
+  });
+
+  test("keeps reasoning out of the response while text passes through", async () => {
+    const reasoning = "모델이 몰래 생각한 내용";
+    const chunks: LanguageModelV4StreamPart[] = [
+      { type: "stream-start", warnings: [] },
+      { id: "r0", type: "reasoning-start" },
+      { delta: reasoning, id: "r0", type: "reasoning-delta" },
+      { id: "r0", type: "reasoning-end" },
+      { id: "0", type: "text-start" },
+      { delta: "안녕", id: "0", type: "text-delta" },
+      { delta: "하세요", id: "0", type: "text-delta" },
+      { id: "0", type: "text-end" },
+      {
+        finishReason: { raw: undefined, unified: "stop" },
+        type: "finish",
+        usage: {
+          inputTokens: {
+            cacheRead: undefined,
+            cacheWrite: undefined,
+            noCache: undefined,
+            total: undefined,
+          },
+          outputTokens: {
+            reasoning: undefined,
+            text: undefined,
+            total: undefined,
+          },
+        },
+      },
+    ];
+    const model = new MockLanguageModelV4({
+      doStream: {
+        stream: simulateReadableStream({
+          chunkDelayInMs: null,
+          chunks,
+          initialDelayInMs: null,
+        }),
+      },
+    });
+    const app = createApp({ auth: allowUser, model });
+
+    const response = await app.request(
+      chatRequest({ messages: [userMessage("안녕")] })
+    );
+
+    expect(response.status).toBe(200);
+
+    const body = await response.text();
+
+    expect(body).not.toContain("reasoning");
+    expect(body).not.toContain(reasoning);
+    expect(body).toContain('"type":"text-delta"');
+    expect(body).toContain("안녕");
+    expect(body).toContain("하세요");
   });
 });

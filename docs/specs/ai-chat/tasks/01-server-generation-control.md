@@ -10,10 +10,10 @@
 
 ## 완료 조건
 
-- [ ] `streamText` 호출이 요청의 `AbortSignal`(`c.req.raw.signal`)을 전달받고, 요청 중단이 가짜 모델의 `doStream` 옵션까지 전파되는 것을 테스트로 확인한다.
-- [ ] 중단 시 `onAbort` 로그가 메서드와 경로만 남긴다. 대화 내용, 비밀 값과 제공자 원문은 로그와 응답 어디에도 없다.
-- [ ] 가짜 모델이 reasoning과 텍스트를 함께 흘려도 응답 본문에 reasoning part가 없고 텍스트 part는 그대로 유지된다.
-- [ ] 기존 인증 401, 본문 검증 400, 스트리밍 성공, 로그 유출 방지 테스트가 전부 그대로 통과한다.
+- [x] `streamText` 호출이 요청의 `AbortSignal`(`c.req.raw.signal`)을 전달받고, 요청 중단이 가짜 모델의 `doStream` 옵션까지 전파되는 것을 테스트로 확인한다.
+- [x] 중단 시 `onAbort` 로그가 메서드와 경로만 남긴다. 대화 내용, 비밀 값과 제공자 원문은 로그와 응답 어디에도 없다.
+- [x] 가짜 모델이 reasoning과 텍스트를 함께 흘려도 응답 본문에 reasoning part가 없고 텍스트 part는 그대로 유지된다.
+- [x] 기존 인증 401, 본문 검증 400, 스트리밍 성공, 로그 유출 방지 테스트가 전부 그대로 통과한다.
 
 ## 제약
 
@@ -36,9 +36,10 @@
 ## 상태
 
 <!-- 이후 값: `in-progress`, `completed`, `blocked` -->
-pending
+completed
 
 ## 실행 결과
 
-- 검증: —
-- 선행 조건: —
+- 검증: `bun run check --filter=@repo/api`, `bun run check-types --filter=@repo/api`, `bun run test --filter=@repo/api` 모두 통과(테스트 10개). 새 테스트 3개: 중단이 `doStream`의 `abortSignal`까지 전파, 중단 로그가 `Request aborted on POST /ai/chat`만 남고 대화 내용 미노출, reasoning part가 응답에서 제외되고 텍스트 part 유지.
+- 선행 조건: 없음.
+- HTTP 연결 끊김의 실제 런타임 전파는 작업 02의 기기 검증에서 확인한다.
