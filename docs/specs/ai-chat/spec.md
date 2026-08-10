@@ -15,6 +15,33 @@ Expo 모바일 앱과 Hono API를 하나의 AI 채팅 기능으로 완성한다.
 - [모바일 타이포그래피](../../decisions/mobile-typography.md)
 - [모바일 테스트와 런타임 검증](../../decisions/mobile-testing-and-verification.md)
 
+## 구현 참고 코드
+
+### 현재 저장소에서 이어서 쓸 코드
+
+- [chat-transport.ts](../../../apps/mobile/src/features/chat/chat-transport.ts): `DefaultChatTransport`, `expo/fetch`와 요청마다 새 access token을 읽는 방식을 그대로 사용한다.
+- [home-screen.tsx](../../../apps/mobile/src/features/home/home-screen.tsx): 현재 `useChat` 연결, 중복 전송 방지, 다시 시도와 접근성 처리를 유지한다. 문자열로 합친 메시지 본문과 `ScrollView` 화면은 part 렌더러와 가상 목록으로 바꾼다.
+- [app.ts](../../../apps/api/src/app.ts): 기존 인증, UI message 검증, `streamText`와 UI message stream 응답을 유지한다. 여기에 요청의 `AbortSignal` 전달을 추가한다.
+- [app.test.ts](../../../apps/api/src/app.test.ts): 가짜 모델로 인증, 본문 검증과 스트림을 확인하는 기존 방식을 서버 동작 검증에도 사용한다.
+
+### 외부 코드에서 가져올 방식
+
+- [`conversation.tsx`](https://github.com/EvanBacon/chat-template/blob/40379fcbc8d57025e09eef77ae129b7b30b100c7/src/components/chat/conversation.tsx): `LegendList` 가상 목록, 키보드에 맞춘 목록 이동, 아래쪽 따라가기 기준과 최신 메시지 이동 방식을 참고한다.
+- [`prompt-input.tsx`](https://github.com/EvanBacon/chat-template/blob/40379fcbc8d57025e09eef77ae129b7b30b100c7/src/components/chat/prompt-input.tsx): 여러 줄 자동 높이 입력창과 키보드 위 입력창 배치를 참고한다. Liquid Glass와 예제 전용 화면 스타일은 가져오지 않는다.
+- [`streaming-store.ts`](https://github.com/EvanBacon/chat-template/blob/40379fcbc8d57025e09eef77ae129b7b30b100c7/src/components/chat/streaming-store.ts)와 [`streaming-message.tsx`](https://github.com/EvanBacon/chat-template/blob/40379fcbc8d57025e09eef77ae129b7b30b100c7/src/components/chat/streaming-message.tsx): 스트리밍 중인 메시지만 갱신해 목록 전체의 다시 렌더링을 줄이는 방식을 참고한다.
+- [`message.tsx`](https://github.com/EvanBacon/chat-template/blob/40379fcbc8d57025e09eef77ae129b7b30b100c7/src/components/chat/message.tsx): 사용자와 AI 메시지의 기본 배치를 참고한다. 이 명세의 part 렌더러와 메시지 작업 영역은 별도로 추가한다.
+- [`markdown` 구성](https://github.com/EvanBacon/chat-template/tree/40379fcbc8d57025e09eef77ae129b7b30b100c7/src/components/markdown): Markdown AST 렌더링, GFM 표, 링크 열기와 코드 블록 가로 스크롤 방식을 참고한다. 코드 블록 복사 버튼은 예제에 없으므로 추가한다.
+
+### 공식 문서와 제품 동작 참고
+
+- [AI SDK Expo 시작 안내](https://ai-sdk.dev/v7/docs/getting-started/expo): Expo의 `useChat`, `DefaultChatTransport`, `expo/fetch`와 Hono 스트림 연결 기준으로 사용한다.
+- [AI SDK `useChat`](https://ai-sdk.dev/v7/docs/reference/ai-sdk-ui/use-chat): 전송, 중지, 다시 생성과 상태 처리의 현재 API를 확인한다.
+- [AI SDK `streamText`](https://ai-sdk.dev/v7/docs/reference/ai-sdk-core/stream-text): 서버에서 요청 중지 신호를 모델 호출로 전달하는 API를 확인한다.
+- [Expo AI Chatbot](https://www.expoaichatbot.com/docs/introduction): 완성된 채팅 화면의 동작을 비교하는 자료로만 사용한다. 이번 MVP에서 제외한 저장, 이미지, 음성과 도구 기능은 가져오지 않는다.
+- [`grok-voice-demo`](https://github.com/EvanBacon/grok-voice-demo/tree/0e9c42188c09c3351017bd0e174c02f3b5171f1d): 음성 대화를 추가하는 다음 단계에서 참고한다. 이번 구현에는 포함하지 않는다.
+
+`chat-template`의 고정 시점은 Expo SDK 56과 AI SDK 6을 사용하고, 현재 저장소는 Expo SDK 57과 AI SDK 7을 사용한다. 따라서 UI 구성 방식만 참고하고 `src/app/index.tsx`의 AI SDK 연결 코드와 메시지를 텍스트로 합치는 처리는 복사하지 않는다. 외부 코드를 직접 옮길 때는 고정 링크의 원본과 라이선스 표기를 확인한다.
+
 ## 필요한 동작
 
 ### Hono API
