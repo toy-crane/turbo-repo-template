@@ -2,9 +2,11 @@ import { AuthError } from "@supabase/server";
 import { withSupabase } from "@supabase/server/adapters/hono";
 import {
   convertToModelMessages,
+  createUIMessageStreamResponse,
   type LanguageModel,
   safeValidateUIMessages,
   streamText,
+  toUIMessageStream,
 } from "ai";
 import { Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -70,7 +72,13 @@ export function createApp(dependencies: AppDependencies = {}): Hono {
       model: dependencies.model ?? resolveModelId(),
     });
 
-    return result.toUIMessageStreamResponse();
+    // The standalone helpers, not `result.toUIMessageStreamResponse()`: the
+    // methods on the result are deprecated in ai 7 and go away in the next
+    // major. Same bytes on the wire, and `toUIMessageStream` still masks
+    // provider error text by default.
+    return createUIMessageStreamResponse({
+      stream: toUIMessageStream({ stream: result.stream }),
+    });
   });
 
   app.onError((error, c) => {
