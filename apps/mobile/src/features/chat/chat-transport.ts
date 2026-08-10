@@ -1,7 +1,7 @@
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 
-import { resolveApiBaseUrl } from "../../api/env";
+import { resolveApiBaseUrl } from "@/features/chat/config/api-env";
 
 export const CHAT_API_PATH = "/ai/chat";
 

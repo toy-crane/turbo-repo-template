@@ -13,10 +13,9 @@ import Constants from "expo-constants";
 import { useCallback, useRef, useState } from "react";
 import { Platform } from "react-native";
 
-import { signOut } from "../../features/auth/sign-out";
-import { getSupabaseClient } from "../../supabase/client";
-import { useAppTheme } from "../../theme/app-theme-bridge";
-import { getSettingsTextStyle } from "./settings-theme";
+import { useAppTheme } from "@/core/theme/app-theme-bridge";
+import { signOut } from "@/features/auth/sign-out";
+import { getSupabaseClient } from "@/shared/supabase/client";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
 const contentTopSpacing = 24;
@@ -54,8 +53,10 @@ export function SettingsScreen() {
       setIsSigningOut(false);
     }
   }, [queryClient]);
-  const textStyle = getSettingsTextStyle(foreground);
-  const androidTextStyle = Platform.OS === "android" ? textStyle : undefined;
+  // Android's @expo/ui text does not follow the app's appearance on its own, so
+  // the screen passes the same foreground colour the rest of the app uses.
+  const androidTextStyle =
+    Platform.OS === "android" ? { color: foreground } : undefined;
   const preferencesSectionModifiers =
     Platform.OS === "ios"
       ? [listSectionMargins({ edges: "top", length: contentTopSpacing })]

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "@jest/globals";
 import { screen } from "@testing-library/react-native";
 
-import { renderWithHeroUI } from "../../test/render-with-heroui";
+import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { SavedScreen } from "./saved-screen";
 
 const savedItemLabel = /^Saved item /;

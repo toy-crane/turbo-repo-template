@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { Platform } from "react-native";
 
-import { useAppTheme } from "../theme/app-theme-bridge";
+import { useAppTheme } from "@/core/theme/app-theme-bridge";
 
 interface TabStackProps {
   routeName: string;

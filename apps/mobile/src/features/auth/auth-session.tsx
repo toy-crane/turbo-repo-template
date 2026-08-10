@@ -6,15 +6,17 @@ import {
   useEffect,
   useState,
 } from "react";
+import { AppState } from "react-native";
 
-import { getSupabaseClient } from "../../supabase/client";
+import { getSupabaseClient } from "@/shared/supabase/client";
 
 /**
  * The app's one answer to "is someone signed in?".
  *
- * The fourth state the spec asks for, a broken Supabase configuration, belongs
- * to SupabaseGate one level up: without a usable client there is no session to
- * ask about, so this provider never mounts in that case.
+ * It also owns the refresh ticker, because the ticker only matters for the
+ * session this provider holds: Supabase starts one that never stops on native,
+ * so it is paused whenever the app leaves the foreground and started again on
+ * the way back.
  *
  * `checking` exists so the first frame shows neither screen. Rendering the
  * sign-in screen while a stored session is still loading would flash it at
@@ -104,9 +106,21 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       apply(session);
     });
 
+    auth.startAutoRefresh();
+
+    const appState = AppState.addEventListener("change", (appStatus) => {
+      if (appStatus === "active") {
+        auth.startAutoRefresh();
+      } else {
+        auth.stopAutoRefresh();
+      }
+    });
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      appState.remove();
+      auth.stopAutoRefresh();
     };
   }, []);
 

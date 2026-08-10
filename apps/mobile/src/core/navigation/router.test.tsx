@@ -8,11 +8,14 @@ import {
   waitFor,
 } from "expo-router/testing-library";
 
-import { createFakeSession, resetFakeSupabase } from "../test/fake-supabase";
+import {
+  createFakeSession,
+  resetFakeSupabase,
+} from "@/shared/test/fake-supabase";
 
 // Home now talks to the AI API, so it is stubbed here like every other screen:
 // these tests are about which route renders, not about what the screen does.
-jest.mock("../features/home/home-screen", () => {
+jest.mock("@/screens/home/home-screen", () => {
   const React = require("react") as typeof import("react");
   const { View } = require("react-native") as typeof import("react-native");
 
@@ -24,10 +27,10 @@ jest.mock("../features/home/home-screen", () => {
 
 // Every route below the root layout is behind the session guard, so these tests
 // start from a signed-in app. The guard itself is covered in auth-routing.test.
-jest.mock("../supabase/client", () => ({
+jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
     (
-      require("../test/fake-supabase") as typeof import("../test/fake-supabase")
+      require("@/shared/test/fake-supabase") as typeof import("@/shared/test/fake-supabase")
     ).getFakeSupabase().client,
 }));
 
@@ -35,7 +38,7 @@ beforeEach(() => {
   resetFakeSupabase({ session: createFakeSession() });
 });
 
-jest.mock("../features/activity/activity-screen", () => {
+jest.mock("@/screens/activity/activity-screen", () => {
   const React = require("react") as typeof import("react");
   const { View } = require("react-native") as typeof import("react-native");
 
@@ -45,7 +48,7 @@ jest.mock("../features/activity/activity-screen", () => {
   };
 });
 
-jest.mock("../features/settings/settings-screen", () => {
+jest.mock("@/screens/settings/settings-screen", () => {
   const React = require("react") as typeof import("react");
   const { View } = require("react-native") as typeof import("react-native");
 
@@ -55,7 +58,7 @@ jest.mock("../features/settings/settings-screen", () => {
   };
 });
 
-jest.mock("../features/saved/saved-screen", () => {
+jest.mock("@/screens/saved/saved-screen", () => {
   const React = require("react") as typeof import("react");
   const { View } = require("react-native") as typeof import("react-native");
 

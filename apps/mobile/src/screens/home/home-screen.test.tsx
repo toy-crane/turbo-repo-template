@@ -9,17 +9,16 @@ import {
 import { screen, userEvent, waitFor } from "@testing-library/react-native";
 import type { UIMessageChunk } from "ai";
 import { simulateReadableStream } from "ai";
-
-import { renderWithHeroUI } from "../../test/render-with-heroui";
-import { useAuthSession } from "../auth/auth-session";
-import { createChatTransport } from "../chat/chat-transport";
+import { useAuthSession } from "@/features/auth/auth-session";
+import { createChatTransport } from "@/features/chat/chat-transport";
+import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { chatLabels, HomeScreen } from "./home-screen";
 
-jest.mock("../auth/auth-session", () => ({
+jest.mock("@/features/auth/auth-session", () => ({
   useAuthSession: jest.fn(),
 }));
 
-jest.mock("../chat/chat-transport", () => ({
+jest.mock("@/features/chat/chat-transport", () => ({
   createChatTransport: jest.fn(),
 }));
 
