@@ -541,13 +541,13 @@ Supabase URL과 publishable key는 사용자가 직접 설정합니다.
 로컬 값과 원격 값도 자동으로 전환하지 않습니다.
 
 두 변수는 앱을 빌드하거나 시작할 때 모두 필요합니다.
-[apps/mobile/src/supabase/env.ts](apps/mobile/src/supabase/env.ts)는 `@t3-oss/env-core`로 두 변수를 선언합니다.
+[apps/mobile/src/shared/supabase/env.ts](apps/mobile/src/shared/supabase/env.ts)는 `@t3-oss/env-core`로 두 변수를 선언합니다.
 Expo가 앱 설정을 읽을 때 `apps/mobile/app.config.ts`가 값을 검사합니다.
 따라서 `expo start`, `expo prebuild`, `expo run:*`, `expo export`는 값이 없거나 형식이 잘못되면 문제의 변수 이름을 보여주고 종료합니다.
 실행 중인 앱도 같은 검사를 수행하고 오류를 화면에 표시합니다.
 무선으로 배포한 번들에서도 같은 오류를 확인할 수 있습니다.
 
-환경 변수를 추가하려면 [apps/mobile/src/supabase/env.ts](apps/mobile/src/supabase/env.ts)에 선언합니다.
+환경 변수를 추가하려면 [apps/mobile/src/shared/supabase/env.ts](apps/mobile/src/shared/supabase/env.ts)에 선언합니다.
 Supabase secret key, 데이터베이스 URL, 빌드 시점의 업로드 토큰처럼 기기에 전달하면 안 되는 값은 `server` 블록에 둡니다.
 `server` 블록의 변수에는 `EXPO_PUBLIC_` 접두사를 붙이지 않습니다.
 비밀 값을 `client` 블록에 넣거나 앱 코드에서 읽으면 검사가 실패하므로 모든 설치본에 값이 배포되는 일을 막을 수 있습니다.
