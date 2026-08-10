@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Implement or resume settled work from a selected spec folder. Use when the user provides a `docs/specs/SLUG/` folder and wants its settled spec or approved tasks completed in the current checkout with verification and the current harness's automated code-review process.
+description: Implement or resume settled work from a selected spec folder. Use when the user provides a `docs/specs/SLUG/` folder and wants its settled spec or approved tasks completed in the current checkout with verification, the current harness's automated code-review process, and a runnable product handoff when the repository exposes one through a local server.
 ---
 
 # Implement
@@ -23,7 +23,33 @@ commit code, tests, and the task update together as a meaningful checkpoint.
 
 After all outcomes, run the complete required verification, then use the
 current harness's automated code-review process on the entire implementation
-diff against the selected spec and acceptance criteria. Fix blocking findings
-and repeat the affected verification and review until no blocker remains.
-Completion requires every acceptance criterion to pass. If automated code
-review is unavailable, report it as the remaining completion gate.
+diff against the selected spec and acceptance criteria. Prefer a
+model-invocable review facility when the harness provides one. Fix blocking
+findings and repeat the affected verification and review until no blocker
+remains. A rejection recorded only in an earlier session is not current
+evidence; before handing off on that basis, retry the reviewer once in the
+active session.
+
+Completion requires every acceptance criterion and the final review gate to
+pass. If the current review cannot produce an outcome because it is user-only,
+rejected, errors, or times out, report an exact user-invocable command when the
+active harness confirms one. In Claude Code, the Skill tool may expose the
+reviewer as `code-review` even when user-facing aliases exist; use `/review`
+when the active session confirms that equivalence. If no confirmed command
+is available or no review facility exists, report the reviewer's unavailability
+as the remaining gate. Leave either fallback with the review gate outstanding
+and do not claim completion.
+
+After all acceptance criteria and the final review gate pass, when the
+repository exposes the implemented result through a user-reviewable local
+server, run the actual product through its repository-supported development or
+preview path. Verify the changed routes and essential states in that running
+instance, then share an address the user can open and name what to review.
+
+Reuse a healthy server owned by the current checkout or start an isolated
+instance while preserving other checkouts and unrelated processes. Keep the
+server running until the user finishes review or a later authorized delivery
+step cleans up the current checkout. When the active environment cannot provide
+a reachable address, report the exact launch command and blocker as the
+remaining handoff limitation. Access to the running result does not imply human
+approval.
