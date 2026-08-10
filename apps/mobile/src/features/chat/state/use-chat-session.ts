@@ -1,11 +1,18 @@
 import { useChat } from "@ai-sdk/react";
-import type { UIMessage } from "ai";
+import type { ChatStatus, UIMessage } from "ai";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { createChatTransport } from "@/features/chat/api/chat-transport";
 
 /** Which request is in flight. Also what blocks a second one. */
 type ChatAction = "retry" | "send";
+
+/**
+ * How often streaming updates reach React, in milliseconds. Low enough to
+ * read as live typing, high enough that a long answer does not re-render the
+ * screen on every token.
+ */
+const STREAM_UPDATE_INTERVAL_MS = 50;
 
 export interface ChatSession {
   /** False while there is no token to send, so a retry cannot go out naked. */
@@ -17,6 +24,10 @@ export interface ChatSession {
   retry: () => void;
   send: () => void;
   setDraft: (value: string) => void;
+  /** The AI SDK's own request state: submitted, streaming, ready or error. */
+  status: ChatStatus;
+  /** Stops the current generation and keeps whatever has arrived so far. */
+  stop: () => void;
 }
 
 /**
@@ -39,7 +50,15 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     () => createChatTransport(() => currentToken.current),
     []
   );
-  const { error, messages, regenerate, sendMessage, status } = useChat({
+  const {
+    error,
+    messages,
+    regenerate,
+    sendMessage,
+    status,
+    stop: stopChat,
+  } = useChat({
+    throttle: STREAM_UPDATE_INTERVAL_MS,
     transport,
   });
 
@@ -92,6 +111,16 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     run("retry", () => regenerate());
   }, [isBusy, regenerate, run]);
 
+  const stop = useCallback(() => {
+    // Only a running generation can be stopped; the AI SDK keeps the parts
+    // that already arrived and puts the chat back into `ready`.
+    if (!isBusy) {
+      return;
+    }
+
+    stopChat();
+  }, [isBusy, stopChat]);
+
   return {
     canRetry: !(isBusy || accessToken === undefined),
     draft,
@@ -101,5 +130,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     retry,
     send,
     setDraft,
+    status,
+    stop,
   };
 }
