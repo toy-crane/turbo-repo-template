@@ -1,7 +1,14 @@
 import type { UIMessage } from "ai";
 import { useThemeColor } from "heroui-native/hooks";
 import { memo } from "react";
-import { Pressable, Text, View } from "react-native";
+import {
+  type LayoutChangeEvent,
+  Pressable,
+  type StyleProp,
+  Text,
+  View,
+  type ViewStyle,
+} from "react-native";
 
 import { Icon, type IconName } from "@/shared/ui/icon/icon";
 import { chatLabels } from "./chat-labels";
@@ -47,6 +54,32 @@ function ActionButton({
     >
       <Icon name={icon} size={18} tintColor={tint} />
     </Pressable>
+  );
+}
+
+export function AssistantError({
+  disabled,
+  retryAction,
+}: {
+  disabled: boolean;
+  retryAction: () => void;
+}) {
+  return (
+    <View className="items-start" testID="chat-error">
+      <Text className="text-danger text-sm">잠시 뒤에 다시 보내 주세요.</Text>
+      <Pressable
+        accessibilityLabel={chatLabels.retry}
+        accessibilityRole="button"
+        accessibilityState={{ disabled }}
+        className="min-h-11 justify-center px-2"
+        disabled={disabled}
+        onPress={retryAction}
+      >
+        <Text className={disabled ? "text-muted" : "text-link"}>
+          다시 보내기
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -111,20 +144,42 @@ function MessageActions({
 function MessageRowComponent({
   editAction,
   editDisabled = false,
+  errorAction,
+  errorDisabled = false,
+  isStreaming = false,
   message,
+  minimumHeight,
+  onLayout,
   regenerateAction,
   regenerateDisabled = false,
+  testID,
 }: {
   editAction?: () => void;
   editDisabled?: boolean;
+  errorAction?: () => void;
+  errorDisabled?: boolean;
+  isStreaming?: boolean;
   message: UIMessage;
+  minimumHeight?: number;
+  onLayout?: (event: LayoutChangeEvent) => void;
   regenerateAction?: () => void;
   regenerateDisabled?: boolean;
+  testID?: string;
 }) {
   const isUser = message.role === "user";
+  const lastTextIndex = message.parts.findLastIndex(
+    (part) => part.type === "text"
+  );
+  const rowStyle: StyleProp<ViewStyle> =
+    minimumHeight === undefined ? undefined : { minHeight: minimumHeight };
 
   return (
-    <View className={isUser ? "mb-3 items-end" : "mb-3 items-start"}>
+    <View
+      className={isUser ? "mb-3 items-end" : "mb-3 items-start"}
+      onLayout={onLayout}
+      style={rowStyle}
+      testID={errorAction ? "chat-answer-error" : testID}
+    >
       <View
         className={
           isUser ? "max-w-[85%] rounded-2xl bg-accent px-4 py-3" : "w-full"
@@ -132,6 +187,7 @@ function MessageRowComponent({
       >
         {message.parts.map((part, index) => (
           <MessagePart
+            isStreaming={isStreaming && !isUser && index === lastTextIndex}
             // Parts only ever append while a message streams, so the position
             // is a stable identity for them.
             // biome-ignore lint/suspicious/noArrayIndexKey: position is the part identity
@@ -142,13 +198,17 @@ function MessageRowComponent({
           />
         ))}
       </View>
-      <MessageActions
-        editAction={editAction}
-        editDisabled={editDisabled}
-        message={message}
-        regenerateAction={regenerateAction}
-        regenerateDisabled={regenerateDisabled}
-      />
+      {errorAction ? (
+        <AssistantError disabled={errorDisabled} retryAction={errorAction} />
+      ) : (
+        <MessageActions
+          editAction={editAction}
+          editDisabled={editDisabled}
+          message={message}
+          regenerateAction={regenerateAction}
+          regenerateDisabled={regenerateDisabled}
+        />
+      )}
     </View>
   );
 }

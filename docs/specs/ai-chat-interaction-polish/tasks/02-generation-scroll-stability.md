@@ -71,9 +71,14 @@ None.
 ## Status
 
 <!-- Later values: `in-progress`, `completed`, or `blocked`. -->
-pending
+completed
 
 ## Execution
 
-- Verification: —
+- Verification: `bun run check --filter=@repo/mobile`,
+  `bun run check-types --filter=@repo/mobile`,
+  `bun run test --filter=@repo/mobile -- --runInBand --forceExit` 통과. iOS와 Android
+  Development Build에서 실제 이메일 로그인으로 짧은 답변, 긴 스트리밍, 읽던 위치 유지,
+  키보드를 유지한 최신 메시지 이동, 부분 답변 중단, API 중단 오류와 재시도를 확인한 뒤
+  로그아웃했다.
 - Blocker: —

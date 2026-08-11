@@ -54,6 +54,8 @@ export interface ChatSession {
 export function useChatSession(accessToken: string | undefined): ChatSession {
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState(false);
+  const [stopRequested, setStopRequested] = useState(false);
+  const stopRequestedRef = useRef(false);
 
   // A request that threw before it reached the chat store, so the screen has
   // something to show instead of a button that quietly does nothing.
@@ -106,8 +108,10 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
 
   setMessagesRef.current = setMessages;
 
-  const isBusy = status === "streaming" || status === "submitted";
+  const sdkIsBusy = status === "streaming" || status === "submitted";
+  const isBusy = sdkIsBusy && !stopRequested;
   const running = useRef<ChatAction | undefined>(undefined);
+  const requestGeneration = useRef(0);
 
   // Read through a ref where a callback only needs the value at call time.
   //
@@ -142,7 +146,12 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
       return;
     }
 
+    const generation = requestGeneration.current + 1;
+
+    requestGeneration.current = generation;
     running.current = action;
+    stopRequestedRef.current = false;
+    setStopRequested(false);
     setRequestError(undefined);
     work()
       .catch((cause: unknown) => {
@@ -151,7 +160,9 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
         );
       })
       .finally(() => {
-        running.current = undefined;
+        if (requestGeneration.current === generation) {
+          running.current = undefined;
+        }
       });
   }, []);
 
@@ -200,10 +211,15 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   const stop = useCallback(() => {
     // Only a running generation can be stopped; the AI SDK keeps the parts
     // that already arrived and puts the chat back into `ready`.
-    if (!isBusy) {
+    if (!isBusy || stopRequestedRef.current) {
       return;
     }
 
+    requestGeneration.current += 1;
+    running.current = undefined;
+    stopRequestedRef.current = true;
+    setRequestError(undefined);
+    setStopRequested(true);
     stopChat();
   }, [isBusy, stopChat]);
 
@@ -270,7 +286,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     canRetry: !(isBusy || accessToken === undefined),
     draft,
     editing,
-    error: error ?? requestError,
+    error: stopRequested ? undefined : (error ?? requestError),
     isBusy,
     messages,
     regenerateLast,
@@ -278,7 +294,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     send,
     setDraft,
     startEdit,
-    status,
+    status: stopRequested && sdkIsBusy ? "ready" : status,
     stop,
   };
 }

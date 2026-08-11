@@ -41,8 +41,19 @@ const mockListProps: {
   contentContainerStyle?: unknown;
   contentInset?: unknown;
   keyboardShouldPersistTaps?: string;
+  maintainScrollAtEnd?: boolean;
+  maintainScrollAtEndThreshold?: number;
+  maintainVisibleContentPosition?: boolean;
+  onEndReached?: () => void;
+  onScrollBeginDrag?: () => void;
+  scrollEventThrottle?: number;
   scrollIndicatorInsets?: unknown;
 } = {};
+const mockScrollMessageToEnd = jest.fn(() => Promise.resolve());
+const mockNativeScrollToEnd = jest.fn();
+const mockNativeScrollTo = jest.fn();
+const mockScrollToIndex = jest.fn(() => Promise.resolve());
+const mockScrollToOffset = jest.fn(() => Promise.resolve());
 
 jest.mock("@legendapp/list/keyboard", () => {
   const React = require("react") as typeof import("react");
@@ -58,7 +69,15 @@ jest.mock("@legendapp/list/keyboard", () => {
           contentInset?: unknown;
           extraData?: unknown;
           keyboardShouldPersistTaps?: string;
+          keyExtractor?: (item: { id: string }) => string;
           ListEmptyComponent?: React.ComponentType;
+          maintainScrollAtEnd?: boolean;
+          maintainScrollAtEndThreshold?: number;
+          maintainVisibleContentPosition?: boolean;
+          onEndReached?: () => void;
+          onScrollBeginDrag?: () => void;
+          scrollEventThrottle?: number;
+          onLayout?: (event: unknown) => void;
           renderItem: (info: {
             index: number;
             item: unknown;
@@ -72,7 +91,29 @@ jest.mock("@legendapp/list/keyboard", () => {
         mockListProps.contentInset = props.contentInset;
         mockListProps.keyboardShouldPersistTaps =
           props.keyboardShouldPersistTaps;
+        mockListProps.maintainScrollAtEnd = props.maintainScrollAtEnd;
+        mockListProps.maintainScrollAtEndThreshold =
+          props.maintainScrollAtEndThreshold;
+        mockListProps.maintainVisibleContentPosition =
+          props.maintainVisibleContentPosition;
+        mockListProps.onEndReached = props.onEndReached;
+        mockListProps.onScrollBeginDrag = props.onScrollBeginDrag;
         mockListProps.scrollIndicatorInsets = props.scrollIndicatorInsets;
+        mockListProps.scrollEventThrottle = props.scrollEventThrottle;
+
+        React.useImperativeHandle(_ref, () => ({
+          getNativeScrollRef: () => ({
+            scrollTo: mockNativeScrollTo,
+            scrollToEnd: mockNativeScrollToEnd,
+          }),
+          getState: () => ({
+            contentLength: 1200,
+            data: [{ id: "user" }, { id: "answer" }],
+            scrollLength: 320,
+          }),
+          scrollToIndex: mockScrollToIndex,
+          scrollToOffset: mockScrollToOffset,
+        }));
 
         const rows = React.useRef(
           new Map<
@@ -87,11 +128,12 @@ jest.mock("@legendapp/list/keyboard", () => {
 
         return React.createElement(
           ScrollView,
-          { testID: props.testID },
+          { onLayout: props.onLayout, testID: props.testID },
           (props.data ?? []).length === 0 && props.ListEmptyComponent
             ? React.createElement(props.ListEmptyComponent)
             : (props.data ?? []).map((item, index) => {
-                const cached = rows.current.get(item.id);
+                const key = props.keyExtractor?.(item) ?? item.id;
+                const cached = rows.current.get(key);
                 const element =
                   cached &&
                   cached.item === item &&
@@ -99,17 +141,13 @@ jest.mock("@legendapp/list/keyboard", () => {
                     ? cached.element
                     : props.renderItem({ index, item });
 
-                rows.current.set(item.id, {
+                rows.current.set(key, {
                   element,
                   extraData: props.extraData,
                   item,
                 });
 
-                return React.createElement(
-                  React.Fragment,
-                  { key: item.id },
-                  element
-                );
+                return React.createElement(React.Fragment, { key }, element);
               })
         );
       }
@@ -120,7 +158,7 @@ jest.mock("@legendapp/list/keyboard", () => {
     }),
     useKeyboardScrollToEnd: () => ({
       freeze: { value: false },
-      scrollMessageToEnd: () => Promise.resolve(),
+      scrollMessageToEnd: mockScrollMessageToEnd,
     }),
   };
 });
@@ -183,6 +221,7 @@ function controlledStream() {
 
   return {
     close: () => controller?.close(),
+    fail: (cause: Error) => controller?.error(cause),
     push: (chunk: UIMessageChunk) => controller?.enqueue(chunk),
     stream,
   };
@@ -228,6 +267,8 @@ describe("ChatPanel", () => {
   afterEach(() => {
     jest.clearAllMocks();
     mockPartRenderCounts.clear();
+    mockListProps.onEndReached = undefined;
+    mockListProps.onScrollBeginDrag = undefined;
   });
 
   test("보낸 메시지와 생성 중 상태, 스트리밍 답변을 차례로 보여준다", async () => {
@@ -254,6 +295,24 @@ describe("ChatPanel", () => {
       expect(screen.getByText("안녕")).toBeOnTheScreen();
     });
     expect(screen.getByTestId("chat-generating")).toBeOnTheScreen();
+    expect(
+      screen.getByTestId("chat-waiting-dot", { includeHiddenElements: true })
+    ).toBeOnTheScreen();
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("chat-waiting-dot-slot", {
+          includeHiddenElements: true,
+        }).props.style
+      )
+    ).toEqual(expect.objectContaining({ height: 24, width: 24 }));
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("chat-waiting-dot", {
+          includeHiddenElements: true,
+        }).props.style
+      )
+    ).toEqual(expect.objectContaining({ height: 12, width: 12 }));
+    expect(screen.queryByText(chatLabels.generating)).not.toBeOnTheScreen();
 
     release?.();
 
@@ -287,6 +346,44 @@ describe("ChatPanel", () => {
       expect(screen.getByText("안녕")).toBeOnTheScreen();
     });
     expect(screen.getByLabelText(chatLabels.retry)).toBeEnabled();
+    expect(screen.getAllByLabelText(chatLabels.copyMessage)).toHaveLength(1);
+    expect(
+      screen.queryByLabelText(chatLabels.regenerate)
+    ).not.toBeOnTheScreen();
+  });
+
+  test("일부 답변 뒤에 실패하면 글자를 남기고 그 답변 행에는 다시 보내기만 보여준다", async () => {
+    const answer = controlledStream();
+
+    useTransport(fakeTransport(() => Promise.resolve(answer.stream)));
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    answer.push({ type: "start" });
+    answer.push({ id: "0", type: "text-start" });
+    answer.push({ delta: "남은 일부 답변", id: "0", type: "text-delta" });
+
+    await waitFor(() => {
+      expect(screen.getByText("남은 일부 답변")).toBeOnTheScreen();
+    });
+
+    answer.fail(new Error("stream failed"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chat-answer-error")).toBeOnTheScreen();
+    });
+
+    expect(screen.getByText("남은 일부 답변")).toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.retry)).toBeEnabled();
+    expect(screen.getAllByLabelText(chatLabels.copyMessage)).toHaveLength(1);
+    expect(
+      screen.queryByLabelText(chatLabels.regenerate)
+    ).not.toBeOnTheScreen();
   });
 
   test("다시 보내기를 누르면 실제로 다시 요청한다", async () => {
@@ -441,6 +538,110 @@ describe("ChatPanel", () => {
     expect(composerStyle.backgroundColor).toBeUndefined();
   });
 
+  test("새 질문을 헤더 아래에 두고 남은 높이를 답변 자리로 유지한다", async () => {
+    const answer = controlledStream();
+    let finishAnchoring: (() => void) | undefined;
+
+    useTransport(fakeTransport(() => Promise.resolve(answer.stream)));
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chat-latest-user-row")).toBeOnTheScreen();
+    });
+
+    mockScrollToIndex.mockImplementationOnce(() => {
+      expect(
+        StyleSheet.flatten(screen.getByTestId("chat-generating").props.style)
+      ).toEqual(expect.objectContaining({ minHeight: 564 }));
+
+      return new Promise<void>((resolve) => {
+        finishAnchoring = resolve;
+      });
+    });
+
+    await act(() => {
+      fireEvent(screen.getByTestId("chat-list"), "layout", {
+        nativeEvent: { layout: { height: 800, width: 400, x: 0, y: 0 } },
+      });
+      fireEvent(screen.getByTestId("chat-composer"), "layout", {
+        nativeEvent: { layout: { height: 120, width: 400, x: 0, y: 0 } },
+      });
+      fireEvent(screen.getByTestId("chat-latest-user-row"), "layout", {
+        nativeEvent: { layout: { height: 100, width: 360, x: 20, y: 16 } },
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockScrollToIndex).toHaveBeenCalledWith({
+        animated: true,
+        index: 0,
+        viewOffset: 16,
+        viewPosition: 0,
+      });
+    });
+    expect(mockListProps.maintainScrollAtEnd).toBe(false);
+
+    await act(() => {
+      finishAnchoring?.();
+    });
+    await waitFor(() => {
+      expect(mockListProps.maintainScrollAtEnd).toBe(true);
+    });
+
+    expect(
+      StyleSheet.flatten(screen.getByTestId("chat-generating").props.style)
+    ).toEqual(expect.objectContaining({ minHeight: 564 }));
+  });
+
+  test("최신 메시지 버튼은 가운데에서 입력창 위를 따르고 키보드를 닫지 않는다", async () => {
+    useTransport(
+      fakeTransport(() => Promise.resolve(answerStream(["안녕하세요"])))
+    );
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await act(() => {
+      mockListProps.onScrollBeginDrag?.();
+    });
+
+    const container = screen.getByTestId("chat-scroll-to-latest-container");
+
+    expect(StyleSheet.flatten(container.props.style)).toEqual(
+      expect.objectContaining({ height: 56 })
+    );
+    expect(StyleSheet.flatten(container.props.style).top).toBeUndefined();
+
+    await user.press(screen.getByLabelText(chatLabels.scrollToLatest));
+
+    expect(mockScrollToOffset).toHaveBeenCalledWith({
+      animated: true,
+      offset: 880,
+    });
+    expect(mockNativeScrollTo).not.toHaveBeenCalled();
+    expect(mockScrollToIndex).not.toHaveBeenCalled();
+    expect(mockNativeScrollToEnd).not.toHaveBeenCalled();
+    expect(mockScrollMessageToEnd).not.toHaveBeenCalled();
+    expect(mockListProps.maintainVisibleContentPosition).toBe(false);
+    expect(mockListProps.maintainScrollAtEndThreshold).toBe(
+      Number.POSITIVE_INFINITY
+    );
+    expect(mockListProps.scrollEventThrottle).toBe(50);
+
+    await act(() => {
+      mockListProps.onEndReached?.();
+    });
+    expect(mockListProps.maintainScrollAtEndThreshold).toBe(0.15);
+    expect(mockListProps.maintainVisibleContentPosition).toBe(true);
+  });
+
   test("공백뿐인 메시지는 보내지 않는다", async () => {
     const transport = fakeTransport(() =>
       Promise.resolve(answerStream(["안녕하세요"]))
@@ -480,6 +681,7 @@ describe("ChatPanel", () => {
     await user.press(screen.getByLabelText(chatLabels.send));
 
     expect(screen.getByLabelText(chatLabels.stop)).toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.stop)).toBeEnabled();
     expect(screen.queryByTestId("chat-send")).not.toBeOnTheScreen();
     expect(
       within(screen.getByTestId("chat-composer")).queryByTestId(
@@ -515,6 +717,16 @@ describe("ChatPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("부분 답변")).toBeOnTheScreen();
     });
+    expect(
+      screen.queryByTestId("chat-waiting-dot", {
+        includeHiddenElements: true,
+      })
+    ).not.toBeOnTheScreen();
+    expect(
+      screen.getByTestId("chat-streaming-cursor", {
+        includeHiddenElements: true,
+      })
+    ).toBeOnTheScreen();
 
     await user.press(screen.getByLabelText(chatLabels.stop));
 
@@ -526,6 +738,47 @@ describe("ChatPanel", () => {
     expect(screen.getByText("부분 답변")).toBeOnTheScreen();
     expect(screen.queryByTestId("chat-error")).not.toBeOnTheScreen();
     expect(screen.queryByTestId("chat-generating")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("chat-streaming-cursor", {
+        includeHiddenElements: true,
+      })
+    ).not.toBeOnTheScreen();
+    expect(screen.getAllByLabelText(chatLabels.copyMessage)).toHaveLength(2);
+    expect(screen.getByLabelText(chatLabels.regenerate)).toBeEnabled();
+  });
+
+  test("첫 답변 전에 중지하면 빈 답변 행만 없애고 오류를 만들지 않는다", async () => {
+    const answer = controlledStream();
+
+    useTransport(fakeTransport(() => Promise.resolve(answer.stream)));
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+
+    await user.type(screen.getByLabelText(chatLabels.input), "질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("chat-waiting-dot", {
+          includeHiddenElements: true,
+        })
+      ).toBeOnTheScreen();
+    });
+
+    await user.press(screen.getByLabelText(chatLabels.stop));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("chat-waiting-dot", {
+          includeHiddenElements: true,
+        })
+      ).not.toBeOnTheScreen();
+    });
+
+    expect(screen.queryByTestId("chat-error")).not.toBeOnTheScreen();
+    expect(screen.getByText("질문")).toBeOnTheScreen();
   });
 
   test("가짜 스트림의 텍스트, 파일, 출처, 도구 part가 종류와 순서를 유지한다", async () => {
@@ -656,7 +909,7 @@ describe("ChatPanel", () => {
     expect(screen.getByText("질문")).toBeOnTheScreen();
   });
 
-  test("요청이 실패하면 화면 낭독기에 소리 내어 알린다", async () => {
+  test("생성 시작과 실패를 화면 낭독기에 한 번씩 알린다", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
 
     useTransport(fakeTransport(() => Promise.reject(new Error("network"))));
@@ -673,7 +926,16 @@ describe("ChatPanel", () => {
     });
 
     // accessibilityRole="alert"는 React Native에서 아무 알림도 만들지 않는다.
-    expect(announce).toHaveBeenCalledWith(chatLabels.errorAnnouncement);
+    expect(
+      announce.mock.calls.filter(
+        ([message]) => message === chatLabels.generating
+      )
+    ).toHaveLength(1);
+    expect(
+      announce.mock.calls.filter(
+        ([message]) => message === chatLabels.errorAnnouncement
+      )
+    ).toHaveLength(1);
 
     announce.mockRestore();
   });

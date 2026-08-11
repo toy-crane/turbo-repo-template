@@ -36,6 +36,21 @@ function neverEndingStream(): ReadableStream<UIMessageChunk> {
   });
 }
 
+function controlledStream() {
+  let controller: ReadableStreamDefaultController<UIMessageChunk> | undefined;
+  const stream = new ReadableStream<UIMessageChunk>({
+    start(current) {
+      controller = current;
+    },
+  });
+
+  return {
+    fail: (cause: Error) => controller?.error(cause),
+    push: (chunk: UIMessageChunk) => controller?.enqueue(chunk),
+    stream,
+  };
+}
+
 function fakeTransport(respond: () => Promise<ReadableStream<UIMessageChunk>>) {
   const transport = {
     reconnectToStream: () => Promise.resolve(null),
@@ -225,9 +240,8 @@ describe("useChatSession 편집 후 다시 보내기", () => {
     await act(() => {
       result.current.stop();
     });
-    await waitFor(() => {
-      expect(result.current.status).toBe("ready");
-    });
+    expect(result.current.status).toBe("ready");
+    expect(result.current.isBusy).toBe(false);
 
     // 목록의 마지막은 이제 사용자 메시지다. 다시 생성 버튼은 그 앞의 답변에 붙어 있다.
     expect(result.current.messages.at(-1)?.role).toBe("user");
@@ -282,6 +296,66 @@ describe("useChatSession 편집 후 다시 보내기", () => {
       "질문",
       "멈춰서 남긴 답변",
     ]);
+  });
+
+  test("첫 답변 전에 중지하면 사용자 메시지만 남고 오류는 생기지 않는다", async () => {
+    const answer = controlledStream();
+
+    fakeTransport(() => Promise.resolve(answer.stream));
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => {
+      result.current.setDraft("질문");
+    });
+    await act(() => {
+      result.current.send();
+    });
+    await waitFor(() => {
+      expect(result.current.isBusy).toBe(true);
+    });
+
+    await act(() => {
+      result.current.stop();
+    });
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready");
+    });
+
+    expect(result.current.messages).toHaveLength(1);
+    expect(result.current.messages[0]?.role).toBe("user");
+    expect(result.current.error).toBeUndefined();
+  });
+
+  test("일부 답변 뒤에 실패하면 받은 글자와 오류를 함께 남긴다", async () => {
+    const answer = controlledStream();
+
+    fakeTransport(() => Promise.resolve(answer.stream));
+
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => {
+      result.current.setDraft("질문");
+    });
+    await act(() => {
+      result.current.send();
+    });
+    await act(() => {
+      answer.push({ type: "start" });
+      answer.push({ id: "0", type: "text-start" });
+      answer.push({ delta: "일부 답변", id: "0", type: "text-delta" });
+    });
+    await waitFor(() => {
+      expect(result.current.messages.map(textOf)).toContain("일부 답변");
+    });
+
+    await act(() => {
+      answer.fail(new Error("stream failed"));
+    });
+    await waitFor(() => {
+      expect(result.current.error).toBeDefined();
+    });
+
+    expect(result.current.messages.map(textOf)).toContain("일부 답변");
   });
 
   test("여러 턴이 쌓인 뒤 편집해도 이전 대화는 남고 마지막 턴만 교체된다", async () => {
