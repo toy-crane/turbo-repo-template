@@ -1,0 +1,42 @@
+[
+  {
+    "query": "이 참고 이미지 분위기로 Expo 앱의 디자인 시스템과 토큰을 만들어줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "HeroUI Native global.css에 적용할 라이트·다크 테마를 HTML로 비교하고 싶어.",
+    "should_trigger": true
+  },
+  {
+    "query": "아까 본 디자인 시스템에서 강조색을 덜 튀게 하고 모서리를 조금 줄여줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "확정한 테마를 Uniwind semantic token에 적용해줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "이 브랜드 URL을 참고해서 우리 모바일 앱에 어울리는 색상, 모서리, 간격 체계를 만들어줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "앱 아이콘과 스플래시 이미지를 새로 만들어줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "이 React Native 버튼 하나만 각진 모양으로 바꿔줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "Next.js HeroUI React 사이트의 primary 색상을 바꿔줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "기존 디자인 시스템으로 새 DatePicker 컴포넌트를 구현해줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "다크 모드에서 placeholder가 안 보이는 버그를 고쳐줘.",
+    "should_trigger": false
+  }
+]

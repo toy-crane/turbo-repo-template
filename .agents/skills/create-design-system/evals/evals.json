@@ -1,0 +1,101 @@
+{
+  "skill_name": "create-design-system",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/create-design-system 첨부한 화면에서 따뜻한 주황색과 편안한 밀도만 가져와서 이 Expo 앱의 디자인 시스템을 만들어줘.",
+      "expected_output": "The response inspects the reference and repository, creates one standalone HTML candidate using the current HeroUI Native semantic roles, opens it for review, and leaves app code and global.css unchanged.",
+      "files": [],
+      "expectations": [
+        "It treats the image as a style reference rather than an edit target.",
+        "It inspects installed versions, global.css, project decisions, and the current semantic variable set.",
+        "It creates preview.html instead of a PNG, app route, or build-prototype artifact.",
+        "The HTML contains Overview, Components, Patterns, and Export and shows no rationale or platform explanation.",
+        "It defines the same semantic keys for Light and Dark.",
+        "It does not change global.css, Metro config, routes, or product components before approval."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "/create-design-system 당근처럼 따뜻한 버전과 IKEA처럼 강한 파랑·노랑 대비 버전을 같은 결과에서 비교해줘.",
+      "expected_output": "The response creates one self-contained HTML file with two named candidates that use identical content, layout, components, and states while differing through design-system values.",
+      "files": [],
+      "expectations": [
+        "It provides one candidate switcher with the two requested directions.",
+        "It does not copy brand logos, product photos, navigation, or screen structure.",
+        "It keeps Overview, Components, Patterns, and Export identical between candidates.",
+        "It generates no bitmap preview.",
+        "It opens and verifies the HTML before asking for feedback."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "/create-design-system 차분하지만 선명한 생산성 앱 스타일로 만들어줘. 참고 이미지는 없어.",
+      "expected_output": "The response first offers two or three short project-compatible directions and waits for the user to choose one before generating preview.html.",
+      "files": [],
+      "expectations": [
+        "It does not require an image when the user chooses text-only input.",
+        "It proposes two or three distinct directions rather than arbitrary color swatches.",
+        "It does not create the HTML or modify production theme files before a direction is chosen."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "/create-design-system 네오 브루탈리즘으로 만들어줘. 플랫폼 제약 같은 설명은 미리보기에 넣지 마.",
+      "expected_output": "The response adapts the reference internally to the repository constraints, creates a result-only HTML candidate, and does not show rejected features or platform ownership in the page.",
+      "files": [],
+      "expectations": [
+        "It applies platform and renderer constraints internally.",
+        "It keeps compatible contrast, content geometry, spacing, and hierarchy without forcing nonstandard shapes onto platform-owned controls.",
+        "The HTML contains no platform notes, ownership rows, reference analysis, or rationale.",
+        "It does not reject the whole direction merely because some details need adaptation."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "/create-design-system 지금 보여준 Bold Nordic에서 노란색을 줄이고 모서리를 조금만 부드럽게 해줘.",
+      "expected_output": "The response changes only the selected candidate, regenerates and verifies the same HTML, and waits for explicit application approval.",
+      "files": [],
+      "expectations": [
+        "It keeps unrelated candidate values, content, layout, components, and states fixed.",
+        "It updates the Light and Dark values together.",
+        "It does not apply the candidate to global.css."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "/create-design-system 이 결과로 확정할게. 프로젝트에 적용하고 검증해줘.",
+      "expected_output": "The response applies the explicitly approved Light and Dark values to the canonical theme source, updates only required existing bridges or disconnected exceptions, removes review scaffolding, and verifies actual mobile behavior.",
+      "files": [],
+      "expectations": [
+        "It updates the canonical HeroUI Native and Uniwind theme source rather than adding a parallel palette.",
+        "It leaves components already using semantic roles unchanged.",
+        "It removes preview.html, candidate controls, temporary routes, and temporary theme registration.",
+        "It verifies static checks plus actual iOS and Android Light and Dark behavior.",
+        "It reports remaining risks without claiming HTML pixel identity with native rendering."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "/create-design-system 이 로고 색으로 바로 global.css를 바꿔줘. 미리보기는 필요 없어.",
+      "expected_output": "The response treats the logo as reference evidence but creates and presents the standalone HTML result before changing the canonical theme, because no visual result has been explicitly approved.",
+      "files": [],
+      "expectations": [
+        "It does not copy one raw logo color into every semantic role.",
+        "It does not bypass the HTML review and explicit approval gate.",
+        "It leaves production files unchanged until the shown result is approved."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "/create-design-system Next.js와 HeroUI React로 만든 웹 대시보드의 디자인 토큰을 만들어줘.",
+      "expected_output": "The response states that this skill supports Expo, HeroUI Native, and Uniwind projects and does not invent a web output path.",
+      "files": [],
+      "expectations": [
+        "It identifies the unsupported stack.",
+        "It does not apply HeroUI Native rules to HeroUI React.",
+        "It does not modify the web project."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Design System"
+  short_description: "Create an approved native design system"
+  default_prompt: "Use $create-design-system to turn this visual reference into an approved design system for this mobile app."
