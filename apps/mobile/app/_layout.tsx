@@ -52,6 +52,13 @@ function ThemedRootLayout() {
       >
         <Stack.Protected guard={area === "app"}>
           <Stack.Screen name="(tabs)" />
+          {/*
+            A conversation is pushed here rather than inside the tabs so the
+            native push covers the tab bar. Hiding the bar from inside the tab
+            navigator leaves its strip on screen on Android, where it swallows
+            every touch meant for the composer.
+          */}
+          <Stack.Screen name="chat" options={{ headerShown: true }} />
           <Stack.Screen name="settings" options={getSettingsSheetOptions()} />
         </Stack.Protected>
         <Stack.Protected guard={area === "onboarding"}>

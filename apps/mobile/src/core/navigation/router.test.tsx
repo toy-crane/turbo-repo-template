@@ -1,5 +1,4 @@
 import { beforeEach, expect, jest, test } from "@jest/globals";
-import { fireEvent } from "@testing-library/react-native";
 import { router as expoRouter } from "expo-router";
 import {
   act,
@@ -81,19 +80,9 @@ test("/에서 Home 탭의 첫 화면을 표시한다", async () => {
   expect(router.getPathname()).toBe("/");
 });
 
-test("Home 이니셜 아바타가 Settings page sheet 경로를 연다", async () => {
-  const router = renderRouter("./app", { initialUrl: "/" });
-  await router;
-
-  await act(() => {
-    fireEvent.press(screen.getByRole("button", { name: "Open settings" }));
-  });
-
-  await waitFor(() => {
-    expect(router.getPathname()).toBe("/settings");
-    expect(screen.getByLabelText("Settings placeholder")).toBeOnTheScreen();
-  });
-});
+// The avatar button moved into HomeScreen's own toolbar, so the press-to-open
+// wiring is covered in home-screen.test; this layer keeps proving the
+// /settings route itself renders as a sheet over the tabs (공개 경로 테스트).
 
 test("공개 경로 이동이 각 네이티브 탭의 화면을 표시한다", async () => {
   const router = renderRouter("./app", { initialUrl: "/" });

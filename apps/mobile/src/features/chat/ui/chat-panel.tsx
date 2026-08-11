@@ -1,141 +1,166 @@
 import type { UIMessage } from "ai";
-import { Button } from "heroui-native/button";
-import { Input } from "heroui-native/input";
-import { Label } from "heroui-native/label";
-import { Spinner } from "heroui-native/spinner";
-import { TextField } from "heroui-native/text-field";
-import { ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  AccessibilityInfo,
+  type LayoutChangeEvent,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useChatSession } from "@/features/chat/state/use-chat-session";
+import type { ChatSession } from "@/features/chat/state/use-chat-session";
+import { Icon } from "@/shared/ui/icon";
+import { chatLabels } from "./chat-labels";
 
-/** Accessibility names double as the contract for tests and agent-device. */
-export const chatLabels = {
-  generating: "답변을 만드는 중",
-  input: "메시지",
-  retry: "다시 보내기",
-  send: "보내기",
-} as const;
+// biome-ignore lint/performance/noBarrelFile: screens and tests share these accessibility names
+export { chatLabels } from "./chat-labels";
 
-function messageText(message: UIMessage): string {
+const INPUT_MAX_HEIGHT = 120;
+
+function textOfMessage(message: UIMessage): string {
   return message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
     .join("");
 }
 
-function ChatMessage({ message }: { message: UIMessage }) {
+function PlainTextMessage({ message }: { message: UIMessage }) {
   const isUser = message.role === "user";
+  const text = textOfMessage(message);
+
+  if (!text) {
+    return null;
+  }
 
   return (
-    <View
-      className={
-        isUser
-          ? "self-end rounded-2xl bg-accent px-4 py-3"
-          : "self-start rounded-2xl bg-surface px-4 py-3"
-      }
-    >
-      {/*
-        The name sits on the text, not on the bubble around it, so `get text`
-        returns the answer itself. On the container it returns only the id,
-        which cannot tell an empty answer from a full one.
-      */}
-      <Text
+    <View className={isUser ? "mb-3 items-end" : "mb-3 items-start"}>
+      <View
         className={
-          isUser ? "text-accent-foreground" : "text-surface-foreground"
+          isUser ? "max-w-[85%] rounded-2xl bg-accent px-4 py-3" : "w-full"
         }
-        selectable
-        testID={`chat-message-${message.role}`}
       >
-        {messageText(message)}
-      </Text>
+        <Text
+          className={
+            isUser
+              ? "text-accent-foreground"
+              : "text-base text-foreground leading-6"
+          }
+          selectable
+          testID={`chat-message-${message.role}`}
+        >
+          {text}
+        </Text>
+      </View>
     </View>
   );
 }
 
-/**
- * The conversation and the controls that drive it.
- *
- * The access token comes from the screen that assembles this panel, so the
- * chat feature never reaches into the auth feature for a session.
- */
-export function ChatPanel({
-  accessToken,
-}: {
-  accessToken: string | undefined;
-}) {
-  const chat = useChatSession(accessToken);
+export function ChatPanel({ chat }: { chat: ChatSession }) {
+  const insets = useSafeAreaInsets();
+  const listRef = useRef<ScrollView | null>(null);
+  const [composerHeight, setComposerHeight] = useState(0);
+  const canSend = chat.draft.trim().length > 0 && !chat.isBusy;
+
+  const announcedError = useRef<Error | undefined>(undefined);
+
+  useEffect(() => {
+    if (!chat.error) {
+      announcedError.current = undefined;
+      return;
+    }
+
+    if (announcedError.current === chat.error) {
+      return;
+    }
+
+    announcedError.current = chat.error;
+    AccessibilityInfo.announceForAccessibility(chatLabels.errorAnnouncement);
+  }, [chat.error]);
+
+  const followLatest = useCallback(() => {
+    listRef.current?.scrollToEnd({ animated: true });
+  }, []);
+  const measureComposer = useCallback((event: LayoutChangeEvent) => {
+    setComposerHeight(event.nativeEvent.layout.height);
+  }, []);
 
   return (
-    <ScrollView
-      className="bg-background"
-      contentContainerClassName="gap-4 px-5 pt-5 pb-6"
-      contentInsetAdjustmentBehavior="automatic"
-      keyboardShouldPersistTaps="handled"
-    >
-      <View className="gap-3">
-        {chat.messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
-        ))}
-      </View>
-
-      {chat.isBusy ? (
-        <View className="flex-row items-center gap-2" testID="chat-generating">
-          <Spinner size="sm" />
-          <Text className="text-muted text-sm">{chatLabels.generating}</Text>
-        </View>
-      ) : null}
-
-      {chat.error ? (
-        <View className="gap-2">
-          <Text
-            accessibilityRole="alert"
-            className="text-danger text-sm"
-            testID="chat-error"
-          >
-            답변을 받지 못했습니다. 잠시 뒤에 다시 시도해 주세요.
-          </Text>
-          <Button
-            accessibilityLabel={chatLabels.retry}
-            isDisabled={!chat.canRetry}
-            onPress={chat.retry}
-            variant="tertiary"
-          >
-            <Button.Label>다시 보내기</Button.Label>
-          </Button>
-        </View>
-      ) : null}
-
-      <TextField>
-        {/*
-          The field itself carries the name, so the visible label stays out of
-          the accessibility tree and a selector cannot land on the caption.
-        */}
-        <Label
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          메시지
-        </Label>
-        <Input
-          accessibilityLabel={chatLabels.input}
-          onChangeText={chat.setDraft}
-          onSubmitEditing={chat.send}
-          placeholder="무엇이든 물어보세요"
-          returnKeyType="send"
-          testID="chat-input"
-          value={chat.draft}
-        />
-      </TextField>
-
-      <Button
-        accessibilityLabel={chatLabels.send}
-        isDisabled={chat.isBusy || chat.draft.trim().length === 0}
-        onPress={chat.send}
-        testID="chat-send"
+    <View className="flex-1 bg-background">
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: composerHeight + 16,
+          paddingHorizontal: 20,
+          paddingTop: 16,
+        }}
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        keyboardShouldPersistTaps="handled"
+        onContentSizeChange={followLatest}
+        ref={listRef}
+        testID="chat-list"
       >
-        {chat.isBusy ? <Spinner size="sm" /> : null}
-        <Button.Label>보내기</Button.Label>
-      </Button>
-    </ScrollView>
+        {chat.messages.map((message) => (
+          <PlainTextMessage key={message.id} message={message} />
+        ))}
+      </ScrollView>
+
+      <KeyboardStickyView
+        offset={{ closed: 0, opened: insets.bottom }}
+        style={{ bottom: 0, left: 0, position: "absolute", right: 0 }}
+      >
+        <View
+          className="gap-2 bg-background px-5 pt-2"
+          onLayout={measureComposer}
+          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        >
+          {chat.error ? (
+            <Text
+              accessibilityLiveRegion="assertive"
+              accessibilityRole="alert"
+              className="text-danger text-sm"
+              testID="chat-error"
+            >
+              {chatLabels.errorAnnouncement}
+            </Text>
+          ) : null}
+
+          <View className="flex-row items-end gap-2">
+            <TextInput
+              accessibilityLabel={chatLabels.input}
+              className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
+              multiline
+              onChangeText={chat.setDraft}
+              onSubmitEditing={chat.send}
+              placeholder="메시지를 입력하세요"
+              returnKeyType="send"
+              style={{ maxHeight: INPUT_MAX_HEIGHT }}
+              submitBehavior="submit"
+              testID="chat-input"
+              value={chat.draft}
+            />
+            <Pressable
+              accessibilityLabel={chatLabels.send}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canSend }}
+              className={
+                canSend
+                  ? "h-11 w-11 items-center justify-center rounded-full bg-accent"
+                  : "h-11 w-11 items-center justify-center rounded-full bg-accent opacity-40"
+              }
+              disabled={!canSend}
+              onPress={chat.send}
+              testID="chat-send"
+            >
+              <Icon name="send" tone="accentForeground" />
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardStickyView>
+    </View>
   );
 }

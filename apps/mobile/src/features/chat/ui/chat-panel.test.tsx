@@ -1,227 +1,179 @@
 import { afterEach, describe, expect, jest, test } from "@jest/globals";
-import { screen, userEvent, waitFor } from "@testing-library/react-native";
-import type { UIMessageChunk } from "ai";
-import { simulateReadableStream } from "ai";
+import { fireEvent, screen, userEvent } from "@testing-library/react-native";
+import type { UIMessage } from "ai";
+import { useState } from "react";
+import { AccessibilityInfo } from "react-native";
 
-import { createChatTransport } from "@/features/chat/api/chat-transport";
+import type { ChatSession } from "@/features/chat/state/use-chat-session";
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { ChatPanel, chatLabels } from "./chat-panel";
 
-jest.mock("@/features/chat/api/chat-transport", () => ({
-  createChatTransport: jest.fn(),
-}));
-
-const mockCreateChatTransport = jest.mocked(createChatTransport);
-
-const ACCESS_TOKEN = "test-access-token";
-
-function answerStream(text: string[]): ReadableStream<UIMessageChunk> {
-  const chunks: UIMessageChunk[] = [
-    { type: "start" },
-    { id: "0", type: "text-start" },
-    ...text.map((delta) => ({ delta, id: "0", type: "text-delta" as const })),
-    { id: "0", type: "text-end" },
-    { type: "finish" },
-  ];
-
-  return simulateReadableStream({
-    chunkDelayInMs: null,
-    chunks,
-    initialDelayInMs: null,
-  });
+function textMessage(
+  id: string,
+  role: "assistant" | "user",
+  text: string
+): UIMessage {
+  return { id, parts: [{ text, type: "text" }], role };
 }
 
-/**
- * Stands in for the network. `sendMessages` records every call so a test can
- * say "this was not sent" rather than only "nothing appeared on screen".
- */
-function fakeTransport(
-  respond: () => Promise<ReadableStream<UIMessageChunk>>
-): {
-  reconnectToStream: () => Promise<null>;
-  sendMessages: jest.Mock<() => Promise<ReadableStream<UIMessageChunk>>>;
-} {
+function chatSession(overrides: Partial<ChatSession> = {}): ChatSession {
   return {
-    reconnectToStream: () => Promise.resolve(null),
-    sendMessages: jest.fn(respond),
+    draft: "",
+    error: undefined,
+    isBusy: false,
+    messages: [],
+    send: jest.fn(),
+    setDraft: jest.fn(),
+    ...overrides,
   };
 }
 
-function useTransport(transport: ReturnType<typeof fakeTransport>) {
-  mockCreateChatTransport.mockReturnValue(
-    transport as unknown as ReturnType<typeof createChatTransport>
-  );
-}
+function EditableChat({ onSend }: { onSend: () => void }) {
+  const [draft, setDraft] = useState("");
 
-function renderChat(accessToken: string | undefined) {
-  return renderWithHeroUI(<ChatPanel accessToken={accessToken} />);
+  return <ChatPanel chat={chatSession({ draft, send: onSend, setDraft })} />;
 }
 
 describe("ChatPanel", () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
-  test("보낸 메시지와 생성 중 상태, 스트리밍 답변을 차례로 보여준다", async () => {
-    let release: (() => void) | undefined;
-    const started = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    const transport = fakeTransport(async () => {
-      await started;
+  test("대화가 비어 있으면 메시지 목록과 입력·전송만 보여준다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
 
-      return answerStream(["안녕", "하세요"]);
-    });
+    expect(screen.getByTestId("chat-list")).toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.input)).toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.send)).toBeDisabled();
+    expect(screen.queryByText("무엇을 도와드릴까요?")).not.toBeOnTheScreen();
+  });
 
-    useTransport(transport);
+  test("사용자 메시지와 AI 답변을 일반 텍스트로 보여준다", async () => {
+    const messages = [
+      textMessage("user-1", "user", "질문"),
+      textMessage("assistant-1", "assistant", "# 제목 **강조**"),
+    ];
 
+    await renderWithHeroUI(<ChatPanel chat={chatSession({ messages })} />);
+
+    expect(screen.getByText("질문")).toBeOnTheScreen();
+    expect(screen.getByText("# 제목 **강조**")).toBeOnTheScreen();
+    expect(screen.queryByTestId("chat-markdown")).not.toBeOnTheScreen();
+  });
+
+  test("텍스트가 아닌 응답 part는 표시하지 않는다", async () => {
+    const message: UIMessage = {
+      id: "assistant-1",
+      parts: [
+        {
+          mediaType: "application/pdf",
+          type: "file",
+          url: "https://example.com/document.pdf",
+        },
+        {
+          sourceId: "source-1",
+          title: "문서 출처",
+          type: "source-url",
+          url: "https://example.com/source",
+        },
+        { text: "일반 텍스트", type: "text" },
+      ],
+      role: "assistant",
+    };
+
+    await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ messages: [message] })} />
+    );
+
+    expect(screen.getByText("일반 텍스트")).toBeOnTheScreen();
+    expect(screen.queryByText("문서 출처")).not.toBeOnTheScreen();
+  });
+
+  test("텍스트가 없는 응답은 빈 메시지 행도 만들지 않는다", async () => {
+    const message: UIMessage = {
+      id: "assistant-1",
+      parts: [
+        {
+          mediaType: "application/pdf",
+          type: "file",
+          url: "https://example.com/document.pdf",
+        },
+      ],
+      role: "assistant",
+    };
+
+    await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ messages: [message] })} />
+    );
+
+    expect(
+      screen.queryByTestId("chat-message-assistant")
+    ).not.toBeOnTheScreen();
+  });
+
+  test("메시지 작업을 접근성 트리에 만들지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+
+    for (const removedLabel of [
+      "메시지 복사",
+      "편집 후 다시 보내기",
+      "다시 생성",
+      "최신 메시지로 이동",
+    ]) {
+      expect(screen.queryByLabelText(removedLabel)).not.toBeOnTheScreen();
+    }
+  });
+
+  test("입력과 전송을 채팅 세션에 연결한다", async () => {
+    const send = jest.fn();
     const user = userEvent.setup();
 
-    await renderChat(ACCESS_TOKEN);
+    await renderWithHeroUI(<EditableChat onSend={send} />);
 
-    await user.type(screen.getByLabelText(chatLabels.input), "안녕");
+    await user.type(screen.getByLabelText(chatLabels.input), "질문");
+    expect(screen.getByLabelText(chatLabels.input)).toHaveDisplayValue("질문");
+
     await user.press(screen.getByLabelText(chatLabels.send));
+    expect(send).toHaveBeenCalledTimes(1);
+  });
 
-    expect(screen.getByText("안녕")).toBeOnTheScreen();
-    expect(screen.getByTestId("chat-generating")).toBeOnTheScreen();
+  test("생성 중에는 전송만 비활성화하고 별도 상태 작업을 만들지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ draft: "질문", isBusy: true })} />
+    );
 
-    release?.();
-
-    await waitFor(() => {
-      expect(screen.getByText("안녕하세요")).toBeOnTheScreen();
-    });
-
+    expect(screen.getByLabelText(chatLabels.send)).toBeDisabled();
+    expect(screen.queryByLabelText("생성 중지")).not.toBeOnTheScreen();
     expect(screen.queryByTestId("chat-generating")).not.toBeOnTheScreen();
-    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
   });
 
-  test("요청이 실패하면 보낸 메시지를 남기고 다시 시도할 수 있게 한다", async () => {
-    const transport = fakeTransport(() =>
-      Promise.reject(new Error("network is down"))
+  test("요청 실패는 짧은 오류만 보여주고 다시 시도 작업을 만들지 않는다", async () => {
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+
+    await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ error: new Error("network") })} />
     );
 
-    useTransport(transport);
-
-    const user = userEvent.setup();
-
-    await renderChat(ACCESS_TOKEN);
-
-    await user.type(screen.getByLabelText(chatLabels.input), "안녕");
-    await user.press(screen.getByLabelText(chatLabels.send));
-
-    await waitFor(() => {
-      expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
-    });
-
-    expect(screen.getByText("안녕")).toBeOnTheScreen();
-    expect(screen.getByLabelText(chatLabels.retry)).toBeEnabled();
+    expect(screen.getByText(chatLabels.errorAnnouncement)).toBeOnTheScreen();
+    expect(screen.queryByLabelText("다시 보내기")).not.toBeOnTheScreen();
+    expect(announce).toHaveBeenCalledWith(chatLabels.errorAnnouncement);
   });
 
-  test("다시 보내기를 누르면 실제로 다시 요청한다", async () => {
-    let attempt = 0;
-    const transport = fakeTransport(() => {
-      attempt += 1;
+  test("입력창의 return 키로 전송한다", async () => {
+    const send = jest.fn();
 
-      return attempt === 1
-        ? Promise.reject(new Error("network is down"))
-        : Promise.resolve(answerStream(["안녕하세요"]));
-    });
-
-    useTransport(transport);
-
-    const user = userEvent.setup();
-
-    await renderChat(ACCESS_TOKEN);
-
-    await user.type(screen.getByLabelText(chatLabels.input), "안녕");
-    await user.press(screen.getByLabelText(chatLabels.send));
-
-    await waitFor(() => {
-      expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
-    });
-
-    await user.press(screen.getByLabelText(chatLabels.retry));
-
-    await waitFor(() => {
-      expect(screen.getByText("안녕하세요")).toBeOnTheScreen();
-    });
-
-    expect(transport.sendMessages).toHaveBeenCalledTimes(2);
-  });
-
-  test("토큰이 사라지면 다시 보내기를 막는다", async () => {
-    const transport = fakeTransport(() =>
-      Promise.reject(new Error("network is down"))
+    await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ draft: "질문", send })} />
     );
 
-    useTransport(transport);
+    fireEvent(screen.getByLabelText(chatLabels.input), "submitEditing");
 
-    const user = userEvent.setup();
-
-    const view = await renderChat(ACCESS_TOKEN);
-
-    await user.type(screen.getByLabelText(chatLabels.input), "안녕");
-    await user.press(screen.getByLabelText(chatLabels.send));
-
-    await waitFor(() => {
-      expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
-    });
-
-    // The session goes away while the error is on screen.
-    await view.rerender(<ChatPanel accessToken={undefined} />);
-
-    expect(screen.getByLabelText(chatLabels.retry)).toBeDisabled();
-    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
-  });
-
-  test("토큰이 없으면 요청을 보내지 않는다", async () => {
-    const transport = fakeTransport(() =>
-      Promise.resolve(answerStream(["안녕하세요"]))
-    );
-
-    useTransport(transport);
-
-    const user = userEvent.setup();
-
-    await renderChat(undefined);
-
-    await user.type(screen.getByLabelText(chatLabels.input), "안녕");
-    await user.press(screen.getByLabelText(chatLabels.send));
-
-    expect(transport.sendMessages).not.toHaveBeenCalled();
-    expect(screen.queryByTestId("chat-message-user")).not.toBeOnTheScreen();
-  });
-
-  test("답변을 기다리는 동안 같은 입력을 다시 보내지 않는다", async () => {
-    let release: (() => void) | undefined;
-    const started = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    const transport = fakeTransport(async () => {
-      await started;
-
-      return answerStream(["안녕하세요"]);
-    });
-
-    useTransport(transport);
-
-    const user = userEvent.setup();
-
-    await renderChat(ACCESS_TOKEN);
-
-    await user.type(screen.getByLabelText(chatLabels.input), "안녕");
-
-    const send = screen.getByLabelText(chatLabels.send);
-
-    await user.press(send);
-    await user.press(send);
-
-    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
-
-    release?.();
-
-    await waitFor(() => {
-      expect(screen.getByText("안녕하세요")).toBeOnTheScreen();
-    });
+    expect(send).toHaveBeenCalledTimes(1);
   });
 });
