@@ -2,6 +2,7 @@ import { afterEach, describe, expect, jest, test } from "@jest/globals";
 import { screen, userEvent } from "@testing-library/react-native";
 import { setStringAsync } from "expo-clipboard";
 import { openBrowserAsync } from "expo-web-browser";
+import { StyleSheet } from "react-native";
 
 import { chatLabels } from "@/features/chat/ui/chat-labels";
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
@@ -150,5 +151,31 @@ describe("MarkdownView", () => {
     await renderWithHeroUI(<MarkdownView markdown={streaming} />);
 
     expect(screen.getByTestId("chat-markdown-table")).toBeOnTheScreen();
+  });
+
+  test("스트리밍 텍스트와 블록 커서는 투명도 애니메이션을 가진다", async () => {
+    const view = await renderWithHeroUI(
+      <MarkdownView markdown="쓰는 중" showCursor />
+    );
+
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("chat-streaming-cursor", {
+          includeHiddenElements: true,
+        }).props.style
+      ).opacity
+    ).toEqual(expect.any(Number));
+
+    await view.rerender(
+      <MarkdownView markdown={"```ts\nconst value = 1;"} showCursor />
+    );
+
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("chat-streaming-cursor", {
+          includeHiddenElements: true,
+        }).props.style
+      ).opacity
+    ).toEqual(expect.any(Number));
   });
 });

@@ -10,7 +10,7 @@ import type {
   RootContent,
   Table,
 } from "mdast";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   type LayoutChangeEvent,
   type NativeSyntheticEvent,
@@ -19,6 +19,15 @@ import {
   type TextLayoutEventData,
   View,
 } from "react-native";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 import { openExternalLink } from "../open-link";
 import { CodeBlock, InlineCode } from "./code-block";
@@ -40,13 +49,43 @@ const headingClassByDepth: Record<number, string> = {
 
 const BODY_TEXT_CLASS = "text-base text-foreground leading-6";
 const TABLE_CELL_WIDTH = 144;
+const STREAMING_CURSOR_BLINK_DURATION_MS = 1000;
+
+function useStreamingCursorStyle() {
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    const halfCycle = STREAMING_CURSOR_BLINK_DURATION_MS / 2;
+
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.15, {
+          duration: halfCycle,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        withTiming(1, {
+          duration: halfCycle,
+          easing: Easing.inOut(Easing.ease),
+        })
+      ),
+      -1
+    );
+
+    return () => cancelAnimation(opacity);
+  }, [opacity]);
+
+  return useAnimatedStyle(() => ({ opacity: opacity.value }), [opacity]);
+}
 
 function StreamingBlockCursor() {
+  const animatedStyle = useStreamingCursorStyle();
+
   return (
-    <View
+    <Animated.View
       accessibilityElementsHidden
       className="absolute right-0 bottom-0 h-5 w-0 border-accent border-r-2"
       importantForAccessibility="no-hide-descendants"
+      style={animatedStyle}
       testID="chat-streaming-cursor"
     />
   );
@@ -63,6 +102,7 @@ function StreamingText({
 }) {
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [cursor, setCursor] = useState({ height: 0, left: 0, top: 0 });
+  const animatedCursorStyle = useStreamingCursorStyle();
   const captureOrigin = useCallback((event: LayoutChangeEvent) => {
     const { x, y } = event.nativeEvent.layout;
 
@@ -105,11 +145,11 @@ function StreamingText({
       >
         {children}
       </Text>
-      <View
+      <Animated.View
         accessibilityElementsHidden
         className="absolute w-0 border-accent border-r-2"
         importantForAccessibility="no-hide-descendants"
-        style={cursor}
+        style={[cursor, animatedCursorStyle]}
         testID="chat-streaming-cursor"
       />
     </View>
