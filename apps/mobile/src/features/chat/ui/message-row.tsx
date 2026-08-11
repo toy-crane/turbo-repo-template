@@ -322,10 +322,14 @@ function UserMessage({
     >
       <Menu.Trigger asChild ref={triggerRef}>
         <PressableFeedback
-          accessibilityActions={[
-            { label: chatLabels.copyUserMessage, name: "copy" },
-            { label: chatLabels.editMessage, name: "edit" },
-          ]}
+          accessibilityActions={
+            editDisabled
+              ? [{ label: chatLabels.copyUserMessage, name: "copy" }]
+              : [
+                  { label: chatLabels.copyUserMessage, name: "copy" },
+                  { label: chatLabels.editMessage, name: "edit" },
+                ]
+          }
           accessibilityLabel={text}
           accessibilityRole="button"
           accessibilityState={{ expanded: menuOpen }}

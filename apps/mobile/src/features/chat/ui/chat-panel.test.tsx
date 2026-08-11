@@ -489,6 +489,11 @@ describe("ChatPanel", () => {
     expect(
       screen.queryByLabelText(chatLabels.regenerate)
     ).not.toBeOnTheScreen();
+
+    fireEvent(screen.getByTestId(USER_MESSAGE_TEST_ID), "longPress");
+    await user.press(await screen.findByLabelText(chatLabels.editMessage));
+
+    expect(screen.getByLabelText(chatLabels.retry)).toBeDisabled();
   });
 
   test("일부 답변 뒤에 실패하면 글자를 남기고 그 답변 행에는 다시 보내기만 보여준다", async () => {
@@ -1120,6 +1125,10 @@ describe("ChatPanel", () => {
 
     const userBubble = screen.getByTestId(USER_MESSAGE_TEST_ID);
 
+    expect(userBubble.props.accessibilityActions).toEqual([
+      { label: chatLabels.copyUserMessage, name: "copy" },
+    ]);
+
     fireEvent(userBubble, "longPress");
     await waitFor(() =>
       expect(screen.getByText(chatLabels.copyUserMessage)).toBeOnTheScreen()
@@ -1284,6 +1293,7 @@ describe("ChatPanel", () => {
     );
     expect(screen.getByLabelText(chatLabels.input).props.editable).toBe(false);
     expect(screen.getByLabelText(chatLabels.send)).toBeDisabled();
+    expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
     expect(screen.queryByText("메시지를 고치는 중")).not.toBeOnTheScreen();
 
     await user.press(screen.getByLabelText(chatLabels.cancelEdit));

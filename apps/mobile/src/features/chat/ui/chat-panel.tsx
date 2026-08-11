@@ -332,7 +332,9 @@ function ChatListRow({
         item.id === lastAssistantId ? regenerateLast : undefined
       }
       regenerateDisabled={
-        item.id === lastAssistantId ? status !== "ready" : false
+        item.id === lastAssistantId
+          ? status !== "ready" || editing !== undefined
+          : false
       }
       setEditDraft={setEditDraft}
       startEdit={startEdit}

@@ -220,6 +220,51 @@ describe("useChatSession 편집 후 다시 보내기", () => {
     expect(resent.at(-1)?.role).toBe("user");
   });
 
+  test("편집 중에는 마지막 답변을 다시 생성하지 않는다", async () => {
+    const transport = fakeTransport(() =>
+      Promise.resolve(answerStream("첫 답변"))
+    );
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => result.current.setDraft("첫 질문"));
+    await act(() => result.current.send());
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+
+    const firstMessageId = result.current.messages[0]?.id;
+
+    expect(firstMessageId).toBeDefined();
+    await act(() => result.current.startEdit(firstMessageId as string));
+    await act(() => result.current.regenerateLast());
+
+    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
+    expect(result.current.messages.map(textOf)).toEqual(["첫 질문", "첫 답변"]);
+  });
+
+  test("편집 중에는 실패한 요청을 재시도하지 않는다", async () => {
+    let attempt = 0;
+    const transport = fakeTransport(() => {
+      attempt += 1;
+
+      return attempt === 1
+        ? Promise.reject(new Error("network is down"))
+        : Promise.resolve(answerStream("재시도 답변"));
+    });
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => result.current.setDraft("실패할 질문"));
+    await act(() => result.current.send());
+    await waitFor(() => expect(result.current.status).toBe("error"));
+
+    const firstMessageId = result.current.messages[0]?.id;
+
+    expect(firstMessageId).toBeDefined();
+    await act(() => result.current.startEdit(firstMessageId as string));
+
+    expect(result.current.canRetry).toBe(false);
+    await act(() => result.current.retry());
+    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
+  });
+
   test("답변 뒤에 보낸 질문을 중지해도 다시 생성은 그 답변만 새로 만든다", async () => {
     let attempt = 0;
     const transport = fakeTransport(() => {

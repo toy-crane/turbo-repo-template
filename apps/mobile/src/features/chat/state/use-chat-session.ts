@@ -23,7 +23,7 @@ function textOfMessage(message: UIMessage): string {
 export interface ChatSession {
   /** Leaves inline editing without changing the conversation. */
   cancelEdit: () => void;
-  /** False while there is no token to send, so a retry cannot go out naked. */
+  /** False without a token, during a request, or while inline editing. */
   canRetry: boolean;
   /** True when the current composer draft can start a new request. */
   canSend: boolean;
@@ -115,6 +115,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   const canSend = Boolean(
     draft.trim() && accessToken && !sdkIsBusy && editing === undefined
   );
+  const canRetry = Boolean(accessToken && !sdkIsBusy && editing === undefined);
   const running = useRef<ChatAction | undefined>(undefined);
   const requestGeneration = useRef(0);
 
@@ -190,12 +191,12 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     // went away sends a request with no Authorization header, and the 401 comes
     // back as the same "try again later" message the person is already looking
     // at.
-    if (!currentToken.current || isBusy) {
+    if (!currentToken.current || sdkIsBusy || editingRef.current) {
       return;
     }
 
     run("retry", () => regenerate());
-  }, [isBusy, regenerate, run]);
+  }, [regenerate, run, sdkIsBusy]);
 
   const stop = useCallback(() => {
     // Only a running generation can be stopped; the AI SDK keeps the parts
@@ -272,7 +273,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   const regenerateLast = useCallback(() => {
     // `ready` only: an error retry is the retry button's job, and a running
     // generation cannot be regenerated.
-    if (status !== "ready" || !currentToken.current) {
+    if (status !== "ready" || !currentToken.current || editingRef.current) {
       return;
     }
 
@@ -302,7 +303,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
 
   return {
     cancelEdit,
-    canRetry: !(isBusy || accessToken === undefined),
+    canRetry,
     canSend,
     confirmEdit,
     draft,
