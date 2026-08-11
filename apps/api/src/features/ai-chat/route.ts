@@ -14,10 +14,10 @@ import { resolveModelId } from "./config";
 
 export interface AiChatDependencies {
   /**
-   * The gate on the AI route. Tests replace it to reach the handler without a
-   * real Supabase project; nothing else should.
+   * Authentication middleware for the AI route. Tests replace it to reach the
+   * handler without a real Supabase project; nothing else should.
    */
-  auth?: MiddlewareHandler;
+  authMiddleware?: MiddlewareHandler;
   /**
    * The model to call. Left unset, the server reads `AI_GATEWAY_MODEL` per
    * request, which is also what keeps tests off the real AI Gateway.
@@ -41,7 +41,7 @@ export function createAiChatRoutes(dependencies: AiChatDependencies = {}) {
   // with this string instead of quietly succeeding. Remove it once the package
   // creates the admin client lazily.
   const requireUser =
-    dependencies.auth ??
+    dependencies.authMiddleware ??
     withSupabase({
       auth: "user",
       env: { secretKeys: { default: "unused-ai-chat-never-calls-admin" } },

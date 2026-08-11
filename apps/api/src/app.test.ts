@@ -16,7 +16,7 @@ const CHAT_PATH = "/ai/chat";
  * credentials. Everything after that — missing header, unverifiable token — is
  * the real check running.
  */
-function requireRealUser(): MiddlewareHandler {
+function createUserAuthMiddleware(): MiddlewareHandler {
   return withSupabase({
     auth: "user",
     env: { url: "http://localhost:54321" },
@@ -24,9 +24,9 @@ function requireRealUser(): MiddlewareHandler {
 }
 
 /** Stands in for a request that already passed the real check. */
-const allowUser: MiddlewareHandler = (_c, next) => next();
+const bypassAuth: MiddlewareHandler = (_c, next) => next();
 
-function fakeModel(text: string[]): MockLanguageModelV4 {
+function createMockModel(text: string[]): MockLanguageModelV4 {
   const chunks: LanguageModelV4StreamPart[] = [
     { type: "stream-start", warnings: [] },
     { id: "0", type: "text-start" },
@@ -62,7 +62,7 @@ function fakeModel(text: string[]): MockLanguageModelV4 {
   });
 }
 
-function chatRequest(body: unknown, token?: string): Request {
+function createChatRequest(body: unknown, token?: string): Request {
   return new Request(`http://localhost${CHAT_PATH}`, {
     body: JSON.stringify(body),
     headers: {
@@ -73,7 +73,7 @@ function chatRequest(body: unknown, token?: string): Request {
   });
 }
 
-function userMessage(text: string) {
+function createUserMessage(text: string) {
   return {
     id: "m1",
     parts: [{ text, type: "text" }],
@@ -83,9 +83,9 @@ function userMessage(text: string) {
 
 describe("GET /health", () => {
   test("answers without credentials or AI configuration", async () => {
-    const response = await createApp({ auth: requireRealUser() }).request(
-      "/health"
-    );
+    const response = await createApp({
+      authMiddleware: createUserAuthMiddleware(),
+    }).request("/health");
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ status: "ok" });
@@ -94,11 +94,14 @@ describe("GET /health", () => {
 
 describe("POST /ai/chat", () => {
   test("rejects a request with no access token before calling the model", async () => {
-    const model = fakeModel(["안녕하세요"]);
-    const app = createApp({ auth: requireRealUser(), model });
+    const model = createMockModel(["안녕하세요"]);
+    const app = createApp({
+      authMiddleware: createUserAuthMiddleware(),
+      model,
+    });
 
     const response = await app.request(
-      chatRequest({ messages: [userMessage("안녕")] })
+      createChatRequest({ messages: [createUserMessage("안녕")] })
     );
 
     expect(response.status).toBe(401);
@@ -106,11 +109,17 @@ describe("POST /ai/chat", () => {
   });
 
   test("rejects an access token it cannot verify before calling the model", async () => {
-    const model = fakeModel(["안녕하세요"]);
-    const app = createApp({ auth: requireRealUser(), model });
+    const model = createMockModel(["안녕하세요"]);
+    const app = createApp({
+      authMiddleware: createUserAuthMiddleware(),
+      model,
+    });
 
     const response = await app.request(
-      chatRequest({ messages: [userMessage("안녕")] }, "not-a-real-token")
+      createChatRequest(
+        { messages: [createUserMessage("안녕")] },
+        "not-a-real-token"
+      )
     );
 
     expect(response.status).toBe(401);
@@ -118,11 +127,11 @@ describe("POST /ai/chat", () => {
   });
 
   test("returns a UI message stream for an authenticated request", async () => {
-    const model = fakeModel(["안녕", "하세요"]);
-    const app = createApp({ auth: allowUser, model });
+    const model = createMockModel(["안녕", "하세요"]);
+    const app = createApp({ authMiddleware: bypassAuth, model });
 
     const response = await app.request(
-      chatRequest({ messages: [userMessage("안녕")] })
+      createChatRequest({ messages: [createUserMessage("안녕")] })
     );
 
     expect(response.status).toBe(200);
@@ -137,11 +146,11 @@ describe("POST /ai/chat", () => {
   });
 
   test("rejects a malformed body before calling the model", async () => {
-    const model = fakeModel(["안녕하세요"]);
-    const app = createApp({ auth: allowUser, model });
+    const model = createMockModel(["안녕하세요"]);
+    const app = createApp({ authMiddleware: bypassAuth, model });
 
     const response = await app.request(
-      chatRequest({ messages: [{ role: "user" }] })
+      createChatRequest({ messages: [{ role: "user" }] })
     );
 
     expect(response.status).toBe(400);
@@ -166,7 +175,7 @@ describe("POST /ai/chat", () => {
           })
         ),
     });
-    const app = createApp({ auth: allowUser, model });
+    const app = createApp({ authMiddleware: bypassAuth, model });
     const written: string[] = [];
     const realError = console.error;
 
@@ -178,7 +187,7 @@ describe("POST /ai/chat", () => {
 
     try {
       const response = await app.request(
-        chatRequest({ messages: [userMessage(secret)] })
+        createChatRequest({ messages: [createUserMessage(secret)] })
       );
 
       await response.text();
@@ -191,10 +200,10 @@ describe("POST /ai/chat", () => {
   });
 
   test("rejects a body that is not an AI SDK message list", async () => {
-    const model = fakeModel(["안녕하세요"]);
-    const app = createApp({ auth: allowUser, model });
+    const model = createMockModel(["안녕하세요"]);
+    const app = createApp({ authMiddleware: bypassAuth, model });
 
-    const response = await app.request(chatRequest({ prompt: "안녕" }));
+    const response = await app.request(createChatRequest({ prompt: "안녕" }));
 
     expect(response.status).toBe(400);
     expect(model.doStreamCalls).toHaveLength(0);
