@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design System Preview</title>
+  <!-- Standalone design-system review template. Do not add product-prototype review chrome. -->
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--background);
+      color: var(--foreground);
+      font-family: inherit;
+      transition: background-color .18s ease, color .18s ease;
+    }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    [hidden] { display: none !important; }
+
+    .preview-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid color-mix(in srgb, var(--separator) 65%, transparent);
+      background: var(--header-background);
+      color: var(--header-foreground);
+      backdrop-filter: blur(18px);
+    }
+    .header-inner {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto auto;
+      align-items: center;
+      gap: 18px;
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      min-height: 82px;
+    }
+    .brand-label {
+      margin: 0 0 3px;
+      color: color-mix(in srgb, currentColor 65%, transparent);
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .theme-name {
+      margin: 0;
+      font-size: 29px;
+      line-height: 1;
+      letter-spacing: -.035em;
+    }
+    .theme-switcher {
+      display: flex;
+      padding: 4px;
+      border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface) 13%, transparent);
+    }
+    .theme-choice {
+      min-height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: inherit;
+      font-size: 13px;
+      font-weight: 680;
+      cursor: pointer;
+    }
+    .theme-choice[aria-pressed="true"] {
+      background: var(--surface);
+      color: var(--foreground);
+    }
+    .export-button {
+      min-height: 42px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: var(--field-radius);
+      background: var(--export-background);
+      color: var(--export-foreground);
+      font-weight: 780;
+      cursor: pointer;
+    }
+
+    .preview-tabs {
+      position: sticky;
+      top: 82px;
+      z-index: 40;
+      display: flex;
+      gap: 6px;
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding-top: 8px;
+      border-bottom: 1px solid var(--separator);
+      background: color-mix(in srgb, var(--background) 94%, transparent);
+      backdrop-filter: blur(18px);
+    }
+    .tab-button {
+      min-height: 48px;
+      padding: 0 16px;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 690;
+      cursor: pointer;
+    }
+    .tab-button[aria-selected="true"] {
+      border-bottom-color: var(--tab-active);
+      color: var(--tab-active-foreground);
+    }
+
+    .preview-main {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 24px 0 72px;
+    }
+    .panel { display: grid; gap: var(--space); }
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space);
+    }
+    .spec-card {
+      min-width: 0;
+      padding: 22px;
+      border: 1px solid var(--separator);
+      border-radius: calc(var(--radius) * 3);
+      background: var(--surface);
+      color: var(--surface-foreground);
+      box-shadow: var(--surface-shadow);
+    }
+    .span-2 { grid-column: 1 / -1; }
+    .spec-label {
+      margin: 0 0 15px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 780;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .hero-spec {
+      position: relative;
+      display: grid;
+      min-height: 280px;
+      align-content: end;
+      overflow: hidden;
+      padding: clamp(28px, 6vw, 64px);
+    }
+    .hero-spec::before {
+      content: "";
+      position: absolute;
+      width: var(--hero-shape-width);
+      height: var(--hero-shape-height);
+      top: var(--hero-shape-top);
+      right: var(--hero-shape-right);
+      border-radius: var(--hero-shape-radius);
+      background: var(--hero-shape-background);
+    }
+    .hero-title {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0;
+      font-size: clamp(44px, 8vw, 86px);
+      line-height: 1.02;
+      letter-spacing: -.06em;
+      text-wrap: balance;
+    }
+
+    .palette {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .swatch {
+      aspect-ratio: .78;
+      border: 1px solid color-mix(in srgb, var(--foreground) 13%, transparent);
+      border-radius: calc(var(--radius) * 1.65);
+    }
+
+    .type-list { display: grid; gap: 12px; }
+    .type-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid color-mix(in srgb, var(--separator) 30%, transparent);
+    }
+    .type-row:last-child { padding-bottom: 0; border-bottom: 0; }
+    .type-row strong { letter-spacing: -.025em; }
+    .type-row:nth-child(1) strong { font-size: 30px; }
+    .type-row:nth-child(2) strong { font-size: 22px; }
+    .type-row:nth-child(3) strong { font-size: 16px; font-weight: 520; }
+    .type-row:nth-child(4) strong { color: var(--muted); font-size: 12px; font-weight: 520; }
+
+    .button-stack, .field-stack { display: grid; gap: 10px; }
+    .demo-button {
+      min-height: var(--control-height);
+      padding: 0 20px;
+      border: 1.5px solid var(--accent);
+      border-radius: var(--field-radius);
+      background: var(--accent);
+      color: var(--accent-foreground);
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .demo-button.secondary { background: transparent; color: var(--accent); }
+    .demo-button:active { opacity: .82; transform: translateY(1px); }
+    .demo-button:disabled { cursor: default; opacity: .4; }
+
+    .search-field {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-height: var(--control-height);
+      padding: 0 16px;
+      border: 1px solid var(--separator);
+      border-radius: var(--field-radius);
+      background: var(--background);
+    }
+    .search-field:focus-within {
+      border-color: var(--accent);
+      outline: 3px solid color-mix(in srgb, var(--accent) 17%, transparent);
+    }
+    .search-icon {
+      position: relative;
+      width: 17px;
+      height: 17px;
+      flex: 0 0 auto;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      color: var(--muted);
+    }
+    .search-icon::after {
+      content: "";
+      position: absolute;
+      width: 7px;
+      height: 2px;
+      right: -6px;
+      bottom: -2px;
+      border-radius: 2px;
+      background: currentColor;
+      transform: rotate(45deg);
+    }
+    .search-field input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--foreground);
+    }
+    .search-field input::placeholder { color: var(--muted); }
+
+    .chip-row { display: flex; flex-wrap: wrap; gap: 9px; }
+    .chip {
+      min-height: 38px;
+      padding: 0 16px;
+      border: 1px solid var(--separator);
+      border-radius: var(--field-radius);
+      background: var(--surface);
+      color: var(--foreground);
+      font-weight: 660;
+      cursor: pointer;
+    }
+    .chip.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-foreground);
+    }
+
+    .feature-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+    .feature-mark {
+      display: grid;
+      place-items: center;
+      width: 66px;
+      height: 66px;
+      border-radius: calc(var(--radius) * 2.25);
+      background: var(--feature-background);
+      color: var(--feature-foreground);
+      font-size: 28px;
+      font-weight: 850;
+    }
+    .feature-copy h3 { margin: 0 0 5px; font-size: 21px; letter-spacing: -.025em; }
+    .feature-copy p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .feature-arrow {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: var(--field-radius);
+      background: var(--feature-background);
+      color: var(--feature-foreground);
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .list-stack { display: grid; }
+    .list-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 60px;
+      border-bottom: 1px solid color-mix(in srgb, var(--separator) 42%, transparent);
+    }
+    .list-row:last-child { border-bottom: 0; }
+    .list-icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: calc(var(--radius) * .5);
+      background: var(--surface-secondary);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .list-row strong { flex: 1; }
+    .chevron { color: var(--muted); font-size: 22px; }
+
+    .state-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .state-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border-radius: var(--field-radius);
+      font-weight: 720;
+    }
+    .state-badge::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .state-success { color: var(--success); background: color-mix(in srgb, var(--success) 12%, white); }
+    .state-warning { color: var(--warning); background: color-mix(in srgb, var(--warning) 13%, white); }
+    .state-danger { color: var(--danger); background: color-mix(in srgb, var(--danger) 11%, white); }
+
+    .modes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .mode-surface {
+      min-height: 145px;
+      padding: 17px;
+      border: 1px solid var(--separator);
+      border-radius: var(--radius);
+    }
+    .mode-surface.light { background: var(--light-sample-surface); color: var(--light-sample-foreground); }
+    .mode-surface.dark { border-color: var(--dark-sample-border); background: var(--dark-sample-surface); color: var(--dark-sample-foreground); }
+    .mode-blocks { display: flex; align-items: end; gap: 8px; height: 82px; }
+    .mode-blocks i {
+      display: block;
+      flex: 1;
+      height: 48px;
+      border-radius: calc(var(--radius) * .45);
+      background: var(--light-sample-accent);
+    }
+    .mode-blocks i:nth-child(2) { height: 64px; background: var(--secondary); }
+    .mode-blocks i:nth-child(3) { height: 36px; background: currentColor; opacity: .16; }
+    .mode-surface.dark .mode-blocks i:first-child { background: var(--dark-sample-accent); }
+    .mode-surface.dark .mode-blocks i:nth-child(2) { background: var(--dark-sample-secondary); }
+
+    .section-heading {
+      margin: 8px 0 0;
+      font-size: clamp(34px, 5vw, 52px);
+      letter-spacing: -.05em;
+    }
+    .section-copy {
+      max-width: 650px;
+      margin: -8px 0 6px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .field-label {
+      display: grid;
+      gap: 7px;
+      color: var(--foreground);
+      font-size: 13px;
+      font-weight: 720;
+    }
+    .text-field {
+      width: 100%;
+      min-height: var(--control-height);
+      padding: 0 15px;
+      border: 1px solid var(--separator);
+      border-radius: var(--field-radius);
+      outline: 0;
+      background: var(--surface);
+      color: var(--foreground);
+    }
+    .text-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 17%, transparent);
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 56px;
+    }
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      border: 0;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--muted) 34%, transparent);
+      cursor: pointer;
+    }
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ffffff;
+      transition: transform .18s ease;
+    }
+    .toggle[aria-pressed="true"] { background: var(--accent); }
+    .toggle[aria-pressed="true"]::after { transform: translateX(20px); }
+
+    .pattern-list { display: grid; gap: 10px; }
+    .pattern-item {
+      display: grid;
+      grid-template-columns: 58px 1fr auto;
+      align-items: center;
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--separator);
+      border-radius: calc(var(--radius) * 3);
+      background: var(--surface);
+    }
+    .pattern-thumb {
+      width: 58px;
+      aspect-ratio: 1;
+      border-radius: calc(var(--radius) * 1.8);
+      background: var(--pattern-background);
+    }
+    .pattern-item h4 { margin: 0 0 4px; font-size: 15px; }
+    .pattern-item p { margin: 0; color: var(--muted); font-size: 12px; }
+    .form-actions {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .export-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      justify-items: end;
+      background: rgba(11, 13, 17, .5);
+    }
+    .export-drawer {
+      width: min(460px, 94vw);
+      height: 100%;
+      padding: 26px;
+      overflow-y: auto;
+      background: #15171b;
+      color: #f6f7f8;
+      box-shadow: -24px 0 60px rgba(0, 0, 0, .28);
+    }
+    .drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .drawer-head h2 { margin: 0; font-size: 26px; }
+    .drawer-close {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #3b3f47;
+      border-radius: 50%;
+      background: transparent;
+      color: #ffffff;
+      cursor: pointer;
+    }
+    .export-drawer pre {
+      margin: 0;
+      padding: 18px;
+      overflow: auto;
+      border-radius: 10px;
+      background: #0c0e11;
+      color: #dce8f7;
+      font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 760px) {
+      .header-inner {
+        grid-template-columns: 1fr auto;
+        width: min(100% - 28px, 1180px);
+        min-height: 72px;
+        gap: 12px;
+      }
+      .brand-label { display: none; }
+      .theme-name { font-size: 25px; }
+      .theme-switcher {
+        order: 3;
+        grid-column: 1 / -1;
+        width: 100%;
+        margin-bottom: 12px;
+      }
+      .theme-choice { flex: 1; }
+      .export-button { min-height: 38px; padding-inline: 15px; }
+      .preview-tabs {
+        top: 124px;
+        width: 100%;
+        padding-inline: 10px;
+        overflow-x: auto;
+      }
+      .tab-button { flex: 1; min-width: max-content; padding-inline: 10px; }
+      .preview-main { width: calc(100% - 28px); padding-top: 16px; }
+      .spec-grid { grid-template-columns: 1fr; }
+      .span-2 { grid-column: auto; }
+      .hero-spec { min-height: 200px; padding: 26px; }
+      .hero-title { font-size: 40px; }
+      .feature-card { grid-template-columns: auto 1fr; }
+      .feature-arrow { display: none; }
+      .modes { grid-template-columns: 1fr; }
+      .state-row { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header class="preview-header">
+    <div class="header-inner">
+      <div>
+        <p class="brand-label">Design System Preview</p>
+        <h1 class="theme-name" data-theme-name></h1>
+      </div>
+      <div class="theme-switcher" aria-label="테마 선택" data-theme-switcher></div>
+      <button class="export-button" type="button" data-open-export>Export</button>
+    </div>
+  </header>
+
+  <nav class="preview-tabs" aria-label="미리보기 영역">
+    <button class="tab-button" type="button" data-tab="overview" aria-selected="true">Overview</button>
+    <button class="tab-button" type="button" data-tab="components" aria-selected="false">Components</button>
+    <button class="tab-button" type="button" data-tab="patterns" aria-selected="false">Patterns</button>
+  </nav>
+
+  <main class="preview-main">
+    <section class="panel" data-panel="overview">
+      <article class="spec-card hero-spec" data-component="Hero">
+        <h2 class="hero-title">필요한 것을 쉽게 찾는 일상</h2>
+      </article>
+
+      <div class="spec-grid">
+        <article class="spec-card" data-component="ColorPalette">
+          <p class="spec-label">Palette</p>
+          <div class="palette" data-palette></div>
+        </article>
+
+        <article class="spec-card" data-component="Typography">
+          <p class="spec-label">Typography</p>
+          <div class="type-list">
+            <div class="type-row"><span>Display</span><strong>가나다라마바사</strong></div>
+            <div class="type-row"><span>Heading</span><strong>가나다라마바사</strong></div>
+            <div class="type-row"><span>Body</span><strong>가나다라마바사</strong></div>
+            <div class="type-row"><span>Caption</span><strong>가나다라마바사</strong></div>
+          </div>
+        </article>
+
+        <article class="spec-card" data-component="Button">
+          <p class="spec-label">Actions</p>
+          <div class="button-stack">
+            <button class="demo-button" type="button" data-feedback>계속하기</button>
+            <button class="demo-button secondary" type="button">더 보기</button>
+          </div>
+        </article>
+
+        <article class="spec-card" data-component="TextField">
+          <p class="spec-label">Search</p>
+          <label class="search-field">
+            <i class="search-icon"></i>
+            <input aria-label="검색" placeholder="검색">
+          </label>
+        </article>
+
+        <article class="spec-card" data-component="Chip">
+          <p class="spec-label">Filters</p>
+          <div class="chip-row" data-chip-group>
+            <button class="chip active" type="button">전체</button>
+            <button class="chip" type="button">인기</button>
+            <button class="chip" type="button">새로운</button>
+          </div>
+        </article>
+
+        <article class="spec-card feature-card" data-component="Card">
+          <div class="feature-mark">●</div>
+          <div class="feature-copy">
+            <h3>오늘의 추천</h3>
+            <p>필요한 정보를 빠르고 분명하게 확인하세요</p>
+          </div>
+          <button class="feature-arrow" type="button" aria-label="오늘의 추천 열기">→</button>
+        </article>
+
+        <article class="spec-card" data-component="List">
+          <p class="spec-label">List</p>
+          <div class="list-stack">
+            <div class="list-row"><span class="list-icon">N</span><strong>새로운 소식</strong><span class="chevron">›</span></div>
+            <div class="list-row"><span class="list-icon">L</span><strong>관심 목록</strong><span class="chevron">›</span></div>
+          </div>
+        </article>
+
+        <article class="spec-card" data-component="Status">
+          <p class="spec-label">Status</p>
+          <div class="state-row">
+            <span class="state-badge state-success">성공</span>
+            <span class="state-badge state-warning">주의</span>
+            <span class="state-badge state-danger">오류</span>
+          </div>
+        </article>
+
+        <article class="spec-card span-2" data-component="ColorMode">
+          <p class="spec-label">Light / Dark</p>
+          <div class="modes">
+            <div class="mode-surface light"><strong>Light</strong><div class="mode-blocks"><i></i><i></i><i></i></div></div>
+            <div class="mode-surface dark"><strong>Dark</strong><div class="mode-blocks"><i></i><i></i><i></i></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="components" hidden>
+      <h2 class="section-heading">Components</h2>
+      <p class="section-copy">기본 상태와 상호작용 상태를 한눈에 확인합니다.</p>
+      <div class="spec-grid">
+        <article class="spec-card" data-component="Button">
+          <p class="spec-label">Buttons</p>
+          <div class="button-stack">
+            <button class="demo-button" type="button" data-feedback>계속하기</button>
+            <button class="demo-button secondary" type="button">더 보기</button>
+            <button class="demo-button" type="button" disabled>사용할 수 없음</button>
+          </div>
+        </article>
+        <article class="spec-card" data-component="TextField">
+          <p class="spec-label">Fields</p>
+          <div class="field-stack">
+            <label class="field-label">닉네임<input class="text-field" value="동네친구"></label>
+            <label class="field-label">아이디<input class="text-field" placeholder="아이디를 입력하세요"></label>
+          </div>
+        </article>
+        <article class="spec-card" data-component="Chip">
+          <p class="spec-label">Selection</p>
+          <div class="chip-row" data-chip-group>
+            <button class="chip active" type="button">전체</button>
+            <button class="chip" type="button">인기</button>
+            <button class="chip" type="button">새로운</button>
+          </div>
+          <div class="toggle-row"><strong>알림 받기</strong><button class="toggle" type="button" aria-label="알림 받기" aria-pressed="true"></button></div>
+          <div class="toggle-row"><strong>추천 표시</strong><button class="toggle" type="button" aria-label="추천 표시" aria-pressed="false"></button></div>
+        </article>
+        <article class="spec-card" data-component="Status">
+          <p class="spec-label">Feedback</p>
+          <div class="state-row">
+            <span class="state-badge state-success">저장했습니다</span>
+            <span class="state-badge state-warning">확인이 필요합니다</span>
+            <span class="state-badge state-danger">다시 시도하세요</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="patterns" hidden>
+      <h2 class="section-heading">Patterns</h2>
+      <p class="section-copy">검색, 목록, 입력처럼 자주 쓰는 조합을 확인합니다.</p>
+
+      <article class="spec-card" data-component="SearchPattern">
+        <p class="spec-label">Search and filter</p>
+        <label class="search-field"><i class="search-icon"></i><input aria-label="검색" placeholder="검색"></label>
+        <div class="chip-row" data-chip-group style="margin-top:12px">
+          <button class="chip active" type="button">전체</button>
+          <button class="chip" type="button">인기</button>
+          <button class="chip" type="button">새로운</button>
+        </div>
+      </article>
+
+      <article class="spec-card" data-component="ContentListPattern">
+        <p class="spec-label">Content list</p>
+        <div class="pattern-list">
+          <div class="pattern-item"><div class="pattern-thumb"></div><div><h4>오늘의 추천</h4><p>필요한 정보를 빠르고 분명하게 확인하세요</p></div><span class="chevron">›</span></div>
+          <div class="pattern-item"><div class="pattern-thumb"></div><div><h4>새로운 소식</h4><p>지금 확인할 수 있는 내용을 모았습니다</p></div><span class="chevron">›</span></div>
+          <div class="pattern-item"><div class="pattern-thumb"></div><div><h4>관심 목록</h4><p>나중에 다시 볼 항목을 확인하세요</p></div><span class="chevron">›</span></div>
+        </div>
+      </article>
+
+      <article class="spec-card" data-component="FormPattern">
+        <p class="spec-label">Form and action</p>
+        <div class="field-stack">
+          <label class="field-label">닉네임<input class="text-field" value="동네친구"></label>
+          <label class="field-label">아이디<input class="text-field" value="local_friend"></label>
+          <div class="form-actions">
+            <button class="demo-button secondary" type="button">취소</button>
+            <button class="demo-button" type="button" data-feedback>저장하기</button>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <div class="export-layer" data-export-layer hidden>
+    <aside class="export-drawer" role="dialog" aria-modal="true" aria-label="Theme CSS">
+      <div class="drawer-head">
+        <h2 data-export-name></h2>
+        <button class="drawer-close" type="button" data-close-export aria-label="닫기">×</button>
+      </div>
+      <pre data-export-code></pre>
+    </aside>
+  </div>
+
+  <script>
+    /* PREVIEW_DATA_START */
+    var themes = {
+      "warm-local": {
+        name: "Warm Local",
+        label: "당근 스타일",
+        swatches: ["#ff6f0f", "#fff0e4", "#f7f5f2", "#202124", "#728b68"],
+        preview: {
+          "--secondary": "#728b68",
+          "--control-height": "48px",
+          "--space": "16px",
+          "--header-background": "rgba(247, 245, 242, .92)",
+          "--header-foreground": "var(--foreground)",
+          "--export-background": "var(--accent)",
+          "--export-foreground": "var(--accent-foreground)",
+          "--tab-active": "var(--accent)",
+          "--tab-active-foreground": "var(--accent)",
+          "--hero-shape-width": "230px",
+          "--hero-shape-height": "230px",
+          "--hero-shape-top": "-75px",
+          "--hero-shape-right": "-56px",
+          "--hero-shape-radius": "50%",
+          "--hero-shape-background": "var(--surface-secondary)",
+          "--feature-background": "var(--surface-secondary)",
+          "--feature-foreground": "var(--accent)",
+          "--pattern-background": "linear-gradient(135deg, var(--surface-secondary), color-mix(in srgb, #728b68 28%, white))"
+        },
+        base: {
+          "--white": "#ffffff",
+          "--black": "#000000",
+          "--snow": "#fffaf7",
+          "--eclipse": "#202124",
+          "--border-width": "1px",
+          "--field-border-width": "1px",
+          "--radius": "6px",
+          "--field-radius": "999px",
+          "--opacity-disabled": "0.5",
+          "--theme": "default"
+        },
+        light: {
+          "--background": "#f7f5f2",
+          "--foreground": "#202124",
+          "--surface": "#ffffff",
+          "--surface-foreground": "var(--foreground)",
+          "--surface-secondary": "#fff0e4",
+          "--surface-secondary-foreground": "var(--foreground)",
+          "--surface-tertiary": "#f0ece7",
+          "--surface-tertiary-foreground": "var(--foreground)",
+          "--overlay": "#ffffff",
+          "--overlay-foreground": "var(--foreground)",
+          "--backdrop": "rgba(32, 33, 36, .20)",
+          "--muted": "#6f7378",
+          "--default": "#ebe7e2",
+          "--default-foreground": "#202124",
+          "--accent": "#ff6f0f",
+          "--accent-foreground": "#ffffff",
+          "--field-background": "#ffffff",
+          "--field-foreground": "#202124",
+          "--field-placeholder": "#777b80",
+          "--field-border": "#d8d2ca",
+          "--success": "#3d7a40",
+          "--success-foreground": "#ffffff",
+          "--warning": "#925a00",
+          "--warning-foreground": "#ffffff",
+          "--danger": "#c92a22",
+          "--danger-foreground": "#ffffff",
+          "--segment": "#ffffff",
+          "--segment-foreground": "#202124",
+          "--border": "#ded8d1",
+          "--separator": "#c9c1b8",
+          "--focus": "#ff6f0f",
+          "--link": "#b84100",
+          "--surface-shadow": "0 1px 2px rgba(32, 33, 36, .05)",
+          "--overlay-shadow": "0 14px 28px rgba(32, 33, 36, .12)",
+          "--field-shadow": "0 1px 2px rgba(32, 33, 36, .04)"
+        },
+        dark: {
+          "--background": "#111214",
+          "--foreground": "#f7f5f2",
+          "--surface": "#1e2023",
+          "--surface-foreground": "var(--foreground)",
+          "--surface-secondary": "#2b241f",
+          "--surface-secondary-foreground": "var(--foreground)",
+          "--surface-tertiary": "#302b27",
+          "--surface-tertiary-foreground": "var(--foreground)",
+          "--overlay": "#24262a",
+          "--overlay-foreground": "var(--foreground)",
+          "--backdrop": "rgba(0, 0, 0, .48)",
+          "--muted": "#b5b0ab",
+          "--default": "#2e3034",
+          "--default-foreground": "#f7f5f2",
+          "--accent": "#ff8a3d",
+          "--accent-foreground": "#211005",
+          "--field-background": "#24262a",
+          "--field-foreground": "#f7f5f2",
+          "--field-placeholder": "#aaa6a2",
+          "--field-border": "#4b4743",
+          "--success": "#72ad73",
+          "--success-foreground": "#0e1b0f",
+          "--warning": "#e8aa49",
+          "--warning-foreground": "#211604",
+          "--danger": "#ef6a61",
+          "--danger-foreground": "#260806",
+          "--segment": "#35302c",
+          "--segment-foreground": "#f7f5f2",
+          "--border": "#403d3a",
+          "--separator": "#5b5652",
+          "--focus": "#ff8a3d",
+          "--link": "#ff9d61",
+          "--surface-shadow": "0 0 0 0 transparent inset",
+          "--overlay-shadow": "0 0 1px rgba(255, 255, 255, .22) inset",
+          "--field-shadow": "0 0 0 0 transparent inset"
+        }
+      },
+      "bold-nordic": {
+        name: "Bold Nordic",
+        label: "IKEA 스타일",
+        swatches: ["#0758a6", "#ffd43b", "#ffffff", "#e6c79c", "#111111"],
+        preview: {
+          "--secondary": "#ffd43b",
+          "--control-height": "48px",
+          "--space": "18px",
+          "--header-background": "#0758a6",
+          "--header-foreground": "#ffffff",
+          "--export-background": "#ffd43b",
+          "--export-foreground": "#111111",
+          "--tab-active": "#ffd43b",
+          "--tab-active-foreground": "#111111",
+          "--hero-shape-width": "38%",
+          "--hero-shape-height": "100%",
+          "--hero-shape-top": "0",
+          "--hero-shape-right": "0",
+          "--hero-shape-radius": "0",
+          "--hero-shape-background": "#ffd43b",
+          "--feature-background": "#0758a6",
+          "--feature-foreground": "#ffd43b",
+          "--pattern-background": "linear-gradient(135deg, #0758a6 50%, #ffd43b 50%)"
+        },
+        base: {
+          "--white": "#ffffff",
+          "--black": "#000000",
+          "--snow": "#ffffff",
+          "--eclipse": "#111111",
+          "--border-width": "1px",
+          "--field-border-width": "1px",
+          "--radius": "2px",
+          "--field-radius": "4px",
+          "--opacity-disabled": "0.5",
+          "--theme": "default"
+        },
+        light: {
+          "--background": "#f7f6f1",
+          "--foreground": "#111111",
+          "--surface": "#ffffff",
+          "--surface-foreground": "var(--foreground)",
+          "--surface-secondary": "#edf4ff",
+          "--surface-secondary-foreground": "var(--foreground)",
+          "--surface-tertiary": "#fff4bf",
+          "--surface-tertiary-foreground": "var(--foreground)",
+          "--overlay": "#ffffff",
+          "--overlay-foreground": "var(--foreground)",
+          "--backdrop": "rgba(7, 32, 65, .28)",
+          "--muted": "#5d5d5d",
+          "--default": "#e7e3da",
+          "--default-foreground": "#111111",
+          "--accent": "#0758a6",
+          "--accent-foreground": "#ffffff",
+          "--field-background": "#ffffff",
+          "--field-foreground": "#111111",
+          "--field-placeholder": "#666666",
+          "--field-border": "#174d9b",
+          "--success": "#2f7132",
+          "--success-foreground": "#ffffff",
+          "--warning": "#8f5700",
+          "--warning-foreground": "#ffffff",
+          "--danger": "#b92323",
+          "--danger-foreground": "#ffffff",
+          "--segment": "#ffd43b",
+          "--segment-foreground": "#111111",
+          "--border": "#174d9b",
+          "--separator": "#174d9b",
+          "--focus": "#0758a6",
+          "--link": "#0758a6",
+          "--surface-shadow": "0 0 0 0 transparent",
+          "--overlay-shadow": "0 14px 28px rgba(7, 32, 65, .16)",
+          "--field-shadow": "0 0 0 0 transparent"
+        },
+        dark: {
+          "--background": "#101a2a",
+          "--foreground": "#ffffff",
+          "--surface": "#17253b",
+          "--surface-foreground": "var(--foreground)",
+          "--surface-secondary": "#203754",
+          "--surface-secondary-foreground": "var(--foreground)",
+          "--surface-tertiary": "#2b4568",
+          "--surface-tertiary-foreground": "var(--foreground)",
+          "--overlay": "#1c2e48",
+          "--overlay-foreground": "var(--foreground)",
+          "--backdrop": "rgba(0, 0, 0, .56)",
+          "--muted": "#b8c5d8",
+          "--default": "#263b59",
+          "--default-foreground": "#ffffff",
+          "--accent": "#6ca5ff",
+          "--accent-foreground": "#071425",
+          "--field-background": "#17253b",
+          "--field-foreground": "#ffffff",
+          "--field-placeholder": "#aebcd0",
+          "--field-border": "#6f8db8",
+          "--success": "#70b874",
+          "--success-foreground": "#081709",
+          "--warning": "#ffd43b",
+          "--warning-foreground": "#1c1600",
+          "--danger": "#ff746e",
+          "--danger-foreground": "#250706",
+          "--segment": "#ffd43b",
+          "--segment-foreground": "#111111",
+          "--border": "#45658f",
+          "--separator": "#6f8db8",
+          "--focus": "#ffd43b",
+          "--link": "#8bb8ff",
+          "--surface-shadow": "0 0 0 0 transparent inset",
+          "--overlay-shadow": "0 0 1px rgba(255, 255, 255, .22) inset",
+          "--field-shadow": "0 0 0 0 transparent inset"
+        }
+      }
+    };
+    /* PREVIEW_DATA_END */
+
+    var currentTheme = Object.keys(themes)[0];
+    var currentTab = "overview";
+
+    function applyVariables(values) {
+      Object.keys(values).forEach(function (name) {
+        document.documentElement.style.setProperty(name, values[name]);
+      });
+    }
+
+    function formatVariables(values, indent) {
+      return Object.keys(values).map(function (name) {
+        return indent + name + ": " + values[name] + ";";
+      });
+    }
+
+    function buildExport(theme) {
+      return [
+        "@theme {",
+        ...formatVariables(theme.base, "  "),
+        "}",
+        "",
+        "@layer theme {",
+        "  :root {",
+        "    @variant light {",
+        ...formatVariables(theme.light, "      "),
+        "    }",
+        "  }",
+        "",
+        "  :root {",
+        "    @variant dark {",
+        ...formatVariables(theme.dark, "      "),
+        "    }",
+        "  }",
+        "}"
+      ].join("\n");
+    }
+
+    function buildSwitcher() {
+      var switcher = document.querySelector("[data-theme-switcher]");
+      var themeIds = Object.keys(themes);
+      switcher.innerHTML = "";
+      themeIds.forEach(function (themeId) {
+        var button = document.createElement("button");
+        button.className = "theme-choice";
+        button.type = "button";
+        button.dataset.themeChoice = themeId;
+        button.setAttribute("aria-pressed", "false");
+        button.textContent = themes[themeId].label || themes[themeId].name;
+        switcher.appendChild(button);
+      });
+      switcher.hidden = themeIds.length < 2;
+    }
+
+    function paintPalette(colors) {
+      var palette = document.querySelector("[data-palette]");
+      palette.innerHTML = "";
+      colors.forEach(function (color) {
+        var swatch = document.createElement("i");
+        swatch.className = "swatch";
+        swatch.style.background = color;
+        swatch.title = color;
+        palette.appendChild(swatch);
+      });
+    }
+
+    function setTheme(themeId, updateHash) {
+      if (!themes[themeId]) return;
+      currentTheme = themeId;
+      var theme = themes[themeId];
+      applyVariables(theme.base);
+      applyVariables(theme.light);
+      applyVariables(theme.preview);
+      applyVariables({
+        "--light-sample-surface": theme.light["--surface"],
+        "--light-sample-foreground": theme.light["--foreground"],
+        "--light-sample-accent": theme.light["--accent"],
+        "--dark-sample-surface": theme.dark["--surface"],
+        "--dark-sample-foreground": theme.dark["--foreground"],
+        "--dark-sample-border": theme.dark["--border"],
+        "--dark-sample-accent": theme.dark["--accent"],
+        "--dark-sample-secondary": theme.dark["--segment"]
+      });
+      document.documentElement.dataset.theme = themeId;
+      document.querySelector("[data-theme-name]").textContent = theme.name;
+      document.querySelector("[data-export-name]").textContent = theme.name;
+      document.querySelector("[data-export-code]").textContent = buildExport(theme);
+      document.querySelectorAll("[data-theme-choice]").forEach(function (button) {
+        button.setAttribute("aria-pressed", button.dataset.themeChoice === themeId ? "true" : "false");
+      });
+      paintPalette(theme.swatches);
+      if (updateHash !== false) history.replaceState(null, "", "#" + currentTheme + "/" + currentTab);
+    }
+
+    function setTab(tabId, updateHash) {
+      var target = document.querySelector("[data-panel='" + tabId + "']");
+      if (!target) return;
+      currentTab = tabId;
+      document.querySelectorAll("[data-panel]").forEach(function (panel) {
+        panel.hidden = panel.dataset.panel !== tabId;
+      });
+      document.querySelectorAll("[data-tab]").forEach(function (button) {
+        button.setAttribute("aria-selected", button.dataset.tab === tabId ? "true" : "false");
+      });
+      if (updateHash !== false) history.replaceState(null, "", "#" + currentTheme + "/" + currentTab);
+    }
+
+    function restoreFromHash() {
+      var parts = location.hash.slice(1).split("/");
+      setTheme(themes[parts[0]] ? parts[0] : currentTheme, false);
+      setTab(document.querySelector("[data-panel='" + parts[1] + "']") ? parts[1] : "overview", false);
+    }
+
+    document.addEventListener("click", function (event) {
+      var themeButton = event.target.closest("[data-theme-choice]");
+      if (themeButton) setTheme(themeButton.dataset.themeChoice);
+
+      var tabButton = event.target.closest("[data-tab]");
+      if (tabButton) setTab(tabButton.dataset.tab);
+
+      var chip = event.target.closest(".chip");
+      if (chip) {
+        var group = chip.closest("[data-chip-group]");
+        group.querySelectorAll(".chip").forEach(function (item) {
+          item.classList.toggle("active", item === chip);
+        });
+      }
+
+      var toggle = event.target.closest(".toggle");
+      if (toggle) {
+        toggle.setAttribute("aria-pressed", toggle.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      }
+
+      var feedback = event.target.closest("[data-feedback]");
+      if (feedback) {
+        var original = feedback.textContent;
+        feedback.textContent = "완료";
+        feedback.disabled = true;
+        window.setTimeout(function () {
+          feedback.textContent = original;
+          feedback.disabled = false;
+        }, 900);
+      }
+
+      if (event.target.closest("[data-open-export]")) {
+        document.querySelector("[data-export-layer]").hidden = false;
+      }
+      if (event.target.closest("[data-close-export]") || event.target.matches("[data-export-layer]")) {
+        document.querySelector("[data-export-layer]").hidden = true;
+      }
+    });
+
+    window.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") document.querySelector("[data-export-layer]").hidden = true;
+    });
+    window.addEventListener("hashchange", restoreFromHash);
+    buildSwitcher();
+    restoreFromHash();
+  </script>
+</body>
+</html>
