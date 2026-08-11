@@ -9,4 +9,6 @@ set -euo pipefail
 cd "$CODEX_WORKTREE_PATH"
 
 git fetch origin main --prune
-git rebase origin/main'''
+git rebase origin/main
+
+bun install'''
