@@ -2,7 +2,7 @@
 
 ## 결정
 
-- 앱 아이콘 생성은 `bun run setup`으로 앱 표시 이름과 식별자를 정한 뒤 별도 작업으로 실행한다. 앱의 한 줄 설명이 없으면 컨셉 생성을 시작하지 않는다.
+- 앱 아이콘 생성은 `bun run setup`으로 앱 표시 이름과 식별자를 정한 뒤 별도 승인 단계로 실행한다. `initialize-app`은 기본 초기화를 끝낸 뒤 같은 대화에서 이 단계를 이어서 할지 물을 수 있다. 사용자가 이어서 하기를 선택한 것이 `create-app-assets`를 시작하는 명시적 요청이다. 앱의 한 줄 설명이 없으면 컨셉 생성을 시작하지 않는다.
 - 외부 `app-icon` 스킬에서는 앱 목적, 상징, 색상, 분위기, 피할 요소와 작은 크기 검토 방식만 참고한다. SnapAI와 별도 이미지 제공자 API 키를 기본 도구에 추가하지 않는다.
 - 실제 시안 생성과 수정은 Codex에 설치된 `imagegen`을 사용한다.
 - 이 흐름은 `.agents/skills/create-app-assets/SKILL.md`를 원본으로 두는 프로젝트 공용 Skill로 제공한다. Claude는 `.claude/skills/create-app-assets` 심볼릭 링크로 같은 Skill을 읽는다.

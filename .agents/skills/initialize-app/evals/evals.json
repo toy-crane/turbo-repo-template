@@ -1,0 +1,114 @@
+{
+  "skill_name": "initialize-app",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "$initialize-app 혼자 사는 직장인이 냉장고 식재료를 기록하고 소비 기한 전에 알림을 받는 앱을 시작해줘. 따뜻하고 차분하며 정보가 빽빽하지 않았으면 해. 참고는 https://example.com/reference 야.",
+      "expected_output": "The response accepts the sufficient app and visual brief, inspects the repository, and hands the brief to create-design-system without starting broad product discovery.",
+      "files": [],
+      "expectations": [
+        "It does not ask about MVP scope, user flows, data ownership, authentication, AI, payments, notifications, analytics, or external services.",
+        "It inspects the current app brief, theme, identity fields, asset configuration, decisions, and Git status before changing files.",
+        "It invokes create-design-system with the app description, visual qualities, and reference URL.",
+        "It does not run bun run setup before the design system is approved and applied."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "$initialize-app 팀이 회의 결정을 짧게 남기고 다시 찾는 앱이야. 단정하고 선명하지만 딱딱하지 않은 느낌이면 좋겠어. 참고 이미지는 없어.",
+      "expected_output": "The response treats text as sufficient visual input and lets create-design-system offer two or three compatible directions before any theme application.",
+      "files": [],
+      "expectations": [
+        "It does not require a reference image or URL.",
+        "It invokes create-design-system's text-only direction flow.",
+        "It waits for direction selection and later explicit application approval.",
+        "It does not change identity fields while theme review is in progress."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "$initialize-app 새 앱을 만들고 싶은데 아직 누구를 위한 앱인지도 무엇을 할지도 모르겠어.",
+      "expected_output": "The response stops initialization without modifying files or launching a broad product interview, and only offers separate opportunity discovery if the user wants it.",
+      "files": [],
+      "expectations": [
+        "It does not invent an audience, job, visual direction, project name, or identifier.",
+        "It does not ask the full product-discovery question set.",
+        "It leaves theme, identity, and active assets unchanged.",
+        "It may offer discover-opportunity as a separate optional task."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "$initialize-app 방금 보여준 두 테마 중 두 번째 방향으로 갈게.",
+      "expected_output": "The response treats the selection as refinement input, not application approval, and keeps canonical theme and identity files unchanged.",
+      "files": [],
+      "expectations": [
+        "It continues through create-design-system refinement or review.",
+        "It explicitly distinguishes candidate selection from permission to apply.",
+        "It does not edit global.css or theme bridges.",
+        "It does not write docs/app-brief.md or run bun run setup yet."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "$initialize-app 지금 본 테마로 적용해줘. 앱 표시 이름은 Fridge Friend, 프로젝트 슬러그는 fridge-friend, 모바일 앱 식별자는 com.acme.fridgefriend로 확정할게.",
+      "expected_output": "After create-design-system applies and verifies the approved theme, the response saves the confirmed app brief, previews the exact identity changes, gets confirmation for those values, runs the existing setup command, and verifies every owned identity field.",
+      "files": [],
+      "expectations": [
+        "It requires successful theme application and validation before identity setup.",
+        "It writes only the confirmed one-line description, approved visual direction, and any confirmed avoid list to docs/app-brief.md.",
+        "It shows the exact display name, project slug, mobile app ID, and owned fields before executing setup.",
+        "It runs bun run setup --project-slug fridge-friend --display-name \"Fridge Friend\" --mobile-app-id com.acme.fridgefriend --yes only after explicit confirmation of the shown changes.",
+        "It verifies the root package name, Expo name, slug and scheme, iOS bundleIdentifier, Android package, Supabase project_id, and app brief from actual files."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "$initialize-app 기본 초기화는 끝났어. 아이콘과 스플래시는 이번에는 건너뛸게.",
+      "expected_output": "The response keeps base initialization complete, does not invoke create-app-assets, and closes without asking about assets again.",
+      "files": [],
+      "expectations": [
+        "It reports the approved theme, saved app brief, and verified identity as complete.",
+        "It does not mark initialization incomplete because assets were skipped.",
+        "It does not modify active app assets.",
+        "It does not repeat the app-assets offer."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "$initialize-app 기본 초기화가 끝났으니 앱 아이콘과 스플래시도 지금 이어서 만들자.",
+      "expected_output": "The response treats the user's answer as an explicit create-app-assets request, carries forward the confirmed brief and theme, and preserves the asset skill's separate concept and final approval gates.",
+      "files": [],
+      "expectations": [
+        "It invokes create-app-assets in the same conversation.",
+        "It passes the one-line app description, approved visual direction, references, and avoid list that are already confirmed.",
+        "It does not treat this answer as concept selection or final asset approval.",
+        "If asset creation fails or stops, it keeps base initialization complete."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "$initialize-app 중간에 멈췄던 초기화를 이어서 해줘. 테마와 docs/app-brief.md는 적용됐고 프로젝트 이름은 아직 템플릿 그대로야.",
+      "expected_output": "The response reconstructs progress from repository files, preserves the completed theme work, and resumes at identity collection and setup.",
+      "files": [],
+      "expectations": [
+        "It reads the current app brief, canonical theme, theme bridges, and identity fields.",
+        "It does not regenerate or reapply the completed theme.",
+        "It collects only missing display name, project slug, and mobile app ID values.",
+        "It does not invent prior approval that cannot be proven from files."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "$initialize-app 이미 초기화가 끝난 이 저장소를 확인해줘.",
+      "expected_output": "The response verifies the existing theme, app brief, and all setup-owned identity fields, reports that base initialization is already complete, and makes no changes.",
+      "files": [],
+      "expectations": [
+        "It does not rewrite docs/app-brief.md or rerun completed theme work.",
+        "It does not run bun run setup with --force.",
+        "It reports mismatches instead of silently treating them as complete.",
+        "It asks about app assets only if base initialization is verified and the current request has not already answered that choice."
+      ]
+    }
+  ]
+}
