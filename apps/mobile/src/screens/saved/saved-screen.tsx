@@ -1,6 +1,8 @@
 import { Card } from "heroui-native/card";
 import { Chip } from "heroui-native/chip";
-import { ScrollView } from "react-native";
+import { ScrollView, Text, View } from "react-native";
+
+import { Icon } from "@/shared/ui/icon";
 
 const savedItems = [
   {
@@ -33,6 +35,12 @@ export function SavedScreen() {
       contentContainerClassName="gap-3 px-5 pt-5 pb-6"
       contentInsetAdjustmentBehavior="automatic"
     >
+      <View className="mb-1 flex-row items-center gap-2">
+        <Icon name="bookmark" testID="saved-bookmark-icon" tone="accent" />
+        <Text className="font-semibold text-base text-foreground">
+          저장한 결정
+        </Text>
+      </View>
       {savedItems.map((item) => (
         <Card
           accessibilityLabel={`Saved item ${item.title}. ${item.category}. ${item.description}`}
