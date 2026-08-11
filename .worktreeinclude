@@ -1,0 +1,2 @@
+apps/api/.env.local
+apps/mobile/.env.local
