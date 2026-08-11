@@ -178,10 +178,12 @@ function ToolPart({ part }: { part: AnyToolUIPart }) {
  * placeholder instead of taking the screen down.
  */
 export function MessagePart({
+  isStreaming = false,
   messageId,
   part,
   role,
 }: {
+  isStreaming?: boolean;
   messageId: string;
   part: MessagePartValue;
   role: UIMessage["role"];
@@ -192,7 +194,7 @@ export function MessagePart({
     if (role === "assistant") {
       return (
         <View testID="chat-message-assistant">
-          <MarkdownView markdown={part.text} />
+          <MarkdownView markdown={part.text} showCursor={isStreaming} />
         </View>
       );
     }

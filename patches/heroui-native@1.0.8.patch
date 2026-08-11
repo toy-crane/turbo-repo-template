@@ -1,0 +1,87 @@
+diff --git a/lib/module/primitives/slot/slot.js b/lib/module/primitives/slot/slot.js
+index a203cc7cc0c0cdfcc200c179a6c42755d4558657..0c926078e90a9a93f809a67a229ed4b6f73fb428 100644
+--- a/lib/module/primitives/slot/slot.js
++++ b/lib/module/primitives/slot/slot.js
+@@ -16,7 +16,7 @@ const Pressable = /*#__PURE__*/forwardRef((props, forwardedRef) => {
+   }
+   return /*#__PURE__*/cloneElement(isTextChildren(children) ? /*#__PURE__*/_jsx(_Fragment, {}) : children, {
+     ...mergeProps(pressableSlotProps, children.props),
+-    ref: forwardedRef ? composeRefs(forwardedRef, children.ref) : children.ref
++    ref: forwardedRef ? composeRefs(forwardedRef, children.props.ref) : children.props.ref
+   });
+ });
+ Pressable.displayName = 'HeroUINative.Primitive.Slot.Pressable';
+@@ -34,7 +34,7 @@ const View = /*#__PURE__*/forwardRef((props, forwardedRef) => {
+   }
+   return /*#__PURE__*/cloneElement(isTextChildren(children) ? /*#__PURE__*/_jsx(_Fragment, {}) : children, {
+     ...mergeProps(viewSlotProps, children.props),
+-    ref: forwardedRef ? composeRefs(forwardedRef, children.ref) : children.ref
++    ref: forwardedRef ? composeRefs(forwardedRef, children.props.ref) : children.props.ref
+   });
+ });
+ View.displayName = 'HeroUINative.Primitive.Slot.View';
+@@ -52,7 +52,7 @@ const Text = /*#__PURE__*/forwardRef((props, forwardedRef) => {
+   }
+   return /*#__PURE__*/cloneElement(isTextChildren(children) ? /*#__PURE__*/_jsx(_Fragment, {}) : children, {
+     ...mergeProps(textSlotProps, children.props),
+-    ref: forwardedRef ? composeRefs(forwardedRef, children.ref) : children.ref
++    ref: forwardedRef ? composeRefs(forwardedRef, children.props.ref) : children.props.ref
+   });
+ });
+ Text.displayName = 'HeroUINative.Primitive.Slot.Text';
+@@ -70,7 +70,7 @@ const Image = /*#__PURE__*/forwardRef((props, forwardedRef) => {
+   }
+   return /*#__PURE__*/cloneElement(isTextChildren(children) ? /*#__PURE__*/_jsx(_Fragment, {}) : children, {
+     ...mergeProps(imageSlotProps, children.props),
+-    ref: forwardedRef ? composeRefs(forwardedRef, children.ref) : children.ref
++    ref: forwardedRef ? composeRefs(forwardedRef, children.props.ref) : children.props.ref
+   });
+ });
+ Image.displayName = 'HeroUINative.Primitive.Slot.Image';
+diff --git a/src/primitives/slot/slot.tsx b/src/primitives/slot/slot.tsx
+index e60e4ddbb6606c68abeefd38c56a30e389737bb9..b11b34b2edbc41f8b7ba44383abd491de8bd7cde 100644
+--- a/src/primitives/slot/slot.tsx
++++ b/src/primitives/slot/slot.tsx
+@@ -36,7 +36,7 @@ const Pressable = forwardRef<
+   >(isTextChildren(children) ? <></> : children, {
+     ...mergeProps(pressableSlotProps, children.props as AnyProps),
+     ref: forwardedRef
+-      ? composeRefs(forwardedRef, (children as any).ref)
+-      : (children as any).ref,
++      ? composeRefs(forwardedRef, (children.props as AnyProps).ref)
++      : (children.props as AnyProps).ref,
+   });
+ });
+@@ -60,8 +60,8 @@ const View = forwardRef<React.ComponentRef<typeof RNView>, RNViewProps>(
+     >(isTextChildren(children) ? <></> : children, {
+       ...mergeProps(viewSlotProps, children.props as AnyProps),
+       ref: forwardedRef
+-        ? composeRefs(forwardedRef, (children as any).ref)
+-        : (children as any).ref,
++        ? composeRefs(forwardedRef, (children.props as AnyProps).ref)
++        : (children.props as AnyProps).ref,
+     });
+   }
+ );
+@@ -85,8 +85,8 @@ const Text = forwardRef<ComponentRef<typeof RNText>, RNTextProps>(
+     >(isTextChildren(children) ? <></> : children, {
+       ...mergeProps(textSlotProps, children.props as AnyProps),
+       ref: forwardedRef
+-        ? composeRefs(forwardedRef, (children as any).ref)
+-        : (children as any).ref,
++        ? composeRefs(forwardedRef, (children.props as AnyProps).ref)
++        : (children.props as AnyProps).ref,
+     });
+   }
+ );
+@@ -110,8 +110,8 @@ const Image = forwardRef<ComponentRef<typeof RNImage>, ImageSlotProps>(
+     >(isTextChildren(children) ? <></> : children, {
+       ...mergeProps(imageSlotProps, children.props as AnyProps),
+       ref: forwardedRef
+-        ? composeRefs(forwardedRef, (children as any).ref)
+-        : (children as any).ref,
++        ? composeRefs(forwardedRef, (children.props as AnyProps).ref)
++        : (children.props as AnyProps).ref,
+     });
+   }
+ );

@@ -350,9 +350,13 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 | `답변을 만드는 중` | 답변 생성 중 표시 |
 | `다시 보내기` | 실패한 요청 재시도 버튼 |
 | `코드 복사` | AI 답변 코드 블록의 복사 버튼 |
-| `메시지 복사` | 각 메시지 아래 복사 버튼 |
-| `편집 후 다시 보내기` | 마지막 사용자 메시지의 편집 버튼 |
-| `편집 취소` | 편집 중 표시 옆 취소 버튼 |
+| `메시지 복사` | AI 답변 아래 복사 버튼 |
+| `복사됨` | AI 복사 완료 상태와 사용자 메시지 복사 알림 |
+| `복사하기` | 사용자 메시지 메뉴와 접근성 작업 |
+| `수정하기` | 사용자 메시지 메뉴와 접근성 작업 |
+| `메시지 수정` | 사용자 메시지 인라인 편집 입력 |
+| `취소` | 인라인 편집 취소 버튼 |
+| `수정한 메시지 보내기` | 인라인 편집 전송 버튼 |
 | `다시 생성` | 마지막 AI 답변의 다시 생성 버튼 |
 | `새 대화` | Home 헤더의 새 대화 버튼 |
 | `뒤로 가기` | 대화 화면 헤더의 뒤로 가기 버튼 |
@@ -367,12 +371,14 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 
 - 입력과 전송: `chat-input`, `chat-send`, `chat-stop`
 - 목록과 상태: `chat-list`, `chat-scroll-to-latest`, `chat-generating`, `chat-error`
-- 메시지: `chat-message-user`, `chat-message-assistant`, `chat-copy-<메시지 id>`
-- 메시지 작업: `chat-edit-resend`, `chat-editing`, `chat-cancel-edit`, `chat-regenerate`
+- 메시지: `chat-user-message-<메시지 id>`, `chat-message-assistant`, `chat-copy-<메시지 id>`
+- 사용자 메시지 메뉴: `chat-user-menu`, `chat-user-menu-overlay`, `chat-user-copy-<메시지 id>`, `chat-user-edit-<메시지 id>`
+- 인라인 편집: `chat-inline-editor-<메시지 id>`, `chat-inline-edit-input-<메시지 id>`, `chat-inline-edit-cancel-<메시지 id>`, `chat-inline-edit-send-<메시지 id>`
+- AI 답변 작업: `chat-regenerate`
 - 본문: `chat-markdown`, `chat-markdown-table`, `chat-code-copy`
 - part: `chat-part-file`, `chat-part-source-url`, `chat-part-source-document`, `chat-part-tool-<도구 이름>`, `chat-part-unsupported-<메시지 id>`
 
-메시지 `testID`는 말풍선이 아니라 본문을 감싼 영역에 붙어 있습니다. AI 답변은 Markdown으로 그리므로 `get text`가 글자 그대로를 돌려주지는 않습니다. 답변 내용을 확인할 때는 `chat-markdown` 안의 글자를 봅니다.
+사용자 메시지의 `chat-user-message-<메시지 id>`는 말풍선에 붙어 있습니다. AI 답변의 `chat-message-assistant`는 본문을 감싼 영역에 붙어 있습니다. AI 답변은 Markdown으로 그리므로 `get text`가 글자 그대로를 돌려주지는 않습니다. 답변 내용을 확인할 때는 `chat-markdown` 안의 글자를 봅니다.
 대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 새 대화를 열어 한 건만 보냅니다.
 
 Google과 Apple 버튼은 각 제공자가 그리는 네이티브 버튼이지만, 위 표의 이름은 앱이 버튼

@@ -10,8 +10,24 @@ import type {
   RootContent,
   Table,
 } from "mdast";
-import { useCallback, useMemo } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type LayoutChangeEvent,
+  type NativeSyntheticEvent,
+  ScrollView,
+  Text,
+  type TextLayoutEventData,
+  View,
+} from "react-native";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 import { openExternalLink } from "../open-link";
 import { CodeBlock, InlineCode } from "./code-block";
@@ -33,6 +49,112 @@ const headingClassByDepth: Record<number, string> = {
 
 const BODY_TEXT_CLASS = "text-base text-foreground leading-6";
 const TABLE_CELL_WIDTH = 144;
+const STREAMING_CURSOR_BLINK_DURATION_MS = 1000;
+
+function useStreamingCursorStyle() {
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    const halfCycle = STREAMING_CURSOR_BLINK_DURATION_MS / 2;
+
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.15, {
+          duration: halfCycle,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        withTiming(1, {
+          duration: halfCycle,
+          easing: Easing.inOut(Easing.ease),
+        })
+      ),
+      -1
+    );
+
+    return () => cancelAnimation(opacity);
+  }, [opacity]);
+
+  return useAnimatedStyle(() => ({ opacity: opacity.value }), [opacity]);
+}
+
+function StreamingBlockCursor() {
+  const animatedStyle = useStreamingCursorStyle();
+
+  return (
+    <Animated.View
+      accessibilityElementsHidden
+      className="absolute right-0 bottom-0 h-5 w-0 border-accent border-r-2"
+      importantForAccessibility="no-hide-descendants"
+      style={animatedStyle}
+      testID="chat-streaming-cursor"
+    />
+  );
+}
+
+function StreamingText({
+  children,
+  className,
+  selectable = false,
+}: {
+  children: React.ReactNode;
+  className: string;
+  selectable?: boolean;
+}) {
+  const [origin, setOrigin] = useState({ x: 0, y: 0 });
+  const [cursor, setCursor] = useState({ height: 0, left: 0, top: 0 });
+  const animatedCursorStyle = useStreamingCursorStyle();
+  const captureOrigin = useCallback((event: LayoutChangeEvent) => {
+    const { x, y } = event.nativeEvent.layout;
+
+    setOrigin((current) =>
+      current.x === x && current.y === y ? current : { x, y }
+    );
+  }, []);
+  const captureLastLine = useCallback(
+    (event: NativeSyntheticEvent<TextLayoutEventData>) => {
+      const line = event.nativeEvent.lines.at(-1);
+
+      if (!line) {
+        return;
+      }
+
+      const nextCursor = {
+        height: Math.max(12, line.height * 0.8),
+        left: origin.x + line.x + line.width,
+        top: origin.y + line.y + line.height * 0.1,
+      };
+
+      setCursor((current) =>
+        current.height === nextCursor.height &&
+        current.left === nextCursor.left &&
+        current.top === nextCursor.top
+          ? current
+          : nextCursor
+      );
+    },
+    [origin.x, origin.y]
+  );
+
+  return (
+    <View>
+      <Text
+        className={className}
+        onLayout={captureOrigin}
+        onTextLayout={captureLastLine}
+        selectable={selectable}
+      >
+        {children}
+      </Text>
+      <Animated.View
+        accessibilityElementsHidden
+        className="absolute w-0 border-accent border-r-2"
+        importantForAccessibility="no-hide-descendants"
+        style={[cursor, animatedCursorStyle]}
+        testID="chat-streaming-cursor"
+      />
+    </View>
+  );
+}
 
 function LinkText({
   children,
@@ -183,13 +305,15 @@ function MarkdownTable({
 
 function renderListItemContent(
   nodes: (BlockContent | DefinitionContent)[],
-  parentKey: string
+  parentKey: string,
+  showCursor = false
 ) {
   return nodes.map((node, index) => (
     <BlockNode
       key={`${parentKey}-${index}`}
       node={node}
       parentKey={`${parentKey}-${index}`}
+      showCursor={showCursor && index === nodes.length - 1}
     />
   ));
 }
@@ -197,9 +321,11 @@ function renderListItemContent(
 function BlockNode({
   node,
   parentKey,
+  showCursor = false,
 }: {
   node: RootContent;
   parentKey: string;
+  showCursor?: boolean;
 }) {
   switch (node.type) {
     case "blockquote":
@@ -210,13 +336,30 @@ function BlockNode({
               key={`${parentKey}-${index}`}
               node={child}
               parentKey={`${parentKey}-${index}`}
+              showCursor={showCursor && index === node.children.length - 1}
             />
           ))}
         </View>
       );
     case "code":
-      return <CodeBlock code={node.value} />;
+      return (
+        <View>
+          <CodeBlock code={node.value} />
+          {showCursor ? <StreamingBlockCursor /> : null}
+        </View>
+      );
     case "heading":
+      if (showCursor) {
+        return (
+          <StreamingText
+            className={headingClassByDepth[node.depth] ?? BODY_TEXT_CLASS}
+            selectable
+          >
+            {renderInline(node.children, parentKey)}
+          </StreamingText>
+        );
+      }
+
       return (
         <Text
           className={headingClassByDepth[node.depth] ?? BODY_TEXT_CLASS}
@@ -236,7 +379,11 @@ function BlockNode({
                 {node.ordered ? `${start + index}.` : "•"}
               </Text>
               <View className="flex-1">
-                {renderListItemContent(item.children, `${parentKey}-${index}`)}
+                {renderListItemContent(
+                  item.children,
+                  `${parentKey}-${index}`,
+                  showCursor && index === node.children.length - 1
+                )}
               </View>
             </View>
           ))}
@@ -244,21 +391,47 @@ function BlockNode({
       );
     }
     case "paragraph":
+      if (showCursor) {
+        return (
+          <StreamingText className={`${BODY_TEXT_CLASS} my-1`} selectable>
+            {renderInline(node.children, parentKey)}
+          </StreamingText>
+        );
+      }
+
       return (
         <Text className={`${BODY_TEXT_CLASS} my-1`} selectable>
           {renderInline(node.children, parentKey)}
         </Text>
       );
     case "table":
-      return <MarkdownTable node={node} parentKey={parentKey} />;
+      return (
+        <View>
+          <MarkdownTable node={node} parentKey={parentKey} />
+          {showCursor ? <StreamingBlockCursor /> : null}
+        </View>
+      );
     case "thematicBreak":
-      return <View className="my-3 h-px bg-separator" />;
+      return (
+        <View>
+          <View className="my-3 h-px bg-separator" />
+          {showCursor ? <StreamingBlockCursor /> : null}
+        </View>
+      );
     default:
-      return "value" in node && typeof node.value === "string" ? (
+      if (!("value" in node) || typeof node.value !== "string") {
+        return null;
+      }
+
+      return showCursor ? (
+        <StreamingText className={BODY_TEXT_CLASS} selectable>
+          {node.value}
+        </StreamingText>
+      ) : (
         <Text className={BODY_TEXT_CLASS} selectable>
           {node.value}
         </Text>
-      ) : null;
+      );
   }
 }
 
@@ -269,7 +442,13 @@ function BlockNode({
  * never re-parses; the memoized message row above this keeps other rows from
  * re-rendering at all while one message streams.
  */
-export function MarkdownView({ markdown }: { markdown: string }) {
+export function MarkdownView({
+  markdown,
+  showCursor = false,
+}: {
+  markdown: string;
+  showCursor?: boolean;
+}) {
   const tree = useMemo(() => parseMarkdown(markdown), [markdown]);
 
   return (
@@ -277,7 +456,12 @@ export function MarkdownView({ markdown }: { markdown: string }) {
       {tree.children.map((node, index) => (
         // Position is the stable identity: streaming only ever appends or
         // grows the last block, so earlier keys keep their nodes.
-        <BlockNode key={`b-${index}`} node={node} parentKey={`b-${index}`} />
+        <BlockNode
+          key={`b-${index}`}
+          node={node}
+          parentKey={`b-${index}`}
+          showCursor={showCursor && index === tree.children.length - 1}
+        />
       ))}
     </View>
   );

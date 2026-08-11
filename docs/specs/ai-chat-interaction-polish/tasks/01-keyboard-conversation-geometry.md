@@ -12,24 +12,24 @@ None.
 
 ## Acceptance criteria
 
-- [ ] 빈 대화에서도 `KeyboardAwareLegendList`를 유지하고 빈 문구를 목록의 empty content로
+- [x] 빈 대화에서도 `KeyboardAwareLegendList`를 유지하고 빈 문구를 목록의 empty content로
   표시한다. 키보드 상태에 따라 다른 화면 구조를 렌더링하지 않는다.
-- [ ] 빈 문구는 네이티브 헤더 아래부터 입력창 위까지 남은 영역의 가운데에 놓이고,
+- [x] 빈 문구는 네이티브 헤더 아래부터 입력창 위까지 남은 영역의 가운데에 놓이고,
   키보드 애니메이션과 함께 줄어드는 영역을 자연스럽게 따라간다.
-- [ ] 키보드가 닫히면 입력창이 하단 Safe Area를 지키고, 열리면 키보드 위에 iOS 8pt,
+- [x] 키보드가 닫히면 입력창이 하단 Safe Area를 지키고, 열리면 키보드 위에 iOS 8pt,
   Android 8dp 간격을 둔다.
-- [ ] iOS에서 상호작용으로 키보드를 내릴 때 입력창과 대화 영역이 키보드 진행도와 함께
+- [x] iOS에서 상호작용으로 키보드를 내릴 때 입력창과 대화 영역이 키보드 진행도와 함께
   움직인다. Android는 목록을 끌면 키보드를 닫는 현재 동작을 유지한다.
-- [ ] iOS 네이티브 헤더 높이를 목록 inset에 수동으로 더하지 않는다. 첫 메시지의 위쪽은
+- [x] iOS 네이티브 헤더 높이를 목록 inset에 수동으로 더하지 않는다. 첫 메시지의 위쪽은
   두 플랫폼 모두 네이티브 헤더 아래 16 레이아웃 단위다.
-- [ ] 입력창 바깥 묶음은 투명하고 실제 입력칸과 전송·중지 버튼만 시맨틱 표면색을 쓴다.
-- [ ] 목록은 측정한 입력창 높이와 Safe Area를 하단 공간으로 확보한다. 대화 끝에서 마지막
+- [x] 입력창 바깥 묶음은 투명하고 실제 입력칸과 전송·중지 버튼만 시맨틱 표면색을 쓴다.
+- [x] 목록은 측정한 입력창 높이와 Safe Area를 하단 공간으로 확보한다. 대화 끝에서 마지막
   메시지 작업과 입력칸 사이에 최소 16 간격이 보인다.
-- [ ] 여러 줄 입력과 Dynamic Type으로 입력창 높이가 바뀌어도 목록 하단 공간을 같은
+- [x] 여러 줄 입력과 Dynamic Type으로 입력창 높이가 바뀌어도 목록 하단 공간을 같은
   프레임에 맞추고 마지막 내용이 입력칸 뒤에 멈추지 않는다.
-- [ ] 밝은 화면, 어두운 화면과 고대비에서 투명한 입력창 바깥과 실제 입력칸의 경계가
+- [x] 밝은 화면, 어두운 화면과 고대비에서 투명한 입력창 바깥과 실제 입력칸의 경계가
   구분된다. 모션 줄이기에서도 필요한 위치 변화는 유지한다.
-- [ ] 화면과 컴포넌트 테스트가 빈 대화에도 목록이 존재하고, iOS 전용 헤더 높이 전달이
+- [x] 화면과 컴포넌트 테스트가 빈 대화에도 목록이 존재하고, iOS 전용 헤더 높이 전달이
   사라지며, 키보드가 열린 목록의 작업을 한 번에 누를 수 있음을 확인한다.
 
 ## Constraints
@@ -62,9 +62,14 @@ Required after this task. 누적 범위는 하나로 유지되는 대화 목록,
 ## Status
 
 <!-- Later values: `in-progress`, `completed`, or `blocked`. -->
-pending
+completed
 
 ## Execution
 
-- Verification: —
-- Blocker: —
+- Verification: `bun run check --filter=@repo/mobile`, `bun run check-types --filter=@repo/mobile`,
+  `bun run test --filter=@repo/mobile -- --runInBand --forceExit` 통과. 모바일 테스트 205개 통과.
+  iPhone 17 Simulator와 `mobile_shell_verify_api35` Android Development Build에서 실제 이메일
+  코드로 로그인한 뒤 빈 대화, 키보드 열기와 닫기, 8 간격, Safe Area, 첫 메시지, 여러 줄
+  입력, iOS 상호작용 닫기와 Android 끌어서 닫기를 확인했다. iOS 밝은 화면과 어두운 화면,
+  Android 글자 크기 1.3과 고대비, 애니메이션 끄기에서도 배치를 확인하고 로그아웃했다.
+- Blocker: 없음.

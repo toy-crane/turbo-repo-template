@@ -43,5 +43,8 @@
       "name": "bun",
       "version": "1.3.6"
     }
+  },
+  "patchedDependencies": {
+    "heroui-native@1.0.8": "patches/heroui-native@1.0.8.patch"
   }
 }

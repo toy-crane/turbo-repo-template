@@ -179,8 +179,12 @@ jest.mock("expo-symbols", () => {
   const { View } = require("react-native") as typeof import("react-native");
 
   return {
-    SymbolView: (props: { name?: string; testID?: string }) =>
-      React.createElement(View, { testID: props.testID }),
+    SymbolView: (props: {
+      name?: string;
+      size?: number;
+      testID?: string;
+      weight?: string;
+    }) => React.createElement(View, props),
   };
 });
 
@@ -188,6 +192,13 @@ jest.mock("expo-symbols", () => {
 // against these functions to prove what would have been copied or opened.
 jest.mock("expo-clipboard", () => ({
   setStringAsync: jest.fn(() => Promise.resolve(true)),
+}));
+
+jest.mock("expo-haptics", () => ({
+  ImpactFeedbackStyle: { Medium: "medium" },
+  impactAsync: jest.fn(() => Promise.resolve()),
+  NotificationFeedbackType: { Success: "success" },
+  notificationAsync: jest.fn(() => Promise.resolve()),
 }));
 
 jest.mock("expo-web-browser", () => ({

@@ -1,4 +1,4 @@
-import { type SFSymbol, SymbolView } from "expo-symbols";
+import { type SFSymbol, SymbolView, type SymbolWeight } from "expo-symbols";
 import { Platform } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
@@ -15,6 +15,7 @@ import {
  * the same.
  */
 const icons = {
+  check: { material: "check", sf: "checkmark" },
   copy: { material: "contentCopy", sf: "doc.on.doc" },
   edit: { material: "edit", sf: "pencil" },
   newChat: { material: "editSquare", sf: "square.and.pencil" },
@@ -32,11 +33,13 @@ export type IconName = keyof typeof icons;
 export interface IconProps {
   name: IconName;
   size?: number;
+  testID?: string;
   /**
    * A resolved color value, usually from `useThemeColor`. A value rather than
    * a class because neither `SymbolView` nor `Svg` reads Uniwind classes.
    */
   tintColor: string;
+  weight?: SymbolWeight;
 }
 
 /**
@@ -47,15 +50,34 @@ export interface IconProps {
  * symbol view there. Icons are decorative on their own — the pressable that
  * owns one carries the accessibility name.
  */
-export function Icon({ name, size = 20, tintColor }: IconProps) {
+export function Icon({
+  name,
+  size = 20,
+  testID,
+  tintColor,
+  weight,
+}: IconProps) {
   const icon = icons[name];
 
   if (Platform.OS === "ios") {
-    return <SymbolView name={icon.sf} size={size} tintColor={tintColor} />;
+    return (
+      <SymbolView
+        name={icon.sf}
+        size={size}
+        testID={testID}
+        tintColor={tintColor}
+        weight={weight}
+      />
+    );
   }
 
   return (
-    <Svg height={size} viewBox={MATERIAL_SYMBOL_VIEW_BOX} width={size}>
+    <Svg
+      height={size}
+      testID={testID}
+      viewBox={MATERIAL_SYMBOL_VIEW_BOX}
+      width={size}
+    >
       <Path d={materialSymbolPaths[icon.material]} fill={tintColor} />
     </Svg>
   );
