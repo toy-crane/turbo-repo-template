@@ -1389,6 +1389,44 @@ describe("ChatPanel", () => {
     });
   });
 
+  test("편집 초안 입력은 선택하지 않은 메시지 행을 다시 렌더링하지 않는다", async () => {
+    let attempt = 0;
+    const transport = fakeTransport(() => {
+      attempt += 1;
+
+      return Promise.resolve(answerStream([`답변 ${attempt}`]));
+    });
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+    await user.type(screen.getByLabelText(chatLabels.input), "첫 질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+    await waitFor(() => expect(screen.getByText("답변 1")).toBeOnTheScreen());
+
+    await user.type(screen.getByLabelText(chatLabels.input), "둘째 질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+    await waitFor(() => expect(screen.getByText("답변 2")).toBeOnTheScreen());
+
+    const [firstUserBubble] = screen.getAllByTestId(USER_MESSAGE_TEST_ID);
+
+    fireEvent(firstUserBubble as never, "longPress");
+    await user.press(await screen.findByLabelText(chatLabels.editMessage));
+
+    const inlineInput = await screen.findByLabelText(chatLabels.editInput);
+    const baseline = new Map(mockPartRenderCounts);
+
+    await user.type(inlineInput, " 수정");
+
+    const rerendered = [...mockPartRenderCounts].filter(
+      ([messageId, count]) => count !== baseline.get(messageId)
+    );
+
+    expect(rerendered).toEqual([]);
+  });
+
   test("스트리밍 중에는 스트리밍 중인 메시지 행만 다시 렌더링한다", async () => {
     let attempt = 0;
     const second = controlledStream();

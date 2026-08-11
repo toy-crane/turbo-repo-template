@@ -321,7 +321,7 @@ function ChatListRow({
       cancelEdit={cancelEdit}
       confirmEdit={confirmEdit}
       editDisabled={isBusy}
-      editing={editing}
+      editing={editing?.messageId === item.id ? editing : undefined}
       errorAction={isLatestAnswer && error ? retry : undefined}
       errorDisabled={!canRetry}
       isStreaming={isLatestAnswer && isBusy}
@@ -446,13 +446,9 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
   const { canSend } = chat;
 
   const confirmEdit = useCallback(() => {
-    if (!chat.editing) {
-      return;
-    }
-
     focusComposerAfterEdit.current = true;
     chat.confirmEdit();
-  }, [chat.confirmEdit, chat.editing]);
+  }, [chat.confirmEdit]);
 
   useEffect(() => {
     if (chat.editing || !focusComposerAfterEdit.current) {
