@@ -1,0 +1,50 @@
+[
+  {
+    "query": "$initialize-app 이 템플릿으로 새 앱을 시작해줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "이 템플릿을 새 모바일 앱으로 초기화하고 테마와 프로젝트 이름까지 정하고 싶어.",
+    "should_trigger": true
+  },
+  {
+    "query": "앱이 하는 일을 설명하면서 디자인 방향을 정한 다음 Expo 이름과 bundle ID를 설정해줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "중간에 멈춘 앱 초기화를 이어서 프로젝트 식별자 설정까지 마쳐줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "새 앱 시작 절차를 대화로 진행하고 마지막에 아이콘도 만들지 물어봐 줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "이미 초기화한 저장소인지 확인하고 남은 단계만 이어서 해줘.",
+    "should_trigger": true
+  },
+  {
+    "query": "package.json의 이름만 my-app으로 바꿔줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "현재 앱의 HeroUI Native 테마만 새로 만들어줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "앱 아이콘과 스플래시 이미지를 만들어줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "이 제품의 MVP 범위와 핵심 사용자 흐름을 인터뷰로 정리해줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "bun run setup 명령의 옵션을 설명해줘.",
+    "should_trigger": false
+  },
+  {
+    "query": "운영 중인 앱을 전면 리브랜딩하고 모든 화면을 다시 디자인해줘.",
+    "should_trigger": false
+  }
+]

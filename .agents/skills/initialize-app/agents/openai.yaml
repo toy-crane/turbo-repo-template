@@ -1,0 +1,4 @@
+interface:
+  display_name: "앱 초기화"
+  short_description: "앱 설명부터 테마와 프로젝트 설정까지 안내합니다"
+  default_prompt: "새 앱의 설명과 테마를 정하고 프로젝트 설정을 마치려면 $initialize-app Skill을 사용해 주세요."
