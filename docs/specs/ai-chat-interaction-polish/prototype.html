@@ -1,0 +1,1414 @@
+<!--
+  prototype shell: the review chrome every prototype starts from.
+
+  Keep this comment in the prototype you grow from here: it is the contract,
+  and later turns work from that file rather than from this one.
+
+  Contract (extend product screens; keep the review shell):
+  - Product:  .sh-stage contains only end-user product UI. Keep review notes,
+               rationale, instructions, and approval controls in conversation.
+  - Screens:  <section data-screen="slug" data-title="Label"> inside .sh-stage.
+               The selector, arrow keys, and #hash routing build themselves.
+               Use one option per product destination or distinct surface,
+               named by its product role. Keep baselines, variants, comparison
+               labels, steps, indexes, and progress out of names and states.
+               Links may use href="#slug".
+  - States:   "Default" is automatic. A screen declares only representative
+               presets in data-states="Empty,Error". Use natural, screen-specific
+               names. Reserve presets for important multi-step results, forced
+               data or errors, or materially different structure; keep one-click
+               and transient states as interactions. Use data-when="Empty" on
+               preset-only elements. Call prototypeShell.setState("Name") on
+               entry and setState("Default") on exit, including when repeated
+               actions cross a preset condition.
+  - Viewport: "vp (m)" cycles full / 390 / 768. The 390 preset is a
+               fixed-height, internally scrolling phone frame. Start a
+               mobile-first prototype by adding class="sh-vp-390" to <body>
+               (or a bootstrap classList.add before the chrome script runs).
+  - Pinning:  keep in-frame bars (tab bars, CTAs) inside the phone with
+               position: sticky; position: fixed pins to the browser window.
+  - Tokens:   replace the project-tokens block with project tokens copied
+               verbatim. Map differing names to --background, --foreground, and
+               --font afterwards; replace network fonts with a system stack and
+               note that substitution. Without a design system, keep this
+               palette as the finished style.
+  - Placeholders: .wf-pic stands in for pictures the prototype has no real
+               files for. Use real text everywhere text belongs.
+
+  - Chrome:   Keep exactly the screen selector, selected-screen state selector,
+               and viewport cycle. Chrome that needs explaining has failed.
+
+  Self-contained by design: no build, no framework, no network.
+-->
+<meta charset="utf-8">
+<title>AI 채팅 상호작용 프로토타입</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  /* ── project tokens: apps/mobile/global.css + HeroUI Native 1.0.8 ── */
+  :root {
+    --white: oklch(100% 0 0);
+    --black: oklch(0% 0 0);
+    --snow: oklch(0.9911 0 0);
+    --eclipse: oklch(0.2103 0.0059 285.89);
+    --border-width: 1px;
+    --field-border-width: 0px;
+    --radius: 0.5rem;
+    --field-radius: calc(var(--radius) * 1.75);
+    --opacity-disabled: 0.5;
+    --theme: default;
+
+    --background: #f4f4f6;
+    --foreground: #111114;
+    --surface: #ffffff;
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.9524 0.0013 286.37);
+    --surface-secondary-foreground: var(--foreground);
+    --surface-tertiary: oklch(0.9373 0.0013 286.37);
+    --surface-tertiary-foreground: var(--foreground);
+    --overlay: var(--white);
+    --overlay-foreground: var(--foreground);
+    --backdrop: oklch(0% 0 0 / 20%);
+    --muted: oklch(0.5517 0.0138 285.94);
+    --default: oklch(94% 0.001 286.375);
+    --default-foreground: var(--eclipse);
+    --accent: oklch(0.6204 0.195 253.83);
+    --accent-foreground: var(--snow);
+    --field-background: var(--white);
+    --field-foreground: oklch(0.2103 0.0059 285.89);
+    --field-placeholder: var(--muted);
+    --field-border: transparent;
+    --success: oklch(0.7329 0.1935 150.81);
+    --success-foreground: var(--eclipse);
+    --danger: oklch(0.6532 0.2328 25.74);
+    --danger-foreground: var(--snow);
+    --border: oklch(90% 0.004 286.32);
+    --separator: oklch(74% 0.004 286.32);
+    --focus: var(--accent);
+    --link: var(--foreground);
+    --surface-shadow:
+      0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 1px 0 rgba(0, 0, 0, 0.06);
+    --overlay-shadow:
+      0 2px 8px 0 rgba(0, 0, 0, 0.02), 0 -6px 12px 0 rgba(0, 0, 0, 0.01),
+      0 14px 28px 0 rgba(0, 0, 0, 0.03);
+    --field-shadow:
+      0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 1px 0 rgba(0, 0, 0, 0.06);
+
+    /* Network fonts are intentionally replaced by each platform's system stack. */
+    --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+  }
+
+  /* ── review chrome (sh-*): keep; extend product styles elsewhere ── */
+  * { box-sizing: border-box }
+  body {
+    margin: 0; padding: 0 0 40px;
+    background: var(--background, #f6f6f6); color: var(--foreground, #3a3a3a);
+    font-family: var(--font, system-ui, sans-serif);
+  }
+  button, input, textarea, select { font: inherit }
+  .sh-bar {
+    position: sticky; top: 0; z-index: 999;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 8px 12px; background: #191a1c; color: #d7d7d7;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .sh-bar b, .sh-control-label { color: #8a8f98; font-weight: 500 }
+  .sh-control { display: inline-flex; gap: 5px; align-items: center }
+  .sh-bar button {
+    border: 1px solid #3a3d42; background: none; color: inherit;
+    font: inherit; padding: 2px 9px; border-radius: 99px; cursor: pointer;
+  }
+  .sh-bar select {
+    width: 190px; border: 1px solid #3a3d42; background: #232428; color: inherit;
+    font: inherit; padding: 3px 28px 3px 9px; border-radius: 7px; cursor: pointer;
+    color-scheme: dark;
+  }
+  #sh-screen { width: 190px }
+  .sh-bar button.on { background: #d7d7d7; color: #191a1c; border-color: #d7d7d7 }
+  .sh-spacer { flex: 1 }
+  .sh-stage { max-width: 960px; margin: 0 auto; padding: 12px 16px 0 }
+  [hidden] { display: none !important }
+
+  .sh-vp-390 .sh-stage {
+    max-width: 390px; background: var(--background, #f6f6f6);
+    border: 10px solid #191a1c; border-radius: 28px;
+    padding: 16px 12px; height: min(844px, calc(100dvh - 52px));
+    overflow: hidden; margin-top: 12px;
+  }
+  .sh-vp-768 .sh-stage {
+    max-width: 768px; border: 1px solid #c4c4c4; border-radius: 12px;
+    padding: 16px; margin-top: 12px;
+  }
+  .wf-pic  { border-radius: 4px; background:
+             repeating-linear-gradient(45deg, #e9e9e9, #e9e9e9 6px, #f2f2f2 6px, #f2f2f2 12px) }
+
+  /* ── product surface ── */
+  [data-screen="chat"] {
+    width: min(390px, 100%);
+    height: 844px;
+    min-height: 720px;
+    margin: 0 auto;
+  }
+  .sh-vp-390 [data-screen="chat"] {
+    width: calc(100% + 24px);
+    height: calc(100% + 32px);
+    min-height: 0;
+    margin: -16px -12px;
+  }
+  .sh-vp-768 [data-screen="chat"] { height: 844px; }
+
+  .chat-device {
+    --background: #f4f4f6;
+    --foreground: #111114;
+    --surface: #ffffff;
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.9524 0.0013 286.37);
+    --surface-tertiary: oklch(0.9373 0.0013 286.37);
+    --overlay: var(--white);
+    --overlay-foreground: var(--foreground);
+    --muted: oklch(0.5517 0.0138 285.94);
+    --default: oklch(94% 0.001 286.375);
+    --default-foreground: var(--eclipse);
+    --danger: oklch(0.6532 0.2328 25.74);
+    --border: oklch(90% 0.004 286.32);
+    --separator: oklch(74% 0.004 286.32);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    color: var(--foreground);
+    background: var(--background);
+    border-radius: 18px;
+    isolation: isolate;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body:not(.sh-vp-390) .chat-device {
+    border: 10px solid #191a1c;
+    border-radius: 48px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.18);
+  }
+  .chat-device[data-theme="dark"] {
+    --background: #0b0b0d;
+    --foreground: #ffffff;
+    --surface: #1a1a1e;
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.257 0.0037 286.14);
+    --surface-tertiary: oklch(0.2721 0.0024 247.91);
+    --overlay: oklch(0.2103 0.0059 285.89);
+    --overlay-foreground: var(--foreground);
+    --muted: oklch(70.5% 0.015 286.067);
+    --default: oklch(27.4% 0.006 286.033);
+    --default-foreground: var(--snow);
+    --danger: oklch(0.594 0.1967 24.63);
+    --border: oklch(28% 0.006 286.033);
+    --separator: oklch(40% 0.006 286.033);
+    --surface-shadow: 0 0 0 0 transparent inset;
+    --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+    --field-shadow: 0 0 0 0 transparent inset;
+  }
+
+  .status-bar {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 22px 0;
+    background: color-mix(in srgb, var(--background) 94%, transparent);
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 650;
+    letter-spacing: -.2px;
+  }
+  .dynamic-island {
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 116px;
+    height: 32px;
+    border-radius: 20px;
+    background: #000;
+    transform: translateX(-50%);
+  }
+  .status-icons { display: flex; align-items: center; gap: 6px }
+  .signal { display: flex; align-items: end; gap: 2px; height: 12px }
+  .signal i { width: 3px; border-radius: 2px; background: currentColor }
+  .signal i:nth-child(1) { height: 4px }
+  .signal i:nth-child(2) { height: 6px }
+  .signal i:nth-child(3) { height: 9px }
+  .signal i:nth-child(4) { height: 12px }
+  .wifi { width: 16px; height: 12px; border: 2px solid currentColor; border-width: 2px 0 0; border-radius: 50% 50% 0 0; transform: translateY(2px) }
+  .battery { width: 24px; height: 12px; border: 1.5px solid currentColor; border-radius: 3px; padding: 2px; position: relative }
+  .battery::before { content:""; display:block; width: 15px; height:100%; border-radius:1px; background:currentColor }
+  .battery::after { content:""; position:absolute; right:-3px; top:3px; width:2px; height:5px; border-radius:0 2px 2px 0; background:currentColor; opacity:.45 }
+
+  .native-header {
+    position: relative;
+    z-index: 4;
+    display: grid;
+    flex: 0 0 58px;
+    grid-template-columns: 64px 1fr 64px;
+    align-items: center;
+    border-bottom: 1px solid color-mix(in srgb, var(--separator) 28%, transparent);
+    background: color-mix(in srgb, var(--background) 92%, transparent);
+    backdrop-filter: blur(18px) saturate(140%);
+  }
+  .native-header h1 {
+    margin: 0;
+    text-align: center;
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 650;
+    letter-spacing: -.35px;
+  }
+  .back-button {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    margin-left: 12px;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    box-shadow: var(--surface-shadow);
+    cursor: pointer;
+  }
+  .back-button:active { transform: scale(.96); opacity: .72 }
+
+  .chat-device[data-platform="android"] .status-bar {
+    flex-basis: 26px;
+    padding: 3px 14px 0;
+    font-family: Roboto, "Noto Sans KR", system-ui, sans-serif;
+    font-size: 13px;
+  }
+  .chat-device[data-platform="android"] .dynamic-island { display: none }
+  .chat-device[data-platform="android"] .native-header {
+    flex-basis: 64px;
+    grid-template-columns: 56px 1fr 56px;
+    background: var(--background);
+    backdrop-filter: none;
+  }
+  .chat-device[data-platform="android"] .native-header h1 {
+    text-align: left;
+    font-family: Roboto, "Noto Sans KR", system-ui, sans-serif;
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  .chat-device[data-platform="android"] .back-button {
+    margin-left: 6px;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .chat-main {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    transition: flex-basis .32s cubic-bezier(.2,.8,.2,1);
+  }
+  .message-list {
+    position: absolute;
+    inset: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    padding: 16px 20px;
+    scroll-padding: 16px;
+  }
+  .message-list::-webkit-scrollbar { display: none }
+  .message-list.active-response {
+    display: flex;
+    flex-direction: column;
+  }
+  .message-list.is-empty { overflow: hidden }
+  .empty-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 32px;
+    text-align: center;
+    transition: transform .32s cubic-bezier(.2,.8,.2,1);
+  }
+  .empty-content h2 {
+    margin: 0;
+    color: var(--foreground);
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 600;
+    letter-spacing: -.6px;
+  }
+  .empty-content p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .message-row {
+    display: flex;
+    width: 100%;
+    margin: 0 0 12px;
+  }
+  .message-row.user { justify-content: flex-end }
+  .message-row.assistant { justify-content: flex-start }
+  .user-bubble {
+    max-width: 85%;
+    margin: 0;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: 16px;
+    color: var(--accent-foreground);
+    background: var(--accent);
+    box-shadow: none;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    transform-origin: 80% 50%;
+    cursor: default;
+    transition: transform 110ms ease, filter 110ms ease, opacity 110ms ease;
+  }
+  .user-bubble.is-pressing {
+    transform: scale(.985);
+    filter: brightness(.94);
+  }
+  .user-bubble:focus-visible,
+  .icon-action:focus-visible,
+  .menu-item:focus-visible,
+  .composer-input:focus-visible,
+  .text-action:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--focus) 70%, white);
+    outline-offset: 2px;
+  }
+  .assistant-content {
+    width: 100%;
+    color: var(--foreground);
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: -.12px;
+  }
+  .assistant-content p { margin: 0 0 10px }
+  .assistant-content p:last-child { margin-bottom: 0 }
+  .assistant-content ul { margin: 8px 0 10px; padding-left: 22px }
+  .assistant-content li { margin: 3px 0 }
+  .assistant-actions {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 44px;
+    margin-top: 2px;
+  }
+  .icon-action {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    color: var(--muted);
+    background: transparent;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease, transform 120ms ease;
+  }
+  .icon-action:hover { background: color-mix(in srgb, var(--default) 72%, transparent) }
+  .icon-action:active { transform: scale(.94); color: var(--foreground) }
+  .icon-action svg, .menu-item svg, .send-button svg, .latest-button svg, .back-button svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .icon-action .check-icon { display: none }
+  .icon-action.is-copied .copy-icon { display: none }
+  .icon-action.is-copied .check-icon { display: block }
+
+  .response-slot {
+    display: flex;
+    min-height: 24px;
+    flex: 1 0 auto;
+    align-items: flex-start;
+  }
+  .pulse-box {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+  }
+  .pulse-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--foreground);
+    animation: breathe 1s ease-in-out infinite alternate;
+  }
+  @keyframes breathe {
+    from { opacity: .4; transform: scale(.85) }
+    to { opacity: 1; transform: scale(1) }
+  }
+  .stream-caret {
+    display: inline-block;
+    width: 2px;
+    height: 18px;
+    margin-left: 2px;
+    vertical-align: -3px;
+    border-radius: 2px;
+    background: var(--accent);
+    animation: caret-blink .8s steps(1,end) infinite;
+  }
+  @keyframes caret-blink { 50% { opacity: 0 } }
+  .inline-error {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0 4px;
+    min-height: 44px;
+    margin-top: 4px;
+    color: var(--danger);
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .text-action {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--foreground);
+    background: transparent;
+    font-size: 14px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+  .text-action:hover { background: color-mix(in srgb, var(--default) 75%, transparent) }
+
+  .latest-button {
+    position: absolute;
+    z-index: 8;
+    left: 50%;
+    bottom: 4px;
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    border-radius: 50%;
+    color: var(--foreground);
+    background: var(--surface);
+    box-shadow: 0 5px 20px rgba(0,0,0,.12), var(--surface-shadow);
+    transform: translateX(-50%);
+    cursor: pointer;
+    animation: latest-in 160ms ease-out both;
+  }
+  @keyframes latest-in {
+    from { opacity: 0; transform: translateX(-50%) scale(.88) }
+    to { opacity: 1; transform: translateX(-50%) scale(1) }
+  }
+  .latest-button:active { transform: translateX(-50%) scale(.94) }
+
+  .inline-editor {
+    width: min(100%, 330px);
+    padding: 12px;
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--border) 74%, transparent), var(--field-shadow);
+  }
+  .inline-editor textarea {
+    display: block;
+    width: 100%;
+    min-height: 76px;
+    max-height: 180px;
+    resize: none;
+    padding: 2px 3px;
+    border: 0;
+    outline: none;
+    color: var(--foreground);
+    background: transparent;
+    font-size: 16px;
+    line-height: 24px;
+  }
+  .inline-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .edit-button {
+    min-width: 58px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    color: var(--foreground);
+    background: var(--surface);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .edit-button.primary {
+    border-color: var(--accent);
+    color: var(--accent-foreground);
+    background: var(--accent);
+  }
+  .edit-button:disabled { opacity: .4; cursor: default }
+
+  .composer {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 8px 20px 12px;
+    background: transparent;
+    transition: padding .32s cubic-bezier(.2,.8,.2,1), margin .32s cubic-bezier(.2,.8,.2,1);
+  }
+  .composer-field {
+    display: flex;
+    min-height: 48px;
+    max-height: 120px;
+    flex: 1 1 auto;
+    align-items: center;
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--field-shadow);
+    overflow: hidden;
+  }
+  .composer-input {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    max-height: 120px;
+    resize: none;
+    padding: 12px 16px;
+    border: 0;
+    outline: none;
+    color: var(--foreground);
+    background: transparent;
+    font-size: 16px;
+    line-height: 24px;
+    overflow-y: auto;
+  }
+  .composer-input::placeholder { color: var(--field-placeholder, var(--muted)) }
+  .composer-input:disabled { opacity: .58 }
+  .send-button {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: var(--accent-foreground);
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform 120ms ease, opacity 120ms ease;
+  }
+  .send-button:active { transform: scale(.94) }
+  .send-button:disabled { opacity: .4; cursor: default }
+  .send-button .stop-square {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+  .chat-device.is-busy .send-icon { display: none }
+  .safe-area {
+    position: relative;
+    z-index: 5;
+    flex: 0 0 20px;
+    background: transparent;
+    transition: flex-basis .32s cubic-bezier(.2,.8,.2,1);
+  }
+  .home-indicator {
+    position: absolute;
+    bottom: 7px;
+    left: 50%;
+    width: 132px;
+    height: 5px;
+    border-radius: 5px;
+    background: var(--foreground);
+    transform: translateX(-50%);
+    opacity: .9;
+  }
+
+  .keyboard {
+    position: relative;
+    z-index: 5;
+    flex: 0 0 auto;
+    max-height: 0;
+    overflow: hidden;
+    color: #17171a;
+    background: #d6d8de;
+    transition: max-height .32s cubic-bezier(.2,.8,.2,1);
+  }
+  .chat-device.keyboard-open .composer { margin-bottom: 8px; padding-bottom: 0 }
+  .chat-device.keyboard-open .safe-area { flex-basis: 0 }
+  .chat-device.keyboard-open .home-indicator { display: none }
+  .chat-device.keyboard-open .keyboard { max-height: 286px }
+  .keyboard-grab {
+    display: flex;
+    justify-content: center;
+    gap: 52px;
+    height: 34px;
+    padding-top: 10px;
+  }
+  .keyboard-grab i { display:block; width:1px; height:22px; background:#b9bbc1 }
+  .key-row { display: flex; gap: 5px; justify-content: center; margin: 0 5px 7px }
+  .key {
+    display: grid;
+    height: 42px;
+    min-width: 31px;
+    flex: 1 1 0;
+    place-items: center;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 1px 0 #a9abb0;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .key.wide { min-width: 44px; flex-grow: 1.35; background:#adb1b9; font-size:14px }
+  .key.space { min-width: 150px; flex-grow: 5; font-size: 12px; color:#7b7e84 }
+  .key.return { min-width: 86px; flex-grow: 2.3; color:#fff; background:#087df5 }
+  .keyboard-footer {
+    display: flex;
+    height: 42px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px 5px;
+    font-size: 23px;
+  }
+  .keyboard-footer .mini-home { width: 118px; height: 5px; border-radius:5px; background:#17171a; align-self:flex-end; margin-bottom:2px }
+  .chat-device[data-platform="android"] .keyboard { background:#dee3ea }
+  .chat-device[data-platform="android"] .keyboard-grab { height: 24px; padding-top: 5px }
+  .chat-device[data-platform="android"] .keyboard-grab i { display:none }
+  .chat-device[data-platform="android"] .keyboard-footer { height: 48px; padding-inline: 24px }
+  .chat-device[data-platform="android"] .keyboard-footer .mini-home { width:24px; height:4px }
+
+  .menu-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    border: 0;
+    background: var(--backdrop);
+    cursor: default;
+    animation: fade-in 140ms ease-out both;
+  }
+  @keyframes fade-in { from { opacity:0 } to { opacity:1 } }
+  .message-menu {
+    position: absolute;
+    z-index: 31;
+    width: 196px;
+    padding: 12px 6px;
+    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    border-radius: 24px;
+    color: var(--overlay-foreground);
+    background: var(--overlay);
+    box-shadow: 0 18px 50px rgba(0,0,0,.16), var(--overlay-shadow);
+    animation: menu-in 170ms cubic-bezier(.2,.8,.2,1) both;
+    transform-origin: 80% 0;
+  }
+  @keyframes menu-in {
+    from { opacity:0; transform:scale(.94) translateY(-3px) }
+    to { opacity:1; transform:scale(1) translateY(0) }
+  }
+  .menu-item {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 16px;
+    color: var(--overlay-foreground);
+    background: transparent;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  .menu-item:hover, .menu-item:focus-visible { background: var(--default) }
+  .menu-item:focus-visible { outline: none }
+  .menu-item:disabled { opacity: .4; cursor: default }
+
+  .chat-device.large-type .assistant-content { font-size: 21px; line-height: 32px }
+  .chat-device.large-type .user-bubble { font-size: 18px; line-height: 27px }
+  .chat-device.large-type .composer-input { font-size: 20px; line-height: 30px; min-height: 58px }
+  .chat-device.large-type .composer-field { min-height: 58px }
+  .chat-device.multiline .composer-input { min-height: 96px }
+  .chat-device.multiline .composer-field { min-height: 96px }
+
+  .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0,0,0,0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important }
+    .pulse-dot { animation-name: reduced-breathe; transform: none }
+    @keyframes reduced-breathe { from { opacity:.45 } to { opacity:1 } }
+    .latest-button { animation: fade-in 140ms ease-out both }
+    .message-menu, .menu-backdrop { animation-duration: 1ms }
+    .chat-main, .composer, .safe-area, .keyboard { transition-duration: 1ms }
+  }
+  @media (prefers-contrast: more) {
+    .composer-field, .inline-editor, .message-menu, .latest-button {
+      outline: 2px solid var(--foreground);
+      outline-offset: -2px;
+    }
+    .icon-action { color: var(--foreground) }
+    .menu-backdrop { background: oklch(0% 0 0 / 28%) }
+  }
+</style>
+
+<body class="sh-vp-390">
+<header class="sh-bar">
+  <b>proto</b>
+  <label class="sh-control"><span class="sh-control-label">screen</span><select id="sh-screen"></select></label>
+  <span class="sh-spacer"></span>
+  <label class="sh-control"><span class="sh-control-label">state</span><select id="sh-state"></select></label>
+  <button id="sh-vp">vp: full (m)</button>
+</header>
+
+<main class="sh-stage">
+  <section
+    data-screen="chat"
+    data-title="대화"
+    data-states="빈 대화,빈 대화 · 키보드,키보드 열림,메뉴 열림,수정 중,답변 대기,스트리밍,긴 답변 스트리밍,이전 내용 읽는 중,응답 전 중지,부분 답변 중지,첫 응답 오류,부분 답변 오류,여러 줄 입력,큰 글자,어두운 화면,Android"
+  >
+    <div class="chat-device" data-component="ChatScreen" data-platform="ios" data-theme="light">
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="dynamic-island"></span>
+        <span class="status-icons">
+          <span class="signal"><i></i><i></i><i></i><i></i></span>
+          <span class="wifi"></span>
+          <span class="battery"></span>
+        </span>
+      </div>
+
+      <header class="native-header" data-component="NativeStackHeader">
+        <button class="back-button" type="button" aria-label="뒤로">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <h1>대화</h1>
+        <span></span>
+      </header>
+
+      <main class="chat-main">
+        <div class="message-list" role="log" aria-label="대화 내용" data-component="ChatMessageList"></div>
+        <button class="latest-button" type="button" aria-label="최신 메시지로 이동" data-component="ScrollToLatestButton" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </main>
+
+      <form class="composer" data-component="ChatComposer">
+        <label class="composer-field">
+          <span class="sr-only">메시지</span>
+          <textarea class="composer-input" rows="1" placeholder="무엇이든 물어보세요" aria-label="메시지"></textarea>
+        </label>
+        <button class="send-button" type="submit" aria-label="보내기" disabled>
+          <svg class="send-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6.5 10.5L12 5l5.5 5.5"/></svg>
+          <span class="stop-square" aria-hidden="true" hidden></span>
+        </button>
+      </form>
+      <div class="safe-area" aria-hidden="true"><span class="home-indicator"></span></div>
+
+      <div class="keyboard" aria-hidden="true" data-component="NativeKeyboard">
+        <div class="keyboard-grab"><i></i><i></i><i></i></div>
+        <div class="key-row"><span class="key">ㅂ</span><span class="key">ㅈ</span><span class="key">ㄷ</span><span class="key">ㄱ</span><span class="key">ㅅ</span><span class="key">ㅛ</span><span class="key">ㅕ</span><span class="key">ㅑ</span><span class="key">ㅐ</span><span class="key">ㅔ</span></div>
+        <div class="key-row"><span class="key">ㅁ</span><span class="key">ㄴ</span><span class="key">ㅇ</span><span class="key">ㄹ</span><span class="key">ㅎ</span><span class="key">ㅗ</span><span class="key">ㅓ</span><span class="key">ㅏ</span><span class="key">ㅣ</span></div>
+        <div class="key-row"><span class="key wide">⇧</span><span class="key">ㅋ</span><span class="key">ㅌ</span><span class="key">ㅊ</span><span class="key">ㅍ</span><span class="key">ㅠ</span><span class="key">ㅜ</span><span class="key">ㅡ</span><span class="key wide">⌫</span></div>
+        <div class="key-row"><span class="key wide">123</span><span class="key wide">☺</span><span class="key space">한글</span><span class="key return">↑</span></div>
+        <div class="keyboard-footer"><span>◎</span><span class="mini-home"></span><span>♩</span></div>
+      </div>
+
+      <button class="menu-backdrop" type="button" aria-label="메뉴 닫기" hidden></button>
+      <div class="message-menu" role="menu" aria-label="메시지 작업" data-component="new:UserMessageMenu" hidden>
+        <button class="menu-item" type="button" role="menuitem" data-menu-action="copy" aria-label="복사하기">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0013.5 4h-7A2.5 2.5 0 004 6.5v7A2.5 2.5 0 006.5 16H8"/></svg>
+          <span>복사하기</span>
+        </button>
+        <button class="menu-item" type="button" role="menuitem" data-menu-action="edit" aria-label="수정하기">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 6.5l4 4M5 19l3.8-.8L18.7 7.3a2.15 2.15 0 00-3-3L5.8 14.2 5 19z"/></svg>
+          <span>수정하기</span>
+        </button>
+      </div>
+
+      <div class="sr-only" aria-live="polite" aria-atomic="true" id="live-status"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const stage = document.querySelector('.sh-stage');
+  const screens = [...stage.querySelectorAll('[data-screen]')];
+  const screenSelect = document.getElementById('sh-screen');
+  const stateSelect = document.getElementById('sh-state');
+  const vpBtn = document.getElementById('sh-vp');
+  let current = null;
+  let currentStates = [];
+
+  screens.forEach(s => {
+    const option = document.createElement('option');
+    option.textContent = s.dataset.title || s.dataset.screen;
+    option.value = s.dataset.screen;
+    screenSelect.append(option);
+  });
+  screenSelect.onchange = () => show(screenSelect.value);
+
+  function show(slug) {
+    current = screens.find(s => s.dataset.screen === slug) || screens[0];
+    screens.forEach(s => s.hidden = s !== current);
+    screenSelect.value = current.dataset.screen;
+    history.replaceState(null, '', '#' + current.dataset.screen);
+    buildStates();
+  }
+
+  function buildStates() {
+    const declared = (current.dataset.states || '').split(',').map(x => x.trim()).filter(Boolean);
+    currentStates = ['Default', ...declared.filter(name => name !== 'Default')];
+    stateSelect.innerHTML = '';
+    currentStates.forEach(name => {
+      const option = document.createElement('option');
+      option.textContent = name;
+      option.value = name;
+      stateSelect.append(option);
+    });
+    applyState('Default');
+  }
+
+  function applyState(name) {
+    const active = currentStates.includes(name) ? name : 'Default';
+    current.querySelectorAll('[data-when]').forEach(el => {
+      el.hidden = !el.dataset.when.split(',').map(x => x.trim()).includes(active);
+    });
+    stateSelect.value = active;
+    syncProductState(active);
+  }
+  stateSelect.onchange = () => {
+    clearStreamTimers();
+    if (stateSelect.value === '수정 중') {
+      runtimeQuestion = '';
+      editingUserId = 'u1';
+    }
+    applyState(stateSelect.value);
+  };
+
+  window.prototypeShell = {
+    showScreen: show,
+    setState: applyState,
+    getScreen: () => current?.dataset.screen,
+    getState: () => stateSelect.value
+  };
+
+  const VPS = ['full', '390', '768'];
+  let vp = VPS.find(v => document.body.classList.contains('sh-vp-' + v)) || 'full';
+  function applyVp() {
+    VPS.forEach(v => document.body.classList.toggle('sh-vp-' + v, v === vp && v !== 'full'));
+    vpBtn.textContent = 'vp: ' + vp + ' (m)';
+    vpBtn.classList.toggle('on', vp !== 'full');
+  }
+  vpBtn.onclick = () => { vp = VPS[(VPS.indexOf(vp) + 1) % VPS.length]; applyVp(); };
+  applyVp();
+
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !menu.hidden) {
+      closeMenu();
+      return;
+    }
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const i = screens.indexOf(current);
+    if (e.key === 'ArrowRight') show(screens[(i + 1) % screens.length].dataset.screen);
+    if (e.key === 'ArrowLeft') show(screens[(i - 1 + screens.length) % screens.length].dataset.screen);
+    if (e.key === 'm') vpBtn.click();
+  });
+
+  const device = document.querySelector('.chat-device');
+  const list = document.querySelector('.message-list');
+  const composer = document.querySelector('.composer');
+  const composerInput = document.querySelector('.composer-input');
+  const sendButton = document.querySelector('.send-button');
+  const sendIcon = sendButton.querySelector('.send-icon');
+  const stopSquare = sendButton.querySelector('.stop-square');
+  const latestButton = document.querySelector('.latest-button');
+  const menu = document.querySelector('.message-menu');
+  const backdrop = document.querySelector('.menu-backdrop');
+  const liveStatus = document.getElementById('live-status');
+  let activeUserId = null;
+  let activeUserText = '';
+  let longPressTimer = null;
+  let copiedTimer = null;
+  let streamTimers = [];
+  let runtimeQuestion = '';
+  let editingUserId = 'u1';
+  let keyboardWasOpen = false;
+
+  const svg = {
+    copy: '<svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0013.5 4h-7A2.5 2.5 0 004 6.5v7A2.5 2.5 0 006.5 16H8"/></svg>',
+    check: '<svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>',
+    refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8V4m0 0h-4m4 0l-3.1 3.1A7 7 0 105 17"/></svg>'
+  };
+
+  const messages = {
+    firstUser: '스트리밍 중에 위로 스크롤하면 자동으로 다시 내려오지 않게 해줘.',
+    firstAnswer: '<p>사용자가 대화 끝을 보고 있을 때만 새 답변을 따라가면 됩니다.</p><p>위로 스크롤하는 순간 자동 이동을 멈추고, 다시 맨 아래로 내리거나 최신 메시지 버튼을 눌렀을 때만 따라가기를 켭니다.</p>',
+    lastUser: '키보드가 열릴 때 입력창과 목록은 어떻게 움직여야 해?',
+    lastAnswer: '<p>키보드 진행도와 같은 값으로 입력창을 옮기고, 남은 대화 영역의 높이도 함께 줄이는 방식이 자연스럽습니다.</p><p>키보드 위에는 8pt 간격을 두고, 닫히면 다시 하단 Safe Area를 지킵니다.</p>'
+  };
+
+  const presets = {
+    'Default': { scene: 'ready', platform: 'ios', theme: 'light' },
+    '빈 대화': { scene: 'empty', platform: 'ios', theme: 'light' },
+    '빈 대화 · 키보드': { scene: 'empty', platform: 'ios', theme: 'light', keyboard: true },
+    '키보드 열림': { scene: 'ready', platform: 'ios', theme: 'light', keyboard: true },
+    '메뉴 열림': { scene: 'ready', platform: 'ios', theme: 'light', menu: true },
+    '수정 중': { scene: 'edit', platform: 'ios', theme: 'light', keyboard: true },
+    '답변 대기': { scene: 'waiting', platform: 'ios', theme: 'light', busy: true },
+    '스트리밍': { scene: 'streaming', platform: 'ios', theme: 'light', busy: true },
+    '긴 답변 스트리밍': { scene: 'streaming-long', platform: 'ios', theme: 'light', busy: true },
+    '이전 내용 읽는 중': { scene: 'away', platform: 'ios', theme: 'light', away: true, busy: true },
+    '응답 전 중지': { scene: 'stopped-empty', platform: 'ios', theme: 'light' },
+    '부분 답변 중지': { scene: 'stopped-partial', platform: 'ios', theme: 'light' },
+    '첫 응답 오류': { scene: 'error-empty', platform: 'ios', theme: 'light' },
+    '부분 답변 오류': { scene: 'error', platform: 'ios', theme: 'light' },
+    '여러 줄 입력': { scene: 'ready', platform: 'ios', theme: 'light', keyboard: true, multiline: true },
+    '큰 글자': { scene: 'ready', platform: 'ios', theme: 'light', largeType: true },
+    '어두운 화면': { scene: 'ready', platform: 'ios', theme: 'dark' },
+    'Android': { scene: 'ready', platform: 'android', theme: 'light', keyboard: true }
+  };
+
+  function userRow(id, text, options = {}) {
+    if (options.editing) {
+      return `<article class="message-row user" data-component="MessageRow" data-message-id="${id}">
+        <div class="inline-editor" data-component="new:InlineMessageEditor">
+          <label><span class="sr-only">메시지 수정</span><textarea id="inline-edit" aria-label="메시지 수정">${escapeHtml(text)}</textarea></label>
+          <div class="inline-editor-actions">
+            <button class="edit-button" type="button" data-edit-action="cancel">취소</button>
+            <button class="edit-button primary" type="button" data-edit-action="send">보내기</button>
+          </div>
+        </div>
+      </article>`;
+    }
+    return `<article class="message-row user" data-component="MessageRow" data-message-id="${id}">
+      <button class="user-bubble" type="button" data-component="new:PressableFeedback" data-user-id="${id}" aria-label="사용자 메시지. 길게 눌러 작업 열기">${escapeHtml(text)}</button>
+    </article>`;
+  }
+
+  function assistantRow(id, html, options = {}) {
+    const actions = options.actions === false ? '' : `<div class="assistant-actions" aria-label="답변 작업">
+      <button class="icon-action" type="button" data-assistant-copy aria-label="답변 복사">${svg.copy}${svg.check}</button>
+      ${options.regenerate === false ? '' : `<button class="icon-action" type="button" data-regenerate aria-label="답변 다시 생성">${svg.refresh}</button>`}
+    </div>`;
+    const error = options.error ? `<div class="inline-error" role="alert"><span>잠시 뒤에 다시 보내 주세요.</span><button class="text-action" type="button" data-retry>다시 보내기</button></div>` : '';
+    return `<article class="message-row assistant" data-component="MessageRow" data-message-id="${id}">
+      <div class="assistant-content">${html}${error}${actions}</div>
+    </article>`;
+  }
+
+  function waitingRow() {
+    return `<article class="message-row assistant response-slot" data-component="MessageRow" aria-label="답변을 만드는 중">
+      <span class="pulse-box" data-component="new:GenerationPulse" aria-hidden="true"><span class="pulse-dot"></span></span>
+    </article>`;
+  }
+
+  function renderScene(scene) {
+    list.className = 'message-list';
+    if (scene === 'empty') {
+      list.classList.add('is-empty');
+      list.innerHTML = `<div class="empty-content" data-component="ChatEmptyContent">
+        <h2>무엇을 도와드릴까요?</h2>
+        <p>궁금한 것을 입력하면 AI가 바로 답해요.</p>
+      </div>`;
+      bindMessageInteractions();
+      return;
+    }
+
+    const question = runtimeQuestion || messages.lastUser;
+    let html = '';
+    if (scene === 'edit') {
+      const editText = runtimeQuestion || messages.firstUser;
+      if (editingUserId === 'u2') {
+        html = userRow('u1', messages.firstUser) +
+          assistantRow('a1', messages.firstAnswer, { regenerate: false }) +
+          userRow('u2', editText, { editing: true }) +
+          assistantRow('a2', messages.lastAnswer);
+      } else {
+        html = userRow(editingUserId, editText, { editing: true }) +
+          assistantRow('a1', messages.firstAnswer, { regenerate: false }) +
+          userRow('u2', messages.lastUser) +
+          assistantRow('a2', messages.lastAnswer);
+      }
+    } else if (scene === 'waiting') {
+      list.classList.add('active-response');
+      html = userRow('u3', question) + waitingRow();
+    } else if (scene === 'streaming') {
+      list.classList.add('active-response');
+      html = userRow('u3', question) + assistantRow('a3', '<p>키보드와 입력창을 같은 진행도로 움직이면 화면이 먼저 튀지 않습니다. 대화 목록은 남은 높이 안에서 줄어들고<span class="stream-caret"></span></p>', { actions: false });
+    } else if (scene === 'streaming-long') {
+      html = userRow('u3', question) + assistantRow('a3', '<p>키보드와 입력창은 키보드 진행도와 같은 값으로 움직입니다. 대화 목록은 남은 높이 안에서 줄어들기 때문에 별도의 화면 전환이 필요하지 않습니다.</p><p>답변이 처음 확보한 영역보다 길어지면 사용자가 맨 아래를 보고 있을 때만 새 문장을 따라갑니다.</p><ul><li>사용자가 위로 움직이면 바로 자동 이동을 멈춥니다.</li><li>Markdown 높이가 바뀌어도 읽던 줄을 그대로 둡니다.</li><li>다시 맨 아래에 도달하면 새 답변을 따라갑니다.</li></ul><p>입력 내용이 여러 줄로 늘어나도 목록의 하단 여백을 같은 프레임에 갱신합니다. 마지막 문장이 입력칸 뒤에 숨지 않습니다.</p><p>오류나 복사 완료 표시도 입력창 높이를 바꾸지 않으므로 읽고 있던 위치가 갑자기 밀리지 않습니다.</p><p>최신 메시지 버튼도 입력창과 함께 움직이고, 버튼을 눌러도 키보드는 닫지 않습니다.<span class="stream-caret"></span></p>', { actions: false });
+    } else if (scene === 'stopped-empty') {
+      html = userRow('u3', question);
+    } else if (scene === 'stopped-partial') {
+      html = userRow('u3', question) + assistantRow('a3', '<p>키보드와 입력창을 같은 진행도로 움직이면 화면이 먼저 튀지 않습니다. 대화 목록은 남은 높이 안에서 줄어듭니다.</p>');
+    } else if (scene === 'error-empty') {
+      html = userRow('u3', question) + assistantRow('a3', '', { error: true, actions: false });
+    } else if (scene === 'error') {
+      html = userRow('u3', '긴 답변을 만들다 네트워크가 끊기면 어떻게 보여줘?') +
+        assistantRow('a3', '<p>이미 받은 답변은 그대로 남깁니다. 사용자는 실패하기 전까지 받은 내용을 계속 읽을 수 있어요.</p>', { error: true, actions: false });
+    } else if (scene === 'away') {
+      html = userRow('u0', '대화가 길어졌을 때도 읽던 위치를 지켜줘.') +
+        assistantRow('a0', '<p>자동 스크롤은 사용자가 맨 아래를 보고 있는 동안에만 유지합니다.</p><ul><li>위로 움직이면 바로 따라가기를 멈춥니다.</li><li>새 문장이 들어와도 읽던 줄을 고정합니다.</li><li>아래 버튼을 누르면 최신 답변으로 돌아갑니다.</li></ul>', { regenerate: false }) +
+        userRow('u1', messages.firstUser) + assistantRow('a1', messages.firstAnswer, { regenerate: false }) +
+        userRow('u2', messages.lastUser) + assistantRow('a2', '<p>키보드 진행도와 같은 값으로 입력창을 옮기고, 남은 대화 영역도 함께 줄입니다.</p><p>사용자가 위로 스크롤했으므로 새 문장이 계속 들어와도 지금 읽는 위치를 유지합니다.<span class="stream-caret"></span></p>', { actions: false });
+    } else {
+      html = userRow('u2', question) + assistantRow('a2', messages.lastAnswer);
+    }
+    list.innerHTML = html;
+    bindMessageInteractions();
+    if (scene === 'edit') {
+      requestAnimationFrame(() => {
+        const input = document.getElementById('inline-edit');
+        input?.focus();
+        input?.setSelectionRange(input.value.length, input.value.length);
+        bindInlineEditor();
+      });
+    }
+  }
+
+  function syncProductState(name) {
+    closeMenu(false);
+    const config = presets[name] || presets.Default;
+    device.dataset.reviewState = name;
+    device.dataset.platform = config.platform;
+    device.dataset.theme = config.theme;
+    device.classList.toggle('keyboard-open', Boolean(config.keyboard));
+    device.classList.toggle('large-type', Boolean(config.largeType));
+    device.classList.toggle('multiline', Boolean(config.multiline));
+    keyboardWasOpen = Boolean(config.keyboard);
+    renderScene(config.scene);
+    latestButton.hidden = !config.away;
+    setBusy(Boolean(config.busy));
+    composerInput.disabled = config.scene === 'edit';
+    composer.setAttribute('aria-disabled', config.scene === 'edit' ? 'true' : 'false');
+
+    if (config.multiline) {
+      composerInput.value = '키보드가 열린 상태에서 입력 내용이 여러 줄로 늘어나도 마지막 메시지가 가려지지 않게 해줘.';
+      composerInput.style.height = '96px';
+    } else {
+      composerInput.value = '';
+      composerInput.style.height = '';
+    }
+    updateSendAvailability();
+
+    requestAnimationFrame(() => {
+      if (config.scene === 'away') {
+        list.scrollTop = Math.max(0, list.scrollHeight * .28);
+      } else if (config.scene !== 'edit') {
+        list.scrollTop = list.scrollHeight;
+      }
+    });
+
+    if (config.menu) {
+      setTimeout(() => {
+        if (prototypeShell.getState() !== '메뉴 열림') return;
+        const bubble = list.querySelector('[data-user-id="u2"]') || list.querySelector('.user-bubble');
+        openMenu(bubble, false);
+      }, 360);
+    }
+
+    if (config.scene === 'waiting') announce('답변을 만드는 중');
+    if (['error', 'error-empty'].includes(config.scene)) {
+      announce('답변 생성에 실패했습니다. 잠시 뒤에 다시 보내 주세요.');
+    }
+  }
+
+  function bindMessageInteractions() {
+    list.querySelectorAll('.user-bubble').forEach(bubble => {
+      bubble.addEventListener('pointerdown', event => {
+        if (device.dataset.reviewState === '수정 중') return;
+        bubble.classList.add('is-pressing');
+        longPressTimer = setTimeout(() => {
+          openMenu(bubble);
+          if (navigator.vibrate) navigator.vibrate(12);
+        }, 520);
+        bubble.setPointerCapture?.(event.pointerId);
+      });
+      const cancelPress = () => {
+        clearTimeout(longPressTimer);
+        setTimeout(() => bubble.classList.remove('is-pressing'), 70);
+      };
+      bubble.addEventListener('pointerup', cancelPress);
+      bubble.addEventListener('pointercancel', cancelPress);
+      bubble.addEventListener('pointerleave', cancelPress);
+      bubble.addEventListener('contextmenu', event => {
+        event.preventDefault();
+        openMenu(bubble);
+      });
+    });
+
+    list.querySelectorAll('[data-assistant-copy]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const text = button.closest('.assistant-content')?.innerText || '';
+        await copyText(text.replace('답변 다시 생성', '').trim());
+        clearTimeout(copiedTimer);
+        button.classList.add('is-copied');
+        button.setAttribute('aria-label', '답변 복사됨');
+        announce('복사됨');
+        copiedTimer = setTimeout(() => {
+          button.classList.remove('is-copied');
+          button.setAttribute('aria-label', '답변 복사');
+        }, 2000);
+      });
+    });
+    list.querySelectorAll('[data-regenerate]').forEach(button => button.addEventListener('click', () => {
+      runtimeQuestion = lastVisibleUserText();
+      prototypeShell.setState('답변 대기');
+    }));
+    list.querySelectorAll('[data-retry]').forEach(button => button.addEventListener('click', () => {
+      runtimeQuestion = lastVisibleUserText();
+      prototypeShell.setState('답변 대기');
+    }));
+  }
+
+  function lastVisibleUserText() {
+    const bubbles = [...list.querySelectorAll('.user-bubble')];
+    return bubbles.at(-1)?.textContent.trim() || messages.lastUser;
+  }
+
+  function openMenu(bubble, sync = true) {
+    if (!bubble) return;
+    clearTimeout(longPressTimer);
+    activeUserId = bubble.dataset.userId;
+    activeUserText = bubble.textContent.trim();
+    const editItem = menu.querySelector('[data-menu-action="edit"]');
+    editItem.disabled = device.classList.contains('is-busy');
+    editItem.setAttribute('aria-disabled', editItem.disabled ? 'true' : 'false');
+    bubble.classList.add('is-pressing');
+    backdrop.hidden = false;
+    menu.hidden = false;
+    const deviceRect = device.getBoundingClientRect();
+    const bubbleRect = bubble.getBoundingClientRect();
+    const menuWidth = 196;
+    const safe = 12;
+    const left = Math.min(deviceRect.width - menuWidth - safe, Math.max(safe, bubbleRect.right - deviceRect.left - menuWidth));
+    const proposedTop = bubbleRect.bottom - deviceRect.top + 9;
+    const top = Math.min(deviceRect.height - 126 - safe, Math.max(76, proposedTop));
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+    if (sync && prototypeShell.getState() !== '메뉴 열림') {
+      stateSelect.value = '메뉴 열림';
+    }
+    requestAnimationFrame(() => menu.querySelector('.menu-item')?.focus());
+  }
+
+  function closeMenu(sync = true) {
+    if (!menu) return;
+    menu.hidden = true;
+    backdrop.hidden = true;
+    list?.querySelectorAll('.user-bubble').forEach(b => b.classList.remove('is-pressing'));
+    if (sync && prototypeShell.getState() === '메뉴 열림') prototypeShell.setState('Default');
+  }
+
+  backdrop.addEventListener('click', () => closeMenu());
+  menu.querySelector('[data-menu-action="copy"]').addEventListener('click', async () => {
+    await copyText(activeUserText);
+    if (navigator.vibrate) navigator.vibrate([8, 24, 8]);
+    announce('복사됨');
+    closeMenu();
+  });
+  menu.querySelector('[data-menu-action="edit"]').addEventListener('click', () => {
+    runtimeQuestion = activeUserText || messages.firstUser;
+    editingUserId = activeUserId || 'u1';
+    menu.hidden = true;
+    backdrop.hidden = true;
+    prototypeShell.setState('수정 중');
+  });
+
+  function bindInlineEditor() {
+    const input = document.getElementById('inline-edit');
+    const cancel = list.querySelector('[data-edit-action="cancel"]');
+    const send = list.querySelector('[data-edit-action="send"]');
+    const update = () => { send.disabled = input.value.trim().length === 0 };
+    input.addEventListener('input', update);
+    input.addEventListener('keydown', event => {
+      if (event.isComposing) return;
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        if (!send.disabled) send.click();
+      }
+    });
+    cancel.addEventListener('click', () => {
+      runtimeQuestion = '';
+      editingUserId = 'u1';
+      prototypeShell.setState('Default');
+    });
+    send.addEventListener('click', () => {
+      runtimeQuestion = input.value.trim();
+      prototypeShell.setState('답변 대기');
+    });
+    update();
+  }
+
+  composerInput.addEventListener('input', () => {
+    composerInput.style.height = 'auto';
+    composerInput.style.height = `${Math.min(120, Math.max(48, composerInput.scrollHeight))}px`;
+    updateSendAvailability();
+  });
+  composerInput.addEventListener('focus', () => {
+    const state = prototypeShell.getState();
+    if (state === '빈 대화') prototypeShell.setState('빈 대화 · 키보드');
+    else if (state === 'Default') prototypeShell.setState('키보드 열림');
+  });
+  composerInput.addEventListener('keydown', event => {
+    if (event.isComposing) return;
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (!sendButton.disabled) composer.requestSubmit();
+    }
+  });
+  composer.addEventListener('submit', event => {
+    event.preventDefault();
+    if (device.classList.contains('is-busy')) {
+      stopGeneration();
+      return;
+    }
+    const value = composerInput.value.trim();
+    if (!value) return;
+    runtimeQuestion = value;
+    composerInput.value = '';
+    composerInput.style.height = '';
+    prototypeShell.setState('답변 대기');
+    startStreamingDemo();
+  });
+
+  function setBusy(busy) {
+    device.classList.toggle('is-busy', busy);
+    sendIcon.hidden = busy;
+    stopSquare.hidden = !busy;
+    sendButton.disabled = busy ? false : composerInput.value.trim().length === 0;
+    sendButton.setAttribute('aria-label', busy ? '생성 중지' : '보내기');
+  }
+
+  function updateSendAvailability() {
+    if (device.classList.contains('is-busy')) return;
+    sendButton.disabled = composerInput.value.trim().length === 0;
+  }
+
+  function startStreamingDemo() {
+    clearStreamTimers();
+    streamTimers.push(setTimeout(() => prototypeShell.setState('스트리밍'), 1150));
+    streamTimers.push(setTimeout(() => {
+      runtimeQuestion = '';
+      prototypeShell.setState('Default');
+    }, 3600));
+  }
+
+  function stopGeneration() {
+    clearStreamTimers();
+    const hadText = ['스트리밍', '긴 답변 스트리밍', '이전 내용 읽는 중'].includes(prototypeShell.getState());
+    prototypeShell.setState(hadText ? '부분 답변 중지' : '응답 전 중지');
+    announce(hadText ? '생성을 중지했습니다. 받은 답변을 남겼습니다.' : '생성을 중지했습니다.');
+  }
+
+  function clearStreamTimers() {
+    streamTimers.forEach(clearTimeout);
+    streamTimers = [];
+  }
+
+  latestButton.addEventListener('click', () => {
+    const keepKeyboard = device.classList.contains('keyboard-open');
+    list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
+    latestButton.hidden = true;
+    const nextState = prototypeShell.getState() === '이전 내용 읽는 중'
+      ? '긴 답변 스트리밍'
+      : (keepKeyboard ? '키보드 열림' : 'Default');
+    setTimeout(() => {
+      prototypeShell.setState(nextState);
+      if (keepKeyboard) {
+        device.classList.add('keyboard-open');
+        keyboardWasOpen = true;
+      }
+    }, 220);
+  });
+  latestButton.addEventListener('pointerdown', event => event.preventDefault());
+
+  let scrollFrame = 0;
+  list.addEventListener('scroll', () => {
+    cancelAnimationFrame(scrollFrame);
+    scrollFrame = requestAnimationFrame(() => {
+      const state = prototypeShell.getState();
+      if (!['긴 답변 스트리밍', '이전 내용 읽는 중'].includes(state)) return;
+      const isAway = list.scrollHeight - list.clientHeight - list.scrollTop > 24;
+      latestButton.hidden = !isAway;
+      stateSelect.value = isAway ? '이전 내용 읽는 중' : '긴 답변 스트리밍';
+    });
+  });
+
+  document.querySelector('.back-button').addEventListener('click', () => {
+    if (!menu.hidden) closeMenu();
+    else if (device.classList.contains('keyboard-open')) {
+      const state = prototypeShell.getState();
+      prototypeShell.setState(state === '빈 대화 · 키보드' ? '빈 대화' : 'Default');
+    }
+  });
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const helper = document.createElement('textarea');
+      helper.value = text;
+      helper.style.position = 'absolute';
+      helper.style.opacity = '0';
+      document.body.append(helper);
+      helper.select();
+      document.execCommand('copy');
+      helper.remove();
+    }
+  }
+
+  function announce(text) {
+    liveStatus.textContent = '';
+    requestAnimationFrame(() => { liveStatus.textContent = text });
+  }
+
+  function escapeHtml(value) {
+    return value.replace(/[&<>'"]/g, char => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+    })[char]);
+  }
+
+  addEventListener('hashchange', () => show(location.hash.slice(1)));
+  show(location.hash.slice(1));
+</script>
+</body>
