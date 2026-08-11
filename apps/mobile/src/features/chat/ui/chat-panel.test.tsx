@@ -1294,6 +1294,9 @@ describe("ChatPanel", () => {
     expect(screen.getByLabelText(chatLabels.input).props.editable).toBe(false);
     expect(screen.getByLabelText(chatLabels.send)).toBeDisabled();
     expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
+    expect(
+      screen.getByTestId(USER_MESSAGE_TEST_ID).props.accessibilityActions
+    ).toEqual([{ label: chatLabels.copyUserMessage, name: "copy" }]);
     expect(screen.queryByText("메시지를 고치는 중")).not.toBeOnTheScreen();
 
     await user.press(screen.getByLabelText(chatLabels.cancelEdit));

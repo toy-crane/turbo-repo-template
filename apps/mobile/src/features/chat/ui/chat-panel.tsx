@@ -320,7 +320,7 @@ function ChatListRow({
     <MessageRow
       cancelEdit={cancelEdit}
       confirmEdit={confirmEdit}
-      editDisabled={isBusy}
+      editDisabled={isBusy || editing !== undefined}
       editing={editing?.messageId === item.id ? editing : undefined}
       errorAction={isLatestAnswer && error ? retry : undefined}
       errorDisabled={!canRetry}
