@@ -20,4 +20,5 @@
 - [모바일 UI 렌더러 경계](mobile-ui-renderer-boundaries.md) — 모바일 화면의 주 렌더러, 네이티브 셸 소유권 또는 Liquid Glass 사용 범위를 선택할 때 읽는다.
 - [Supabase 클라이언트 경계](supabase-client-boundaries.md) — Supabase 타입, 클라이언트 초기화, 세션 저장소 또는 런타임별 키 소유권을 변경할 때 읽는다.
 - [Supabase 스키마 작업 방식](supabase-schema-workflow.md) — Supabase 스키마 원본, 로컬 스택, 마이그레이션 또는 타입 생성 방식을 변경할 때 읽는다.
+- [앱 초기화 작업 흐름](app-initialization-workflow.md) — 템플릿에서 새 앱을 시작하는 대화, Skill, 스크립트의 책임을 변경할 때 읽는다.
 - [템플릿 프로젝트 정체성](template-project-identity.md) — 템플릿의 초기 설정 명령, 프로젝트 슬러그 또는 도구별 프로젝트 식별자를 변경할 때 읽는다.
