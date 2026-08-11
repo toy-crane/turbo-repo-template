@@ -340,6 +340,48 @@ describe("useChatSession 편집 후 다시 보내기", () => {
     expect(result.current.error).toBeUndefined();
   });
 
+  test("중지한 요청이 정리되기 전에는 새 메시지를 보내지 않는다", async () => {
+    let attempt = 0;
+    let releaseFirst:
+      | ((stream: ReadableStream<UIMessageChunk>) => void)
+      | undefined;
+    const firstResponse = new Promise<ReadableStream<UIMessageChunk>>(
+      (resolve) => {
+        releaseFirst = resolve;
+      }
+    );
+    const transport = fakeTransport(() => {
+      attempt += 1;
+
+      return attempt === 1
+        ? firstResponse
+        : Promise.resolve(answerStream("둘째 답변"));
+    });
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => result.current.setDraft("첫 질문"));
+    await act(() => result.current.send());
+    await waitFor(() =>
+      expect(transport.sendMessages).toHaveBeenCalledTimes(1)
+    );
+
+    await act(() => result.current.stop());
+    await act(() => result.current.setDraft("둘째 질문"));
+    await act(() => result.current.send());
+
+    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
+    expect(result.current.canSend).toBe(false);
+    expect(result.current.draft).toBe("둘째 질문");
+
+    await act(() => releaseFirst?.(answerStream("받지 않을 답변")));
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    expect(result.current.canSend).toBe(true);
+    await act(() => result.current.send());
+    await waitFor(() =>
+      expect(transport.sendMessages).toHaveBeenCalledTimes(2)
+    );
+  });
+
   test("일부 답변 뒤에 실패하면 받은 글자와 오류를 함께 남긴다", async () => {
     const answer = controlledStream();
 

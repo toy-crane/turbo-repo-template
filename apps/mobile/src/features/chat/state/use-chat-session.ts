@@ -25,6 +25,8 @@ export interface ChatSession {
   cancelEdit: () => void;
   /** False while there is no token to send, so a retry cannot go out naked. */
   canRetry: boolean;
+  /** True when the current composer draft can start a new request. */
+  canSend: boolean;
   /** Sends the inline edit after replacing the selected conversation tail. */
   confirmEdit: () => void;
   draft: string;
@@ -110,6 +112,9 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
 
   const sdkIsBusy = status === "streaming" || status === "submitted";
   const isBusy = sdkIsBusy && !stopRequested;
+  const canSend = Boolean(
+    draft.trim() && accessToken && !sdkIsBusy && editing === undefined
+  );
   const running = useRef<ChatAction | undefined>(undefined);
   const requestGeneration = useRef(0);
 
@@ -169,7 +174,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
 
     // No token means no request. Getting the person to a sign-in screen is the
     // auth implementation's job, not this one's.
-    if (!(text && currentToken.current) || isBusy || editingRef.current) {
+    if (!(canSend && currentToken.current) || editingRef.current) {
       return;
     }
 
@@ -178,7 +183,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
 
       return sendMessage({ text });
     });
-  }, [draft, isBusy, run, sendMessage]);
+  }, [canSend, draft, run, sendMessage]);
 
   const retry = useCallback(() => {
     // The same check `send` makes. Without it a retry pressed after the session
@@ -199,8 +204,6 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
       return;
     }
 
-    requestGeneration.current += 1;
-    running.current = undefined;
     stopRequestedRef.current = true;
     setRequestError(undefined);
     setStopRequested(true);
@@ -300,6 +303,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   return {
     cancelEdit,
     canRetry: !(isBusy || accessToken === undefined),
+    canSend,
     confirmEdit,
     draft,
     editing,

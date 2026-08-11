@@ -441,7 +441,7 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
   }, []);
   const handleEndReached = useCallback(() => setIsAtEnd(true), [setIsAtEnd]);
 
-  const canSend = chat.editing === undefined && chat.draft.trim().length > 0;
+  const { canSend } = chat;
 
   const confirmEdit = useCallback(() => {
     if (!chat.editing) {
