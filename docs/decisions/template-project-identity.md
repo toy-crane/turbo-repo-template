@@ -2,7 +2,7 @@
 
 ## 결정
 
-- 템플릿 사용자는 처음 한 번 루트의 `bun run setup`을 실행해 프로젝트 정보를 설정한다.
+- 템플릿의 전체 앱 초기화는 `initialize-app` Skill이 이끌고, 프로젝트 이름과 식별자를 정한 뒤 루트의 `bun run setup`을 한 번 실행한다. Skill을 쓰지 않을 때는 `bun run setup`을 독립적으로 실행할 수 있다.
 - 초기 설정은 영문 소문자 kebab-case 형식의 단일 프로젝트 슬러그를 받는다. 이 값을 루트 `package.json`의 `name`, Expo의 `slug`와 `scheme`, Supabase `config.toml`의 `project_id`에 적용한다.
 - 대화형 초기 설정은 프로젝트 슬러그, 앱 표시 이름, 완성된 reverse-DNS 모바일 앱 식별자를 한 단계씩 입력받는다. 모바일 앱 식별자는 iOS `bundleIdentifier`와 Android `package`에 동일하게 적용한다.
 - 초기 설정은 바꿀 필드를 미리 보여주고 사용자가 확인한 뒤 수정한다.
