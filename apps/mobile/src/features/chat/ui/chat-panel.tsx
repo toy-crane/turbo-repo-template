@@ -514,6 +514,28 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
     startEdit,
     status,
   } = chat;
+  const editingMessageIndex = editing
+    ? chat.messages.findIndex((message) => message.id === editing.messageId)
+    : -1;
+
+  useEffect(() => {
+    if (editingMessageIndex < 0) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      listRef.current
+        ?.scrollToIndex({
+          animated: true,
+          index: editingMessageIndex,
+          viewOffset: LATEST_USER_TOP_OFFSET,
+          viewPosition: 0,
+        })
+        .catch(() => undefined);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [editingMessageIndex]);
 
   const latestAnswer = chat.messages.find(
     (message, index) => index > lastUserIndex && message.role === "assistant"

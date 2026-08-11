@@ -1278,11 +1278,20 @@ describe("ChatPanel", () => {
     expect(userBubbles).toHaveLength(2);
 
     await user.type(screen.getByLabelText(chatLabels.input), "쓰다 만 초안");
+    mockScrollToIndex.mockClear();
     fireEvent(userBubbles[0] as never, "longPress");
     await user.press(await screen.findByLabelText(chatLabels.editMessage));
 
     const inlineInput = screen.getByLabelText(chatLabels.editInput);
 
+    await waitFor(() => {
+      expect(mockScrollToIndex).toHaveBeenCalledWith({
+        animated: true,
+        index: 0,
+        viewOffset: 16,
+        viewPosition: 0,
+      });
+    });
     expect(inlineInput).toHaveDisplayValue("첫 질문");
     expect(inlineInput.props.autoFocus).toBe(true);
     expect(screen.getByText("답변 1")).toBeOnTheScreen();
