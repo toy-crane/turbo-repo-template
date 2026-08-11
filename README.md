@@ -371,12 +371,14 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 
 - 입력과 전송: `chat-input`, `chat-send`, `chat-stop`
 - 목록과 상태: `chat-list`, `chat-scroll-to-latest`, `chat-generating`, `chat-error`
-- 메시지: `chat-message-user`, `chat-message-assistant`, `chat-copy-<메시지 id>`
-- 메시지 작업: `chat-edit-resend`, `chat-editing`, `chat-cancel-edit`, `chat-regenerate`
+- 메시지: `chat-user-message-<메시지 id>`, `chat-message-assistant`, `chat-copy-<메시지 id>`
+- 사용자 메시지 메뉴: `chat-user-menu`, `chat-user-menu-overlay`, `chat-user-copy-<메시지 id>`, `chat-user-edit-<메시지 id>`
+- 인라인 편집: `chat-inline-editor-<메시지 id>`, `chat-inline-edit-input-<메시지 id>`, `chat-inline-edit-cancel-<메시지 id>`, `chat-inline-edit-send-<메시지 id>`
+- AI 답변 작업: `chat-regenerate`
 - 본문: `chat-markdown`, `chat-markdown-table`, `chat-code-copy`
 - part: `chat-part-file`, `chat-part-source-url`, `chat-part-source-document`, `chat-part-tool-<도구 이름>`, `chat-part-unsupported-<메시지 id>`
 
-메시지 `testID`는 말풍선이 아니라 본문을 감싼 영역에 붙어 있습니다. AI 답변은 Markdown으로 그리므로 `get text`가 글자 그대로를 돌려주지는 않습니다. 답변 내용을 확인할 때는 `chat-markdown` 안의 글자를 봅니다.
+사용자 메시지의 `chat-user-message-<메시지 id>`는 말풍선에 붙어 있습니다. AI 답변의 `chat-message-assistant`는 본문을 감싼 영역에 붙어 있습니다. AI 답변은 Markdown으로 그리므로 `get text`가 글자 그대로를 돌려주지는 않습니다. 답변 내용을 확인할 때는 `chat-markdown` 안의 글자를 봅니다.
 대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 새 대화를 열어 한 건만 보냅니다.
 
 Google과 Apple 버튼은 각 제공자가 그리는 네이티브 버튼이지만, 위 표의 이름은 앱이 버튼
