@@ -10,7 +10,8 @@ import {
 import type { UIMessageChunk } from "ai";
 import { simulateReadableStream } from "ai";
 import { setStringAsync } from "expo-clipboard";
-import { AccessibilityInfo, StyleSheet } from "react-native";
+import { impactAsync, notificationAsync } from "expo-haptics";
+import { AccessibilityInfo, BackHandler, StyleSheet } from "react-native";
 
 import { createChatTransport } from "@/features/chat/api/chat-transport";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
@@ -21,6 +22,140 @@ import { ChatPanel, chatLabels } from "./chat-panel";
 jest.mock("@/features/chat/api/chat-transport", () => ({
   createChatTransport: jest.fn(),
 }));
+
+// HeroUI Menu positions its real portal by calling the native trigger's
+// `measure`. Jest host refs do not run the measure callback, so this small
+// stand-in keeps the public compound API and close behavior while device tests
+// cover the library's real positioning and collision code.
+jest.mock("heroui-native/menu", () => {
+  const React = require("react") as typeof import("react");
+  const {
+    BackHandler: NativeBackHandler,
+    Pressable,
+    Text,
+    View,
+  } = require("react-native") as typeof import("react-native");
+  const MenuContext = React.createContext<
+    { isOpen: boolean; onOpenChange: (open: boolean) => void } | undefined
+  >(undefined);
+  const useMenuContext = () => {
+    const value = React.useContext(MenuContext);
+
+    if (!value) {
+      throw new Error("Menu mock must be used inside Menu");
+    }
+
+    return value;
+  };
+  const Root = ({
+    children,
+    isOpen = false,
+    onOpenChange = () => undefined,
+  }: {
+    children?: React.ReactNode;
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
+  }) =>
+    React.createElement(
+      MenuContext.Provider,
+      { value: { isOpen, onOpenChange } },
+      children
+    );
+  const Trigger = React.forwardRef(
+    (
+      { children }: { asChild?: boolean; children?: React.ReactNode },
+      ref: React.ForwardedRef<{ close: () => void; open: () => void }>
+    ) => {
+      const { onOpenChange } = useMenuContext();
+
+      React.useImperativeHandle(ref, () => ({
+        close: () => onOpenChange(false),
+        open: () => onOpenChange(true),
+      }));
+
+      return React.createElement(View, null, children);
+    }
+  );
+  const Portal = ({ children }: { children?: React.ReactNode }) => {
+    const { isOpen } = useMenuContext();
+
+    return isOpen ? React.createElement(React.Fragment, null, children) : null;
+  };
+  const Overlay = React.forwardRef(
+    (
+      props: { closeOnPress?: boolean; onPress?: () => void; testID?: string },
+      ref: React.ForwardedRef<React.ComponentRef<typeof Pressable>>
+    ) => {
+      const { onOpenChange } = useMenuContext();
+
+      return React.createElement(Pressable, {
+        ...props,
+        onPress: () => {
+          if (props.closeOnPress !== false) {
+            onOpenChange(false);
+          }
+          props.onPress?.();
+        },
+        ref,
+      });
+    }
+  );
+  const Content = React.forwardRef(
+    (
+      props: React.ComponentProps<typeof View> & { presentation?: string },
+      ref: React.ForwardedRef<React.ComponentRef<typeof View>>
+    ) => {
+      const { onOpenChange } = useMenuContext();
+
+      React.useEffect(() => {
+        const subscription = NativeBackHandler.addEventListener(
+          "hardwareBackPress",
+          () => {
+            onOpenChange(false);
+            return true;
+          }
+        );
+
+        return () => subscription.remove();
+      }, [onOpenChange]);
+
+      return React.createElement(View, { ...props, ref });
+    }
+  );
+  const Item = React.forwardRef(
+    (
+      props: React.ComponentProps<typeof Pressable> & { isDisabled?: boolean },
+      ref: React.ForwardedRef<React.ComponentRef<typeof Pressable>>
+    ) => {
+      const { onOpenChange } = useMenuContext();
+
+      return React.createElement(Pressable, {
+        ...props,
+        accessibilityRole: "menuitem",
+        accessibilityState: { disabled: props.isDisabled ?? false },
+        disabled: props.isDisabled,
+        onPress: (event) => {
+          props.onPress?.(event);
+          onOpenChange(false);
+        },
+        ref,
+      });
+    }
+  );
+  const ItemTitle = (props: React.ComponentProps<typeof Text>) =>
+    React.createElement(Text, props);
+
+  return {
+    Menu: Object.assign(Root, {
+      Content,
+      Item,
+      ItemTitle,
+      Overlay,
+      Portal,
+      Trigger,
+    }),
+  };
+});
 
 /**
  * The virtual list never becomes interactive under Jest: its containers wait
@@ -193,6 +328,7 @@ const mockCreateChatTransport = jest.mocked(createChatTransport);
 const ACCESS_TOKEN = "test-access-token";
 
 const PART_MARKER_PATTERN = /^chat-(part|message)-/;
+const USER_MESSAGE_TEST_ID = /^chat-user-message-/;
 
 function answerStream(text: string[]): ReadableStream<UIMessageChunk> {
   const chunks: UIMessageChunk[] = [
@@ -266,6 +402,7 @@ function renderChat(accessToken: string | undefined) {
 describe("ChatPanel", () => {
   afterEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
     mockPartRenderCounts.clear();
     mockListProps.onEndReached = undefined;
     mockListProps.onScrollBeginDrag = undefined;
@@ -346,7 +483,9 @@ describe("ChatPanel", () => {
       expect(screen.getByText("안녕")).toBeOnTheScreen();
     });
     expect(screen.getByLabelText(chatLabels.retry)).toBeEnabled();
-    expect(screen.getAllByLabelText(chatLabels.copyMessage)).toHaveLength(1);
+    expect(
+      screen.queryByLabelText(chatLabels.copyMessage)
+    ).not.toBeOnTheScreen();
     expect(
       screen.queryByLabelText(chatLabels.regenerate)
     ).not.toBeOnTheScreen();
@@ -380,7 +519,9 @@ describe("ChatPanel", () => {
 
     expect(screen.getByText("남은 일부 답변")).toBeOnTheScreen();
     expect(screen.getByLabelText(chatLabels.retry)).toBeEnabled();
-    expect(screen.getAllByLabelText(chatLabels.copyMessage)).toHaveLength(1);
+    expect(
+      screen.queryByLabelText(chatLabels.copyMessage)
+    ).not.toBeOnTheScreen();
     expect(
       screen.queryByLabelText(chatLabels.regenerate)
     ).not.toBeOnTheScreen();
@@ -743,7 +884,7 @@ describe("ChatPanel", () => {
         includeHiddenElements: true,
       })
     ).not.toBeOnTheScreen();
-    expect(screen.getAllByLabelText(chatLabels.copyMessage)).toHaveLength(2);
+    expect(screen.getAllByLabelText(chatLabels.copyMessage)).toHaveLength(1);
     expect(screen.getByLabelText(chatLabels.regenerate)).toBeEnabled();
   });
 
@@ -851,14 +992,16 @@ describe("ChatPanel", () => {
     ]);
   });
 
-  test("모든 메시지를 복사할 수 있고 복사됨 피드백이 보인다", async () => {
+  test("AI 복사는 같은 크기의 체크 아이콘으로 2초 동안 바뀐다", async () => {
+    jest.useFakeTimers();
+
     const transport = fakeTransport(() =>
       Promise.resolve(answerStream(["복사할 답변"]))
     );
 
     useTransport(transport);
 
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
 
     await renderChat(ACCESS_TOKEN);
 
@@ -869,17 +1012,146 @@ describe("ChatPanel", () => {
       expect(screen.getByText("복사할 답변")).toBeOnTheScreen();
     });
 
-    const copyButtons = screen.getAllByLabelText(chatLabels.copyMessage);
+    const copyButton = screen.getByLabelText(chatLabels.copyMessage);
 
-    // 사용자 메시지와 AI 답변 둘 다 복사 버튼이 있다.
-    expect(copyButtons).toHaveLength(2);
+    expect(copyButton.props.className).toContain("h-11 w-11");
+    expect(screen.getByTestId("chat-ai-copy-icon").props.size).toBe(20);
 
-    await user.press(copyButtons[1] as never);
+    await user.press(copyButton);
 
     expect(jest.mocked(setStringAsync)).toHaveBeenCalledWith("복사할 답변");
     await waitFor(() => {
-      expect(screen.getByText("복사됨")).toBeOnTheScreen();
+      expect(screen.getByLabelText(chatLabels.copied)).toBeOnTheScreen();
     });
+
+    expect(screen.getByTestId("chat-ai-copy-check").props.size).toBe(20);
+    expect(screen.queryByText(chatLabels.copied)).not.toBeOnTheScreen();
+
+    await act(() => jest.advanceTimersByTime(1999));
+    expect(screen.getByLabelText(chatLabels.copied)).toBeOnTheScreen();
+
+    await act(() => jest.advanceTimersByTime(1));
+    expect(screen.getByLabelText(chatLabels.copyMessage)).toBeOnTheScreen();
+  });
+
+  test("사용자 말풍선은 짧게 누르면 그대로이고 길게 누르면 닫을 수 있는 메뉴를 연다", async () => {
+    const transport = fakeTransport(() =>
+      Promise.resolve(answerStream(["AI 답변"]))
+    );
+    const addBackHandler = jest.spyOn(BackHandler, "addEventListener");
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+    await user.type(screen.getByLabelText(chatLabels.input), "사용자 질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+    await waitFor(() => expect(screen.getByText("AI 답변")).toBeOnTheScreen());
+
+    const userBubble = screen.getByTestId(USER_MESSAGE_TEST_ID);
+
+    fireEvent.press(userBubble);
+    expect(
+      screen.queryByText(chatLabels.copyUserMessage)
+    ).not.toBeOnTheScreen();
+    expect(jest.mocked(impactAsync)).not.toHaveBeenCalled();
+
+    fireEvent(userBubble, "longPress");
+
+    await waitFor(() => {
+      expect(screen.getByText(chatLabels.copyUserMessage)).toBeOnTheScreen();
+      expect(screen.getByText(chatLabels.editMessage)).toBeOnTheScreen();
+    });
+    expect(jest.mocked(impactAsync)).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("chat-user-menu").props.avoidCollisions).toBe(
+      true
+    );
+
+    await act(() => {
+      fireEvent.press(screen.getByTestId("chat-user-menu-overlay"));
+    });
+    await waitFor(() =>
+      expect(
+        screen.queryByText(chatLabels.copyUserMessage)
+      ).not.toBeOnTheScreen()
+    );
+
+    fireEvent(userBubble, "longPress");
+    await waitFor(() =>
+      expect(screen.getByText(chatLabels.copyUserMessage)).toBeOnTheScreen()
+    );
+
+    const backPress = [...addBackHandler.mock.calls]
+      .reverse()
+      .find(([event]) => event === "hardwareBackPress")?.[1];
+
+    expect(backPress).toBeDefined();
+    await act(() => backPress?.({} as never));
+    await waitFor(() =>
+      expect(
+        screen.queryByText(chatLabels.copyUserMessage)
+      ).not.toBeOnTheScreen()
+    );
+
+    fireEvent(screen.getByTestId("chat-message-assistant"), "longPress");
+    expect(
+      screen.queryByText(chatLabels.copyUserMessage)
+    ).not.toBeOnTheScreen();
+
+    addBackHandler.mockRestore();
+  });
+
+  test("생성 중 사용자 메뉴는 복사와 접근성 복사는 허용하고 수정은 막는다", async () => {
+    const answer = controlledStream();
+    const transport = fakeTransport(() => Promise.resolve(answer.stream));
+    const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+
+    useTransport(transport);
+
+    const user = userEvent.setup();
+
+    await renderChat(ACCESS_TOKEN);
+    await user.type(screen.getByLabelText(chatLabels.input), "복사할 질문");
+    await user.press(screen.getByLabelText(chatLabels.send));
+    await waitFor(() =>
+      expect(screen.getByTestId(USER_MESSAGE_TEST_ID)).toBeOnTheScreen()
+    );
+
+    const userBubble = screen.getByTestId(USER_MESSAGE_TEST_ID);
+
+    fireEvent(userBubble, "longPress");
+    await waitFor(() =>
+      expect(screen.getByText(chatLabels.copyUserMessage)).toBeOnTheScreen()
+    );
+
+    expect(screen.getByLabelText(chatLabels.copyUserMessage)).toBeEnabled();
+    expect(screen.getByLabelText(chatLabels.editMessage)).toBeDisabled();
+
+    await user.press(screen.getByLabelText(chatLabels.copyUserMessage));
+
+    expect(jest.mocked(setStringAsync)).toHaveBeenCalledWith("복사할 질문");
+    await waitFor(() => {
+      expect(jest.mocked(notificationAsync)).toHaveBeenCalledWith("success");
+      expect(announce).toHaveBeenCalledWith(chatLabels.copied);
+    });
+    expect(
+      screen.queryByText(chatLabels.copyUserMessage)
+    ).not.toBeOnTheScreen();
+
+    fireEvent(userBubble, "accessibilityAction", {
+      nativeEvent: { actionName: "copy" },
+    });
+    await waitFor(() =>
+      expect(jest.mocked(setStringAsync)).toHaveBeenCalledTimes(2)
+    );
+
+    fireEvent(userBubble, "accessibilityAction", {
+      nativeEvent: { actionName: "edit" },
+    });
+    expect(screen.queryByLabelText(chatLabels.editInput)).not.toBeOnTheScreen();
+
+    announce.mockRestore();
   });
 
   test("입력창에서 return 키로도 보낸다", async () => {
@@ -964,7 +1236,7 @@ describe("ChatPanel", () => {
     expect(mockListProps.keyboardShouldPersistTaps).toBe("handled");
   });
 
-  test("마지막 사용자 메시지에만 편집이 보이고 취소하면 초안이 복원된다", async () => {
+  test("과거 사용자 메시지를 그 자리에서 취소하거나 고쳐 보낸다", async () => {
     let attempt = 0;
     const transport = fakeTransport(() => {
       attempt += 1;
@@ -992,24 +1264,54 @@ describe("ChatPanel", () => {
       expect(screen.getByText("답변 2")).toBeOnTheScreen();
     });
 
-    // 사용자 메시지가 둘이어도 편집 버튼은 하나뿐이다.
-    expect(screen.getAllByLabelText(chatLabels.editResend)).toHaveLength(1);
+    const userBubbles = screen.getAllByTestId(USER_MESSAGE_TEST_ID);
 
-    // 쓰다 만 초안이 있는 채로 편집을 시작하면 원문이 입력창을 채운다.
+    expect(userBubbles).toHaveLength(2);
+
     await user.type(screen.getByLabelText(chatLabels.input), "쓰다 만 초안");
-    await user.press(screen.getByLabelText(chatLabels.editResend));
+    fireEvent(userBubbles[0] as never, "longPress");
+    await user.press(await screen.findByLabelText(chatLabels.editMessage));
 
-    expect(screen.getByTestId("chat-editing")).toBeOnTheScreen();
-    expect(screen.getByLabelText(chatLabels.input)).toHaveDisplayValue(
-      "둘째 질문"
-    );
+    const inlineInput = screen.getByLabelText(chatLabels.editInput);
 
-    await user.press(screen.getByLabelText(chatLabels.cancelEdit));
-
-    expect(screen.queryByTestId("chat-editing")).not.toBeOnTheScreen();
+    expect(inlineInput).toHaveDisplayValue("첫 질문");
+    expect(inlineInput.props.autoFocus).toBe(true);
+    expect(screen.getByText("답변 1")).toBeOnTheScreen();
+    expect(screen.getByText("둘째 질문")).toBeOnTheScreen();
+    expect(screen.getByText("답변 2")).toBeOnTheScreen();
     expect(screen.getByLabelText(chatLabels.input)).toHaveDisplayValue(
       "쓰다 만 초안"
     );
+    expect(screen.getByLabelText(chatLabels.input).props.editable).toBe(false);
+    expect(screen.getByLabelText(chatLabels.send)).toBeDisabled();
+    expect(screen.queryByText("메시지를 고치는 중")).not.toBeOnTheScreen();
+
+    await user.press(screen.getByLabelText(chatLabels.cancelEdit));
+
+    expect(screen.queryByLabelText(chatLabels.editInput)).not.toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.input)).toHaveDisplayValue(
+      "쓰다 만 초안"
+    );
+    expect(screen.getByText("첫 질문")).toBeOnTheScreen();
+    expect(screen.getByText("답변 2")).toBeOnTheScreen();
+
+    const [restoredFirstBubble] = screen.getAllByTestId(USER_MESSAGE_TEST_ID);
+
+    fireEvent(restoredFirstBubble as never, "accessibilityAction", {
+      nativeEvent: { actionName: "edit" },
+    });
+
+    const reopenedInput = await screen.findByLabelText(chatLabels.editInput);
+
+    await user.clear(reopenedInput);
+    await user.type(reopenedInput, "고친 첫 질문");
+    await user.press(screen.getByLabelText(chatLabels.sendEdit));
+
+    await waitFor(() => expect(screen.getByText("답변 3")).toBeOnTheScreen());
+    expect(screen.getByText("고친 첫 질문")).toBeOnTheScreen();
+    expect(screen.queryByText("둘째 질문")).not.toBeOnTheScreen();
+    expect(screen.queryByText("답변 2")).not.toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.input).props.editable).toBe(true);
   });
 
   test("마지막 AI 답변에만 다시 생성이 보이고 누르면 재요청한다", async () => {
@@ -1045,7 +1347,7 @@ describe("ChatPanel", () => {
     expect(screen.queryByText("답변 1")).not.toBeOnTheScreen();
   });
 
-  test("생성 중에는 편집과 다시 생성이 비활성이다", async () => {
+  test("생성 중에는 다시 생성이 비활성이다", async () => {
     const answer = controlledStream();
     const transport = fakeTransport(() => Promise.resolve(answer.stream));
 
@@ -1066,7 +1368,6 @@ describe("ChatPanel", () => {
       expect(screen.getByText("진행 중")).toBeOnTheScreen();
     });
 
-    expect(screen.getByLabelText(chatLabels.editResend)).toBeDisabled();
     expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
 
     answer.push({ id: "0", type: "text-end" });

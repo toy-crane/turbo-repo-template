@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react-native";
+import { PortalHost } from "heroui-native/portal";
 import { HeroUINativeProviderRaw } from "heroui-native/provider-raw";
 import type { ReactElement } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -44,6 +45,7 @@ function withProviders(element: ReactElement) {
       <SafeAreaProvider initialMetrics={testSafeAreaMetrics}>
         <HeroUINativeProviderRaw config={{ animation: "disable-all" }}>
           {element}
+          <PortalHost />
         </HeroUINativeProviderRaw>
       </SafeAreaProvider>
     </QueryProvider>

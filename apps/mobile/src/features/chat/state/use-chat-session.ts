@@ -21,13 +21,15 @@ function textOfMessage(message: UIMessage): string {
 }
 
 export interface ChatSession {
-  /** Leaves editing and puts the pre-edit draft back. */
+  /** Leaves inline editing without changing the conversation. */
   cancelEdit: () => void;
   /** False while there is no token to send, so a retry cannot go out naked. */
   canRetry: boolean;
+  /** Sends the inline edit after replacing the selected conversation tail. */
+  confirmEdit: () => void;
   draft: string;
-  /** True while the composer holds the last user message for rewriting. */
-  editing: boolean;
+  /** The inline editor. Its draft never shares state with the composer. */
+  editing: { draft: string; messageId: string } | undefined;
   error: Error | undefined;
   isBusy: boolean;
   messages: UIMessage[];
@@ -36,8 +38,9 @@ export interface ChatSession {
   retry: () => void;
   send: () => void;
   setDraft: (value: string) => void;
-  /** Puts the last user message into the composer for editing. */
-  startEdit: () => void;
+  setEditDraft: (value: string) => void;
+  /** Opens the selected user message in its own inline editor. */
+  startEdit: (messageId: string) => void;
   /** The AI SDK's own request state: submitted, streaming, ready or error. */
   status: ChatStatus;
   /** Stops the current generation and keeps whatever has arrived so far. */
@@ -53,7 +56,7 @@ export interface ChatSession {
  */
 export function useChatSession(accessToken: string | undefined): ChatSession {
   const [draft, setDraft] = useState("");
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<ChatSession["editing"]>(undefined);
   const [stopRequested, setStopRequested] = useState(false);
   const stopRequestedRef = useRef(false);
 
@@ -62,9 +65,6 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   const [requestError, setRequestError] = useState<Error | undefined>(
     undefined
   );
-
-  // What the person had typed before pressing edit, so cancel can restore it.
-  const draftBeforeEdit = useRef("");
 
   // The transport reads this on every send, so it has to see the token the app
   // holds now rather than the one captured when the screen mounted.
@@ -122,11 +122,9 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   // would leave every row holding a stale one — the draft cannot go into
   // `extraData` without re-rendering the whole conversation on each keystroke.
   const messagesRef = useRef(messages);
-  const draftRef = useRef(draft);
   const editingRef = useRef(editing);
 
   messagesRef.current = messages;
-  draftRef.current = draft;
   editingRef.current = editing;
 
   /**
@@ -171,30 +169,16 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
 
     // No token means no request. Getting the person to a sign-in screen is the
     // auth implementation's job, not this one's.
-    if (!(text && currentToken.current) || isBusy) {
+    if (!(text && currentToken.current) || isBusy || editingRef.current) {
       return;
     }
 
     run("send", () => {
       setDraft("");
 
-      // Confirming an edit replaces the last user message: everything from
-      // that message on is dropped, and the rewritten text goes out as the
-      // new tail. One conversation, no leftover branch.
-      if (editing) {
-        setEditing(false);
-        setMessages((current) => {
-          const lastUserIndex = current.findLastIndex(
-            (message) => message.role === "user"
-          );
-
-          return lastUserIndex < 0 ? current : current.slice(0, lastUserIndex);
-        });
-      }
-
       return sendMessage({ text });
     });
-  }, [draft, editing, isBusy, run, sendMessage, setMessages]);
+  }, [draft, isBusy, run, sendMessage]);
 
   const retry = useCallback(() => {
     // The same check `send` makes. Without it a retry pressed after the session
@@ -223,32 +207,64 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     stopChat();
   }, [isBusy, stopChat]);
 
-  // A message row holds this one, so it reads the draft and the edit flag at
-  // press time instead of depending on them. `isBusy` may stay a dependency:
-  // it is in the list's `extraData`, so rows do get a fresh copy when it
-  // changes.
-  const startEdit = useCallback(() => {
-    const lastUser = messagesRef.current.findLast(
-      (message) => message.role === "user"
+  // Rows keep this callback while the virtual list caches them, so every value
+  // that can change between presses is read through a ref.
+  const startEdit = useCallback(
+    (messageId: string) => {
+      const selected = messagesRef.current.find(
+        (message) => message.id === messageId && message.role === "user"
+      );
+
+      if (!selected || isBusy || editingRef.current) {
+        return;
+      }
+
+      setEditing({ draft: textOfMessage(selected), messageId });
+    },
+    [isBusy]
+  );
+
+  const setEditDraft = useCallback((value: string) => {
+    setEditing((current) =>
+      current ? { ...current, draft: value } : undefined
     );
-
-    if (!lastUser || isBusy || editingRef.current) {
-      return;
-    }
-
-    draftBeforeEdit.current = draftRef.current;
-    setDraft(textOfMessage(lastUser));
-    setEditing(true);
-  }, [isBusy]);
+  }, []);
 
   const cancelEdit = useCallback(() => {
-    if (!editing) {
+    setEditing(undefined);
+  }, []);
+
+  const confirmEdit = useCallback(() => {
+    const currentEdit = editingRef.current;
+    const text = currentEdit?.draft.trim() ?? "";
+
+    if (!(currentEdit && text && currentToken.current) || isBusy) {
       return;
     }
 
-    setEditing(false);
-    setDraft(draftBeforeEdit.current);
-  }, [editing]);
+    const selectedIndex = messagesRef.current.findIndex(
+      (message) =>
+        message.id === currentEdit.messageId && message.role === "user"
+    );
+
+    if (selectedIndex < 0) {
+      return;
+    }
+
+    run("send", () => {
+      setEditing(undefined);
+      setMessages((current) => {
+        const index = current.findIndex(
+          (message) =>
+            message.id === currentEdit.messageId && message.role === "user"
+        );
+
+        return index < 0 ? current : current.slice(0, index);
+      });
+
+      return sendMessage({ text });
+    });
+  }, [isBusy, run, sendMessage, setMessages]);
 
   const regenerateLast = useCallback(() => {
     // `ready` only: an error retry is the retry button's job, and a running
@@ -284,6 +300,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   return {
     cancelEdit,
     canRetry: !(isBusy || accessToken === undefined),
+    confirmEdit,
     draft,
     editing,
     error: stopRequested ? undefined : (error ?? requestError),
@@ -293,6 +310,7 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
     retry,
     send,
     setDraft,
+    setEditDraft,
     startEdit,
     status: stopRequested && sdkIsBusy ? "ready" : status,
     stop,

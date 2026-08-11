@@ -45,6 +45,7 @@ function controlledStream() {
   });
 
   return {
+    close: () => controller?.close(),
     fail: (cause: Error) => controller?.error(cause),
     push: (chunk: UIMessageChunk) => controller?.enqueue(chunk),
     stream,
@@ -107,19 +108,26 @@ describe("useChatSession 편집 후 다시 보내기", () => {
       expect(result.current.status).toBe("ready");
     });
 
-    // 편집을 시작하면 입력창에 원문이 채워진다.
+    const firstMessageId = result.current.messages[0]?.id;
+
+    expect(firstMessageId).toBeDefined();
+
+    // 편집을 시작하면 하단 초안과 별개인 편집 초안에 원문이 들어간다.
     await act(() => {
-      result.current.startEdit();
+      result.current.startEdit(firstMessageId as string);
     });
 
-    expect(result.current.editing).toBe(true);
-    expect(result.current.draft).toBe("첫 질문");
+    expect(result.current.editing).toEqual({
+      draft: "첫 질문",
+      messageId: firstMessageId,
+    });
+    expect(result.current.draft).toBe("");
 
     await act(() => {
-      result.current.setDraft("고친 질문");
+      result.current.setEditDraft("고친 질문");
     });
     await act(() => {
-      result.current.send();
+      result.current.confirmEdit();
     });
 
     await waitFor(() => {
@@ -137,7 +145,7 @@ describe("useChatSession 편집 후 다시 보내기", () => {
     expect(resent).toHaveLength(1);
 
     await waitFor(() => {
-      expect(result.current.editing).toBe(false);
+      expect(result.current.editing).toBeUndefined();
     });
   });
 
@@ -157,22 +165,28 @@ describe("useChatSession 편집 후 다시 보내기", () => {
       expect(result.current.status).toBe("ready");
     });
 
-    // 쓰다 만 초안이 있는 상태에서 편집을 시작한다.
+    const messageId = result.current.messages[0]?.id;
+
+    expect(messageId).toBeDefined();
+
+    // 쓰다 만 하단 초안이 있어도 편집 초안은 별도로 가진다.
     await act(() => {
       result.current.setDraft("쓰다 만 초안");
     });
     await act(() => {
-      result.current.startEdit();
+      result.current.startEdit(messageId as string);
     });
 
-    expect(result.current.draft).toBe("첫 질문");
+    expect(result.current.editing?.draft).toBe("첫 질문");
+    expect(result.current.draft).toBe("쓰다 만 초안");
 
     await act(() => {
       result.current.cancelEdit();
     });
 
-    expect(result.current.editing).toBe(false);
+    expect(result.current.editing).toBeUndefined();
     expect(result.current.draft).toBe("쓰다 만 초안");
+    expect(result.current.messages.map(textOf)).toEqual(["첫 질문", "첫 답변"]);
   });
 
   test("다시 생성은 ready에서만 정확히 한 번 재요청한다", async () => {
@@ -358,7 +372,7 @@ describe("useChatSession 편집 후 다시 보내기", () => {
     expect(result.current.messages.map(textOf)).toContain("일부 답변");
   });
 
-  test("여러 턴이 쌓인 뒤 편집해도 이전 대화는 남고 마지막 턴만 교체된다", async () => {
+  test("과거 메시지는 확정하기 전까지 이후 대화를 유지하고 확정할 때만 잘라 낸다", async () => {
     let attempt = 0;
     const transport = fakeTransport(() => {
       attempt += 1;
@@ -382,25 +396,96 @@ describe("useChatSession 편집 후 다시 보내기", () => {
     await ask("첫 질문");
     await ask("둘째 질문");
 
+    const firstMessageId = result.current.messages[0]?.id;
+
+    expect(firstMessageId).toBeDefined();
+
     await act(() => {
-      result.current.startEdit();
+      result.current.startEdit(firstMessageId as string);
     });
     await act(() => {
-      result.current.setDraft("고친 둘째 질문");
+      result.current.setEditDraft("고친 첫 질문");
     });
+
+    // 입력하고 있는 동안에는 과거 답변과 둘째 턴을 그대로 보여준다.
+    expect(result.current.messages.map(textOf)).toEqual([
+      "첫 질문",
+      "답변 1",
+      "둘째 질문",
+      "답변 2",
+    ]);
+
     await act(() => {
-      result.current.send();
+      result.current.confirmEdit();
     });
     await waitFor(() => {
       expect(transport.sendMessages).toHaveBeenCalledTimes(3);
     });
 
-    // 첫 턴은 그대로 남고 마지막 사용자 메시지만 교체된다. 목록을 통째로
-    // 비우면 모델은 방금 시작한 대화처럼 답한다.
-    expect(sentMessages(transport, 2).map(textOf)).toEqual([
-      "첫 질문",
-      "답변 1",
-      "고친 둘째 질문",
-    ]);
+    expect(sentMessages(transport, 2).map(textOf)).toEqual(["고친 첫 질문"]);
+  });
+
+  test("공백뿐인 편집 초안은 보내지 않고 편집과 이후 대화를 유지한다", async () => {
+    const transport = fakeTransport(() =>
+      Promise.resolve(answerStream("답변"))
+    );
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => result.current.setDraft("질문"));
+    await act(() => result.current.send());
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+
+    const messageId = result.current.messages[0]?.id;
+
+    expect(messageId).toBeDefined();
+
+    await act(() => result.current.startEdit(messageId as string));
+    await act(() => result.current.setEditDraft("   "));
+    await act(() => result.current.confirmEdit());
+
+    expect(transport.sendMessages).toHaveBeenCalledTimes(1);
+    expect(result.current.editing).toEqual({
+      draft: "   ",
+      messageId,
+    });
+    expect(result.current.messages.map(textOf)).toEqual(["질문", "답변"]);
+  });
+
+  test("생성 중에는 다른 사용자 메시지 편집을 시작하거나 확정하지 않는다", async () => {
+    const answer = controlledStream();
+    let attempt = 0;
+    fakeTransport(() => {
+      attempt += 1;
+
+      return Promise.resolve(
+        attempt === 1 ? answerStream("첫 답변") : answer.stream
+      );
+    });
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await act(() => result.current.setDraft("첫 질문"));
+    await act(() => result.current.send());
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+
+    const firstMessageId = result.current.messages[0]?.id;
+
+    await act(() => result.current.startEdit(firstMessageId as string));
+    await act(() => result.current.setEditDraft("고친 첫 질문"));
+    await act(() => result.current.cancelEdit());
+    await act(() => result.current.setDraft("둘째 질문"));
+    await act(() => result.current.send());
+    await waitFor(() => expect(result.current.isBusy).toBe(true));
+
+    await act(() => result.current.startEdit(firstMessageId as string));
+
+    expect(result.current.editing).toBeUndefined();
+
+    // 편집이 이미 열린 뒤 생성 상태가 바뀌는 방어도 확정 시점에 적용한다.
+    await act(() => answer.close());
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    await act(() => result.current.startEdit(firstMessageId as string));
+    await act(() => result.current.setEditDraft("고친 첫 질문"));
+
+    expect(result.current.editing?.draft).toBe("고친 첫 질문");
   });
 });

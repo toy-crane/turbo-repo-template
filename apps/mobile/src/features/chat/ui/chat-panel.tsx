@@ -254,7 +254,10 @@ function EmptyConversation({
 }
 
 function ChatListRow({
+  cancelEdit,
   canRetry,
+  confirmEdit,
+  editing,
   error,
   handleLatestUserLayout,
   isBusy,
@@ -265,11 +268,15 @@ function ChatListRow({
   minimumAnswerHeight,
   regenerateLast,
   retry,
+  setEditDraft,
   showAnswerState,
   startEdit,
   status,
 }: {
+  cancelEdit: ChatSession["cancelEdit"];
   canRetry: boolean;
+  confirmEdit: ChatSession["confirmEdit"];
+  editing: ChatSession["editing"];
   error: Error | undefined;
   handleLatestUserLayout: (event: LayoutChangeEvent) => void;
   isBusy: boolean;
@@ -280,6 +287,7 @@ function ChatListRow({
   minimumAnswerHeight: number;
   regenerateLast: () => void;
   retry: () => void;
+  setEditDraft: ChatSession["setEditDraft"];
   showAnswerState: boolean;
   startEdit: ChatSession["startEdit"];
   status: ChatSession["status"];
@@ -310,8 +318,10 @@ function ChatListRow({
 
   return (
     <MessageRow
-      editAction={item.id === lastUserId ? startEdit : undefined}
-      editDisabled={item.id === lastUserId ? isBusy : false}
+      cancelEdit={cancelEdit}
+      confirmEdit={confirmEdit}
+      editDisabled={isBusy}
+      editing={editing}
       errorAction={isLatestAnswer && error ? retry : undefined}
       errorDisabled={!canRetry}
       isStreaming={isLatestAnswer && isBusy}
@@ -324,6 +334,8 @@ function ChatListRow({
       regenerateDisabled={
         item.id === lastAssistantId ? status !== "ready" : false
       }
+      setEditDraft={setEditDraft}
+      startEdit={startEdit}
       testID={item.id === lastUserId ? "chat-latest-user-row" : undefined}
     />
   );
@@ -347,6 +359,8 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
 
   const listRef = useRef<LegendListRef | null>(null);
   const composerRef = useRef<View | null>(null);
+  const composerInputRef = useRef<TextInput | null>(null);
+  const focusComposerAfterEdit = useRef(false);
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze } = useKeyboardScrollToEnd({ listRef });
@@ -427,7 +441,25 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
   }, []);
   const handleEndReached = useCallback(() => setIsAtEnd(true), [setIsAtEnd]);
 
-  const canSend = chat.draft.trim().length > 0;
+  const canSend = chat.editing === undefined && chat.draft.trim().length > 0;
+
+  const confirmEdit = useCallback(() => {
+    if (!chat.editing) {
+      return;
+    }
+
+    focusComposerAfterEdit.current = true;
+    chat.confirmEdit();
+  }, [chat.confirmEdit, chat.editing]);
+
+  useEffect(() => {
+    if (chat.editing || !focusComposerAfterEdit.current) {
+      return;
+    }
+
+    focusComposerAfterEdit.current = false;
+    requestAnimationFrame(() => composerInputRef.current?.focus());
+  }, [chat.editing]);
 
   const handleListLayout = useCallback((event: LayoutChangeEvent) => {
     setListHeight(event.nativeEvent.layout.height);
@@ -462,9 +494,8 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
     }
   }, [spoken]);
 
-  // Only the last user message can be rewritten and only the last answer can
-  // be regenerated; every earlier message keeps constant props so its
-  // memoized row stays quiet.
+  // The last user row still owns the scroll anchor. Every user message may be
+  // edited, while only the last answer may be regenerated.
   const lastUserIndex = chat.messages.findLastIndex(
     (message) => message.role === "user"
   );
@@ -476,7 +507,15 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
     latestUserLayout && latestUserLayout.messageId === lastUserId
       ? latestUserLayout.height
       : 0;
-  const { isBusy, regenerateLast, startEdit, status } = chat;
+  const {
+    cancelEdit,
+    editing,
+    isBusy,
+    regenerateLast,
+    setEditDraft,
+    startEdit,
+    status,
+  } = chat;
 
   const latestAnswer = chat.messages.find(
     (message, index) => index > lastUserIndex && message.role === "assistant"
@@ -584,7 +623,10 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
   const renderMessage = useCallback(
     ({ item }: { item: ChatListItem }) => (
       <ChatListRow
+        cancelEdit={cancelEdit}
         canRetry={chat.canRetry}
+        confirmEdit={confirmEdit}
+        editing={editing}
         error={chat.error}
         handleLatestUserLayout={handleLatestUserLayout}
         isBusy={isBusy}
@@ -595,6 +637,7 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
         minimumAnswerHeight={minimumAnswerHeight}
         regenerateLast={regenerateLast}
         retry={chat.retry}
+        setEditDraft={setEditDraft}
         showAnswerState={showAnswerState}
         startEdit={startEdit}
         status={status}
@@ -602,8 +645,11 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
     ),
     [
       chat.canRetry,
+      cancelEdit,
       chat.error,
       chat.retry,
+      confirmEdit,
+      editing,
       handleLatestUserLayout,
       isBusy,
       lastAssistantId,
@@ -611,6 +657,7 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
       latestAnswer?.id,
       minimumAnswerHeight,
       regenerateLast,
+      setEditDraft,
       showAnswerState,
       startEdit,
       status,
@@ -624,6 +671,7 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
   const listExtraData = useMemo(
     () => ({
       canRetry: chat.canRetry,
+      editing,
       hasError: Boolean(chat.error),
       isBusy,
       lastAssistantId,
@@ -636,6 +684,7 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
     [
       chat.canRetry,
       chat.error,
+      editing,
       isBusy,
       lastAssistantId,
       lastUserId,
@@ -737,33 +786,16 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
           }}
           testID="chat-composer"
         >
-          {chat.editing ? (
-            <View
-              accessibilityLiveRegion="polite"
-              className="flex-row items-center justify-between"
-              testID="chat-editing"
-            >
-              <Text className="text-muted text-sm">메시지를 고치는 중</Text>
-              <Pressable
-                accessibilityLabel={chatLabels.cancelEdit}
-                accessibilityRole="button"
-                className="min-h-11 justify-center px-2"
-                onPress={chat.cancelEdit}
-                testID="chat-cancel-edit"
-              >
-                <Text className="text-link">편집 취소</Text>
-              </Pressable>
-            </View>
-          ) : null}
-
           <View className="flex-row items-end gap-2">
             <TextInput
               accessibilityLabel={chatLabels.input}
               className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
+              editable={chat.editing === undefined}
               multiline
               onChangeText={chat.setDraft}
               onSubmitEditing={chat.send}
               placeholder="무엇이든 물어보세요"
+              ref={composerInputRef}
               returnKeyType="send"
               style={{ maxHeight: INPUT_MAX_HEIGHT }}
               // Multiline is for growing with a long message, not for writing
