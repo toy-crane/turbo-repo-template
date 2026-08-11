@@ -1,9 +1,11 @@
 import { type ThemeColor, useThemeColor } from "heroui-native/hooks";
+import ArrowUp from "lucide-react-native/icons/arrow-up";
 import Bookmark from "lucide-react-native/icons/bookmark";
 import { View } from "react-native";
 
 const icons = {
   bookmark: Bookmark,
+  send: ArrowUp,
 } as const;
 
 const iconSizes = {
@@ -14,6 +16,7 @@ const iconSizes = {
 
 const iconTones = {
   accent: "accent",
+  accentForeground: "accent-foreground",
   default: "foreground",
   muted: "muted",
 } as const satisfies Record<string, ThemeColor>;

@@ -306,7 +306,8 @@ bun run auth:otp -- --email agent-20260809-01@example.test
    표시가 나오는지 확인합니다. **시작하기**를 누릅니다.
 8. 홈이 열렸는지 확인합니다.
 9. 앱을 다시 시작해 온보딩 없이 홈이 열리는지 확인합니다.
-10. Home에서 메시지를 보내고, 생성 중 표시와 답변이 차례로 나오는지 확인합니다.
+10. Home 헤더의 **새 대화**를 눌러 대화 화면을 열고, 일반 텍스트 메시지를 보내
+    일반 텍스트 답변이 차례로 나오는지 확인합니다. 뒤로 가기를 누르면 Home으로 돌아옵니다.
 11. 설정에서 로그아웃합니다.
 12. 로그인 화면으로 돌아왔는지 확인합니다.
 
@@ -342,10 +343,10 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 | `아이디 다시 확인하기` | 확인 요청이 실패했을 때 재시도 |
 | `시작하기` | 아이디 화면 버튼 |
 | `로그아웃` | 설정 화면 |
-| `메시지` | Home 채팅 입력 |
-| `보내기` | Home 채팅 전송 버튼 |
-| `답변을 만드는 중` | 답변 생성 중 표시 |
-| `다시 보내기` | 실패한 요청 재시도 버튼 |
+| `메시지` | 대화 화면 입력 |
+| `보내기` | 대화 화면 전송 버튼 |
+| `새 대화` | Home 헤더의 새 대화 버튼 |
+| `뒤로 가기` | 대화 화면 헤더의 뒤로 가기 버튼 |
 
 온보딩 화면의 요소에는 `testID`도 있습니다.
 `onboarding-nickname`, `onboarding-username`, `onboarding-username-checking`,
@@ -353,10 +354,14 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 `onboarding-username-retry`, `onboarding-error-nickname`, `onboarding-error-username`입니다.
 후보 버튼은 세 개가 같은 `testID`를 쓰고, 접근성 이름은 후보 값 자체입니다.
 
-채팅 화면의 요소에는 `testID`도 있습니다.
-`chat-input`, `chat-send`, `chat-generating`, `chat-error`, `chat-message-user`, `chat-message-assistant`입니다.
-메시지 `testID`는 말풍선이 아니라 글자에 붙어 있어서 `get text`가 답변 자체를 돌려줍니다.
-대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 앱을 다시 시작해 대화를 비우고 한 건만 보냅니다.
+대화 화면의 요소에는 `testID`도 있습니다.
+
+- 입력과 전송: `chat-input`, `chat-send`
+- 목록과 오류: `chat-list`, `chat-error`
+- 메시지: `chat-message-user`, `chat-message-assistant`
+
+메시지 `testID`는 말풍선이 아니라 일반 텍스트 본문에 붙어 있습니다.
+대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 새 대화를 열어 한 건만 보냅니다.
 
 Google과 Apple 버튼은 각 제공자가 그리는 네이티브 버튼이지만, 위 표의 이름은 앱이 버튼
 자체에 붙입니다. Apple 버튼에서는 이 이름이 Apple이 정한 현지화 이름을 대신합니다.

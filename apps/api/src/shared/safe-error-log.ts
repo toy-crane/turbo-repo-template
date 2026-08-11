@@ -17,3 +17,12 @@ export function logRequestFailure(
     error instanceof Error ? `${error.name}: ${error.message}` : "unknown error"
   );
 }
+
+/**
+ * An abort is the client hanging up, not a failure, so it goes to the plain
+ * log. Method and path only: the abort event carries the finished steps, and
+ * printing those would put the person's conversation into the server log.
+ */
+export function logRequestAbort(method: string, path: string): void {
+  console.log("Request aborted on", method, path);
+}

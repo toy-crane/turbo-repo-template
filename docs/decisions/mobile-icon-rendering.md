@@ -7,6 +7,7 @@
 - React Native UI는 `lucide-react-native`를 감싼 프로젝트 공통 `Icon`을 사용한다. iOS와 Android에서 같은 의미에 같은 SVG 실루엣을 렌더링하며, 기능 코드는 `lucide-react-native`를 직접 불러오지 않는다.
 - HeroUI Native 컴포넌트가 기본 아이콘을 제공하는 자리는 해당 컴포넌트가 계속 소유한다. 제품 아이콘으로 바꿔야 할 요구가 확인될 때만 프로젝트 `Icon`으로 교체한다.
 - `@expo/ui`의 `Host` 안에서는 `@expo/ui`가 제공하는 `Icon`을 사용한다. 이 API는 iOS에서 SF Symbol을, Android에서 Material Symbol XML을 렌더링한다.
+- `Stack.Toolbar` 버튼의 아이콘은 `src/shared/ui/icon/toolbar-icons.tsx`가 한곳에서 정의한다. iOS는 SF Symbol 이름을, Android는 `assets/toolbar/`의 PNG를 `icon` prop으로 넘긴다.
 - 브랜드 로고나 제품 고유 그래픽은 프로젝트가 소유하는 이미지 또는 SVG 파일로 제공한다.
 
 ## 경계
@@ -14,6 +15,7 @@
 - React Native UI 안에서 `@expo/ui`의 `Icon` 하나를 쓰기 위해 별도 `Host`를 만들지 않는다. 반대로 `@expo/ui`의 `Host` 안에 프로젝트 `Icon`이나 `SymbolView`를 삽입하지 않는다.
 - 네이티브 셸과 `@expo/ui`에서는 플랫폼별 심벌의 세부 모양이 다른 것을 허용한다. React Native UI의 프로젝트 `Icon`은 두 플랫폼에서 같은 모양을 유지한다. 어느 쪽이든 의미와 접근성 라벨은 플랫폼 사이에서 동일하다.
 - 한 화면에서 여러 범용 SVG 아이콘 세트를 섞지 않는다. 프로젝트 `Icon`이 라이브러리 이름, 크기와 색상 매핑을 소유한다.
+- 툴바 PNG는 `Stack.Toolbar` 버튼 전용이다. Android 툴바에는 폭을 안정적으로 정할 수 없는 React Native 뷰를 넣지 않는다.
 - 아이콘 색상은 적용되는 표면의 시맨틱 색상을 사용한다. 네이티브 탭의 선택·비선택 색상과 애니메이션은 탭 컴포넌트가 소유한다.
 - 아이콘이 단독으로 동작을 전달하면 그 아이콘을 소유한 버튼, 탭 또는 컨트롤이 접근성 라벨을 제공한다.
 
@@ -43,3 +45,4 @@
 - Expo SDK 57의 [`@expo/ui` `Icon`](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/icon/)은 `Host` 안에서 iOS SF Symbol과 Android Material Symbol XML을 렌더링한다.
 - `react-native-svg`는 HeroUI Native의 직접 peer dependency로 이미 모바일 앱에 설치되어 있고, HeroUI Native의 기본 검색·닫기·체크 아이콘도 SVG로 렌더링한다.
 - Expo SDK 57의 `expo-symbols`는 Android에서 약 939KB인 기본 Material Symbols 폰트를 `expo-font`로 불러오고 완료 전에는 같은 크기의 빈 뷰를 렌더링한다.
+- 설치된 Expo Router의 `Stack.Toolbar.Button`은 아이콘을 iOS 심벌 이름 또는 Android 이미지 자산으로 받는다.
