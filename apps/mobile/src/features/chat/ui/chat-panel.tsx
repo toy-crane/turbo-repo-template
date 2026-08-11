@@ -17,7 +17,15 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
+import {
+  KeyboardStickyView,
+  useReanimatedKeyboardAnimation,
+} from "react-native-keyboard-controller";
+import Animated, {
+  interpolate,
+  type SharedValue,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ChatSession } from "@/features/chat/state/use-chat-session";
@@ -37,20 +45,49 @@ const INPUT_MAX_HEIGHT = 120;
  */
 const FOLLOW_END_THRESHOLD = 0.15;
 
+/** Visible space between the composer surface and an open keyboard. */
+const KEYBOARD_COMPOSER_GAP = 8;
+
 function keyOfMessage(message: UIMessage) {
   return message.id;
 }
 
-function EmptyConversation() {
+function EmptyConversation({
+  composerInset,
+  keyboardOpenedOffset,
+}: {
+  composerInset: SharedValue<number>;
+  keyboardOpenedOffset: number;
+}) {
+  const { height, progress } = useReanimatedKeyboardAnimation();
+  const centeredInVisibleArea = useAnimatedStyle(() => {
+    const keyboardOffset = interpolate(
+      progress.value,
+      [0, 1],
+      [0, keyboardOpenedOffset]
+    );
+
+    return {
+      transform: [
+        {
+          translateY: (height.value + keyboardOffset - composerInset.value) / 2,
+        },
+      ],
+    };
+  }, [composerInset, height, keyboardOpenedOffset, progress]);
+
   return (
-    <View className="flex-1 items-center justify-center gap-2 px-8">
+    <Animated.View
+      className="flex-1 items-center justify-center gap-2 px-8"
+      style={centeredInVisibleArea}
+    >
       <Text className="font-semibold text-2xl text-foreground">
         무엇을 도와드릴까요?
       </Text>
       <Text className="text-center text-muted">
         궁금한 것을 입력하면 AI가 바로 답해요.
       </Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -59,17 +96,12 @@ function EmptyConversation() {
  *
  * The screen that assembles this panel owns the chat session, so the panel
  * stays a view over the conversation and the same session can later serve the
- * header's new-conversation control. `topInset` is the header the screen puts
- * above this panel; the list keeps its content below it.
+ * header's new-conversation control.
  */
-export function ChatPanel({
-  chat,
-  topInset = 0,
-}: {
-  chat: ChatSession;
-  topInset?: number;
-}) {
+export function ChatPanel({ chat }: { chat: ChatSession }) {
   const insets = useSafeAreaInsets();
+  const composerBottomInset = Math.max(insets.bottom, 12);
+  const keyboardOpenedOffset = composerBottomInset - KEYBOARD_COMPOSER_GAP;
   const [accentForeground, foreground] = useThemeColor([
     "accent-foreground",
     "foreground",
@@ -91,7 +123,6 @@ export function ChatPanel({
     );
   }, [scrollMessageToEnd]);
 
-  const hasMessages = chat.messages.length > 0;
   const canSend = chat.draft.trim().length > 0;
 
   // `accessibilityRole="alert"` announces nothing in React Native: Android
@@ -150,44 +181,49 @@ export function ChatPanel({
     () => ({ isBusy, lastAssistantId, lastUserId, status }),
     [isBusy, lastAssistantId, lastUserId, status]
   );
+  const renderEmptyConversation = useCallback(
+    () => (
+      <EmptyConversation
+        composerInset={contentInsetEndAdjustment}
+        keyboardOpenedOffset={keyboardOpenedOffset}
+      />
+    ),
+    [contentInsetEndAdjustment, keyboardOpenedOffset]
+  );
 
   return (
     <View className="flex-1 bg-background">
-      {hasMessages ? (
-        <KeyboardAwareLegendList
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16 }}
-          // An explicit inset rather than `contentInsetAdjustmentBehavior`:
-          // the keyboard scroll view drives `contentInset` itself, which keeps
-          // UIKit's automatic adjustment from ever reaching this list.
-          contentInset={{ top: topInset }}
-          contentInsetEndAdjustment={contentInsetEndAdjustment}
-          data={chat.messages}
-          extraData={listExtraData}
-          freeze={freeze}
-          // Interactive tracking exists only on iOS; Android closes the
-          // keyboard as soon as the list is dragged.
-          keyboardDismissMode={
-            Platform.OS === "ios" ? "interactive" : "on-drag"
-          }
-          keyboardLiftBehavior="whenAtEnd"
-          // React Native defaults to "never", which spends the first tap on
-          // dismissing the keyboard. Every message action lives inside this
-          // list, so without this they all need two taps while the composer
-          // is open.
-          keyboardShouldPersistTaps="handled"
-          keyExtractor={keyOfMessage}
-          maintainScrollAtEnd
-          maintainScrollAtEndThreshold={FOLLOW_END_THRESHOLD}
-          maintainVisibleContentPosition
-          onEndVisible={setEndVisible}
-          ref={listRef}
-          renderItem={renderMessage}
-          scrollIndicatorInsets={{ top: topInset }}
-          testID="chat-list"
-        />
-      ) : (
-        <EmptyConversation />
-      )}
+      <KeyboardAwareLegendList
+        contentContainerStyle={{
+          flexGrow: chat.messages.length === 0 ? 1 : undefined,
+          paddingHorizontal: 20,
+          paddingTop: chat.messages.length === 0 ? 0 : 16,
+        }}
+        contentInsetEndAdjustment={contentInsetEndAdjustment}
+        data={chat.messages}
+        extraData={listExtraData}
+        freeze={freeze}
+        // Interactive tracking exists only on iOS; Android closes the
+        // keyboard as soon as the list is dragged.
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        keyboardLiftBehavior={
+          chat.messages.length === 0 ? "never" : "whenAtEnd"
+        }
+        // React Native defaults to "never", which spends the first tap on
+        // dismissing the keyboard. Every message action lives inside this
+        // list, so without this they all need two taps while the composer
+        // is open.
+        keyboardShouldPersistTaps="handled"
+        keyExtractor={keyOfMessage}
+        ListEmptyComponent={renderEmptyConversation}
+        maintainScrollAtEnd
+        maintainScrollAtEndThreshold={FOLLOW_END_THRESHOLD}
+        maintainVisibleContentPosition
+        onEndVisible={setEndVisible}
+        ref={listRef}
+        renderItem={renderMessage}
+        testID="chat-list"
+      />
 
       {/*
         Absolutely placed over the list: the list keeps the full screen and
@@ -197,8 +233,12 @@ export function ChatPanel({
         keyboard and the composer wherever they are.
       */}
       <KeyboardStickyView
-        offset={{ closed: 0, opened: insets.bottom }}
+        offset={{
+          closed: 0,
+          opened: keyboardOpenedOffset,
+        }}
         style={{ bottom: 0, left: 0, position: "absolute", right: 0 }}
+        testID="chat-keyboard-sticky"
       >
         {endVisible ? null : (
           <View className="absolute right-5" style={{ top: -56 }}>
@@ -213,11 +253,45 @@ export function ChatPanel({
             </Pressable>
           </View>
         )}
+
+        {chat.isBusy ? (
+          <View
+            accessibilityLiveRegion="polite"
+            className="flex-row items-center gap-2 px-5"
+            testID="chat-generating"
+          >
+            <Spinner size="sm" />
+            <Text className="text-muted text-sm">{chatLabels.generating}</Text>
+          </View>
+        ) : null}
+
+        {chat.error ? (
+          <View className="gap-2 px-5">
+            <Text
+              accessibilityLiveRegion="assertive"
+              accessibilityRole="alert"
+              className="text-danger text-sm"
+              testID="chat-error"
+            >
+              잠시 뒤에 다시 보내 주세요.
+            </Text>
+            <Button
+              accessibilityLabel={chatLabels.retry}
+              isDisabled={!chat.canRetry}
+              onPress={chat.retry}
+              variant="tertiary"
+            >
+              <Button.Label>다시 보내기</Button.Label>
+            </Button>
+          </View>
+        ) : null}
+
         <View
-          className="gap-2 bg-background px-5 pt-2"
+          className="gap-2 px-5"
           onLayout={onComposerLayout}
           ref={composerRef}
-          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+          style={{ paddingBottom: composerBottomInset, paddingTop: 16 }}
+          testID="chat-composer"
         >
           {chat.editing ? (
             <View
@@ -235,40 +309,6 @@ export function ChatPanel({
               >
                 <Text className="text-link">편집 취소</Text>
               </Pressable>
-            </View>
-          ) : null}
-
-          {chat.isBusy ? (
-            <View
-              accessibilityLiveRegion="polite"
-              className="flex-row items-center gap-2"
-              testID="chat-generating"
-            >
-              <Spinner size="sm" />
-              <Text className="text-muted text-sm">
-                {chatLabels.generating}
-              </Text>
-            </View>
-          ) : null}
-
-          {chat.error ? (
-            <View className="gap-2">
-              <Text
-                accessibilityLiveRegion="assertive"
-                accessibilityRole="alert"
-                className="text-danger text-sm"
-                testID="chat-error"
-              >
-                잠시 뒤에 다시 보내 주세요.
-              </Text>
-              <Button
-                accessibilityLabel={chatLabels.retry}
-                isDisabled={!chat.canRetry}
-                onPress={chat.retry}
-                variant="tertiary"
-              >
-                <Button.Label>다시 보내기</Button.Label>
-              </Button>
             </View>
           ) : null}
 

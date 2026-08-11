@@ -27,9 +27,17 @@ jest.mock("@/features/chat/ui/chat-panel", () => {
   const { View } = require("react-native") as typeof import("react-native");
 
   return {
-    ChatPanel: ({ chat }: { chat: { tag?: string } }) =>
+    ChatPanel: ({
+      chat,
+      ...props
+    }: {
+      chat: { tag?: string };
+      topInset?: number;
+    }) =>
       React.createElement(View, {
         accessibilityLabel: `chat panel with ${chat.tag ?? "unknown session"}`,
+        testID: "chat-panel",
+        ...props,
       }),
   };
 });
@@ -70,10 +78,13 @@ afterEach(() => {
 });
 
 test("현재 세션의 access token으로 채팅 세션을 만들어 패널에 넘긴다", async () => {
-  const { getByLabelText } = await renderWithHeroUI(<ChatScreen />);
+  const { getByLabelText, getByTestId } = await renderWithHeroUI(
+    <ChatScreen />
+  );
 
   expect(mockUseChatSession).toHaveBeenCalledWith("test-access-token");
   expect(getByLabelText("chat panel with chat-session")).toBeOnTheScreen();
+  expect(getByTestId("chat-panel").props.topInset).toBeUndefined();
 });
 
 test("세션이 사라지면 채팅에 토큰을 넘기지 않는다", async () => {

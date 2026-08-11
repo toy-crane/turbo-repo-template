@@ -5,11 +5,12 @@ import {
   screen,
   userEvent,
   waitFor,
+  within,
 } from "@testing-library/react-native";
 import type { UIMessageChunk } from "ai";
 import { simulateReadableStream } from "ai";
 import { setStringAsync } from "expo-clipboard";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 
 import { createChatTransport } from "@/features/chat/api/chat-transport";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
@@ -36,7 +37,12 @@ jest.mock("@/features/chat/api/chat-transport", () => ({
  * does on a device.
  */
 /** The props the panel last handed the list, for the contract test below. */
-const mockListProps: { keyboardShouldPersistTaps?: string } = {};
+const mockListProps: {
+  contentContainerStyle?: unknown;
+  contentInset?: unknown;
+  keyboardShouldPersistTaps?: string;
+  scrollIndicatorInsets?: unknown;
+} = {};
 
 jest.mock("@legendapp/list/keyboard", () => {
   const React = require("react") as typeof import("react");
@@ -48,18 +54,25 @@ jest.mock("@legendapp/list/keyboard", () => {
       (
         props: {
           data?: { id: string }[];
+          contentContainerStyle?: unknown;
+          contentInset?: unknown;
           extraData?: unknown;
           keyboardShouldPersistTaps?: string;
+          ListEmptyComponent?: React.ComponentType;
           renderItem: (info: {
             index: number;
             item: unknown;
           }) => React.ReactNode;
           testID?: string;
+          scrollIndicatorInsets?: unknown;
         },
         _ref
       ) => {
+        mockListProps.contentContainerStyle = props.contentContainerStyle;
+        mockListProps.contentInset = props.contentInset;
         mockListProps.keyboardShouldPersistTaps =
           props.keyboardShouldPersistTaps;
+        mockListProps.scrollIndicatorInsets = props.scrollIndicatorInsets;
 
         const rows = React.useRef(
           new Map<
@@ -75,27 +88,29 @@ jest.mock("@legendapp/list/keyboard", () => {
         return React.createElement(
           ScrollView,
           { testID: props.testID },
-          (props.data ?? []).map((item, index) => {
-            const cached = rows.current.get(item.id);
-            const element =
-              cached &&
-              cached.item === item &&
-              cached.extraData === props.extraData
-                ? cached.element
-                : props.renderItem({ index, item });
+          (props.data ?? []).length === 0 && props.ListEmptyComponent
+            ? React.createElement(props.ListEmptyComponent)
+            : (props.data ?? []).map((item, index) => {
+                const cached = rows.current.get(item.id);
+                const element =
+                  cached &&
+                  cached.item === item &&
+                  cached.extraData === props.extraData
+                    ? cached.element
+                    : props.renderItem({ index, item });
 
-            rows.current.set(item.id, {
-              element,
-              extraData: props.extraData,
-              item,
-            });
+                rows.current.set(item.id, {
+                  element,
+                  extraData: props.extraData,
+                  item,
+                });
 
-            return React.createElement(
-              React.Fragment,
-              { key: item.id },
-              element
-            );
-          })
+                return React.createElement(
+                  React.Fragment,
+                  { key: item.id },
+                  element
+                );
+              })
         );
       }
     ),
@@ -387,7 +402,7 @@ describe("ChatPanel", () => {
     });
   });
 
-  test("대화가 비어 있으면 제목과 짧은 안내만 보여준다", async () => {
+  test("대화가 비어 있어도 목록 안에 제목과 짧은 안내를 보여준다", async () => {
     useTransport(
       fakeTransport(() => Promise.resolve(answerStream(["안녕하세요"])))
     );
@@ -398,7 +413,32 @@ describe("ChatPanel", () => {
     expect(
       screen.getByText("궁금한 것을 입력하면 AI가 바로 답해요.")
     ).toBeOnTheScreen();
-    expect(screen.queryByTestId("chat-list")).not.toBeOnTheScreen();
+    expect(screen.getByTestId("chat-list")).toBeOnTheScreen();
+    expect(mockListProps.contentContainerStyle).toEqual({
+      flexGrow: 1,
+      paddingHorizontal: 20,
+      paddingTop: 0,
+    });
+    expect(mockListProps.contentInset).toBeUndefined();
+    expect(mockListProps.scrollIndicatorInsets).toBeUndefined();
+  });
+
+  test("입력창은 닫힌 Safe Area와 열린 키보드 위 8 간격을 같은 높이로 유지한다", async () => {
+    useTransport(
+      fakeTransport(() => Promise.resolve(answerStream(["안녕하세요"])))
+    );
+
+    await renderChat(ACCESS_TOKEN);
+
+    const sticky = screen.getByTestId("chat-keyboard-sticky");
+    const composer = screen.getByTestId("chat-composer");
+    const composerStyle = StyleSheet.flatten(composer.props.style);
+
+    expect(sticky.props.offset).toEqual({ closed: 0, opened: 26 });
+    expect(composerStyle).toEqual(
+      expect.objectContaining({ paddingBottom: 34, paddingTop: 16 })
+    );
+    expect(composerStyle.backgroundColor).toBeUndefined();
   });
 
   test("공백뿐인 메시지는 보내지 않는다", async () => {
@@ -441,6 +481,11 @@ describe("ChatPanel", () => {
 
     expect(screen.getByLabelText(chatLabels.stop)).toBeOnTheScreen();
     expect(screen.queryByTestId("chat-send")).not.toBeOnTheScreen();
+    expect(
+      within(screen.getByTestId("chat-composer")).queryByTestId(
+        "chat-generating"
+      )
+    ).not.toBeOnTheScreen();
 
     release?.();
 
