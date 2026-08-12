@@ -343,6 +343,10 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 | `아이디 다시 확인하기` | 확인 요청이 실패했을 때 재시도 |
 | `시작하기` | 아이디 화면 버튼 |
 | `로그아웃` | 설정 화면 |
+| `설정 닫기` | 설정 화면 닫기 버튼 |
+| `프로필 수정` | 설정 화면의 프로필 사진과 계정 섹션 항목 |
+| `사진 편집` | 프로필 수정 화면의 사진과 문구 |
+| `저장` | 프로필 수정 화면 도구막대 |
 | `메시지` | 대화 화면 입력 |
 | `보내기` | 대화 화면 전송 버튼 |
 | `새 대화` | Home 헤더의 새 대화 버튼 |
@@ -353,6 +357,14 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 `onboarding-username-available`, `onboarding-username-suggestion`,
 `onboarding-username-retry`, `onboarding-error-nickname`, `onboarding-error-username`입니다.
 후보 버튼은 세 개가 같은 `testID`를 쓰고, 접근성 이름은 후보 값 자체입니다.
+
+설정과 프로필 수정 화면의 `testID`는 `settings-profile-photo`,
+`settings-profile-name`, `settings-profile-username`, `edit-profile-row`,
+`profile-edit-photo`, `profile-edit-photo-label`, `profile-nickname`,
+`profile-username`, `profile-nickname-message`, `profile-username-message`,
+`profile-username-suggestion`, `profile-username-policy`,
+`profile-camera-denied`, `profile-save-failure`입니다.
+검증 문구는 해당 상태일 때만 나타나므로 기본 상태에서는 찾을 수 없습니다.
 
 대화 화면의 요소에는 `testID`도 있습니다.
 

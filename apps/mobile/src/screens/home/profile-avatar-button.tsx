@@ -1,6 +1,9 @@
 import { Pressable } from "react-native";
 
-import { useProfile } from "@/features/auth/query/profile";
+import {
+  readProfileAvatarUrl,
+  useProfile,
+} from "@/features/auth/query/profile";
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { UserAvatar } from "@/shared/ui/user-avatar";
 
@@ -22,7 +25,7 @@ export function ProfileAvatarButton({ onPress }: { onPress: () => void }) {
       onPress={onPress}
     >
       <UserAvatar
-        avatarUrl={profile?.avatarUrl ?? null}
+        avatarUrl={readProfileAvatarUrl(profile)}
         displayName={profile?.displayName ?? null}
       />
     </Pressable>

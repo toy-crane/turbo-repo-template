@@ -8,12 +8,16 @@ function dismissSettings() {
   router.dismiss();
 }
 
+function openProfileEdit() {
+  router.push("/settings/profile");
+}
+
 function SettingsToolbar() {
   if (Platform.OS === "ios") {
     return (
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
-          accessibilityLabel="Close settings"
+          accessibilityLabel="설정 닫기"
           icon="xmark"
           onPress={dismissSettings}
         />
@@ -24,21 +28,26 @@ function SettingsToolbar() {
   return (
     <Stack.Toolbar placement="right">
       <Stack.Toolbar.Button
-        accessibilityLabel="Close settings"
+        accessibilityLabel="설정 닫기"
         onPress={dismissSettings}
       >
-        Close
+        닫기
       </Stack.Toolbar.Button>
     </Stack.Toolbar>
   );
 }
 
 export default function SettingsRoute() {
-  const { foreground } = useAppTheme();
+  const { danger, foreground, muted } = useAppTheme();
 
   return (
     <>
-      <SettingsScreen foreground={foreground} />
+      <SettingsScreen
+        danger={danger}
+        foreground={foreground}
+        muted={muted}
+        onEditProfile={openProfileEdit}
+      />
       <SettingsToolbar />
     </>
   );

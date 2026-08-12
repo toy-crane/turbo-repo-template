@@ -11,6 +11,12 @@ VALUES
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'name-a@example.test'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'name-b@example.test');
 
+-- These checks walk one row through many spellings to cover the format rules, and
+-- the rename policy would lock the row after the first accepted one. It stands
+-- down here and is exercised in full by profiles_username_change_test.sql, so the
+-- two files each say one thing. ROLLBACK puts the trigger back.
+ALTER TABLE public.profiles DISABLE TRIGGER profiles_guard_username_change;
+
 SET LOCAL ROLE authenticated;
 SET LOCAL request.jwt.claims TO '{"sub":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","role":"authenticated"}';
 

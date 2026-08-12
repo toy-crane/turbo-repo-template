@@ -1,16 +1,44 @@
 import { describe, expect, test } from "@jest/globals";
 
-import { getSettingsSheetOptions } from "./settings-sheet";
+import {
+  getProfileEditRouteOptions,
+  getSettingsRouteOptions,
+  getSettingsSheetOptions,
+  getSettingsStackScreenOptions,
+} from "./settings-sheet";
 
 describe("getSettingsSheetOptions", () => {
-  test("Settings를 native page sheet로 연다", () => {
+  test("Settings를 native page sheet로 열고 헤더는 안쪽 스택에 맡긴다", () => {
     expect(getSettingsSheetOptions()).toEqual({
-      headerBackVisible: false,
-      headerShadowVisible: false,
-      headerShown: true,
-      headerTransparent: true,
+      // Two headers would otherwise stack: the sheet's own and the one the
+      // screens inside it draw.
+      headerShown: false,
       presentation: "pageSheet",
-      title: "Settings",
     });
+  });
+});
+
+describe("시트 안쪽 화면", () => {
+  test("같은 표면으로 읽히도록 공통 옵션을 쓴다", () => {
+    expect(getSettingsStackScreenOptions()).toEqual({
+      // The chevron carries the back control on its own. Naming the previous
+      // screen repeats it and eats the width the current title needs.
+      headerBackButtonDisplayMode: "minimal",
+      headerShadowVisible: false,
+      headerTransparent: true,
+    });
+  });
+
+  test("첫 화면은 한글 제목을 쓰고 뒤로 가기를 두지 않는다", () => {
+    expect(getSettingsRouteOptions()).toEqual({
+      headerBackVisible: false,
+      title: "설정",
+    });
+  });
+
+  // Pushed rather than presented, so the back arrow is the platform's own and
+  // the profile behind it stays in place.
+  test("프로필 수정은 push한 화면의 제목을 쓴다", () => {
+    expect(getProfileEditRouteOptions()).toEqual({ title: "프로필 수정" });
   });
 });

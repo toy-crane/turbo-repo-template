@@ -36,30 +36,71 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          avatar_chosen_by_user: boolean
+          avatar_path: string | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
           id: string
           updated_at: string
           username: string | null
+          username_changed_at: string | null
+          username_locked_until: string | null
         }
         Insert: {
+          avatar_chosen_by_user?: boolean
+          avatar_path?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id: string
           updated_at?: string
           username?: string | null
+          username_changed_at?: string | null
+          username_locked_until?: string | null
         }
         Update: {
+          avatar_chosen_by_user?: boolean
+          avatar_path?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
           updated_at?: string
           username?: string | null
+          username_changed_at?: string | null
+          username_locked_until?: string | null
         }
         Relationships: []
+      }
+      retired_usernames: {
+        Row: {
+          protected_until: string
+          retired_at: string
+          retired_by: string
+          username: string
+        }
+        Insert: {
+          protected_until: string
+          retired_at?: string
+          retired_by: string
+          username: string
+        }
+        Update: {
+          protected_until?: string
+          retired_at?: string
+          retired_by?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retired_usernames_retired_by_fkey"
+            columns: ["retired_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -67,7 +108,12 @@ export type Database = {
     }
     Functions: {
       available_usernames: { Args: { candidates: string[] }; Returns: string[] }
+      is_protected_username: {
+        Args: { candidate: string; owner: string }
+        Returns: boolean
+      }
       is_reserved_username: { Args: { candidate: string }; Returns: boolean }
+      username_change_interval: { Args: never; Returns: string }
       username_status: { Args: { candidate: string }; Returns: string }
     }
     Enums: {

@@ -7,7 +7,19 @@ import { Text } from "react-native";
 import { AppThemeBridge, useAppTheme } from "./app-theme-bridge";
 
 jest.mock("heroui-native/hooks", () => ({
-  useThemeColor: () => ["#0B0B0D", "#FFFFFF", "#1A1A1E"],
+  // Answers by token name rather than by position: the bridge asks for a
+  // different set as the app grows, and a fixed array silently hands back the
+  // wrong colours the moment that list changes.
+  useThemeColor: (tokens: string[]) =>
+    tokens.map(
+      (token) =>
+        ({
+          background: "#0B0B0D",
+          danger: "#FF453A",
+          foreground: "#FFFFFF",
+          surface: "#1A1A1E",
+        })[token] ?? "#000000"
+    ),
 }));
 
 jest.mock("uniwind", () => ({

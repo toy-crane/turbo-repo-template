@@ -3,21 +3,30 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
   fireEvent,
-  render,
   screen,
+  userEvent,
   waitFor,
 } from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
 import { Platform } from "react-native";
 
+import { useAuthSession } from "@/features/auth/state/auth-session";
 import {
   createFakeSession,
+  createProfileRow,
   resetFakeSupabase,
 } from "@/shared/test/fake-supabase";
+import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { SettingsScreen } from "./settings-screen";
 
-/** The foreground colour the root layout would hand this screen. */
+/** The colours the root layout would hand this screen. */
 const FOREGROUND = "#111114";
+const DANGER = "#dc2626";
+const MUTED = "#6b7280";
+
+jest.mock("@/features/auth/state/auth-session", () => ({
+  useAuthSession: jest.fn(),
+}));
 
 jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
@@ -46,18 +55,30 @@ jest.mock("@expo/ui", () => {
   return {
     FieldGroup,
     Host: Container,
+    // Renders as its own node so a test can assert the row shows a chevron.
+    Icon: ({ name }: { name: string }) =>
+      React.createElement(NativeText, null, name),
     // A native list row takes a press anywhere across it and reads its own text
     // as its accessible name, so the stand-in does the same.
     ListItem: ({
       children,
       onPress,
       testID,
-    }: PropsWithChildren<{ onPress?: () => void; testID?: string }>) =>
+      trailing,
+    }: PropsWithChildren<{
+      onPress?: () => void;
+      testID?: string;
+      trailing?: React.ReactNode;
+    }>) =>
       React.createElement(
         Pressable,
         { accessibilityRole: "button", onPress, testID },
-        children
+        children,
+        trailing
       ),
+    // Hosts plain React Native children inside the native tree, which is exactly
+    // what a View does here.
+    RNHostView: Container,
     Row: Container,
     Spacer: Container,
     Switch: ({
@@ -87,14 +108,33 @@ jest.mock("@expo/ui", () => {
   };
 });
 
+const mockUseAuthSession = jest.mocked(useAuthSession);
+
 beforeEach(() => {
   resetFakeSupabase({ session: createFakeSession() });
+  mockUseAuthSession.mockReturnValue({
+    session: createFakeSession(),
+    status: "signedIn",
+  });
 });
 
-function renderSettings(queryClient: QueryClient = new QueryClient()) {
-  return render(
+function renderSettings({
+  onEditProfile = () => {
+    // Most tests are about something else on this screen.
+  },
+  queryClient = new QueryClient(),
+}: {
+  onEditProfile?: () => void;
+  queryClient?: QueryClient;
+} = {}) {
+  return renderWithHeroUI(
     <QueryClientProvider client={queryClient}>
-      <SettingsScreen foreground={FOREGROUND} />
+      <SettingsScreen
+        danger={DANGER}
+        foreground={FOREGROUND}
+        muted={MUTED}
+        onEditProfile={onEditProfile}
+      />
     </QueryClientProvider>
   );
 }
@@ -152,7 +192,7 @@ test("로그아웃이 실패해도 이전 사용자의 캐시는 남기지 않�
     error: new Error("Network request failed"),
   } as never);
 
-  await renderSettings(queryClient);
+  await renderSettings({ queryClient });
 
   queryClient.setQueryData(["notes"], ["이전 사용자의 데이터"]);
 
@@ -169,34 +209,71 @@ test("로그아웃이 실패해도 이전 사용자의 캐시는 남기지 않�
   expect(await screen.findByTestId("sign-out-error")).toBeOnTheScreen();
 });
 
-test("iOS 설정 텍스트는 네이티브 기본 색상을 그대로 쓴다", async () => {
+test("현재 공개 프로필을 화면 위에 보여 준다", async () => {
+  resetFakeSupabase({
+    profile: createProfileRow({
+      display_name: "김민서",
+      username: "minseokim",
+    }),
+    session: createFakeSession(),
+  });
+
   await renderSettings();
 
-  expect(screen.getByText("Version").props.style).toBeUndefined();
+  // The header is on screen before the profile read answers, so waiting for the
+  // element is not the same as waiting for the values in it.
+  await waitFor(() => {
+    expect(screen.getByTestId("settings-profile-name")).toHaveTextContent(
+      "김민서"
+    );
+  });
+  // No `@` in front: the app has no mentions and no profile addresses, so the id
+  // is shown exactly as it is stored and typed.
+  expect(screen.getByTestId("settings-profile-username")).toHaveTextContent(
+    "minseokim"
+  );
+  expect(screen.queryByText("@minseokim")).toBeNull();
+});
+
+test("프로필 사진과 프로필 수정 행이 같은 화면을 연다", async () => {
+  const onEditProfile = jest.fn();
+  const user = userEvent.setup();
+
+  await renderSettings({ onEditProfile });
+
+  await user.press(await screen.findByTestId("settings-profile-photo"));
+  await user.press(screen.getByTestId("edit-profile-row"));
+
+  // Both entry points, one destination: a photo menu opening straight from
+  // Settings would split saving the picture from saving the rest of the profile.
+  expect(onEditProfile).toHaveBeenCalledTimes(2);
+});
+
+test("iOS 설정 텍스트는 네이티브 기본 색상을 그대로 쓴다", async () => {
+  const view = await renderSettings();
+
+  expect(view.getByText("버전").props.style).toBeUndefined();
 });
 
 test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 표시한다", async () => {
   const platform = jest.replaceProperty(Platform, "OS", "android");
 
   try {
-    await renderSettings();
+    const view = await renderSettings();
 
-    expect(screen.getAllByText("Notifications")).toHaveLength(1);
-    expect(screen.getAllByText("Haptics")).toHaveLength(1);
+    expect(view.getAllByText("알림")).toHaveLength(1);
+    expect(view.getAllByText("햅틱 반응")).toHaveLength(1);
     // Android's @expo/ui text does not follow the app's appearance on its own,
     // so the screen has to hand it the same foreground colour.
-    expect(screen.getByText("Version")).toHaveStyle({ color: FOREGROUND });
-    expect(screen.getByTestId("preferences-section")).toHaveStyle({
-      paddingTop: 24,
-    });
+    expect(view.getByText("버전")).toHaveStyle({ color: FOREGROUND });
     expect(
-      screen.getByTestId("notifications-switch").props.accessibilityState
+      view.getByTestId("notifications-switch").props.accessibilityState
     ).toEqual({ checked: false });
-    expect(
-      screen.getByTestId("haptics-switch").props.accessibilityState
-    ).toEqual({
-      checked: true,
-    });
+    expect(view.getByTestId("haptics-switch").props.accessibilityState).toEqual(
+      {
+        checked: true,
+      }
+    );
   } finally {
     platform.restore();
   }

@@ -14,7 +14,11 @@ import { getNavigationTheme } from "./navigation-theme";
 
 export interface AppThemeValue {
   background: string;
+  /** For the one settings row that removes something, which iOS draws in red. */
+  danger: string;
   foreground: string;
+  /** Secondary ink, for the chevron and anything else that must recede. */
+  muted: string;
   scheme: "dark" | "light";
   surface: string;
 }
@@ -22,9 +26,11 @@ export interface AppThemeValue {
 const AppThemeContext = createContext<AppThemeValue | null>(null);
 
 export function AppThemeBridge({ children }: PropsWithChildren) {
-  const [background, foreground, surface] = useThemeColor([
+  const [background, danger, foreground, muted, surface] = useThemeColor([
     "background",
+    "danger",
     "foreground",
+    "muted",
     "surface",
   ]);
   const { theme } = useUniwind();
@@ -34,8 +40,8 @@ export function AppThemeBridge({ children }: PropsWithChildren) {
     [background, foreground, scheme]
   );
   const value = useMemo<AppThemeValue>(
-    () => ({ background, foreground, scheme, surface }),
-    [background, foreground, scheme, surface]
+    () => ({ background, danger, foreground, muted, scheme, surface }),
+    [background, danger, foreground, muted, scheme, surface]
   );
 
   useEffect(() => {
