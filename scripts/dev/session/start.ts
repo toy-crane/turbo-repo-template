@@ -246,7 +246,6 @@ interface BuildStepInput {
   installedFingerprint: string | null;
   io: SessionIo;
   logs: SessionLogs;
-  metroPort: number;
   platform: Platform;
 }
 
@@ -275,7 +274,6 @@ async function resolveBuild({
   installedFingerprint,
   io,
   logs,
-  metroPort: port,
   platform,
 }: BuildStepInput): Promise<StartResult["build"]> {
   const directory = sharedBuildDirectory(context.paths, platform, fingerprint);
@@ -301,10 +299,10 @@ async function resolveBuild({
     return "installed";
   }
 
-  mkdirSync(directory, { recursive: true });
-
+  // The lock sits beside the artifact directory rather than inside it, so a
+  // build that fails leaves nothing behind that looks like a shared entry.
   return await withLock(
-    join(directory, "build.lock"),
+    `${directory}.lock`,
     async () => {
       const ready = findSharedBuild(directory, name);
 
@@ -329,7 +327,6 @@ async function resolveBuild({
         device: deviceTarget,
         env: driver.buildEnv(env),
         logPath: logs.build,
-        metroPort: port,
         mobileDirectory: context.mobileDirectory,
         platform,
       });
@@ -509,7 +506,6 @@ export async function startSession({
       installedFingerprint: allocation.installedFingerprint,
       io,
       logs,
-      metroPort: metro,
       platform,
     });
 

@@ -62,8 +62,6 @@ export interface DevBuildInput {
   device: string;
   env: Record<string, string>;
   logPath: string;
-  /** This worktree's Metro port, which the launch at the end of the build uses. */
-  metroPort: number;
   mobileDirectory: string;
   onOutput?: (text: string) => void;
   platform: Platform;
@@ -84,7 +82,6 @@ export async function runDevBuild({
   device,
   env,
   logPath,
-  metroPort,
   mobileDirectory,
   onOutput,
   platform,
@@ -113,10 +110,12 @@ export async function runDevBuild({
       "--device",
       device,
       "--no-bundler",
-      // The build opens the app when it finishes, and without this it would
-      // aim at the default port — another worktree's Metro on this machine.
-      "--port",
-      String(metroPort),
+      // Do not add `--port` here. The CLI rejects it together with
+      // `--no-bundler` ("mutually exclusive arguments") and fails the build
+      // before it starts. The app this command launches at the end therefore
+      // aims at the default port, which on this machine may be another
+      // worktree's Metro — the session corrects that right afterwards by
+      // quitting the app and reopening it on this worktree's own URL.
     ],
     { cwd: mobileDirectory, env: buildEnv(env), logPath, onOutput }
   );

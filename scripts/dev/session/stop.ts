@@ -3,7 +3,7 @@ import { releaseDevice } from "../devices";
 import { withLock } from "../lock";
 import type { Platform } from "../options";
 import { worktreeLogDirectory } from "../paths";
-import { type RepositoryState, readState, writeState } from "../state";
+import { readState, type WorktreeRecord, writeState } from "../state";
 import {
   createSessionContext,
   type SessionContext,
@@ -24,20 +24,24 @@ export interface StopResult {
 }
 
 /**
- * Shuts down the device the session was running on. The assignment, the
- * installed app and the signed-in session stay, so the next start picks up
- * where this one left off.
+ * Shuts down every device this worktree holds. It goes by the assignments
+ * rather than by the active platform: a start that failed partway leaves a
+ * booted device behind with no active platform recorded, and that device is
+ * still ours to stop. The assignment, the installed app and the signed-in
+ * session stay, so the next start picks up where this one left off.
  */
-async function shutdownActiveDevice(
+async function shutdownOwnDevices(
   context: SessionContext,
-  state: RepositoryState,
-  platform: Platform | null
+  record: WorktreeRecord
 ): Promise<void> {
-  const deviceId = platform
-    ? state.worktrees[context.git.worktreePath]?.devices[platform]
-    : undefined;
+  for (const platform of PLATFORMS) {
+    const deviceId = record.devices[platform];
 
-  if (platform && deviceId) {
+    if (!deviceId) {
+      continue;
+    }
+
+    // biome-ignore lint/performance/noAwaitInLoops: the device tools contend with each other when driven in parallel.
     await driverFor(context, platform).shutdown(deviceId);
   }
 }
@@ -62,7 +66,7 @@ export async function stopSession({ cwd, io }: StopInput): Promise<StopResult> {
     const platform = record.activePlatform;
 
     await stopOwnProcesses(worktreePath, state);
-    await shutdownActiveDevice(context, state, platform);
+    await shutdownOwnDevices(context, record);
     writeState(context.paths.statePath, state);
 
     io.log(
