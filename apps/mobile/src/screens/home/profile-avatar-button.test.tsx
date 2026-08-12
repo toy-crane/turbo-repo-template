@@ -5,6 +5,7 @@ import { screen, userEvent, waitFor } from "@testing-library/react-native";
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import {
   createFakeSession,
+  createProfileRow,
   resetFakeSupabase,
 } from "@/shared/test/fake-supabase";
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
@@ -44,7 +45,7 @@ beforeEach(() => {
 
 test("프로필 이름의 첫 글자를 아바타에 보여준다", async () => {
   resetFakeSupabase({
-    profile: { avatar_url: null, display_name: "루비", username: "ruby" },
+    profile: createProfileRow({ display_name: "루비", username: "ruby" }),
     session: createFakeSession(),
   });
 

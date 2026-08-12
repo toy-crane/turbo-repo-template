@@ -5,9 +5,17 @@ import type { ProviderIdentity } from "./provider-sign-in";
 
 /** The profile values a screen shows. The row itself holds more. */
 export interface UserProfile {
+  /** The object in the avatars bucket, when the person chose their own picture. */
+  avatarPath: string | null;
+  /** What the sign-in provider offered, used while there is no chosen picture. */
   avatarUrl: string | null;
   displayName: string | null;
   username: string | null;
+  /**
+   * When the account id may change again, as an ISO string, or null while it is
+   * free to change. The server decides the instant; the screen only reads it.
+   */
+  usernameLockedUntil: string | null;
 }
 
 /** The two values a person chooses during onboarding. */
@@ -16,22 +24,43 @@ export interface ProfileIdentity {
   username: string;
 }
 
+/**
+ * Everything the edit screen can change, as one change.
+ *
+ * `avatarPath` carries three cases rather than two: a string is a new picture,
+ * `null` is deleting the current one, and leaving the field out is not touching
+ * the picture at all. Without the third, saving a new nickname would clear a
+ * picture the person never opened the photo menu for.
+ */
+export interface ProfileEdit {
+  avatarPath?: string | null;
+  displayName: string;
+  username: string;
+}
+
 /** What the database says about an account id someone is considering. */
 export type UsernameStatus = "available" | "invalid" | "reserved" | "taken";
 
-const PROFILE_COLUMNS = "avatar_url, display_name, username";
+const PROFILE_COLUMNS =
+  "avatar_path, avatar_url, display_name, username, username_locked_until";
 /** PostgreSQL's unique violation, which is how a taken account id arrives. */
 const UNIQUE_VIOLATION = "23505";
+/** PostgreSQL's check violation, which is how the 30 day lock arrives. */
+const CHECK_VIOLATION = "23514";
 
 function toUserProfile(row: {
+  avatar_path: string | null;
   avatar_url: string | null;
   display_name: string | null;
   username: string | null;
+  username_locked_until: string | null;
 }): UserProfile {
   return {
+    avatarPath: row.avatar_path,
     avatarUrl: row.avatar_url,
     displayName: row.display_name,
     username: row.username,
+    usernameLockedUntil: row.username_locked_until,
   };
 }
 
@@ -142,18 +171,84 @@ export async function saveProfileIdentity(
 }
 
 /**
- * True when a save lost the race for an account id.
+ * Saves the picture, the nickname and the account id as one change.
  *
- * The screen recovers from this one by offering other spellings, so it has to
- * be told apart from a network failure, which recovers by trying again.
+ * One statement for the same reason onboarding uses one: if the id turns out to
+ * be taken, or the 30 day lock has not run out, the whole update is rejected and
+ * the nickname does not land on its own.
+ *
+ * `avatar_chosen_by_user` is written whenever the picture is part of the change,
+ * including when it is being deleted. That is what stops the next provider
+ * sign-in from putting its picture back into a profile the person just cleared.
  */
-export function isUsernameTaken(error: unknown): boolean {
+export async function saveProfileEdit(
+  client: SupabaseClient<Database>,
+  userId: string,
+  edit: ProfileEdit
+): Promise<UserProfile> {
+  const changes: {
+    avatar_chosen_by_user?: boolean;
+    avatar_path?: string | null;
+    avatar_url?: string | null;
+    display_name: string;
+    username: string;
+  } = {
+    display_name: edit.displayName,
+    username: edit.username,
+  };
+
+  if (edit.avatarPath !== undefined) {
+    changes.avatar_chosen_by_user = true;
+    changes.avatar_path = edit.avatarPath;
+    // The provider's picture goes with it. Leaving it behind would show it again
+    // the moment the chosen one is deleted, which is the opposite of deleting.
+    changes.avatar_url = null;
+  }
+
+  const { data, error } = await client
+    .from("profiles")
+    .update(changes)
+    .eq("id", userId)
+    .select(PROFILE_COLUMNS)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return toUserProfile(data);
+}
+
+function hasErrorCode(error: unknown, code: string): boolean {
   return (
     typeof error === "object" &&
     error !== null &&
     "code" in error &&
-    (error as { code?: unknown }).code === UNIQUE_VIOLATION
+    (error as { code?: unknown }).code === code
   );
+}
+
+/**
+ * True when a save lost the race for an account id.
+ *
+ * The screen recovers from this one by offering other spellings, so it has to
+ * be told apart from a network failure, which recovers by trying again. An id
+ * another account released recently arrives the same way, on purpose: to the
+ * person asking, both mean pick another.
+ */
+export function isUsernameTaken(error: unknown): boolean {
+  return hasErrorCode(error, UNIQUE_VIOLATION);
+}
+
+/**
+ * True when a save was refused because the account id is still locked.
+ *
+ * The screen disables the field while the lock is on, so reaching this means the
+ * screen's copy of the lock was out of date — the person has this profile open
+ * on another device, or left the screen sitting long enough for it to change.
+ */
+export function isUsernameLocked(error: unknown): boolean {
+  return hasErrorCode(error, CHECK_VIOLATION);
 }
 
 /**
@@ -182,10 +277,15 @@ export async function fillEmptyProfileValues(
   }
 
   if (identity.avatarUrl) {
+    // `avatar_chosen_by_user` is the second half of "only fill what is empty".
+    // A person who deleted their picture has an empty `avatar_url` and does not
+    // want it filled, and the two conditions are what tell that apart from a
+    // profile that has simply never had one.
     await client
       .from("profiles")
       .update({ avatar_url: identity.avatarUrl })
       .eq("id", userId)
+      .eq("avatar_chosen_by_user", false)
       .is("avatar_url", null);
   }
 }

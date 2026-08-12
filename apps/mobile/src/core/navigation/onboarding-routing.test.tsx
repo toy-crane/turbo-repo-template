@@ -12,6 +12,7 @@ import { queryClient } from "@/core/providers/query-provider";
 import {
   createEmptyProfile,
   createFakeSession,
+  createProfileRow,
   type FakeSupabaseOptions,
   resetFakeSupabase,
 } from "@/shared/test/fake-supabase";
@@ -151,7 +152,7 @@ test("온보딩 두 화면의 제목을 같은 문장 형식으로 보여 준다
 
 test("아이디만 없어도 온보딩을 연다", async () => {
   startOnboarding({
-    profile: { avatar_url: null, display_name: "김민서", username: null },
+    profile: createProfileRow({ display_name: "김민서" }),
   });
   await openApp();
 
@@ -206,7 +207,7 @@ test("프로필을 읽지 못하면 로그아웃하지 않고 다시 시도하�
 
 test("제공자가 준 이름은 고칠 수 있는 닉네임 초기값으로 나타난다", async () => {
   startOnboarding({
-    profile: { avatar_url: null, display_name: "김민서", username: null },
+    profile: createProfileRow({ display_name: "김민서" }),
   });
   await openApp();
 

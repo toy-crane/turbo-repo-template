@@ -23,9 +23,18 @@ export interface RecordedUpdate {
 
 /** The one profile row a select can read back, as the database stores it. */
 export interface FakeProfileRow {
+  avatar_path: string | null;
   avatar_url: string | null;
   display_name: string | null;
   username: string | null;
+  username_locked_until: string | null;
+}
+
+/** One stored object, which is all the avatar bucket ever holds per person. */
+export interface FakeStorageObject {
+  bucket: string;
+  contentType: string;
+  path: string;
 }
 
 export interface FakeSupabaseOptions {
@@ -49,10 +58,15 @@ export interface FakeSupabaseOptions {
  * test about onboarding says so by passing an empty profile.
  */
 const FINISHED_PROFILE: FakeProfileRow = {
+  avatar_path: null,
   avatar_url: null,
   display_name: "이미 정한 이름",
   username: "alreadychosen",
+  username_locked_until: null,
 };
+
+/** Where the local stack serves a public object from. */
+const STORAGE_PUBLIC_BASE = "http://127.0.0.1:54321/storage/v1/object/public";
 
 /** The template's own list, mirrored so the fake refuses what the database would. */
 const RESERVED_USERNAMES = new Set([
@@ -84,9 +98,29 @@ export function createFakeSession(userId = "user-1"): Session {
   } as Session;
 }
 
+/**
+ * A profile row with everything empty, plus whatever the test cares about.
+ *
+ * Tests name only the columns their subject reads, so a new column added to the
+ * table does not send every fixture in the suite back for an edit it has no
+ * opinion about.
+ */
+export function createProfileRow(
+  overrides: Partial<FakeProfileRow> = {}
+): FakeProfileRow {
+  return {
+    avatar_path: null,
+    avatar_url: null,
+    display_name: null,
+    username: null,
+    username_locked_until: null,
+    ...overrides,
+  };
+}
+
 /** A profile with neither value chosen, which is what opens onboarding. */
 export function createEmptyProfile(): FakeProfileRow {
-  return { avatar_url: null, display_name: null, username: null };
+  return createProfileRow();
 }
 
 export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
@@ -242,6 +276,63 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
     },
   }));
 
+  // The bucket, as a flat list. Enough to check what the app uploaded, what it
+  // cleared afterwards, and that a picture is read back from the path it wrote.
+  const objects: FakeStorageObject[] = [];
+  let nextUploadError: Error | undefined;
+
+  const storage = {
+    from: (bucket: string) => ({
+      getPublicUrl: (path: string) => ({
+        data: { publicUrl: `${STORAGE_PUBLIC_BASE}/${bucket}/${path}` },
+      }),
+      list: (prefix: string) =>
+        Promise.resolve({
+          data: objects
+            .filter(
+              (object) =>
+                object.bucket === bucket && object.path.startsWith(`${prefix}/`)
+            )
+            .map((object) => ({ name: object.path.slice(prefix.length + 1) })),
+          error: null,
+        }),
+      remove: (paths: string[]) => {
+        for (const path of paths) {
+          const index = objects.findIndex(
+            (object) => object.bucket === bucket && object.path === path
+          );
+
+          if (index >= 0) {
+            objects.splice(index, 1);
+          }
+        }
+
+        return Promise.resolve({ data: null, error: null });
+      },
+      upload: (
+        path: string,
+        _body: unknown,
+        fileOptions?: { contentType?: string }
+      ) => {
+        if (nextUploadError) {
+          const error = nextUploadError;
+
+          nextUploadError = undefined;
+
+          return Promise.resolve({ data: null, error });
+        }
+
+        objects.push({
+          bucket,
+          contentType: fileOptions?.contentType ?? "",
+          path,
+        });
+
+        return Promise.resolve({ data: { path }, error: null });
+      },
+    }),
+  };
+
   const statusOf = (candidate: string) => {
     if (RESERVED_USERNAMES.has(candidate)) {
       return "reserved";
@@ -274,11 +365,15 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
 
   return {
     auth,
-    client: { auth, from, rpc } as never,
+    client: { auth, from, rpc, storage } as never,
     emit,
     /** Makes the next save fail, for the id somebody took a moment earlier. */
     failNextSave: (error: Error) => {
       nextSaveError = error;
+    },
+    /** Makes the next picture upload fail, before the profile row is touched. */
+    failNextUpload: (error: Error) => {
+      nextUploadError = error;
     },
     from,
     /** Lets a held profile read succeed after it was made to fail. */
@@ -292,6 +387,8 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
     settleSession: () => {
       settleSession();
     },
+    /** What the bucket holds now, so a test can assert an upload and a cleanup. */
+    storedObjects: () => [...objects],
     /** The row as it stands, so a test can assert what the save wrote. */
     storedProfile: () => ({ ...profileRow }),
     updates,
