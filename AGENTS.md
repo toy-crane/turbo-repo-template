@@ -23,6 +23,13 @@
 - 최신 문서는 `bunx @hono/cli@0.1.11 docs [path]`로 읽고, 주제 검색은 `bunx @hono/cli@0.1.11 search <query>`를 사용한다.
 - 로컬 `llms.txt`는 Hono가 제공하는 `https://hono.dev/llms.txt`의 사본이다. Hono를 올릴 때 공식 원본으로 갱신한다.
 
+# 앱 실행
+
+- 앱은 저장소 루트의 `bun run dev <ios|android>`로 실행한다. 이 명령이 이 폴더 전용 포트로 API와 Metro를 띄우고 이 폴더에 배정한 기기에서 앱을 연다.
+- `apps/mobile`의 `ios`, `android`, `start` 명령을 직접 쓰지 않는다. 포트와 기기를 관리하지 않아 다른 worktree의 Metro에 붙은 화면을 검증하게 된다.
+- 세션을 멈출 때는 `bun run dev:stop`, 이 폴더의 개발 자원을 반납할 때는 `bun run dev:remove`를 쓴다.
+- 자세한 규칙은 [Worktree 개발 세션](docs/decisions/worktree-development-sessions.md)을 따른다.
+
 # 인증 확인
 
 - 로컬 이메일 코드 로그인으로 확인한다. 앱에서 코드를 요청한 뒤 `bun run auth:otp -- --email <이번 실행에만 쓸 주소>`로 코드를 읽어 화면에 입력한다.

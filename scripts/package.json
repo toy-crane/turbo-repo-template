@@ -6,7 +6,7 @@
     "check": "ultracite check .",
     "check-types": "tsc --noEmit",
     "fix": "ultracite fix .",
-    "test": "bun test setup auth",
+    "test": "bun test setup auth dev",
     "test:integration": "bun test integration"
   },
   "dependencies": {
