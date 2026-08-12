@@ -19,8 +19,10 @@ import {
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { SettingsScreen } from "./settings-screen";
 
-/** The foreground colour the root layout would hand this screen. */
+/** The colours the root layout would hand this screen. */
 const FOREGROUND = "#111114";
+const DANGER = "#dc2626";
+const MUTED = "#6b7280";
 
 jest.mock("@/features/auth/state/auth-session", () => ({
   useAuthSession: jest.fn(),
@@ -53,17 +55,26 @@ jest.mock("@expo/ui", () => {
   return {
     FieldGroup,
     Host: Container,
+    // Renders as its own node so a test can assert the row shows a chevron.
+    Icon: ({ name }: { name: string }) =>
+      React.createElement(NativeText, null, name),
     // A native list row takes a press anywhere across it and reads its own text
     // as its accessible name, so the stand-in does the same.
     ListItem: ({
       children,
       onPress,
       testID,
-    }: PropsWithChildren<{ onPress?: () => void; testID?: string }>) =>
+      trailing,
+    }: PropsWithChildren<{
+      onPress?: () => void;
+      testID?: string;
+      trailing?: React.ReactNode;
+    }>) =>
       React.createElement(
         Pressable,
         { accessibilityRole: "button", onPress, testID },
-        children
+        children,
+        trailing
       ),
     // Hosts plain React Native children inside the native tree, which is exactly
     // what a View does here.
@@ -118,7 +129,12 @@ function renderSettings({
 } = {}) {
   return renderWithHeroUI(
     <QueryClientProvider client={queryClient}>
-      <SettingsScreen foreground={FOREGROUND} onEditProfile={onEditProfile} />
+      <SettingsScreen
+        danger={DANGER}
+        foreground={FOREGROUND}
+        muted={MUTED}
+        onEditProfile={onEditProfile}
+      />
     </QueryClientProvider>
   );
 }

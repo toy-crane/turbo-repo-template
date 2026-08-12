@@ -38,11 +38,16 @@ function SettingsToolbar() {
 }
 
 export default function SettingsRoute() {
-  const { foreground } = useAppTheme();
+  const { danger, foreground, muted } = useAppTheme();
 
   return (
     <>
-      <SettingsScreen foreground={foreground} onEditProfile={openProfileEdit} />
+      <SettingsScreen
+        danger={danger}
+        foreground={foreground}
+        muted={muted}
+        onEditProfile={openProfileEdit}
+      />
       <SettingsToolbar />
     </>
   );

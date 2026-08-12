@@ -14,9 +14,16 @@ export function getSettingsSheetOptions() {
   };
 }
 
-/** Shared by every screen inside the sheet, so they read as one surface. */
+/**
+ * Shared by every screen inside the sheet, so they read as one surface.
+ *
+ * The back control is the chevron alone. A title beside it repeats the screen a
+ * person just came from and takes the width the current title needs, so this app
+ * never names its back buttons.
+ */
 export function getSettingsStackScreenOptions() {
   return {
+    headerBackButtonDisplayMode: "minimal" as const,
     headerShadowVisible: false,
     headerTransparent: true,
   };

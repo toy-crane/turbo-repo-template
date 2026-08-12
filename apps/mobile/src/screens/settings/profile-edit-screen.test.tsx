@@ -103,8 +103,15 @@ jest.mock("@expo/ui", () => {
     RNHostView: Container,
     Row: Container,
     Spacer: Container,
-    Text: ({ children, testID }: PropsWithChildren<{ testID?: string }>) =>
-      React.createElement(NativeText, { testID }, children),
+    Text: ({
+      children,
+      testID,
+      textStyle,
+    }: PropsWithChildren<{
+      testID?: string;
+      textStyle?: import("react-native").TextStyle;
+    }>) =>
+      React.createElement(NativeText, { style: textStyle, testID }, children),
     TextInput: ({
       editable,
       onChangeText,
@@ -152,6 +159,9 @@ const mockPicker = {
 /** Where a picture must land: the owner's own folder in the bucket. */
 const OWN_FOLDER = /^user-1\//;
 
+/** The colour the route hands the screen for anything that reads as a problem. */
+const DANGER = "#dc2626";
+
 const SAVED = {
   display_name: "김민서",
   username: "minseokim",
@@ -190,7 +200,7 @@ function ProfileEditHarness({ onSaved }: { onSaved?: () => void }) {
 
   return (
     <>
-      <ProfileEditScreen flow={flow} />
+      <ProfileEditScreen danger={DANGER} flow={flow} />
       <Pressable
         accessibilityLabel="저장"
         accessibilityRole="button"
@@ -322,6 +332,53 @@ test("이미 사용 중인 아이디에는 대안을 제안한다", async () => 
     );
 
     expect(suggestions).toHaveLength(3);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+test("예약어를 입력하면 쓸 수 없다고 알리고 화면은 그대로 살아 있다", async () => {
+  jest.useFakeTimers();
+
+  try {
+    await renderEditor();
+    await typeUsername("admin");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("profile-username-message")).toHaveTextContent(
+        "사용할 수 없는 아이디예요."
+      );
+    });
+
+    // The alternatives used to mount inside the section footer, which took the
+    // whole app down natively the moment this state appeared.
+    expect(screen.getByTestId("profile-username")).toBeOnTheScreen();
+    expect(
+      await screen.findAllByTestId("profile-username-suggestion")
+    ).toHaveLength(3);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+test("문제는 빨간색으로, 상시 설명은 기본 색으로 구분한다", async () => {
+  jest.useFakeTimers();
+
+  try {
+    await renderEditor();
+    await typeUsername("admin");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("profile-username-message")).toHaveStyle({
+        color: DANGER,
+      });
+    });
+
+    // Both messages sit in the same footer. Left the same colour they read as
+    // one block of small print and nothing says which one is the problem.
+    expect(
+      screen.getByTestId("profile-username-policy").props.style
+    ).toBeUndefined();
   } finally {
     jest.useRealTimers();
   }

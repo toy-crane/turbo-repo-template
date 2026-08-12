@@ -9,6 +9,8 @@ import { Avatar } from "heroui-native/avatar";
  */
 const XL_ROOT_CLASS = "h-24 w-24";
 const XL_FALLBACK_TEXT_CLASS = "text-3xl";
+/** A profile picture is a circle everywhere it appears, not a rounded square. */
+const CIRCLE_CLASS = "rounded-full";
 
 export interface UserAvatarProps {
   avatarUrl: string | null;
@@ -45,7 +47,9 @@ export function UserAvatar({
   return (
     <Avatar
       alt={displayName ? `${displayName} 프로필 사진` : "프로필 사진"}
-      className={isExtraLarge ? XL_ROOT_CLASS : undefined}
+      className={
+        isExtraLarge ? `${XL_ROOT_CLASS} ${CIRCLE_CLASS}` : CIRCLE_CLASS
+      }
       color="accent"
       size={isExtraLarge ? "lg" : size}
       variant="soft"

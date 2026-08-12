@@ -1,6 +1,7 @@
 import {
   FieldGroup,
   Host,
+  Icon,
   ListItem,
   RNHostView,
   Row,
@@ -23,6 +24,8 @@ import { heroRowModifiers } from "./hero-row";
 import { SettingsProfileHero } from "./settings-profile-hero";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
+/** What iOS uses for a list disclosure chevron, which is smaller than body text. */
+const CHEVRON_SIZE = 14;
 
 /**
  * The app's settings.
@@ -31,10 +34,14 @@ const appVersion = Constants.expoConfig?.version ?? "Unknown";
  * layout, and a screen does not reach up into it.
  */
 export function SettingsScreen({
+  danger,
   foreground,
+  muted,
   onEditProfile,
 }: {
+  danger: string;
   foreground: string;
+  muted: string;
   onEditProfile: () => void;
 }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -60,14 +67,16 @@ export function SettingsScreen({
           the header pinned while the sections scrolled under it. A non-section
           child renders inline between sections, which is where it belongs.
         */}
-        <RNHostView matchContents modifiers={heroRowModifiers}>
-          <SettingsProfileHero
-            avatarUrl={readProfileAvatarUrl(profile)}
-            displayName={profile?.displayName ?? null}
-            onPress={onEditProfile}
-            username={profile?.username ?? null}
-          />
-        </RNHostView>
+        <FieldGroup.Section modifiers={heroRowModifiers}>
+          <RNHostView matchContents>
+            <SettingsProfileHero
+              avatarUrl={readProfileAvatarUrl(profile)}
+              displayName={profile?.displayName ?? null}
+              onPress={onEditProfile}
+              username={profile?.username ?? null}
+            />
+          </RNHostView>
+        </FieldGroup.Section>
 
         <FieldGroup.Section title={profileLabels.account}>
           {/*
@@ -76,13 +85,35 @@ export function SettingsScreen({
             takes the press anywhere across it, which is what the rest of this
             screen already behaves like.
           */}
-          <ListItem onPress={onEditProfile} testID="edit-profile-row">
+          {/*
+            The chevron is iOS telling people the row goes somewhere. `@expo/ui`
+            has no disclosure indicator of its own — SwiftUI only draws the small
+            grey one for a NavigationLink — so the size and colour are set here.
+            Left at its intrinsic size it inherits the row's font and reads as a
+            heavy black arrow rather than the system's quiet one.
+
+            Android lists do not use a chevron, so it is left off there rather
+            than drawn from a second icon set.
+          */}
+          <ListItem
+            onPress={onEditProfile}
+            testID="edit-profile-row"
+            trailing={
+              Platform.OS === "ios" ? (
+                <Icon color={muted} name="chevron.right" size={CHEVRON_SIZE} />
+              ) : undefined
+            }
+          >
             <Text textStyle={androidTextStyle}>
               {profileLabels.editProfile}
             </Text>
           </ListItem>
+          {/*
+            Red because signing out ends something. It is the only row here that
+            does, and no chevron: it acts rather than navigates.
+          */}
           <ListItem onPress={requestSignOut} testID="sign-out-button">
-            <Text textStyle={androidTextStyle}>
+            <Text textStyle={{ color: danger }}>
               {isSigningOut ? profileLabels.signingOut : profileLabels.signOut}
             </Text>
           </ListItem>

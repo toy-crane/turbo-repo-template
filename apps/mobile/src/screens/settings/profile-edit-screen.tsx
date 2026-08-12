@@ -1,8 +1,8 @@
 import {
-  Button,
   Column,
   FieldGroup,
   Host,
+  ListItem,
   RNHostView,
   Row,
   Text,
@@ -106,8 +106,20 @@ export type ProfileEditFlow = ReturnType<typeof useProfileEditFlow>;
  * a number picked in the app would be the one thing on this screen that did not
  * match the surrounding settings.
  */
-export function ProfileEditScreen({ flow }: { flow: ProfileEditFlow }) {
+export function ProfileEditScreen({
+  danger,
+  flow,
+}: {
+  danger: string;
+  flow: ProfileEditFlow;
+}) {
   const { cameraDeniedMessage, edit, menu, menuActions } = flow;
+  /*
+   * Red is what separates a problem from the standing explanation under it.
+   * Both sit in the same footer, and left the same grey they read as one block
+   * of small print. The check in progress is not a problem, so it stays quiet.
+   */
+  const problemStyle = { color: danger };
   // The native fields hold their own text and report changes back. These carry
   // the two writes that do not come from typing: the saved values this screen
   // opens with, and a suggestion the person pressed.
@@ -141,15 +153,22 @@ export function ProfileEditScreen({ flow }: { flow: ProfileEditFlow }) {
   return (
     <Host style={{ flex: 1 }} useViewportSizeMeasurement>
       <FieldGroup testID="profile-edit-field-group">
-        <RNHostView matchContents modifiers={heroRowModifiers}>
-          <EditableProfileHero
-            avatarUrl={edit.avatarUrl}
-            displayName={edit.nickname}
-            onEditPhoto={menu.open}
-          />
-        </RNHostView>
+        <FieldGroup.Section modifiers={heroRowModifiers}>
+          <RNHostView matchContents>
+            <EditableProfileHero
+              avatarUrl={edit.avatarUrl}
+              displayName={edit.nickname}
+              onEditPhoto={menu.open}
+            />
+          </RNHostView>
+        </FieldGroup.Section>
 
-        <FieldGroup.Section title={profileLabels.publicProfile}>
+        {/*
+          No section title. The two fields under a person's own picture are
+          plainly their profile, and naming them again only pushed the form
+          further down the screen.
+        */}
+        <FieldGroup.Section>
           {/*
             No spacer between the label and the field: in a native form row the
             field already takes what the label leaves, and a flexible spacer
@@ -180,6 +199,10 @@ export function ProfileEditScreen({ flow }: { flow: ProfileEditFlow }) {
               autoComplete="username"
               autoCorrect={false}
               editable={!edit.isUsernameLocked}
+              // An account id is lowercase latin, digits and underscore. A
+              // composing keyboard turns those keys into Hangul the field then
+              // has to reject, so ask for the plain ASCII one.
+              keyboardType="ascii-capable"
               maxLength={USERNAME_MAX_LENGTH}
               onChangeText={changeUsername}
               placeholder={profileLabels.username}
@@ -198,24 +221,22 @@ export function ProfileEditScreen({ flow }: { flow: ProfileEditFlow }) {
                 a state most people never reach.
               */}
               {edit.nicknameMessage ? (
-                <Text testID="profile-nickname-message">
+                <Text
+                  testID="profile-nickname-message"
+                  textStyle={problemStyle}
+                >
                   {edit.nicknameMessage}
                 </Text>
               ) : null}
 
               {edit.usernameMessage ? (
-                <Text testID="profile-username-message">
+                <Text
+                  testID="profile-username-message"
+                  textStyle={edit.isCheckingUsername ? undefined : problemStyle}
+                >
                   {edit.usernameMessage}
                 </Text>
               ) : null}
-
-              {edit.suggestions.map((candidate) => (
-                <UsernameSuggestion
-                  candidate={candidate}
-                  key={candidate}
-                  onChoose={chooseSuggestion}
-                />
-              ))}
 
               <Text testID="profile-username-policy">{edit.policyNote}</Text>
 
@@ -226,11 +247,32 @@ export function ProfileEditScreen({ flow }: { flow: ProfileEditFlow }) {
               ) : null}
 
               {edit.saveFailure ? (
-                <Text testID="profile-save-failure">{edit.saveFailure}</Text>
+                <Text testID="profile-save-failure" textStyle={problemStyle}>
+                  {edit.saveFailure}
+                </Text>
               ) : null}
             </Column>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
+
+        {/*
+          The alternatives are their own section of rows rather than controls
+          inside the footer above. A section footer is a place for explanation,
+          and mounting a button in one crashed the app outright the moment an id
+          came back reserved or taken. Rows are also the shape a person already
+          taps everywhere else in Settings.
+        */}
+        {edit.suggestions.length > 0 ? (
+          <FieldGroup.Section title={profileLabels.suggestions}>
+            {edit.suggestions.map((candidate) => (
+              <UsernameSuggestion
+                candidate={candidate}
+                key={candidate}
+                onChoose={chooseSuggestion}
+              />
+            ))}
+          </FieldGroup.Section>
+        ) : null}
       </FieldGroup>
 
       {/*
@@ -258,8 +300,8 @@ function UsernameSuggestion({
   }, [candidate, onChoose]);
 
   return (
-    <Button onPress={choose} testID="profile-username-suggestion">
-      {candidate}
-    </Button>
+    <ListItem onPress={choose} testID="profile-username-suggestion">
+      <Text>{candidate}</Text>
+    </ListItem>
   );
 }

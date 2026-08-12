@@ -21,6 +21,9 @@ describe("getSettingsSheetOptions", () => {
 describe("시트 안쪽 화면", () => {
   test("같은 표면으로 읽히도록 공통 옵션을 쓴다", () => {
     expect(getSettingsStackScreenOptions()).toEqual({
+      // The chevron carries the back control on its own. Naming the previous
+      // screen repeats it and eats the width the current title needs.
+      headerBackButtonDisplayMode: "minimal",
       headerShadowVisible: false,
       headerTransparent: true,
     });
