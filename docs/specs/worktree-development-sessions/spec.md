@@ -19,14 +19,15 @@
 첫 버전은 다음 명령만 제공한다.
 
 ```bash
-bun run dev
+bun run dev ios
 bun run dev android
 bun run dev:stop
 bun run dev:remove
 ```
 
-- `bun run dev`는 iOS 개발 세션을 시작한다.
+- `bun run dev ios`는 iOS 개발 세션을 시작한다.
 - `bun run dev android`는 Android 개발 세션을 시작한다.
+- `bun run dev`처럼 플랫폼을 생략하거나 다른 값을 입력하면 아무것도 시작하지 않고 `bun run dev <ios|android>` 사용법을 보여 준 뒤 실패한다.
 - 시작 명령은 API와 Metro가 응답하고 앱이 지정한 기기에서 열릴 때까지 기다린다. 준비가 끝나면 포트, 기기 이름과 로그 파일 위치를 출력하고 터미널을 돌려준다.
 - 같은 worktree에서 같은 플랫폼이 이미 실행 중이면 프로세스를 중복 생성하지 않고 앱을 다시 열고 현재 정보를 출력한다.
 - 다른 플랫폼이 실행 중이면 그 세션을 정상 종료한 뒤 요청한 플랫폼으로 전환한다. 플랫폼별 기기와 앱 데이터는 그대로 유지한다.
@@ -34,7 +35,7 @@ bun run dev:remove
 - `bun run dev:remove`는 현재 worktree의 개발 자원만 삭제한다. Git worktree 자체는 삭제하지 않는다.
 - 별도의 `start`, `status`, `logs`, `prune`, `repair`, `baseline` 명령은 만들지 않는다.
 
-루트 `bun run dev`가 일반 개발의 유일한 기본 경로다. 아래 앱별 명령은 수동 진단 경로로만 남긴다.
+루트 `bun run dev <ios|android>`가 일반 개발의 유일한 기본 경로다. 아래 앱별 명령은 수동 진단 경로로만 남긴다.
 
 ```bash
 bun run --cwd apps/api dev
@@ -160,14 +161,14 @@ worktree마다 가장 작은 빈 정수 slot을 배정한다. 기존 worktree는
 
 ### iOS
 
-- 첫 기본값은 iOS 26.5의 iPhone 17 Pro다.
+- 기본 iOS 기기 구성은 iOS 26.5의 iPhone 17 Pro다.
 - 저장한 UDID를 기기 조작의 기준으로 사용한다. 표시 이름만으로 Simulator를 선택하지 않는다.
 - 기기가 없으면 빈 Simulator를 만들고 공용 Development Build를 설치한다. 미리 앱을 설치한 기준 Simulator는 만들지 않는다.
 - Metro가 준비되면 정확한 UDID에 현재 Metro 포트가 포함된 development client URL을 연다.
 
 ### Android
 
-- 첫 기본값은 Google Play ARM64 API 35 system image의 Pixel 9 Pro다.
+- 기본 Android 기기 구성은 Google Play ARM64 API 35 system image의 Pixel 9 Pro다.
 - AVD 이름을 지속 식별자로 저장한다. `emulator-5554` 같은 adb serial은 실행할 때마다 해당 AVD에서 다시 찾는다.
 - 모든 adb 명령은 `-s <serial>`로 대상 Emulator를 지정한다.
 - AVD가 없으면 `avdmanager`로 새로 만든다. 같은 AVD를 읽기 전용으로 여러 번 실행하거나 AVD 파일을 직접 복사하지 않는다.
@@ -202,7 +203,7 @@ worktree마다 가장 작은 빈 정수 slot을 배정한다. 기존 worktree는
 
 ## 시작 절차
 
-`bun run dev [android]`는 다음 결과를 만든다.
+`bun run dev <ios|android>`는 다음 결과를 만든다.
 
 1. 현재 Git worktree와 저장소를 식별한다.
 2. 필수 환경 설정과 로컬 Supabase 상태를 확인한다.
@@ -238,7 +239,7 @@ Git worktree를 삭제하려면 해당 폴더에서 `bun run dev:remove`를 먼�
 
 ## 완료 조건
 
-1. 기본 저장소 폴더와 추가 worktree에서 `bun run dev`를 동시에 실행할 수 있다.
+1. 기본 저장소 폴더와 추가 worktree에서 `bun run dev ios`를 동시에 실행할 수 있다.
 2. 두 실행은 서로 다른 API·Metro 포트와 iOS Simulator UDID를 사용한다.
 3. 서로 다른 worktree에서 `bun run dev android`를 실행하면 각기 다른 AVD를 사용하고 모든 adb 명령이 정확한 serial을 대상으로 한다.
 4. 같은 bundle ID와 Android package를 유지한 앱이 서로 다른 전용 기기에 동시에 설치된다.
@@ -250,7 +251,7 @@ Git worktree를 삭제하려면 해당 폴더에서 `bun run dev:remove`를 먼�
 10. 일반 종료 뒤 다시 시작하면 같은 slot, 기기와 로그인 상태를 재사용한다.
 11. 알 수 없는 프로세스가 저장된 포트를 사용해도 그 프로세스를 종료하지 않고 다른 slot으로 옮긴다.
 12. Android 앱은 `10.0.2.2` 주소로 현재 worktree의 API와 공유 Supabase에 연결된다.
-13. `bun run dev`와 `bun run dev:stop`은 로컬 Supabase의 실행 상태나 데이터를 바꾸지 않는다.
+13. `bun run dev ios`, `bun run dev android`와 `bun run dev:stop`은 로컬 Supabase의 실행 상태나 데이터를 바꾸지 않는다.
 14. 시작 명령은 앱이 열리기 전에 성공으로 끝나지 않으며, 성공할 때 로그 파일 위치를 출력한다.
 15. `bun run dev:remove`는 Git worktree와 저장소 공용 빌드를 삭제하지 않는다.
 

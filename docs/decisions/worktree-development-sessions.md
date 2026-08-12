@@ -2,8 +2,8 @@
 
 ## 결정
 
-- 루트의 `bun run dev`를 저장소 전체 로컬 개발 세션의 기본 실행 명령으로 사용한다. 이 명령은 API, Metro와 대상 Simulator 또는 Emulator를 함께 시작한다.
-- 기본 대상은 iOS다. Android는 `bun run dev android`로 시작하며, 한 Git worktree에서는 한 번에 한 플랫폼만 실행한다.
+- 루트의 `bun run dev <ios|android>`를 저장소 전체 로컬 개발 세션의 기본 실행 명령으로 사용한다. 이 명령은 API, Metro와 대상 Simulator 또는 Emulator를 함께 시작한다.
+- 플랫폼 인수는 필수다. `bun run dev`만 실행하면 아무것도 시작하지 않고 사용법을 보여 준다. 한 Git worktree에서는 한 번에 한 플랫폼만 실행한다.
 - 기본 저장소 폴더와 추가 Git worktree를 같은 실행 단위로 취급한다. 실행 단위는 브랜치 이름이 아니라 정규화된 worktree 절대 경로로 식별한다.
 - worktree마다 고정 slot, API·Metro 포트와 플랫폼별 전용 기기를 배정한다. 일반 종료 뒤에도 이 상태를 유지해 다음 실행에서 재사용한다.
 - 네이티브 Development Build는 저장소 단위로 공유한다. 플랫폼과 Expo native fingerprint가 같은 worktree는 공용 빌드 결과를 설치해 재사용한다.
@@ -38,6 +38,8 @@ Portless는 고정 hostname과 빈 포트 선택에는 유용하지만 Simulator
 
 ## 계속 제외하는 대안
 
+- iOS를 기본 플랫폼으로 사용: 짧지만 실행 대상을 명령에서 확인할 수 없고 Android 작업에서도 실수로 iOS를 열 수 있다.
+- 실행 중인 기기나 이전 실행에서 플랫폼 추론: 같은 명령의 결과가 로컬 상태에 따라 달라져 사람과 에이전트가 예측하기 어렵다.
 - 브랜치 이름으로 실행 환경 식별: 브랜치 전환과 detached HEAD를 안정적으로 처리하지 못한다.
 - worktree마다 같은 native fingerprint를 다시 빌드: 구현은 단순하지만 현재 iOS 소스 빌드 비용을 worktree마다 반복한다.
 - 준비된 기준 Simulator 복제: iOS와 Android에 같은 방식으로 적용할 수 없고 기준 기기의 빌드 갱신과 오염을 별도로 관리해야 한다.
