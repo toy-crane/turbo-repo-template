@@ -219,8 +219,16 @@ SELECT is(
   'taking an id back releases its protection rather than leaving a stale row'
 );
 
+-- Counted over this test's own accounts rather than the whole table. A bare
+-- count(*) passes only on an empty database, so it would fail against any
+-- developer's local data and pass again after the next reset — which is exactly
+-- the kind of green that stops meaning anything.
 SELECT is(
-  (SELECT count(*) FROM public.retired_usernames),
+  (SELECT count(*) FROM public.retired_usernames
+    WHERE retired_by IN (
+      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    )),
   1::bigint,
   'and the list holds one row per released id rather than one per change'
 );
