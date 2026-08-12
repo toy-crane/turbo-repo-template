@@ -30,6 +30,8 @@ import { chatLabels } from "./chat-labels";
 export { chatLabels } from "./chat-labels";
 
 const INPUT_MAX_HEIGHT = 120;
+const INPUT_MIN_HEIGHT = 48;
+const LATEST_OVERLAY_HEIGHT = 60;
 const USER_SCROLL_THRESHOLD = 24;
 const LIST_END_THRESHOLD = 20;
 
@@ -85,6 +87,7 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
   const composerRef = useRef<View | null>(null);
   const [anchorIndex, setAnchorIndex] = useState<number | undefined>();
   const [isFollowingLatest, setIsFollowingLatest] = useState(true);
+  const [inputHeight, setInputHeight] = useState(INPUT_MIN_HEIGHT);
   const userMomentum = useRef<true | undefined>(undefined);
   const userScrollStart = useRef<number | undefined>(undefined);
   const canSend = chat.draft.trim().length > 0 && !chat.isBusy;
@@ -162,6 +165,21 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
       () => undefined
     );
   }, [scrollMessageToEnd]);
+  const resizeInput = useCallback(
+    (
+      event: NativeSyntheticEvent<{
+        contentSize: { height: number; width: number };
+      }>
+    ) => {
+      setInputHeight(
+        Math.min(
+          INPUT_MAX_HEIGHT,
+          Math.max(INPUT_MIN_HEIGHT, event.nativeEvent.contentSize.height)
+        )
+      );
+    },
+    []
+  );
   const send = useCallback(() => {
     if (!canSend) {
       return;
@@ -169,6 +187,7 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
 
     setAnchorIndex(chat.messages.length);
     setIsFollowingLatest(true);
+    setInputHeight(INPUT_MIN_HEIGHT);
     chat.send();
 
     requestAnimationFrame(() => {
@@ -219,18 +238,31 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
         testID="chat-list"
       />
 
-      <KeyboardStickyView
-        offset={{ closed: 0, opened: insets.bottom }}
-        style={{ bottom: 0, left: 0, position: "absolute", right: 0 }}
-      >
+      <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
         <View
-          className="gap-2 bg-background px-5 pt-2"
-          onLayout={onComposerLayout}
-          ref={composerRef}
-          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+          pointerEvents="box-none"
+          style={
+            isFollowingLatest
+              ? undefined
+              : {
+                  marginTop: -LATEST_OVERLAY_HEIGHT,
+                  paddingTop: LATEST_OVERLAY_HEIGHT,
+                }
+          }
         >
           {isFollowingLatest ? null : (
-            <View className="items-center pb-2">
+            <View
+              className="items-center justify-end pb-2"
+              pointerEvents="box-none"
+              style={{
+                height: LATEST_OVERLAY_HEIGHT,
+                left: 0,
+                position: "absolute",
+                right: 0,
+                top: 0,
+              }}
+              testID="chat-latest-overlay"
+            >
               <Pressable
                 accessibilityLabel={chatLabels.latest}
                 accessibilityRole="button"
@@ -243,46 +275,55 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
             </View>
           )}
 
-          {chat.error ? (
-            <Text
-              accessibilityLiveRegion="assertive"
-              accessibilityRole="alert"
-              className="text-danger text-sm"
-              testID="chat-error"
-            >
-              {chatLabels.errorAnnouncement}
-            </Text>
-          ) : null}
+          <View
+            className="gap-2 bg-background px-5 pt-2"
+            onLayout={onComposerLayout}
+            ref={composerRef}
+            style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+            testID="chat-composer"
+          >
+            {chat.error ? (
+              <Text
+                accessibilityLiveRegion="assertive"
+                accessibilityRole="alert"
+                className="text-danger text-sm"
+                testID="chat-error"
+              >
+                {chatLabels.errorAnnouncement}
+              </Text>
+            ) : null}
 
-          <View className="flex-row items-end gap-2">
-            <TextInput
-              accessibilityLabel={chatLabels.input}
-              className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
-              multiline
-              onChangeText={chat.setDraft}
-              onSubmitEditing={send}
-              placeholder="메시지를 입력하세요"
-              returnKeyType="send"
-              style={{ maxHeight: INPUT_MAX_HEIGHT }}
-              submitBehavior="submit"
-              testID="chat-input"
-              value={chat.draft}
-            />
-            <Pressable
-              accessibilityLabel={chatLabels.send}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !canSend }}
-              className={
-                canSend
-                  ? "h-11 w-11 items-center justify-center rounded-full bg-accent"
-                  : "h-11 w-11 items-center justify-center rounded-full bg-accent opacity-40"
-              }
-              disabled={!canSend}
-              onPress={send}
-              testID="chat-send"
-            >
-              <Icon name="send" tone="accentForeground" />
-            </Pressable>
+            <View className="flex-row items-end gap-2">
+              <TextInput
+                accessibilityLabel={chatLabels.input}
+                className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
+                multiline
+                onChangeText={chat.setDraft}
+                onContentSizeChange={resizeInput}
+                onSubmitEditing={send}
+                placeholder="메시지를 입력하세요"
+                returnKeyType="send"
+                style={{ height: inputHeight, maxHeight: INPUT_MAX_HEIGHT }}
+                submitBehavior="submit"
+                testID="chat-input"
+                value={chat.draft}
+              />
+              <Pressable
+                accessibilityLabel={chatLabels.send}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !canSend }}
+                className={
+                  canSend
+                    ? "h-11 w-11 items-center justify-center rounded-full bg-accent"
+                    : "h-11 w-11 items-center justify-center rounded-full bg-accent opacity-40"
+                }
+                disabled={!canSend}
+                onPress={send}
+                testID="chat-send"
+              >
+                <Icon name="send" tone="accentForeground" />
+              </Pressable>
+            </View>
           </View>
         </View>
       </KeyboardStickyView>

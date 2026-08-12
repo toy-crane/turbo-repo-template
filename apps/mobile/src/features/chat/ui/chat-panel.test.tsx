@@ -4,10 +4,11 @@ import {
   fireEvent,
   screen,
   userEvent,
+  within,
 } from "@testing-library/react-native";
 import type { UIMessage } from "ai";
 import { useState } from "react";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 import { KeyboardController } from "react-native-keyboard-controller";
 
 import type { ChatSession } from "@/features/chat/state/use-chat-session";
@@ -270,6 +271,30 @@ describe("ChatPanel", () => {
     expect(screen.getByLabelText("최신 메시지로 이동")).toBeOnTheScreen();
   });
 
+  test("최신 메시지 버튼은 입력창 밖의 투명한 오버레이에 띄운다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+    await scrollAwayFromLatest();
+
+    expect(
+      within(screen.getByTestId("chat-composer")).queryByLabelText(
+        chatLabels.latest
+      )
+    ).not.toBeOnTheScreen();
+    expect(
+      StyleSheet.flatten(screen.getByTestId("chat-latest-overlay").props.style)
+        .position
+    ).toBe("absolute");
+    expect(screen.getByTestId("chat-latest-overlay").props.pointerEvents).toBe(
+      "box-none"
+    );
+  });
+
   test("최신 메시지 이동 버튼을 누르면 자동 추적을 다시 켠다", async () => {
     const user = userEvent.setup();
     await renderWithHeroUI(
@@ -442,6 +467,37 @@ describe("ChatPanel", () => {
 
     await user.press(screen.getByLabelText(chatLabels.send));
     expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  test("긴 입력을 보내면 입력창 높이를 한 줄로 줄인다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          draft: "여러 줄로 늘어난 긴 질문",
+          send: jest.fn(),
+        })}
+      />
+    );
+    const input = screen.getByLabelText(chatLabels.input);
+
+    await act(() => {
+      input.props.onContentSizeChange({
+        nativeEvent: { contentSize: { height: 240, width: 300 } },
+      });
+    });
+
+    expect(
+      StyleSheet.flatten(screen.getByLabelText(chatLabels.input).props.style)
+        .height
+    ).toBe(120);
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    expect(
+      StyleSheet.flatten(screen.getByLabelText(chatLabels.input).props.style)
+        .height
+    ).toBe(48);
   });
 
   test("생성 중에는 전송만 비활성화하고 별도 상태 작업을 만들지 않는다", async () => {
