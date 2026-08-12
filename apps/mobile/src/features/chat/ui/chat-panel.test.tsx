@@ -279,6 +279,11 @@ describe("ChatPanel", () => {
         })}
       />
     );
+    await act(() => {
+      screen.getByTestId("chat-composer").props.onLayout({
+        nativeEvent: { layout: { height: 76 } },
+      });
+    });
     await scrollAwayFromLatest();
 
     expect(
@@ -288,8 +293,7 @@ describe("ChatPanel", () => {
     ).not.toBeOnTheScreen();
     expect(
       StyleSheet.flatten(screen.getByTestId("chat-latest-overlay").props.style)
-        .position
-    ).toBe("absolute");
+    ).toMatchObject({ bottom: 76, position: "absolute" });
     expect(screen.getByTestId("chat-latest-overlay").props.pointerEvents).toBe(
       "box-none"
     );
