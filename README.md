@@ -388,7 +388,8 @@ bun run test:integration
 ## 자주 쓰는 명령
 
 ```bash
-bun run dev
+bun run dev ios
+bun run dev:stop
 bun run build
 bun run check
 bun run fix
@@ -401,6 +402,34 @@ bun run auth:otp -- --email <주소>
 
 Expo SDK 57 앱은 `apps/mobile`에 있습니다.
 iOS와 Android 모두 앱 전용 Development Build를 사용합니다.
+
+개발은 저장소 루트의 개발 세션 명령 하나로 시작합니다.
+이 명령이 API와 Metro를 이 폴더 전용 포트로 띄우고, 이 폴더에 배정한 Simulator나 Emulator에서 앱을 엽니다.
+앱이 Metro에 연결된 것을 확인한 뒤에 터미널을 돌려주고, 그다음부터는 백그라운드에서 계속 실행합니다.
+
+```bash
+bun run dev ios
+bun run dev android
+bun run dev:stop
+bun run dev:remove
+```
+
+플랫폼 인수는 필수입니다.
+한 폴더에서는 한 번에 한 플랫폼만 실행하고, 다른 플랫폼을 요청하면 먼저 실행 중인 세션을 종료한 뒤 전환합니다.
+
+`bun run dev:stop`은 프로세스와 기기만 멈춥니다.
+포트, 기기 배정, 설치한 앱과 로그인 상태는 그대로 두므로 다음 실행에서 이어집니다.
+`bun run dev:remove`는 이 폴더에 배정한 기기를 초기화해 저장소 기기 풀로 돌려놓고 포트를 반납합니다.
+Git worktree, 풀의 기기와 저장소 공용 빌드는 지우지 않습니다.
+
+여러 Git worktree에서 같은 앱을 동시에 개발할 수 있습니다.
+폴더마다 다른 포트와 다른 기기를 배정하고, 네이티브 빌드는 플랫폼과 native fingerprint가 같으면 저장소 전체에서 함께 씁니다.
+JavaScript만 바꾸면 다시 빌드하지 않습니다.
+로컬 Supabase는 모든 폴더가 함께 쓰므로 개발 세션 명령이 시작하거나 중지하지 않습니다.
+먼저 `bun run db:start`로 켜 두세요.
+
+아래 앱별 명령은 수동 진단용입니다.
+포트와 기기를 관리하지 않으므로 여러 worktree를 동시에 실행할 때는 쓰지 마세요.
 
 ```bash
 bun run --cwd apps/mobile ios
