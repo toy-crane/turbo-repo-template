@@ -19,6 +19,7 @@ import {
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useSignOut } from "@/features/auth/state/use-sign-out";
 import { profileLabels } from "@/features/auth/ui/profile-labels";
+import { heroRowModifiers } from "./hero-row";
 import { SettingsProfileHero } from "./settings-profile-hero";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
@@ -59,7 +60,7 @@ export function SettingsScreen({
           the header pinned while the sections scrolled under it. A non-section
           child renders inline between sections, which is where it belongs.
         */}
-        <RNHostView matchContents>
+        <RNHostView matchContents modifiers={heroRowModifiers}>
           <SettingsProfileHero
             avatarUrl={readProfileAvatarUrl(profile)}
             displayName={profile?.displayName ?? null}

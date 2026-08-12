@@ -26,6 +26,7 @@ import {
   USERNAME_CONFIRM_TITLE,
 } from "@/features/auth/ui/profile-labels";
 import { EditableProfileHero } from "./editable-profile-hero";
+import { heroRowModifiers } from "./hero-row";
 import {
   type PhotoSourceActions,
   PhotoSourceSheet,
@@ -140,7 +141,7 @@ export function ProfileEditScreen({ flow }: { flow: ProfileEditFlow }) {
   return (
     <Host style={{ flex: 1 }} useViewportSizeMeasurement>
       <FieldGroup testID="profile-edit-field-group">
-        <RNHostView matchContents>
+        <RNHostView matchContents modifiers={heroRowModifiers}>
           <EditableProfileHero
             avatarUrl={edit.avatarUrl}
             displayName={edit.nickname}
