@@ -8,6 +8,7 @@ import {
 } from "./environment";
 
 const iosClientIdMessage = /EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID/;
+const sessionApiUrlMessage = /EXPO_PUBLIC_DEV_SESSION_API_URL/;
 const webClientIdMessage = /EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID/;
 
 const FILE_VALUES = {
@@ -35,14 +36,20 @@ describe("sessionAddresses", () => {
 });
 
 describe("buildMobileEnvironment", () => {
-  test("API와 Supabase 주소만 세션 값으로 바꾼다", () => {
+  test("일반 URL을 보존하고 개발 세션 전용 URL을 추가한다", () => {
     const env = buildMobileEnvironment({
       addresses: sessionAddresses("android", 3910, 54_321),
       fileValues: FILE_VALUES,
     });
 
-    expect(env.EXPO_PUBLIC_API_URL).toBe("http://10.0.2.2:3910");
-    expect(env.EXPO_PUBLIC_SUPABASE_URL).toBe("http://10.0.2.2:54321");
+    expect(env.EXPO_PUBLIC_API_URL).toBe(FILE_VALUES.EXPO_PUBLIC_API_URL);
+    expect(env.EXPO_PUBLIC_SUPABASE_URL).toBe(
+      FILE_VALUES.EXPO_PUBLIC_SUPABASE_URL
+    );
+    expect(env.EXPO_PUBLIC_DEV_SESSION_API_URL).toBe("http://10.0.2.2:3910");
+    expect(env.EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL).toBe(
+      "http://10.0.2.2:54321"
+    );
     expect(env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID).toBe(
       FILE_VALUES.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID
     );
@@ -72,6 +79,18 @@ describe("buildMobileEnvironment", () => {
         },
       })
     ).toThrow(webClientIdMessage);
+  });
+
+  test("형식이 잘못된 개발 세션 URL도 시작 전에 걸러낸다", () => {
+    expect(() =>
+      buildMobileEnvironment({
+        addresses: {
+          apiUrl: "ftp://10.0.2.2:3910",
+          supabaseUrl: "http://10.0.2.2:54321",
+        },
+        fileValues: FILE_VALUES,
+      })
+    ).toThrow(sessionApiUrlMessage);
   });
 });
 

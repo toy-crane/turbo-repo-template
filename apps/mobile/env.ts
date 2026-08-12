@@ -21,13 +21,20 @@ const httpUrl = z
 
 const mobileEnvSchema = z.object({
   EXPO_PUBLIC_API_URL: httpUrl,
+  EXPO_PUBLIC_DEV_SESSION_API_URL: httpUrl.optional(),
+  EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL: httpUrl.optional(),
   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: googleClientId,
   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: googleClientId,
   EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().trim().min(1),
   EXPO_PUBLIC_SUPABASE_URL: httpUrl,
 });
 
-export type MobileEnv = z.infer<typeof mobileEnvSchema>;
+type MobileEnvSource = z.infer<typeof mobileEnvSchema>;
+
+export type MobileEnv = Omit<
+  MobileEnvSource,
+  "EXPO_PUBLIC_DEV_SESSION_API_URL" | "EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL"
+>;
 
 export function parseMobileEnv(input: unknown): MobileEnv {
   const result = mobileEnvSchema.safeParse(input);
@@ -40,12 +47,29 @@ export function parseMobileEnv(input: unknown): MobileEnv {
     throw new Error(`Invalid mobile environment variables:\n${details}`);
   }
 
-  return result.data;
+  const {
+    EXPO_PUBLIC_DEV_SESSION_API_URL,
+    EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL,
+    ...environment
+  } = result.data;
+
+  return {
+    ...environment,
+    EXPO_PUBLIC_API_URL:
+      EXPO_PUBLIC_DEV_SESSION_API_URL ?? environment.EXPO_PUBLIC_API_URL,
+    EXPO_PUBLIC_SUPABASE_URL:
+      EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL ??
+      environment.EXPO_PUBLIC_SUPABASE_URL,
+  };
 }
 
 export function getMobileEnv(): MobileEnv {
   return parseMobileEnv({
     EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+    EXPO_PUBLIC_DEV_SESSION_API_URL:
+      process.env.EXPO_PUBLIC_DEV_SESSION_API_URL,
+    EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL:
+      process.env.EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL,
     EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID:
       process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID:

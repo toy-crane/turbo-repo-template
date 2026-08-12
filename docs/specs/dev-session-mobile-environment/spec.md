@@ -60,4 +60,4 @@ Expo SDK 57의 개발 번들은 셸의 `EXPO_PUBLIC_` 값 뒤에 `.env.local` �
 
 ## 상태
 
-ready for implementation
+completed
