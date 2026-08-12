@@ -136,6 +136,19 @@ test("프로필이 비어 있으면 앱 화면 대신 닉네임 화면을 연다
   expect(screen.queryByLabelText("Home placeholder")).toBeNull();
 });
 
+test("온보딩 두 화면의 제목을 같은 문장 형식으로 보여 준다", async () => {
+  startOnboarding();
+  await openApp();
+
+  await waitFor(() => {
+    expect(screen.getByText("닉네임을 정해 주세요")).toBeOnTheScreen();
+  });
+
+  await goToUsernameScreen();
+
+  expect(screen.getByText("아이디를 정해 주세요")).toBeOnTheScreen();
+});
+
 test("아이디만 없어도 온보딩을 연다", async () => {
   startOnboarding({
     profile: { avatar_url: null, display_name: "김민서", username: null },

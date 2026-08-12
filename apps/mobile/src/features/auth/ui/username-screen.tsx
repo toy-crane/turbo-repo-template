@@ -41,7 +41,7 @@ export function UsernameScreen() {
           <Button.Label>{onboardingLabels.start}</Button.Label>
         </Button>
       }
-      title="사용할 아이디를 입력해 주세요"
+      title="아이디를 정해 주세요"
     >
       <View className="gap-2">
         <TextField isInvalid={form.message !== undefined}>
