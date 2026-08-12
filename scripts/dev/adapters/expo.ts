@@ -72,6 +72,11 @@ export interface DevBuildInput {
  * build start a second one would bind the default port and serve the wrong
  * worktree. `--device` is always passed: without it the CLI waits forever on a
  * device picker that a non-interactive shell can never answer.
+ *
+ * The prebuild runs first because `run:<platform>` skips it whenever the
+ * native folder already exists. This build was asked for precisely because the
+ * fingerprint changed, so a leftover folder from the previous fingerprint is
+ * the one thing that must not be reused.
  */
 export async function runDevBuild({
   device,
@@ -81,6 +86,23 @@ export async function runDevBuild({
   onOutput,
   platform,
 }: DevBuildInput): Promise<void> {
+  const prebuild = await runToLog(
+    [
+      expoBinary(mobileDirectory),
+      "prebuild",
+      "--platform",
+      platform,
+      "--clean",
+    ],
+    { cwd: mobileDirectory, env: buildEnv(env), logPath, onOutput }
+  );
+
+  if (prebuild.code !== 0) {
+    throw new Error(
+      `네이티브 프로젝트를 만들지 못했습니다. 자세한 내용은 ${logPath}를 확인해 주세요.`
+    );
+  }
+
   const result = await runToLog(
     [
       expoBinary(mobileDirectory),

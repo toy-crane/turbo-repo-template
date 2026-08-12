@@ -44,7 +44,10 @@ import { createPlatformDriver, type PlatformDriver } from "./platform";
 const API_READY_TIMEOUT_MS = 60_000;
 const METRO_READY_TIMEOUT_MS = 120_000;
 const BUNDLE_TIMEOUT_MS = 240_000;
-const ALTERNATE_SCHEME_AFTER_MS = 45_000;
+// A cold first bundle regularly runs past two minutes. Trying the second
+// scheme before then would put a "열까요?" dialog on a screen that was about to
+// come up on its own.
+const ALTERNATE_SCHEME_AFTER_MS = 180_000;
 const BUILD_LOCK_TIMEOUT_MS = 60 * 60 * 1000;
 const BUNDLE_PATTERN = /(ios|android)\s+bundl|index\.bundle/i;
 
