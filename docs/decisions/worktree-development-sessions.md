@@ -10,6 +10,7 @@
 - 앱 데이터와 로그인 상태는 공용 빌드에 포함하지 않는다. 각 worktree에 배정한 Simulator 또는 AVD가 독립적으로 소유한다.
 - 로컬 Supabase 스택은 모든 worktree가 공유한다. 개발 세션 명령은 Supabase를 시작하거나 중지하거나 초기화하지 않는다.
 - Portless를 기본 개발 경로에 넣지 않는다. slot에서 실제 포트를 계산하고 개발 세션이 직접 소유한다.
+- 개발 세션이 정한 모바일 API와 Supabase 주소는 `EXPO_PUBLIC_DEV_SESSION_API_URL`과 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL`로 Metro에 전달한다. 앱은 이 값이 있으면 일반 모바일 URL보다 우선한다.
 - 모든 시작 명령은 새 자원을 배정하기 전에 저장소 상태를 실제 Git worktree와 실행 중인 프로세스에 맞춘다. 사라진 worktree의 자원은 회수하고, 살아 있는 worktree의 기기 배정과 앱 데이터는 유지한다.
 
 ## 경계
@@ -29,6 +30,8 @@
 도구별 worktree 삭제 시점은 같지 않다. 개발 세션이 실행 전에 Git worktree와 프로세스 상태를 직접 확인하면 Codex, Claude Code와 일반 터미널이 같은 수명 규칙을 사용한다. 삭제 직후의 정리보다 다음 실행 전의 일관된 회수를 택해 hook과 daemon 없이 기기가 삭제한 worktree 수만큼 늘어나는 일을 막는다.
 
 Portless는 고정 hostname과 빈 포트 선택에는 유용하지만 Simulator·Emulator 소유권, Development Build 호환성, 정확한 Metro 연결을 관리하지 않는다. 현재 범위에서는 별도 프록시 계층 없이 하나의 개발 세션이 포트와 기기를 함께 관리하는 편이 단순하다.
+
+Expo SDK 57의 개발 번들은 셸에서 받은 `EXPO_PUBLIC_` 값 뒤에 `.env.local` 값을 다시 합친다. 개발 세션과 일반 설정이 같은 변수 이름을 쓰면 Android용 `10.0.2.2`가 `.env.local`의 `127.0.0.1`로 바뀐다. 개발 세션 전용 이름을 사용하면 `.env.local`을 수정하지 않고도 세션 주소의 소유권을 지킬 수 있다.
 
 ## 재검토 조건
 
@@ -53,10 +56,13 @@ Portless는 고정 hostname과 빈 포트 선택에는 유용하지만 Simulator
 - 준비된 기준 Simulator 복제: iOS와 Android에 같은 방식으로 적용할 수 없고 기준 기기의 빌드 갱신과 오염을 별도로 관리해야 한다.
 - worktree마다 Supabase 실행: DB 포트, Docker 자원, seed와 schema drift 관리가 일상 개발 과정에 추가된다.
 - 같은 AVD의 읽기 전용 다중 실행: worktree별 앱 데이터와 로그인 상태를 지속해서 보존하지 못한다.
+- 일반 모바일 URL을 개발 세션에서 덮어쓰기: Expo SDK 57 개발 번들이 `.env.local` 값을 다시 우선하므로 최종 앱 주소를 보장하지 못한다.
+- 앱에서 `Platform.OS`로 개발 주소 계산: 플랫폼과 slot을 이미 아는 개발 세션의 계산을 앱에 중복하고 일반 개발 빌드와 관리 세션을 구분하지 못한다.
 
 ## 보존할 근거
 
 - 현재 API 개발 명령은 `3900`을 사용하고 Metro 기본 포트는 `8081`이다.
 - Android Emulator에서 호스트의 loopback 서비스는 `10.0.2.2`로 접근해야 한다. iOS Simulator는 `127.0.0.1`을 사용한다.
+- Expo SDK 57의 `expo/virtual/env` 개발 변환은 `.env` 파일 값을 `process.env` 뒤에 합친다. Expo 이슈 `#41981`과 열린 PR `#41999`도 셸 값이 `.env` 값에 덮이는 같은 동작을 다룬다.
 - Expo SDK 57의 플랫폼별 native fingerprint는 서로 다르므로 공용 빌드는 플랫폼별로 구분해야 한다.
 - 현재 앱에서 `EXPO_PUBLIC_API_URL`만 `http://127.0.0.1:3900`과 `http://127.0.0.1:3910`으로 바꿔 만든 iOS native fingerprint는 모두 `4a36fb8683f551d9b9cf800effec1f673b736511`이었다. slot별 API 포트는 공용 네이티브 빌드 재사용을 막지 않는다.
