@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 import { run, runOrThrow } from "./command";
-import { spawnSession } from "./processes";
+import { isPortFree, spawnSession } from "./processes";
 
 /** The spec fixes the default configuration. */
 export const ANDROID_SYSTEM_IMAGE =
@@ -193,6 +193,14 @@ export async function startEmulator({
 
   if (running) {
     return running;
+  }
+
+  // An emulator started on a taken console port fails quietly, so the wait
+  // below would end in a boot timeout that says nothing about the real cause.
+  if (!(await isPortFree(port))) {
+    throw new Error(
+      `Emulator 콘솔 포트 ${port}을(를) 다른 프로그램이 쓰고 있습니다. 이 저장소가 관리하지 않는 Emulator를 종료한 뒤 다시 실행해 주세요.`
+    );
   }
 
   spawnSession({

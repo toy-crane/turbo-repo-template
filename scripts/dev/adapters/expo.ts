@@ -5,11 +5,13 @@ import type { Platform } from "../options";
 import { run, runToLog } from "./command";
 
 /**
- * `pod install` fails with `Encoding::CompatibilityError` when the shell has an
- * empty `LANG`, which is how non-interactive shells start on this platform.
+ * `pod install` fails with `Encoding::CompatibilityError` under an empty or
+ * non-UTF-8 locale, which is how non-interactive shells start here. The build
+ * gets a UTF-8 locale regardless of the developer's own setting; nothing about
+ * the result depends on the language.
  */
 export function buildEnv(base: Record<string, string>): Record<string, string> {
-  return { LANG: "en_US.UTF-8", LC_ALL: "en_US.UTF-8", ...base };
+  return { ...base, LANG: "en_US.UTF-8", LC_ALL: "en_US.UTF-8" };
 }
 
 export function fingerprintBinary(mobileDirectory: string): string {

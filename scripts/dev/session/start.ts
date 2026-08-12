@@ -107,6 +107,8 @@ async function freePorts(): Promise<Set<number>> {
 
 interface Allocation {
   deviceId: string;
+  /** What the leased device carries, read under the lease's own lock. */
+  installedFingerprint: string | null;
   /** The same platform is already running here; nothing needs starting. */
   running: boolean;
   slot: number;
@@ -128,7 +130,7 @@ async function ensureDevice(
     return choice.deviceId;
   }
 
-  const taken = await driver.existingDeviceIds();
+  const taken = await driver.existingDeviceNames();
   const name = driver.nextDeviceName(context.project.slug, taken);
 
   return await driver.createDevice(name);
@@ -214,7 +216,13 @@ async function allocate(
     leaseDevice(state, platform, deviceId, worktreePath);
     writeState(context.paths.statePath, state);
 
-    return { deviceId, running, slot };
+    return {
+      deviceId,
+      installedFingerprint:
+        state.devicePool[platform][deviceId]?.installedFingerprint ?? null,
+      running,
+      slot,
+    };
   });
 }
 
@@ -237,6 +245,7 @@ interface BuildStepInput {
   env: Record<string, string>;
   fingerprint: string;
   handle: { deviceId: string; target: string };
+  installedFingerprint: string | null;
   io: SessionIo;
   logs: SessionLogs;
   platform: Platform;
@@ -264,18 +273,17 @@ async function resolveBuild({
   env,
   fingerprint,
   handle,
+  installedFingerprint,
   io,
   logs,
   platform,
 }: BuildStepInput): Promise<StartResult["build"]> {
   const directory = sharedBuildDirectory(context.paths, platform, fingerprint);
   const name = artifactName(platform, context.project.slug);
-  const state = readState(context.paths.statePath);
   const plan = planBuild({
     artifactPath: findSharedBuild(directory, name),
     fingerprint,
-    installedFingerprint:
-      state.devicePool[platform][handle.deviceId]?.installedFingerprint ?? null,
+    installedFingerprint,
   });
 
   if (plan.action === "keep") {
@@ -502,6 +510,7 @@ export async function startSession({
       env,
       fingerprint,
       handle,
+      installedFingerprint: allocation.installedFingerprint,
       io,
       logs,
       platform,

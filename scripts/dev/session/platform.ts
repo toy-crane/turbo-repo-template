@@ -56,6 +56,11 @@ export interface PlatformDriver {
   /** Shuts the device down and wipes it before it goes back to the pool. */
   eraseToPool: (deviceId: string) => Promise<void>;
   existingDeviceIds: () => Promise<Set<string>>;
+  /**
+   * Display names already in use. On iOS these are not the pool's identifiers,
+   * so a new device has to be named against this list rather than the ids.
+   */
+  existingDeviceNames: () => Promise<Set<string>>;
   installArtifact: (
     handle: DeviceHandle,
     artifactPath: string
@@ -101,6 +106,8 @@ function createIosDriver(bundleIdentifier: string): PlatformDriver {
     eraseToPool: eraseSimulator,
     existingDeviceIds: async () =>
       new Set((await listSimulators()).map((device) => device.udid)),
+    existingDeviceNames: async () =>
+      new Set((await listSimulators()).map((device) => device.name)),
     installArtifact: (handle, artifactPath) =>
       installApp(handle.target, artifactPath),
     missingTooling: missingIosTooling,
@@ -145,6 +152,8 @@ function createAndroidDriver(
       eraseAvdData(deviceId);
     },
     existingDeviceIds: async () => new Set(await listAvds(sdk)),
+    // An AVD is addressed by its name, so the ids are the names.
+    existingDeviceNames: async () => new Set(await listAvds(sdk)),
     installArtifact: (handle, artifactPath) =>
       installApk(sdk, handle.target, artifactPath),
     missingTooling: () => Promise.resolve(missingAndroidTooling(sdk)),
