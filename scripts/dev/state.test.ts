@@ -32,6 +32,7 @@ function fullState(): RepositoryState {
       "/repo": {
         activePlatform: "ios",
         devices: { android: "avd-1" },
+        environmentFingerprint: "env-fp",
         label: "main",
         processes: {
           api: { logPath: "/cache/api.log", pid: 11, port: 3900 },
@@ -100,6 +101,7 @@ describe("parseState", () => {
     expect(parsed.worktrees["/repo"]).toEqual({
       activePlatform: null,
       devices: {},
+      environmentFingerprint: null,
       label: "",
       processes: {},
       slot: 2,

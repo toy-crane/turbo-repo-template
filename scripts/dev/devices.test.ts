@@ -18,6 +18,7 @@ function stateWithWorktrees(paths: string[]): RepositoryState {
     state.worktrees[path] = {
       activePlatform: null,
       devices: {},
+      environmentFingerprint: null,
       label: `w${index}`,
       processes: {},
       slot: index,
@@ -101,6 +102,7 @@ describe("기기 수명", () => {
     state.worktrees[FEATURE] = {
       activePlatform: null,
       devices: {},
+      environmentFingerprint: null,
       label: "feature",
       processes: {},
       slot: 1,

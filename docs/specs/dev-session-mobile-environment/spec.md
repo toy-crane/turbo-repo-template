@@ -23,6 +23,7 @@ Expo SDK 57의 개발 번들은 셸의 `EXPO_PUBLIC_` 값 뒤에 `.env.local` �
 - 개발 세션 전용 URL이 없으면 기존 `EXPO_PUBLIC_API_URL`과 `EXPO_PUBLIC_SUPABASE_URL`을 사용한다.
 - 개발 세션 전용 URL도 기존 모바일 환경 설정과 같은 URL 규칙으로 검증한다.
 - 개발 세션은 `.env.local`을 만들거나 수정하거나 삭제하지 않는다.
+- 실행 중인 API와 Metro의 공개 모바일 환경이 현재 환경과 다르면 두 프로세스를 다시 시작한다. slot, 기기, 설치된 앱과 앱 데이터는 유지한다.
 - 이 규칙은 기본 Git checkout, 추가 worktree와 detached HEAD에서 똑같이 적용한다. 브랜치 이름은 환경 선택에 사용하지 않는다.
 
 ## 주소 규칙
@@ -52,6 +53,7 @@ Expo SDK 57의 개발 번들은 셸의 `EXPO_PUBLIC_` 값 뒤에 `.env.local` �
 4. 개발 세션 전용 URL이 유효하지 않으면 앱이나 관련 프로세스를 시작하기 전에 환경 설정 검증이 실패한다.
 5. `.env.local`에 `127.0.0.1`이 있고 Android 개발 세션에 `10.0.2.2`가 있어도 최종 Android 개발 번들의 런타임 환경은 `10.0.2.2`를 사용한다.
 6. iOS 개발 세션과 일반 실행의 기존 주소 동작이 유지된다.
+7. 변경 전부터 실행 중인 세션도 다음 `bun run dev <platform>`에서 환경 변경을 감지해 API와 Metro를 다시 시작하고, 그 다음 실행부터는 같은 세션을 재사용한다.
 
 ## 남은 위험
 

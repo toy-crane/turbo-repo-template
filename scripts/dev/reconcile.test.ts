@@ -19,6 +19,7 @@ function worktree(overrides: Partial<WorktreeRecord> = {}): WorktreeRecord {
   return {
     activePlatform: null,
     devices: {},
+    environmentFingerprint: null,
     label: "main",
     processes: {},
     slot: 0,
@@ -70,6 +71,7 @@ describe("reconcile", () => {
         [MAIN]: worktree({
           activePlatform: "ios",
           devices: { ios: "UDID-1" },
+          environmentFingerprint: "env-fp",
           processes: {
             api: processRecord(11, 3900),
             metro: processRecord(12, 8081),
@@ -92,6 +94,7 @@ describe("reconcile", () => {
 
     expect(record?.processes).toEqual({});
     expect(record?.activePlatform).toBeNull();
+    expect(record?.environmentFingerprint).toBeNull();
     expect(record?.slot).toBe(4);
     expect(record?.devices.ios).toBe("UDID-1");
     expect(result.next.devicePool.ios["UDID-1"]).toEqual({

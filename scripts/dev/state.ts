@@ -16,6 +16,7 @@ export type ProcessKind = "api" | "metro";
 export interface WorktreeRecord {
   activePlatform: Platform | null;
   devices: Partial<Record<Platform, string>>;
+  environmentFingerprint: string | null;
   label: string;
   processes: Partial<Record<ProcessKind, ProcessRecord>>;
   slot: number;
@@ -84,6 +85,10 @@ function parseWorktree(value: unknown): WorktreeRecord | undefined {
         : {}),
       ...(typeof devices.ios === "string" ? { ios: devices.ios } : {}),
     },
+    environmentFingerprint:
+      typeof raw.environmentFingerprint === "string"
+        ? raw.environmentFingerprint
+        : null,
     label: typeof raw.label === "string" ? raw.label : "",
     processes: { ...(api ? { api } : {}), ...(metro ? { metro } : {}) },
     slot: raw.slot,

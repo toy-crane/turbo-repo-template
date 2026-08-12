@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { parseMobileEnv } from "../../apps/mobile/env";
 import type { Platform } from "./options";
 
@@ -82,6 +84,17 @@ export function buildMobileEnvironment({
   parseMobileEnv(merged);
 
   return merged;
+}
+
+/** A stable, non-reversible identity for the public environment Metro owns. */
+export function mobileEnvironmentFingerprint(
+  environment: Record<string, string>
+): string {
+  const entries = Object.entries(environment).sort(([left], [right]) =>
+    left.localeCompare(right)
+  );
+
+  return createHash("sha256").update(JSON.stringify(entries)).digest("hex");
 }
 
 /** The development client deep link that pins the app to this worktree's Metro. */

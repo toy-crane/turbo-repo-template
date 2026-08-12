@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   buildMobileEnvironment,
   developmentClientUrl,
+  mobileEnvironmentFingerprint,
   parseEnvFile,
   sessionAddresses,
 } from "./environment";
@@ -91,6 +92,26 @@ describe("buildMobileEnvironment", () => {
         fileValues: FILE_VALUES,
       })
     ).toThrow(sessionApiUrlMessage);
+  });
+});
+
+describe("mobileEnvironmentFingerprint", () => {
+  test("키 순서가 달라도 같은 환경은 같은 fingerprint를 만든다", () => {
+    const first = mobileEnvironmentFingerprint(
+      Object.fromEntries([
+        ["B", "2"],
+        ["A", "1"],
+      ])
+    );
+    const second = mobileEnvironmentFingerprint({ A: "1", B: "2" });
+
+    expect(first).toBe(second);
+  });
+
+  test("환경 값이 달라지면 fingerprint도 달라진다", () => {
+    expect(mobileEnvironmentFingerprint({ A: "1" })).not.toBe(
+      mobileEnvironmentFingerprint({ A: "2" })
+    );
   });
 });
 
