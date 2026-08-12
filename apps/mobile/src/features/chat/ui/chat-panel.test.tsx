@@ -15,6 +15,10 @@ import type { ChatSession } from "@/features/chat/state/use-chat-session";
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { ChatPanel, chatLabels } from "./chat-panel";
 
+const mockScrollToEnd = jest.fn<
+  (options?: { animated?: boolean }) => Promise<void>
+>(() => Promise.resolve());
+
 jest.mock("@legendapp/list/keyboard", () => {
   const React = require("react") as typeof import("react");
   const { KeyboardController: keyboardController } =
@@ -53,7 +57,10 @@ jest.mock("@legendapp/list/keyboard", () => {
   const KeyboardAwareLegendList = React.forwardRef<MockListRef, MockListProps>(
     (props, ref) => {
       const { data, keyExtractor, renderItem, ...viewProps } = props;
-      const scrollToEnd = React.useCallback(() => Promise.resolve(), []);
+      const scrollToEnd = React.useCallback(
+        (options?: { animated?: boolean }) => mockScrollToEnd(options),
+        []
+      );
 
       React.useImperativeHandle(
         ref,
@@ -164,6 +171,7 @@ async function scrollAwayFromLatest() {
 
 describe("ChatPanel", () => {
   afterEach(() => {
+    mockScrollToEnd.mockClear();
     jest.restoreAllMocks();
   });
 
@@ -178,13 +186,16 @@ describe("ChatPanel", () => {
   });
 
   test("메시지는 헤더 아래에 24px 간격을 둔다", async () => {
-    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} topInset={116} />);
 
     expect(
       StyleSheet.flatten(
         screen.getByTestId("chat-list").props.contentContainerStyle
       )
-    ).toMatchObject({ paddingTop: 24 });
+    ).toMatchObject({ paddingTop: 140 });
+    expect(
+      screen.getByTestId("chat-list").props.contentInsetAdjustmentBehavior
+    ).toBe("never");
   });
 
   test("키보드가 열리면 입력창 아래에 8px 간격을 둔다", async () => {
@@ -457,7 +468,7 @@ describe("ChatPanel", () => {
     expect(list.props.initialScrollAtEnd).toBeUndefined();
   });
 
-  test("첫 질문은 고정용 끝 공간을 만들지 않는다", async () => {
+  test("첫 질문은 고정용 끝 공간이나 끝 스크롤을 만들지 않는다", async () => {
     const user = userEvent.setup();
     await renderWithHeroUI(
       <ChatPanel chat={chatSession({ draft: "첫 질문", send: jest.fn() })} />
@@ -468,9 +479,10 @@ describe("ChatPanel", () => {
     expect(
       screen.getByTestId("chat-list").props.anchoredEndSpace
     ).toBeUndefined();
+    expect(mockScrollToEnd).not.toHaveBeenCalled();
   });
 
-  test("보낸 질문의 메시지 위치만 다음 답변의 위쪽 기준으로 고정한다", async () => {
+  test("다음 질문은 헤더 아래 목록 viewport에서 24px 위치에 고정한다", async () => {
     const user = userEvent.setup();
     const messages = [
       textMessage("user-1", "user", "이전 질문"),
@@ -479,6 +491,7 @@ describe("ChatPanel", () => {
     await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({ draft: "새 질문", messages, send: jest.fn() })}
+        topInset={116}
       />
     );
 
