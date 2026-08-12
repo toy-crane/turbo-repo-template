@@ -32,9 +32,11 @@ export { chatLabels } from "./chat-labels";
 
 const INPUT_MAX_HEIGHT = 120;
 const INPUT_MIN_HEIGHT = 48;
+const KEYBOARD_INPUT_GAP = 8;
 const LATEST_OVERLAY_HEIGHT = 60;
 const USER_SCROLL_THRESHOLD = 24;
 const LIST_END_THRESHOLD = 20;
+const MESSAGE_TOP_SPACING = 24;
 
 function textOfMessage(message: UIMessage): string {
   return message.parts
@@ -93,6 +95,7 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
   const userMomentum = useRef<true | undefined>(undefined);
   const userScrollStart = useRef<number | undefined>(undefined);
   const canSend = chat.draft.trim().length > 0 && !chat.isBusy;
+  const composerBottomPadding = Math.max(insets.bottom, 12);
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze, scrollMessageToEnd } = useKeyboardScrollToEnd({ listRef });
@@ -210,11 +213,13 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
     <View className="flex-1 bg-background">
       <KeyboardAwareLegendList
         anchoredEndSpace={
-          anchorIndex === undefined ? undefined : { anchorIndex }
+          anchorIndex === undefined || anchorIndex === 0
+            ? undefined
+            : { anchorIndex, anchorOffset: MESSAGE_TOP_SPACING }
         }
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: 16,
+          paddingTop: MESSAGE_TOP_SPACING,
         }}
         contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={chat.messages}
@@ -247,12 +252,17 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
         testID="chat-list"
       />
 
-      <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
+      <KeyboardStickyView
+        offset={{
+          closed: 0,
+          opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
+        }}
+      >
         <View
           className="gap-2 bg-background px-5 pt-2"
           onLayout={updateComposerLayout}
           ref={composerRef}
-          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+          style={{ paddingBottom: composerBottomPadding }}
           testID="chat-composer"
         >
           {chat.error ? (
@@ -302,7 +312,10 @@ export function ChatPanel({ chat }: { chat: ChatSession }) {
 
       {isFollowingLatest ? null : (
         <KeyboardStickyView
-          offset={{ closed: 0, opened: insets.bottom }}
+          offset={{
+            closed: 0,
+            opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
+          }}
           pointerEvents="box-none"
           style={{
             bottom: composerHeight,

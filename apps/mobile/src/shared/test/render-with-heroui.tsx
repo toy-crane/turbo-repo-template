@@ -35,13 +35,18 @@ const testThemeVariables = {
 Uniwind.updateCSSVariables("light", testThemeVariables);
 Uniwind.updateCSSVariables("dark", testThemeVariables);
 
-function withProviders(element: ReactElement) {
+function withProviders(element: ReactElement, safeAreaBottomInset: number) {
+  const safeAreaMetrics = {
+    ...testSafeAreaMetrics,
+    insets: { ...testSafeAreaMetrics.insets, bottom: safeAreaBottomInset },
+  };
+
   return (
     // The query cache is one of the app's providers, so a screen rendered here
     // finds the same thing it finds at runtime rather than throwing the moment
     // it reads remote state.
     <QueryProvider>
-      <SafeAreaProvider initialMetrics={testSafeAreaMetrics}>
+      <SafeAreaProvider initialMetrics={safeAreaMetrics}>
         <HeroUINativeProviderRaw config={{ animation: "disable-all" }}>
           {element}
         </HeroUINativeProviderRaw>
@@ -50,13 +55,17 @@ function withProviders(element: ReactElement) {
   );
 }
 
-export async function renderWithHeroUI(element: ReactElement) {
-  const view = await render(withProviders(element));
+export async function renderWithHeroUI(
+  element: ReactElement,
+  { safeAreaBottomInset = testSafeAreaMetrics.insets.bottom } = {}
+) {
+  const view = await render(withProviders(element, safeAreaBottomInset));
 
   return {
     ...view,
     // The plain rerender would replace the providers with the element alone, so
     // a test that renders the same screen with new props keeps losing them.
-    rerender: (next: ReactElement) => view.rerender(withProviders(next)),
+    rerender: (next: ReactElement) =>
+      view.rerender(withProviders(next, safeAreaBottomInset)),
   };
 }

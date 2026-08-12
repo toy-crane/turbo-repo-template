@@ -177,6 +177,36 @@ describe("ChatPanel", () => {
     expect(screen.queryByText("무엇을 도와드릴까요?")).not.toBeOnTheScreen();
   });
 
+  test("메시지는 헤더 아래에 24px 간격을 둔다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("chat-list").props.contentContainerStyle
+      )
+    ).toMatchObject({ paddingTop: 24 });
+  });
+
+  test("키보드가 열리면 입력창 아래에 8px 간격을 둔다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+
+    expect(screen.getByTestId("chat-composer").parent?.props.offset).toEqual({
+      closed: 0,
+      opened: 26,
+    });
+  });
+
+  test("하단 안전 영역이 없어도 키보드와 입력창 사이를 8px 띄운다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />, {
+      safeAreaBottomInset: 0,
+    });
+
+    expect(screen.getByTestId("chat-composer").parent?.props.offset).toEqual({
+      closed: 0,
+      opened: 4,
+    });
+  });
+
   test("사용자 메시지와 AI 답변을 일반 텍스트로 보여준다", async () => {
     const messages = [
       textMessage("user-1", "user", "질문"),
@@ -427,6 +457,19 @@ describe("ChatPanel", () => {
     expect(list.props.initialScrollAtEnd).toBeUndefined();
   });
 
+  test("첫 질문은 고정용 끝 공간을 만들지 않는다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ draft: "첫 질문", send: jest.fn() })} />
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    expect(
+      screen.getByTestId("chat-list").props.anchoredEndSpace
+    ).toBeUndefined();
+  });
+
   test("보낸 질문의 메시지 위치만 다음 답변의 위쪽 기준으로 고정한다", async () => {
     const user = userEvent.setup();
     const messages = [
@@ -443,6 +486,7 @@ describe("ChatPanel", () => {
 
     expect(screen.getByTestId("chat-list").props.anchoredEndSpace).toEqual({
       anchorIndex: 2,
+      anchorOffset: 24,
     });
   });
 
