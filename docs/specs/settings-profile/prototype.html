@@ -1,0 +1,800 @@
+<!--
+  prototype shell: the review chrome every prototype starts from.
+
+  Keep this comment in the prototype you grow from here: it is the contract,
+  and later turns work from that file rather than from this one.
+
+  Contract (extend product screens; keep the review shell):
+  - Product:  .sh-stage contains only end-user product UI. Keep review notes,
+               rationale, instructions, and approval controls in conversation.
+  - Screens:  <section data-screen="slug" data-title="Label"> inside .sh-stage.
+               The selector, arrow keys, and #hash routing build themselves.
+               Use one option per product destination or distinct surface,
+               named by its product role. Keep baselines, variants, comparison
+               labels, steps, indexes, and progress out of names and states.
+               Links may use href="#slug".
+  - States:   "Default" is automatic. A screen declares only representative
+               presets in data-states="Empty,Error". Use natural, screen-specific
+               names. Reserve presets for important multi-step results, forced
+               data or errors, or materially different structure; keep one-click
+               and transient states as interactions. Use data-when="Empty" on
+               preset-only elements. Call prototypeShell.setState("Name") on
+               entry and setState("Default") on exit, including when repeated
+               actions cross a preset condition.
+  - Viewport: "vp (m)" cycles full / 390 / 768. The 390 preset is a
+               fixed-height, internally scrolling phone frame. Start a
+               mobile-first prototype by adding class="sh-vp-390" to <body>
+               (or a bootstrap classList.add before the chrome script runs).
+  - Pinning:  keep in-frame bars (tab bars, CTAs) inside the phone with
+               position: sticky; position: fixed pins to the browser window.
+  - Tokens:   replace the project-tokens block with project tokens copied
+               verbatim. Map differing names to --background, --foreground, and
+               --font afterwards; replace network fonts with a system stack and
+               note that substitution. Without a design system, keep this
+               palette as the finished style.
+  - Placeholders: .wf-pic stands in for pictures the prototype has no real
+               files for. Use real text everywhere text belongs.
+
+  - Chrome:   Keep exactly the screen selector, selected-screen state selector,
+               and viewport cycle. Chrome that needs explaining has failed.
+
+  Self-contained by design: no build, no framework, no network.
+-->
+<meta charset="utf-8">
+<title>설정 프로필 Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<style>
+  /* ── project tokens copied from apps/mobile/global.css ── */
+  :root {
+    --background: #f4f4f6;
+    --foreground: #111114;
+    --surface: #ffffff;
+    --surface-foreground: var(--foreground);
+
+    /* Native Settings roles rendered by the prototype. */
+    --muted: #6e6e73;
+    --secondary-muted: #8e8e93;
+    --line: rgba(60, 60, 67, 0.18);
+    --accent: #007aff;
+    --success: #248a3d;
+    --critical: #ff3b30;
+    --glass: rgba(255, 255, 255, 0.78);
+    --radius: 15px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+
+  /* ── review chrome (sh-*): keep; extend product styles elsewhere ── */
+  * { box-sizing: border-box }
+  body {
+    margin: 0; padding: 0 0 40px;
+    background: #e8e8eb; color: var(--foreground);
+    font-family: var(--font);
+  }
+  .sh-bar {
+    position: sticky; top: 0; z-index: 999;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 8px 12px; background: #191a1c; color: #d7d7d7;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .sh-bar b, .sh-control-label { color: #8a8f98; font-weight: 500 }
+  .sh-control { display: inline-flex; gap: 5px; align-items: center }
+  .sh-bar button {
+    border: 1px solid #3a3d42; background: none; color: inherit;
+    font: inherit; padding: 2px 9px; border-radius: 99px; cursor: pointer;
+  }
+  .sh-bar select {
+    width: 170px; border: 1px solid #3a3d42; background: #232428; color: inherit;
+    font: inherit; padding: 3px 28px 3px 9px; border-radius: 7px; cursor: pointer;
+    color-scheme: dark;
+  }
+  #sh-screen { width: 190px }
+  .sh-bar button.on { background: #d7d7d7; color: #191a1c; border-color: #d7d7d7 }
+  .sh-spacer { flex: 1 }
+  .sh-stage { max-width: 960px; margin: 0 auto; padding: 12px 16px 0 }
+  [hidden] { display: none !important }
+
+  .sh-vp-390 .sh-stage {
+    max-width: 390px; background: var(--background);
+    border: 10px solid #191a1c; border-radius: 34px;
+    padding: 0; height: min(844px, calc(100dvh - 52px));
+    overflow-y: auto; overflow-x: hidden; margin-top: 12px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+  }
+  .sh-vp-390 .ios-screen { min-height: 100% }
+  .sh-vp-768 .sh-stage {
+    max-width: 768px; border: 1px solid #c4c4c4; border-radius: 20px;
+    padding: 0; margin-top: 12px; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  }
+  .wf-pic  { border-radius: 4px; background:
+             repeating-linear-gradient(45deg, #e9e9e9, #e9e9e9 6px, #f2f2f2 6px, #f2f2f2 12px) }
+
+  /* ── Native iOS product surface ── */
+  button, input { font: inherit }
+  button { -webkit-tap-highlight-color: transparent }
+  .ios-screen {
+    position: relative; min-height: 824px; background: var(--background);
+    color: var(--foreground); overflow: visible;
+  }
+  .status-bar {
+    height: 44px; display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; padding: 0 22px; font-size: 14px; font-weight: 650;
+    letter-spacing: -0.2px;
+  }
+  .status-time { justify-self: start }
+  .dynamic-island {
+    width: 88px; height: 24px; background: #050505; border-radius: 99px;
+    justify-self: center;
+  }
+  .status-icons { justify-self: end; display: flex; align-items: center; gap: 5px; font-size: 12px }
+  .battery { width: 20px; height: 10px; border: 1.5px solid currentColor; border-radius: 3px; padding: 1px }
+  .battery::after { content: ""; display: block; width: 13px; height: 5px; background: currentColor; border-radius: 1px }
+
+  .nav-bar {
+    position: sticky; top: 0; z-index: 20; height: 52px;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding: 0 16px; background: rgba(244, 244, 246, 0.82);
+    backdrop-filter: blur(22px) saturate(160%);
+  }
+  .nav-title { grid-column: 2; font-size: 17px; line-height: 22px; font-weight: 650; letter-spacing: -0.35px }
+  .nav-leading { grid-column: 1; justify-self: start }
+  .nav-trailing { grid-column: 3; justify-self: end }
+  .glass-control {
+    width: 38px; height: 38px; border: 0; border-radius: 50%;
+    background: var(--glass); color: var(--foreground); cursor: pointer;
+    box-shadow: inset 0 0 0 0.5px rgba(255,255,255,.7), 0 2px 10px rgba(0,0,0,.08);
+    display: grid; place-items: center; font-size: 27px; line-height: 1;
+  }
+  .glass-control:active { transform: scale(.96); background: rgba(230,230,234,.86) }
+  .back-control { font-size: 24px; padding: 0 2px 2px 0 }
+  .save-action {
+    border: 0; background: transparent; color: var(--accent); padding: 8px 2px;
+    font-size: 17px; font-weight: 600; cursor: pointer;
+  }
+  .save-action:disabled { color: var(--secondary-muted); opacity: .6; cursor: default }
+
+  .screen-content { padding: 0 16px 40px }
+  .profile-hero {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 22px 14px 25px;
+  }
+  .profile-hero.editing { padding: 18px 14px 20px }
+  .avatar-wrap { position: relative; display: inline-grid; place-items: center }
+  .avatar {
+    position: relative; width: 92px; height: 92px; border-radius: 50%;
+    overflow: hidden; background: #d8e4ff; box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
+  }
+  .profile-hero.editing .avatar { width: 104px; height: 104px }
+  .avatar .portrait { position: absolute; inset: 0; background: linear-gradient(145deg, #dae6ff 0%, #a9c2fa 100%) }
+  .avatar .hair-back {
+    position: absolute; width: 66%; height: 74%; left: 17%; top: 15%;
+    border-radius: 48% 48% 40% 40%; background: #302823;
+  }
+  .avatar .face {
+    position: absolute; width: 52%; height: 58%; left: 24%; top: 25%;
+    border-radius: 46% 46% 44% 44%; background: #d39a72;
+    box-shadow: inset 0 -7px 0 rgba(140,72,45,.08);
+  }
+  .avatar .fringe {
+    position: absolute; width: 58%; height: 30%; left: 20%; top: 17%;
+    border-radius: 50% 53% 42% 20%; background: #302823; transform: rotate(-3deg);
+  }
+  .avatar .eyes { position: absolute; left: 35%; top: 46%; width: 30%; display: flex; justify-content: space-between }
+  .avatar .eyes::before, .avatar .eyes::after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #241b18 }
+  .avatar .smile {
+    position: absolute; width: 21%; height: 9%; left: 39.5%; top: 61%;
+    border-bottom: 3px solid #7d3b39; border-radius: 0 0 99px 99px;
+  }
+  .avatar .shoulders {
+    position: absolute; width: 82%; height: 30%; left: 9%; bottom: -13%;
+    border-radius: 48% 48% 0 0; background: #42516f;
+  }
+  .avatar .fallback {
+    display: none; position: absolute; inset: 0; place-items: center;
+    background: #dce8ff; color: #3c66b5; font-size: 37px; font-weight: 700;
+  }
+  .avatar.is-fallback .portrait { display: none }
+  .avatar.is-fallback .fallback { display: grid }
+  .avatar.is-new .portrait { filter: hue-rotate(25deg) saturate(1.08) }
+  .settings-avatar-button { border: 0; padding: 0; cursor: pointer; appearance: none }
+  .profile-name {
+    margin-top: 13px; max-width: 300px; font-size: 25px; line-height: 30px;
+    font-weight: 720; letter-spacing: -0.65px; overflow-wrap: anywhere;
+  }
+  .profile-id {
+    margin-top: 2px; max-width: 300px; color: var(--muted); font-size: 16px;
+    line-height: 21px; letter-spacing: -0.2px; overflow-wrap: anywhere;
+  }
+  .avatar-edit-button {
+    border: 0; background: transparent; color: var(--accent); margin-top: 8px;
+    padding: 5px 12px; font-size: 16px; font-weight: 550; cursor: pointer;
+  }
+
+  .settings-section { margin: 0 0 23px }
+  .section-title {
+    margin: 0 16px 7px; color: var(--muted); font-size: 13px; line-height: 18px;
+    font-weight: 500; letter-spacing: -0.1px; text-transform: none;
+  }
+  .settings-card { overflow: hidden; border-radius: var(--radius); background: var(--surface) }
+  .settings-row {
+    position: relative; min-height: 51px; width: 100%; border: 0; background: transparent;
+    display: flex; align-items: center; gap: 10px; padding: 0 15px;
+    color: var(--surface-foreground); font-size: 17px; text-align: left;
+  }
+  button.settings-row { cursor: pointer }
+  button.settings-row:active { background: rgba(118,118,128,.12) }
+  .settings-row + .settings-row::before {
+    content: ""; position: absolute; top: 0; left: 15px; right: 0; height: .5px;
+    background: var(--line);
+  }
+  .row-label { flex: 1; min-width: 0 }
+  .row-value { color: var(--secondary-muted); font-size: 16px; max-width: 52%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+  .chevron { color: #b2b2b7; font-size: 25px; font-weight: 300; line-height: 1; margin-left: 3px }
+  .danger { color: var(--critical) }
+  .switch {
+    width: 51px; height: 31px; padding: 2px; border: 0; border-radius: 99px;
+    background: #e9e9ea; cursor: pointer; transition: background .2s ease;
+  }
+  .switch::after {
+    content: ""; display: block; width: 27px; height: 27px; border-radius: 50%;
+    background: white; box-shadow: 0 1px 3px rgba(0,0,0,.28); transition: transform .2s ease;
+  }
+  .switch.on { background: #34c759 }
+  .switch.on::after { transform: translateX(20px) }
+
+  .edit-form { padding-top: 2px }
+  .form-card { overflow: hidden; border-radius: var(--radius); background: var(--surface) }
+  .form-row {
+    position: relative; min-height: 54px; display: grid; grid-template-columns: 82px 1fr;
+    align-items: center; gap: 10px; padding: 0 15px;
+  }
+  .form-row + .form-row::before {
+    content: ""; position: absolute; top: 0; left: 15px; right: 0; height: .5px; background: var(--line);
+  }
+  .form-label { font-size: 16px; font-weight: 500 }
+  .form-input {
+    width: 100%; border: 0; outline: 0; background: transparent; color: var(--foreground);
+    font-size: 17px; padding: 13px 0; min-width: 0;
+  }
+  .form-input::placeholder { color: var(--secondary-muted) }
+  .form-input:disabled { color: var(--secondary-muted); opacity: 1 }
+  .field-foot {
+    min-height: 19px; margin: 7px 15px 0; color: var(--muted); font-size: 13px;
+    line-height: 18px;
+  }
+  .field-foot:empty { display: none }
+  .field-foot.success { color: var(--success) }
+  .field-foot.error { color: var(--critical) }
+  .spinner {
+    display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px;
+    border: 1.5px solid rgba(0,122,255,.22); border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  .suggestion-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 9px 15px 0 }
+  .suggestion {
+    border: 0; border-radius: 99px; background: rgba(0,122,255,.11); color: var(--accent);
+    padding: 7px 11px; font-size: 14px; cursor: pointer;
+  }
+  /* Prototype approximation. Native implementation uses the Section footer spacing. */
+  .policy-note { margin: 8px 16px 0; color: var(--muted); font-size: 13px; line-height: 18px }
+  .inline-banner {
+    margin: 12px 0 0; padding: 11px 13px; border-radius: 12px; background: rgba(255,59,48,.09);
+    color: #c72922; font-size: 14px; line-height: 19px;
+  }
+
+  .overlay {
+    position: absolute; inset: 0; z-index: 50; display: flex; align-items: flex-end;
+    padding: 12px; background: rgba(0,0,0,.32); backdrop-filter: blur(2px);
+  }
+  .action-sheet { width: 100%; display: grid; gap: 8px }
+  .action-group { overflow: hidden; border-radius: 16px; background: rgba(250,250,252,.94); backdrop-filter: blur(24px) }
+  .sheet-button {
+    width: 100%; min-height: 55px; border: 0; background: transparent; color: var(--accent);
+    font-size: 19px; cursor: pointer;
+  }
+  .sheet-button + .sheet-button { border-top: .5px solid var(--line) }
+  .sheet-button:active { background: rgba(118,118,128,.16) }
+  .sheet-button.destructive { color: var(--critical) }
+  .sheet-button.cancel { border-radius: 16px; background: rgba(250,250,252,.96); font-weight: 650 }
+  .permission-dialog {
+    position: absolute; inset: 0; z-index: 70; display: grid; place-items: center;
+    padding: 30px; background: rgba(0,0,0,.26);
+  }
+  .permission-card {
+    width: min(285px, 100%); overflow: hidden; border-radius: 15px;
+    background: rgba(247,247,249,.96); text-align: center; box-shadow: 0 16px 55px rgba(0,0,0,.24);
+  }
+  .permission-copy { padding: 20px 18px 16px }
+  .permission-copy strong { display: block; margin-bottom: 5px; font-size: 17px }
+  .permission-copy p { margin: 0; font-size: 13px; line-height: 17px }
+  .permission-actions { display: grid; grid-template-columns: 1fr 1fr; border-top: .5px solid var(--line) }
+  .permission-actions button { min-height: 44px; border: 0; background: transparent; color: var(--accent); font-size: 17px; cursor: pointer }
+  .permission-actions button + button { border-left: .5px solid var(--line); font-weight: 650 }
+
+  @media (min-width: 700px) {
+    .screen-content { max-width: 620px; margin: 0 auto }
+    .profile-name, .profile-id { max-width: 500px }
+  }
+</style>
+
+<body class="sh-vp-390">
+<header class="sh-bar">
+  <b>proto</b>
+  <label class="sh-control"><span class="sh-control-label">screen</span><select id="sh-screen"></select></label>
+  <span class="sh-spacer"></span>
+  <label class="sh-control"><span class="sh-control-label">state</span><select id="sh-state"></select></label>
+  <button id="sh-vp">vp: full (m)</button>
+</header>
+
+<main class="sh-stage">
+  <section data-screen="settings" data-title="설정" data-states="긴 프로필">
+    <div class="ios-screen">
+      <div class="status-bar" aria-hidden="true">
+        <span class="status-time">9:41</span><span class="dynamic-island"></span>
+        <span class="status-icons">▮▮▮ ◉ <span class="battery"></span></span>
+      </div>
+      <nav class="nav-bar" data-component="Stack.Toolbar">
+        <strong class="nav-title">설정</strong>
+        <button class="glass-control nav-trailing" aria-label="설정 닫기" type="button">×</button>
+      </nav>
+
+      <div class="screen-content" data-component="Host">
+        <header class="profile-hero" data-component="new:SettingsProfileHero">
+          <button class="avatar avatar-render settings-avatar-button" id="open-edit-avatar" data-component="new:SettingsAvatar" aria-label="프로필 수정" type="button">
+            <div class="portrait"><span class="hair-back"></span><span class="face"></span><span class="fringe"></span><span class="eyes"></span><span class="smile"></span><span class="shoulders"></span></div>
+            <span class="fallback">김</span>
+          </button>
+          <div data-when="Default">
+            <div class="profile-name settings-profile-name">김민서</div>
+            <div class="profile-id settings-profile-id">minseokim</div>
+          </div>
+          <div data-when="긴 프로필">
+            <div class="profile-name">별빛 아래에서 천천히 걷는 민서</div>
+            <div class="profile-id">minseo_from_jeju_24</div>
+          </div>
+        </header>
+
+        <section class="settings-section" data-component="FieldGroup.Section">
+          <h2 class="section-title">계정</h2>
+          <div class="settings-card" data-component="FieldGroup">
+            <button class="settings-row" id="open-edit" data-component="ListItem" type="button">
+              <span class="row-label">프로필 수정</span><span class="chevron">›</span>
+            </button>
+            <button class="settings-row danger" data-component="ListItem" type="button">
+              <span class="row-label">로그아웃</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="settings-section" data-component="FieldGroup.Section">
+          <h2 class="section-title">환경 설정</h2>
+          <div class="settings-card" data-component="FieldGroup">
+            <div class="settings-row"><span class="row-label">알림</span><button class="switch" aria-label="알림" aria-pressed="false" data-component="Switch" type="button"></button></div>
+            <div class="settings-row"><span class="row-label">햅틱 반응</span><button class="switch on" aria-label="햅틱 반응" aria-pressed="true" data-component="Switch" type="button"></button></div>
+          </div>
+        </section>
+
+        <section class="settings-section" data-component="FieldGroup.Section">
+          <h2 class="section-title">앱 정보</h2>
+          <div class="settings-card" data-component="FieldGroup">
+            <div class="settings-row"><span class="row-label">버전</span><span class="row-value">1.0.0</span></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section data-screen="edit-profile" data-title="프로필 수정" data-states="아이디 확인 중,아이디 중복,아이디 변경 제한,사진 권한 거부,저장 실패">
+    <div class="ios-screen" id="edit-screen">
+      <div class="status-bar" aria-hidden="true">
+        <span class="status-time">9:41</span><span class="dynamic-island"></span>
+        <span class="status-icons">▮▮▮ ◉ <span class="battery"></span></span>
+      </div>
+      <nav class="nav-bar" data-component="Stack.Toolbar">
+        <button class="glass-control back-control nav-leading" id="cancel-edit" aria-label="설정으로 돌아가기" type="button">‹</button>
+        <strong class="nav-title">프로필 수정</strong>
+        <button class="save-action nav-trailing" id="save-profile" disabled type="button">저장</button>
+      </nav>
+
+      <div class="screen-content edit-form" data-component="Host">
+        <header class="profile-hero editing" data-component="new:EditableProfileHero">
+          <button class="avatar-wrap avatar-edit-button" id="open-avatar-sheet" aria-label="프로필 사진 편집" type="button">
+            <span class="avatar avatar-render" data-component="new:EditableAvatar">
+              <span class="portrait"><span class="hair-back"></span><span class="face"></span><span class="fringe"></span><span class="eyes"></span><span class="smile"></span><span class="shoulders"></span></span>
+              <span class="fallback">김</span>
+            </span>
+          </button>
+          <button class="avatar-edit-button" id="open-avatar-sheet-text" type="button">사진 편집</button>
+        </header>
+
+        <section class="settings-section" data-component="FieldGroup.Section">
+          <h2 class="section-title">공개 프로필</h2>
+          <div class="form-card" data-component="FieldGroup">
+            <label class="form-row" data-component="new:ProfileTextField">
+              <span class="form-label">닉네임</span>
+              <input class="form-input" id="nickname-input" maxlength="31" autocomplete="nickname" value="김민서">
+            </label>
+            <label class="form-row" data-component="new:ProfileTextField">
+              <span class="form-label">아이디</span>
+              <input class="form-input" id="username-input" maxlength="20" autocomplete="username" autocapitalize="none" spellcheck="false" value="minseokim">
+            </label>
+          </div>
+
+          <div class="field-foot" id="live-message" aria-live="polite"></div>
+          <div class="field-foot" data-when="아이디 확인 중"><span class="spinner"></span>사용할 수 있는 아이디인지 확인하고 있어요.</div>
+          <div class="field-foot error" data-when="아이디 중복">이미 사용 중인 아이디예요. 다른 아이디를 선택해 주세요.</div>
+          <div class="suggestion-row" data-when="아이디 중복">
+            <button class="suggestion forced-suggestion" type="button">minseokim24</button>
+            <button class="suggestion forced-suggestion" type="button">minseo_kim</button>
+            <button class="suggestion forced-suggestion" type="button">kimminseo7</button>
+          </div>
+          <p class="policy-note" id="standard-username-policy">아이디는 30일에 한 번 바꿀 수 있어요. 이전 아이디는 30일 동안 다른 사람이 사용할 수 없어요.</p>
+          <p class="policy-note" data-when="아이디 변경 제한">2026년 9월 11일부터 아이디를 다시 바꿀 수 있어요.</p>
+
+          <div class="inline-banner" data-when="사진 권한 거부">카메라 접근을 허용하면 바로 프로필 사진을 찍을 수 있어요. 설정에서 권한을 바꿀 수 있어요.</div>
+          <div class="inline-banner" data-when="저장 실패">프로필을 저장하지 못했어요. 입력한 내용은 그대로 두었어요. 다시 저장해 주세요.</div>
+        </section>
+      </div>
+
+      <div class="overlay" id="avatar-sheet" hidden>
+        <div class="action-sheet" data-component="new:AvatarSourceMenu" role="dialog" aria-label="프로필 사진 편집">
+          <div class="action-group">
+            <button class="sheet-button" id="take-photo" type="button">사진 찍기</button>
+            <button class="sheet-button" id="choose-photo" type="button">사진 보관함에서 선택</button>
+            <button class="sheet-button destructive" id="remove-photo" type="button">현재 사진 삭제</button>
+          </div>
+          <button class="sheet-button cancel" id="cancel-avatar" type="button">취소</button>
+        </div>
+      </div>
+
+      <div class="permission-dialog" id="camera-permission" hidden>
+        <div class="permission-card" role="alertdialog" aria-label="카메라 접근 권한">
+          <div class="permission-copy"><strong>카메라에 접근하려고 해요</strong><p>새 프로필 사진을 바로 찍을 때 사용해요.</p></div>
+          <div class="permission-actions"><button id="deny-camera" type="button">허용 안 함</button><button id="allow-camera" type="button">허용</button></div>
+        </div>
+      </div>
+
+      <div class="permission-dialog" id="username-confirmation" hidden>
+        <div class="permission-card" role="alertdialog" aria-label="아이디 변경 확인">
+          <div class="permission-copy"><strong>아이디를 변경할까요?</strong><p id="username-confirmation-copy"></p></div>
+          <div class="permission-actions"><button id="cancel-username-change" type="button">취소</button><button id="confirm-username-change" type="button">변경</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const stage = document.querySelector('.sh-stage');
+  const screens = [...stage.querySelectorAll('[data-screen]')];
+  const screenSelect = document.getElementById('sh-screen');
+  const stateSelect = document.getElementById('sh-state');
+  const vpBtn = document.getElementById('sh-vp');
+  let current = null;
+  let currentStates = [];
+
+  screens.forEach(s => {
+    const option = document.createElement('option');
+    option.textContent = s.dataset.title || s.dataset.screen;
+    option.value = s.dataset.screen;
+    screenSelect.append(option);
+  });
+  screenSelect.onchange = () => show(screenSelect.value);
+
+  function show(slug) {
+    const avatarOverlay = document.getElementById('avatar-sheet');
+    const cameraDialog = document.getElementById('camera-permission');
+    const usernameDialog = document.getElementById('username-confirmation');
+    if (avatarOverlay) avatarOverlay.hidden = true;
+    if (cameraDialog) cameraDialog.hidden = true;
+    if (usernameDialog) usernameDialog.hidden = true;
+    current = screens.find(s => s.dataset.screen === slug) || screens[0];
+    screens.forEach(s => s.hidden = s !== current);
+    stage.scrollTop = 0;
+    screenSelect.value = current.dataset.screen;
+    history.replaceState(null, '', '#' + current.dataset.screen);
+    buildStates();
+  }
+
+  function buildStates() {
+    const declared = (current.dataset.states || '').split(',').map(x => x.trim()).filter(Boolean);
+    currentStates = ['Default', ...declared.filter(name => name !== 'Default')];
+    stateSelect.innerHTML = '';
+    currentStates.forEach(name => {
+      const option = document.createElement('option');
+      option.textContent = name;
+      option.value = name;
+      stateSelect.append(option);
+    });
+    applyState('Default');
+  }
+
+  function applyState(name) {
+    const active = currentStates.includes(name) ? name : 'Default';
+    current.querySelectorAll('[data-when]').forEach(el => {
+      el.hidden = !el.dataset.when.split(',').map(x => x.trim()).includes(active);
+    });
+    const live = document.getElementById('live-message');
+    if (live) live.hidden = active !== 'Default';
+    const standardPolicy = document.getElementById('standard-username-policy');
+    if (standardPolicy) standardPolicy.hidden = active === '아이디 변경 제한';
+    stateSelect.value = active;
+  }
+  stateSelect.onchange = () => applyState(stateSelect.value);
+
+  window.prototypeShell = {
+    showScreen: show,
+    setState: applyState,
+    getScreen: () => current?.dataset.screen,
+    getState: () => stateSelect.value
+  };
+
+  const VPS = ['full', '390', '768'];
+  let vp = VPS.find(v => document.body.classList.contains('sh-vp-' + v)) || 'full';
+  function applyVp() {
+    VPS.forEach(v => document.body.classList.toggle('sh-vp-' + v, v === vp && v !== 'full'));
+    vpBtn.textContent = 'vp: ' + vp + ' (m)';
+    vpBtn.classList.toggle('on', vp !== 'full');
+  }
+  vpBtn.onclick = () => { vp = VPS[(VPS.indexOf(vp) + 1) % VPS.length]; applyVp(); };
+  applyVp();
+
+  addEventListener('keydown', e => {
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const i = screens.indexOf(current);
+    if (e.key === 'ArrowRight') show(screens[(i + 1) % screens.length].dataset.screen);
+    if (e.key === 'ArrowLeft') show(screens[(i - 1 + screens.length) % screens.length].dataset.screen);
+    if (e.key === 'm') vpBtn.click();
+  });
+
+  addEventListener('hashchange', () => show(location.hash.slice(1)));
+
+  const switches = document.querySelectorAll('.switch');
+  switches.forEach(toggle => toggle.addEventListener('click', () => {
+    const on = toggle.classList.toggle('on');
+    toggle.setAttribute('aria-pressed', String(on));
+  }));
+
+  const initialProfile = { nickname: '김민서', username: 'minseokim', avatar: 'photo' };
+  let draft = { ...initialProfile };
+  let saved = { ...initialProfile };
+  let usernameAvailable = true;
+  let usernameStatus = 'idle';
+  let usernameLockedUntil = null;
+  let checkTimer = null;
+  const nicknameInput = document.getElementById('nickname-input');
+  const usernameInput = document.getElementById('username-input');
+  const liveMessage = document.getElementById('live-message');
+  const saveButton = document.getElementById('save-profile');
+  const avatarSheet = document.getElementById('avatar-sheet');
+  const permissionDialog = document.getElementById('camera-permission');
+  const usernameConfirmation = document.getElementById('username-confirmation');
+  const usernameConfirmationCopy = document.getElementById('username-confirmation-copy');
+
+  function setAvatar(mode) {
+    draft.avatar = mode;
+    document.querySelectorAll('.avatar-render').forEach(avatar => {
+      avatar.classList.toggle('is-fallback', mode === 'fallback');
+      avatar.classList.toggle('is-new', mode === 'new');
+    });
+    document.getElementById('remove-photo').hidden = mode === 'fallback';
+    updateSave();
+  }
+
+  function isDirty() {
+    return draft.nickname !== saved.nickname || draft.username !== saved.username || draft.avatar !== saved.avatar;
+  }
+
+  function validNickname() {
+    const size = [...draft.nickname.trim()].length;
+    return size >= 1 && size <= 30;
+  }
+
+  function validUsernameShape() {
+    return /^[a-z0-9_]{3,20}$/.test(draft.username);
+  }
+
+  function updateSave() {
+    const usernameOkay = draft.username === saved.username || usernameAvailable;
+    saveButton.disabled = !(isDirty() && validNickname() && validUsernameShape() && usernameOkay);
+  }
+
+  function renderValidation() {
+    if (!validNickname()) {
+      liveMessage.className = 'field-foot error';
+      liveMessage.textContent = draft.nickname.trim() ? '닉네임은 30자까지 입력할 수 있어요.' : '닉네임을 입력해 주세요.';
+      return;
+    }
+
+    liveMessage.className = 'field-foot';
+    liveMessage.textContent = '';
+    if (usernameStatus === 'invalid') {
+      liveMessage.className = 'field-foot error';
+      liveMessage.textContent = '영문 소문자, 숫자와 밑줄로 3~20자까지 입력해 주세요.';
+    } else if (usernameStatus === 'checking') {
+      liveMessage.innerHTML = '<span class="spinner"></span>사용할 수 있는 아이디인지 확인하고 있어요.';
+    } else if (usernameStatus === 'taken') {
+      liveMessage.className = 'field-foot error';
+      liveMessage.textContent = '이미 사용 중인 아이디예요. 다른 아이디를 입력해 주세요.';
+    } else if (usernameStatus === 'available') {
+      liveMessage.className = 'field-foot success';
+      liveMessage.textContent = '✓ 사용할 수 있는 아이디예요.';
+    }
+  }
+
+  function updateNickname() {
+    draft.nickname = nicknameInput.value;
+    renderValidation();
+    updateSave();
+  }
+
+  function updateUsername() {
+    const normalized = usernameInput.value.toLowerCase();
+    if (usernameInput.value !== normalized) usernameInput.value = normalized;
+    draft.username = normalized;
+    clearTimeout(checkTimer);
+
+    if (draft.username === saved.username) {
+      usernameAvailable = true;
+      usernameStatus = 'idle';
+      renderValidation();
+      updateSave();
+      return;
+    }
+
+    usernameAvailable = false;
+    if (!validUsernameShape()) {
+      usernameStatus = 'invalid';
+      renderValidation();
+      updateSave();
+      return;
+    }
+
+    usernameStatus = 'checking';
+    renderValidation();
+    updateSave();
+    checkTimer = setTimeout(() => {
+      if (['minkim', 'minseo', 'official'].includes(draft.username)) {
+        usernameStatus = 'taken';
+        usernameAvailable = false;
+      } else {
+        usernameStatus = 'available';
+        usernameAvailable = true;
+      }
+      renderValidation();
+      updateSave();
+    }, 520);
+  }
+
+  nicknameInput.addEventListener('input', updateNickname);
+  usernameInput.addEventListener('input', updateUsername);
+
+  function openAvatarSheet() {
+    avatarSheet.hidden = false;
+  }
+  function clearCameraDenial() {
+    if (prototypeShell.getState() === '사진 권한 거부') prototypeShell.setState('Default');
+  }
+  document.getElementById('open-avatar-sheet').addEventListener('click', openAvatarSheet);
+  document.getElementById('open-avatar-sheet-text').addEventListener('click', openAvatarSheet);
+  document.getElementById('cancel-avatar').addEventListener('click', () => { avatarSheet.hidden = true; });
+  avatarSheet.addEventListener('click', event => { if (event.target === avatarSheet) avatarSheet.hidden = true; });
+  document.getElementById('choose-photo').addEventListener('click', () => { avatarSheet.hidden = true; clearCameraDenial(); setAvatar('new'); });
+  document.getElementById('remove-photo').addEventListener('click', () => { avatarSheet.hidden = true; clearCameraDenial(); setAvatar('fallback'); });
+  document.getElementById('take-photo').addEventListener('click', () => { permissionDialog.hidden = false; });
+  document.getElementById('allow-camera').addEventListener('click', () => {
+    permissionDialog.hidden = true; avatarSheet.hidden = true; clearCameraDenial(); setAvatar('new');
+  });
+  document.getElementById('deny-camera').addEventListener('click', () => {
+    permissionDialog.hidden = true; avatarSheet.hidden = true; prototypeShell.setState('사진 권한 거부');
+  });
+
+  function resetDraft() {
+    draft = { ...saved };
+    nicknameInput.value = draft.nickname;
+    usernameInput.value = draft.username;
+    usernameInput.disabled = false;
+    usernameAvailable = true;
+    usernameStatus = 'idle';
+    renderValidation();
+    setAvatar(draft.avatar);
+    updateSave();
+  }
+
+  screenSelect.onchange = () => {
+    resetDraft();
+    show(screenSelect.value);
+  };
+
+  stateSelect.onchange = () => {
+    const target = stateSelect.value;
+    if (current.dataset.screen === 'edit-profile') {
+      usernameInput.disabled = target === '아이디 변경 제한';
+      if (target === 'Default') {
+        resetDraft();
+      } else if (target === '아이디 확인 중') {
+        usernameInput.value = 'minseo_2026';
+        draft.username = usernameInput.value;
+        usernameAvailable = false;
+        usernameStatus = 'checking';
+        renderValidation();
+        updateSave();
+      } else if (target === '아이디 중복') {
+        usernameInput.value = 'minkim';
+        draft.username = usernameInput.value;
+        usernameAvailable = false;
+        usernameStatus = 'taken';
+        renderValidation();
+        updateSave();
+      } else if (target === '아이디 변경 제한') {
+        nicknameInput.value = saved.nickname;
+        draft.nickname = saved.nickname;
+        usernameInput.value = saved.username;
+        draft.username = saved.username;
+        usernameAvailable = true;
+        usernameStatus = 'idle';
+        renderValidation();
+        updateSave();
+      } else if (target === '저장 실패') {
+        nicknameInput.value = saved.nickname === '김민서 연구자' ? '김민서 연구자 2' : '김민서 연구자';
+        draft.nickname = nicknameInput.value;
+        usernameInput.value = saved.username;
+        draft.username = saved.username;
+        usernameAvailable = true;
+        usernameStatus = 'idle';
+        renderValidation();
+        updateSave();
+      }
+    }
+    applyState(target);
+  };
+
+  function openProfileEditor() {
+    resetDraft(); prototypeShell.showScreen('edit-profile');
+    if (usernameLockedUntil) {
+      stateSelect.value = '아이디 변경 제한';
+      stateSelect.onchange();
+    }
+  }
+  document.getElementById('open-edit').addEventListener('click', openProfileEditor);
+  document.getElementById('open-edit-avatar').addEventListener('click', openProfileEditor);
+  document.getElementById('cancel-edit').addEventListener('click', () => {
+    resetDraft(); prototypeShell.showScreen('settings');
+  });
+  document.querySelectorAll('.forced-suggestion').forEach(button => button.addEventListener('click', () => {
+    usernameInput.value = button.textContent.trim();
+    prototypeShell.setState('Default');
+    updateUsername();
+  }));
+
+  function commitProfile() {
+    const usernameChanged = draft.username !== saved.username;
+    saveButton.disabled = true;
+    saveButton.textContent = '저장 중';
+    setTimeout(() => {
+      saved = { ...draft, nickname: draft.nickname.trim() };
+      if (usernameChanged) usernameLockedUntil = '2026년 9월 11일';
+      draft = { ...saved };
+      document.querySelector('.settings-profile-name').textContent = saved.nickname;
+      document.querySelector('.settings-profile-id').textContent = saved.username;
+      saveButton.textContent = '저장';
+      prototypeShell.showScreen('settings');
+    }, 650);
+  }
+
+  saveButton.addEventListener('click', () => {
+    if (saveButton.disabled) return;
+    if (draft.username !== saved.username) {
+      usernameConfirmationCopy.textContent = `새 아이디는 ${draft.username}입니다. 변경하면 30일 동안 다시 바꿀 수 없어요. 이전 아이디 ${saved.username}도 30일 동안 다른 사람이 사용할 수 없어요.`;
+      usernameConfirmation.hidden = false;
+      return;
+    }
+    commitProfile();
+  });
+  document.getElementById('cancel-username-change').addEventListener('click', () => { usernameConfirmation.hidden = true; });
+  document.getElementById('confirm-username-change').addEventListener('click', () => { usernameConfirmation.hidden = true; commitProfile(); });
+
+  show(location.hash.slice(1));
+</script>
