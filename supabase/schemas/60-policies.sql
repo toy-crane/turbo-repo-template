@@ -38,8 +38,25 @@ revoke all on table public.profiles from anon, authenticated, service_role;
 -- user may not rewrite them even on their own row. `with check` above already
 -- guards `id`; this also covers `created_at`, which a policy cannot express.
 -- `updated_at` is the database's to set, through the trigger.
+-- `username_changed_at` and `username_locked_until` are missing from the update
+-- grant on purpose. They are the record of the rule, so a client that could write
+-- them could clear its own lock and rename as often as it liked. The trigger sets
+-- both, and it runs as owner.
 grant select on table public.profiles to authenticated;
-grant update (display_name, avatar_url, username) on table public.profiles to authenticated;
+grant update (avatar_chosen_by_user, avatar_path, avatar_url, display_name, username)
+  on table public.profiles to authenticated;
 
 -- The backend role bypasses RLS and is reached only with the secret key.
 grant all on table public.profiles to service_role;
+
+-- Access control for public.retired_usernames.
+--
+-- RLS with no policy at all for `anon` and `authenticated`: this table answers
+-- "which ids are about to come free", which is a queue to camp on rather than
+-- anything a person needs. The trigger writes it and the availability functions
+-- read it, both as owner, so no client role needs to reach it directly.
+alter table public.retired_usernames enable row level security;
+
+revoke all on table public.retired_usernames from anon, authenticated, service_role;
+
+grant all on table public.retired_usernames to service_role;

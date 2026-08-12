@@ -69,6 +69,52 @@ create trigger profiles_set_updated_at
   when (old.* is distinct from new.*)
   execute function public.set_updated_at();
 
+-- How long a changed account id is locked, and how long the old one is held back.
+--
+-- One function rather than the literal repeated across the trigger and both
+-- availability functions: the two periods are the same period in the decision, and
+-- a change that moved one of them would otherwise leave an id that is free to take
+-- but locked to give up, or the reverse.
+--
+-- IMMUTABLE so it costs nothing where it is called per row.
+create function public.username_change_interval()
+returns interval
+language sql
+immutable
+set search_path = ''
+as $$
+  select interval '30 days';
+$$;
+
+comment on function public.username_change_interval() is
+  'How long an account id stays locked after a change, and how long the previous id stays protected.';
+
+-- True while an account id belongs to somebody else's rename and is still held back.
+--
+-- `owner` is the account asking. Its own retired ids do not block it: someone who
+-- renamed away and wants their previous id back is the one person no one can
+-- confuse it with.
+create function public.is_protected_username(candidate text, owner uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.retired_usernames
+    where public.retired_usernames.username = candidate
+      and public.retired_usernames.protected_until > now()
+      and public.retired_usernames.retired_by is distinct from owner
+  );
+$$;
+
+comment on function public.is_protected_username(text, uuid) is
+  'True while another account''s previous id is still protected. Reads retired_usernames as owner.';
+
+revoke all on function public.is_protected_username(text, uuid) from public, anon, authenticated;
+
 -- Answers "can I have this account id?" without widening who may read profiles.
 --
 -- `security definer` is the whole point: `profiles_select_own` limits a signed-in
@@ -80,10 +126,14 @@ create trigger profiles_set_updated_at
 -- Reserved is decided before taken so a name the product keeps for itself reads
 -- as unavailable rather than as somebody else's.
 --
--- "Taken" counts every row, including the caller's own. That is right for
--- onboarding, where the caller has no id yet. A screen that lets someone change
--- an id they already hold has to exclude their own row here, or keeping their
--- current id will read as taken.
+-- "Taken" skips the caller's own row. The edit screen asks about the id the person
+-- already holds every time they open it, and counting their own row would answer
+-- that their own id is somebody else's. Onboarding is unaffected: a caller with no
+-- id yet has no row to skip.
+--
+-- An id another account gave up reads as taken rather than as its own state. The
+-- person asking cannot have it and cannot wait usefully for it either, and naming
+-- the protection would say that a specific stranger used to hold it.
 create function public.username_status(candidate text)
 returns text
 language sql
@@ -95,8 +145,12 @@ as $$
     when candidate is null or candidate !~ '^[a-z0-9_]{3,20}$' then 'invalid'
     when public.is_reserved_username(candidate) then 'reserved'
     when exists (
-      select 1 from public.profiles where public.profiles.username = candidate
+      select 1
+      from public.profiles
+      where public.profiles.username = candidate
+        and public.profiles.id is distinct from (select auth.uid())
     ) then 'taken'
+    when public.is_protected_username(candidate, (select auth.uid())) then 'taken'
     else 'available'
   end;
 $$;
@@ -139,8 +193,12 @@ as $$
   ) as entry
   where entry.candidate ~ '^[a-z0-9_]{3,20}$'
     and not public.is_reserved_username(entry.candidate)
+    and not public.is_protected_username(entry.candidate, (select auth.uid()))
     and not exists (
-      select 1 from public.profiles where public.profiles.username = entry.candidate
+      select 1
+      from public.profiles
+      where public.profiles.username = entry.candidate
+        and public.profiles.id is distinct from (select auth.uid())
     );
 $$;
 
@@ -149,3 +207,87 @@ comment on function public.available_usernames(text[]) is
 
 revoke all on function public.available_usernames(text[]) from public, anon;
 grant execute on function public.available_usernames(text[]) to authenticated;
+
+-- Decides every rename: whether it may happen, and what it costs.
+--
+-- This is the only place the two periods are enforced, and it has to be here
+-- rather than in the client or in a check constraint. `username_status` answers
+-- about the moment it was asked, and the id can be renamed into or protected
+-- between that answer and this write. A check constraint cannot see another table
+-- or the row's previous value, so neither the lock nor the protection can be
+-- expressed as one.
+--
+-- `security definer` for `retired_usernames` alone: `authenticated` holds nothing
+-- on that table, so the rename writes it through this function or not at all.
+--
+-- Two rules, and they cover different writes. A protected id may not be taken by
+-- anyone, including an account choosing its first id at onboarding — otherwise the
+-- shortest way to somebody's released id is to sign up rather than to rename. The
+-- lock and the retirement only apply to a real change, so someone who has just
+-- picked their first id can still fix it.
+create function public.guard_username_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if old.username is not null
+    and old.username_locked_until is not null
+    and old.username_locked_until > now()
+  then
+    raise exception 'Account id is locked until %', old.username_locked_until
+      using errcode = 'check_violation';
+  end if;
+
+  if new.username is not null and public.is_protected_username(new.username, new.id) then
+    -- The same code the unique index raises. To the person asking, an id somebody
+    -- else gave up last week and an id somebody else holds today are one answer:
+    -- not yours, pick another.
+    raise exception 'Account id % is still protected', new.username
+      using errcode = 'unique_violation';
+  end if;
+
+  -- A first id costs nothing and retires nothing: there is no previous id to hold
+  -- back, and locking here would trap someone in the value they just typed.
+  if old.username is null then
+    return new;
+  end if;
+
+  -- Taking back an id this account retired earlier releases it, so the row does
+  -- not sit there blocking the account that now holds the id.
+  delete from public.retired_usernames
+  where public.retired_usernames.username = new.username
+    and public.retired_usernames.retired_by = new.id;
+
+  -- `on conflict` covers the same id being retired twice: a -> b -> a -> b leaves
+  -- one row for `b`, protected from the most recent release rather than the first.
+  insert into public.retired_usernames (username, retired_by, protected_until)
+  values (old.username, new.id, now() + public.username_change_interval())
+  on conflict (username) do update
+  set retired_by = excluded.retired_by,
+      retired_at = now(),
+      protected_until = excluded.protected_until;
+
+  new.username_changed_at := now();
+  new.username_locked_until := now() + public.username_change_interval();
+
+  return new;
+end;
+$$;
+
+comment on function public.guard_username_change() is
+  'Enforces the account id lock, protects the previous id, and stamps the next allowed change.';
+
+revoke all on function public.guard_username_change() from public, anon, authenticated;
+
+-- The `when` clause covers every write that moves the id, including the null ->
+-- value one at onboarding, because the protection has to hold for a new account
+-- too. A profile that saves a new picture and the same id does not fire this at
+-- all, which is what lets someone edit the rest of their profile while the id is
+-- locked.
+create trigger profiles_guard_username_change
+  before update on public.profiles
+  for each row
+  when (new.username is distinct from old.username)
+  execute function public.guard_username_change();
