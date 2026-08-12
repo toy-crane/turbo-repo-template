@@ -29,6 +29,7 @@ import {
   openUrl as openIosUrl,
   openSimulatorApp,
   shutdownSimulator,
+  terminateApp,
 } from "../adapters/ios";
 import type { Platform } from "../options";
 
@@ -115,7 +116,12 @@ function createIosDriver(bundleIdentifier: string): PlatformDriver {
     prepareForMetro: () => Promise.resolve(),
     producedArtifact: (handle) =>
       installedAppPath(handle.target, bundleIdentifier),
-    relaunchUrl: (handle, url) => openIosUrl(handle.target, url),
+    relaunchUrl: async (handle, url) => {
+      // Same reason as Android: the development client keeps whichever server
+      // URL it last used, and a running app turns the deep link into a dialog.
+      await terminateApp(handle.target, bundleIdentifier);
+      await openIosUrl(handle.target, url);
+    },
     shutdown: shutdownSimulator,
   };
 }

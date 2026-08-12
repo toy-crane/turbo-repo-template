@@ -128,6 +128,19 @@ export async function openUrl(udid: string, url: string): Promise<void> {
   await runOrThrow(["xcrun", "simctl", "openurl", udid, url]);
 }
 
+/**
+ * Opening the app's own URL while it is already in front makes iOS put a
+ * "Open in …?" confirmation on screen, and nothing in a background session can
+ * answer it — the deep link never arrives and the app keeps whatever server it
+ * had. Quitting first turns the same call into a plain launch.
+ */
+export async function terminateApp(
+  udid: string,
+  bundleId: string
+): Promise<void> {
+  await run(["xcrun", "simctl", "terminate", udid, bundleId]);
+}
+
 export async function shutdownSimulator(udid: string): Promise<void> {
   const result = await run(["xcrun", "simctl", "shutdown", udid]);
 
