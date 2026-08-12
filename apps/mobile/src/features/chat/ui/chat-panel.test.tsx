@@ -1,12 +1,121 @@
 import { afterEach, describe, expect, jest, test } from "@jest/globals";
-import { fireEvent, screen, userEvent } from "@testing-library/react-native";
+import {
+  act,
+  fireEvent,
+  screen,
+  userEvent,
+} from "@testing-library/react-native";
 import type { UIMessage } from "ai";
 import { useState } from "react";
 import { AccessibilityInfo } from "react-native";
+import { KeyboardController } from "react-native-keyboard-controller";
 
 import type { ChatSession } from "@/features/chat/state/use-chat-session";
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { ChatPanel, chatLabels } from "./chat-panel";
+
+jest.mock("@legendapp/list/keyboard", () => {
+  const React = require("react") as typeof import("react");
+  const { KeyboardController: keyboardController } =
+    require("react-native-keyboard-controller") as typeof import("react-native-keyboard-controller");
+  const { View } = require("react-native") as typeof import("react-native");
+
+  type MockListProps = React.ComponentProps<typeof View> & {
+    anchoredEndSpace?: unknown;
+    contentContainerStyle?: unknown;
+    contentInsetEndAdjustment?: unknown;
+    data: UIMessage[];
+    freeze?: unknown;
+    keyboardDismissMode?: unknown;
+    keyboardLiftBehavior?: unknown;
+    keyboardOffset?: unknown;
+    keyboardShouldPersistTaps?: unknown;
+    keyExtractor: (item: UIMessage) => string;
+    maintainScrollAtEnd?: unknown;
+    maintainScrollAtEndThreshold?: unknown;
+    maintainVisibleContentPosition?: unknown;
+    recycleItems?: unknown;
+    renderItem: (info: {
+      data: UIMessage[];
+      extraData: unknown;
+      index: number;
+      item: UIMessage;
+      type: string | undefined;
+    }) => React.ReactNode;
+    scrollEventThrottle?: unknown;
+  };
+  interface MockListRef {
+    reportContentInset: (inset: { bottom: number }) => void;
+    scrollToEnd: (options?: { animated?: boolean }) => Promise<void>;
+  }
+
+  const KeyboardAwareLegendList = React.forwardRef<MockListRef, MockListProps>(
+    (props, ref) => {
+      const { data, keyExtractor, renderItem, ...viewProps } = props;
+      const scrollToEnd = React.useCallback(() => Promise.resolve(), []);
+
+      React.useImperativeHandle(
+        ref,
+        () => ({ reportContentInset: jest.fn(), scrollToEnd }),
+        [scrollToEnd]
+      );
+
+      return React.createElement(
+        View,
+        { ...viewProps, data, keyExtractor } as React.ComponentProps<
+          typeof View
+        >,
+        data.map((item, index) =>
+          React.createElement(
+            React.Fragment,
+            { key: keyExtractor(item) },
+            renderItem({
+              data,
+              extraData: undefined,
+              index,
+              item,
+              type: undefined,
+            })
+          )
+        )
+      );
+    }
+  );
+
+  return {
+    KeyboardAwareLegendList,
+    useKeyboardChatComposerInset: () => ({
+      contentInsetEndAdjustment: { value: 0 },
+      onComposerLayout: jest.fn(),
+    }),
+    useKeyboardScrollToEnd: ({
+      listRef,
+    }: {
+      listRef: React.RefObject<{
+        scrollToEnd: (options?: { animated?: boolean }) => Promise<void>;
+      } | null>;
+    }) => {
+      const freeze = React.useRef({ value: false }).current;
+      const scrollMessageToEnd = React.useCallback(
+        async ({
+          animated,
+          closeKeyboard,
+        }: {
+          animated: boolean;
+          closeKeyboard: boolean;
+        }) => {
+          if (closeKeyboard) {
+            await keyboardController.dismiss();
+          }
+          await listRef.current?.scrollToEnd({ animated });
+        },
+        [listRef]
+      );
+
+      return { freeze, scrollMessageToEnd };
+    },
+  };
+});
 
 function textMessage(
   id: string,
@@ -34,6 +143,24 @@ function EditableChat({ onSend }: { onSend: () => void }) {
   return <ChatPanel chat={chatSession({ draft, send: onSend, setDraft })} />;
 }
 
+async function scrollAwayFromLatest() {
+  const list = screen.getByTestId("chat-list");
+
+  await act(() => {
+    list.props.onScrollBeginDrag({
+      nativeEvent: { contentOffset: { y: 240 } },
+    });
+    list.props.onScroll({
+      nativeEvent: {
+        contentInset: { bottom: 0 },
+        contentOffset: { y: 160 },
+        contentSize: { height: 800 },
+        layoutMeasurement: { height: 400 },
+      },
+    });
+  });
+}
+
 describe("ChatPanel", () => {
   afterEach(() => {
     jest.restoreAllMocks();
@@ -45,6 +172,7 @@ describe("ChatPanel", () => {
     expect(screen.getByTestId("chat-list")).toBeOnTheScreen();
     expect(screen.getByLabelText(chatLabels.input)).toBeOnTheScreen();
     expect(screen.getByLabelText(chatLabels.send)).toBeDisabled();
+    expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
     expect(screen.queryByText("무엇을 도와드릴까요?")).not.toBeOnTheScreen();
   });
 
@@ -124,10 +252,183 @@ describe("ChatPanel", () => {
       "메시지 복사",
       "편집 후 다시 보내기",
       "다시 생성",
-      "최신 메시지로 이동",
     ]) {
       expect(screen.queryByLabelText(removedLabel)).not.toBeOnTheScreen();
     }
+  });
+
+  test("사용자가 이전 메시지로 스크롤하면 최신 메시지 이동 버튼을 보여준다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+    await scrollAwayFromLatest();
+
+    expect(screen.getByLabelText("최신 메시지로 이동")).toBeOnTheScreen();
+  });
+
+  test("최신 메시지 이동 버튼을 누르면 자동 추적을 다시 켠다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+    await scrollAwayFromLatest();
+
+    await user.press(screen.getByLabelText(chatLabels.latest));
+
+    expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
+  });
+
+  test("사용자가 직접 목록 끝까지 내려오면 자동 추적을 다시 켠다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+    await scrollAwayFromLatest();
+    const list = screen.getByTestId("chat-list");
+
+    await act(() => {
+      list.props.onScrollBeginDrag({
+        nativeEvent: { contentOffset: { y: 160 } },
+      });
+      list.props.onScroll({
+        nativeEvent: {
+          contentInset: { bottom: 0 },
+          contentOffset: { y: 400 },
+          contentSize: { height: 800 },
+          layoutMeasurement: { height: 400 },
+        },
+      });
+    });
+
+    expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
+  });
+
+  test("사용자가 시작한 관성 스크롤이 끝에 닿아도 자동 추적을 다시 켠다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+    await scrollAwayFromLatest();
+    const list = screen.getByTestId("chat-list");
+
+    await act(() => {
+      list.props.onScrollBeginDrag({
+        nativeEvent: { contentOffset: { y: 160 } },
+      });
+      list.props.onScrollEndDrag({ nativeEvent: {} });
+      list.props.onMomentumScrollBegin({ nativeEvent: {} });
+      list.props.onScroll({
+        nativeEvent: {
+          contentInset: { bottom: 0 },
+          contentOffset: { y: 400 },
+          contentSize: { height: 800 },
+          layoutMeasurement: { height: 400 },
+        },
+      });
+    });
+
+    expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
+  });
+
+  test("코드가 시작한 스크롤은 자동 추적 중단으로 보지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+    const list = screen.getByTestId("chat-list");
+
+    await act(() => {
+      list.props.onMomentumScrollBegin({ nativeEvent: {} });
+      list.props.onScroll({
+        nativeEvent: {
+          contentInset: { bottom: 0 },
+          contentOffset: { y: 160 },
+          contentSize: { height: 800 },
+          layoutMeasurement: { height: 400 },
+        },
+      });
+    });
+
+    expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
+  });
+
+  test("메시지 id를 가상 목록 키로 사용하고 항목을 재활용하지 않는다", async () => {
+    const messages = [
+      textMessage("user-stable-id", "user", "같은 내용"),
+      textMessage("assistant-stable-id", "assistant", "같은 내용"),
+    ];
+    await renderWithHeroUI(<ChatPanel chat={chatSession({ messages })} />);
+    const list = screen.getByTestId("chat-list");
+
+    expect(list.props.keyExtractor(messages[0])).toBe("user-stable-id");
+    expect(list.props.keyExtractor(messages[1])).toBe("assistant-stable-id");
+    expect(list.props.recycleItems).toBe(false);
+  });
+
+  test("스트리밍 추적은 애니메이션 없이 크기와 새 메시지 변화를 따른다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+    const list = screen.getByTestId("chat-list");
+
+    expect(list.props.maintainScrollAtEnd).toEqual({
+      animated: false,
+      on: { dataChange: true, itemLayout: true },
+    });
+    expect(list.props.maintainVisibleContentPosition).toEqual({
+      data: false,
+      size: true,
+    });
+    expect(list.props.keyboardLiftBehavior).toBe("whenAtEnd");
+    expect(list.props.initialScrollAtEnd).toBeUndefined();
+  });
+
+  test("보낸 질문의 메시지 위치만 다음 답변의 위쪽 기준으로 고정한다", async () => {
+    const user = userEvent.setup();
+    const messages = [
+      textMessage("user-1", "user", "이전 질문"),
+      textMessage("assistant-1", "assistant", "이전 답변"),
+    ];
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({ draft: "새 질문", messages, send: jest.fn() })}
+      />
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    expect(screen.getByTestId("chat-list").props.anchoredEndSpace).toEqual({
+      anchorIndex: 2,
+    });
+  });
+
+  test("질문을 보내면 키보드를 닫고 최신 답변 자동 추적을 다시 켠다", async () => {
+    const dismiss = jest.mocked(KeyboardController.dismiss);
+    const user = userEvent.setup();
+    dismiss.mockClear();
+    await renderWithHeroUI(<EditableChat onSend={jest.fn()} />);
+    await scrollAwayFromLatest();
+    await user.type(screen.getByLabelText(chatLabels.input), "질문");
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    expect(dismiss).toHaveBeenCalledTimes(1);
+    expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
   });
 
   test("입력과 전송을 채팅 세션에 연결한다", async () => {

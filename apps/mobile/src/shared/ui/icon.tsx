@@ -1,10 +1,12 @@
 import { type ThemeColor, useThemeColor } from "heroui-native/hooks";
+import ArrowDown from "lucide-react-native/icons/arrow-down";
 import ArrowUp from "lucide-react-native/icons/arrow-up";
 import Bookmark from "lucide-react-native/icons/bookmark";
 import { View } from "react-native";
 
 const icons = {
   bookmark: Bookmark,
+  latest: ArrowDown,
   send: ArrowUp,
 } as const;
 
