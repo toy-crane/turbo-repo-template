@@ -15,6 +15,8 @@ const WHITESPACE_PATTERN = /\s+/;
 const EMULATOR_BASE_PORT = 5554;
 const BOOT_TIMEOUT_MS = 180_000;
 const BOOT_POLL_MS = 1000;
+const SHUTDOWN_TIMEOUT_MS = 60_000;
+const SHUTDOWN_POLL_MS = 500;
 
 export interface AndroidSdk {
   adb: string;
@@ -310,11 +312,31 @@ export async function forceStop(
   await run([sdk.adb, "-s", serial, "shell", "am", "force-stop", packageName]);
 }
 
+/**
+ * Waits for the emulator to actually be gone. `emu kill` only asks: QEMU keeps
+ * flushing its writable images for a moment afterwards, so anything that erases
+ * those images has to know the process finished first.
+ */
 export async function shutdownEmulator(
   sdk: AndroidSdk,
   serial: string
 ): Promise<void> {
   await run([sdk.adb, "-s", serial, "emu", "kill"]);
+
+  const deadline = Date.now() + SHUTDOWN_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    // biome-ignore lint/performance/noAwaitInLoops: polling a shutdown is sequential by nature.
+    if (!(await runningSerials(sdk)).includes(serial)) {
+      return;
+    }
+
+    await sleep(SHUTDOWN_POLL_MS);
+  }
+
+  throw new Error(
+    `Emulator가 시간 안에 종료되지 않았습니다 (${serial}). 창을 닫은 뒤 다시 실행해 주세요.`
+  );
 }
 
 export function avdDirectory(

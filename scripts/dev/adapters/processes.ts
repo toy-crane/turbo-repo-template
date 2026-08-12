@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { closeSync, mkdirSync, openSync } from "node:fs";
 import { createServer } from "node:net";
-import { dirname } from "node:path";
+import { dirname, sep } from "node:path";
 
 import { run } from "./command";
 
@@ -123,9 +123,21 @@ export async function isOwnedByWorktree(
     processWorkingDirectory(pid),
   ]);
 
+  // The argv path always continues past the worktree root, so the separator
+  // keeps `/worktrees/feature` from matching `/worktrees/feature-2/...`.
   return (
-    workingDirectory.startsWith(worktreePath) || command.includes(worktreePath)
+    isInside(workingDirectory, worktreePath) ||
+    command.includes(`${worktreePath}${sep}`)
   );
+}
+
+/**
+ * Compared as paths, not as text. `/worktrees/feature` is not a parent of
+ * `/worktrees/feature-2`, and a plain `startsWith` would say it is — which
+ * would let one worktree's stop command kill another worktree's session.
+ */
+export function isInside(path: string, parent: string): boolean {
+  return path === parent || path.startsWith(`${parent}${sep}`);
 }
 
 function sleep(ms: number): Promise<void> {

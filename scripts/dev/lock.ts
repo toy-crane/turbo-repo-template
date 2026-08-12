@@ -3,7 +3,9 @@ import { dirname, join } from "node:path";
 
 const OWNER_FILE = "owner.json";
 const RETRY_INTERVAL_MS = 100;
-const DEFAULT_TIMEOUT_MS = 30_000;
+// Long enough for the holder to finish a reclaim, which shuts down and erases
+// every device a removed worktree left behind.
+const DEFAULT_TIMEOUT_MS = 180_000;
 
 export interface LockOptions {
   /** Answers "is the process holding this lock still running?". */

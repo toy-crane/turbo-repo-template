@@ -65,11 +65,17 @@ export function fileSize(path: string): number {
   }
 }
 
-function readFrom(path: string, offset: number): string {
+interface LogChunk {
+  /** Bytes consumed, which is what the next read must start from. */
+  bytes: number;
+  text: string;
+}
+
+function readFrom(path: string, offset: number): LogChunk {
   const size = fileSize(path);
 
   if (size <= offset) {
-    return "";
+    return { bytes: 0, text: "" };
   }
 
   const handle = openSync(path, "r");
@@ -78,7 +84,11 @@ function readFrom(path: string, offset: number): string {
     const buffer = Buffer.alloc(size - offset);
     const read = readSync(handle, buffer, 0, buffer.length, offset);
 
-    return buffer.subarray(0, read).toString("utf8");
+    // The offset advances by bytes read, never by the decoded length: a
+    // multi-byte character split across this boundary decodes to a single
+    // replacement character, and counting that instead would push every later
+    // read into the middle of a character.
+    return { bytes: read, text: buffer.subarray(0, read).toString("utf8") };
   } finally {
     closeSync(handle);
   }
@@ -113,9 +123,9 @@ export async function waitForLogMatch({
 
     const chunk = readFrom(logPath, offset);
 
-    if (chunk) {
-      offset += Buffer.byteLength(chunk);
-      seen += chunk;
+    if (chunk.bytes > 0) {
+      offset += chunk.bytes;
+      seen += chunk.text;
 
       if (pattern.test(seen)) {
         return true;
