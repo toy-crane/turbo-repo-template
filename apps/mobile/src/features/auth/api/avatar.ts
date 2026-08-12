@@ -90,9 +90,19 @@ export function buildAvatarPath(
   mimeType: string,
   uniqueSuffix: string
 ): string {
-  const extension = MIME_EXTENSIONS[mimeType] ?? MIME_EXTENSIONS[DEFAULT_MIME];
+  return `${userId}/${uniqueSuffix}.${MIME_EXTENSIONS[toStoredMimeType(mimeType)]}`;
+}
 
-  return `${userId}/${uniqueSuffix}.${extension}`;
+/**
+ * The type the object is stored and named as.
+ *
+ * The name and the declared type have to come from the same answer. Falling the
+ * extension back to jpg while still declaring the picker's own type would upload
+ * a `.jpg` announced as something the bucket does not accept, and the person
+ * would be told the whole profile failed to save.
+ */
+export function toStoredMimeType(mimeType: string): string {
+  return mimeType in MIME_EXTENSIONS ? mimeType : DEFAULT_MIME;
 }
 
 /** Bytes of name, which is plenty to never repeat within one person's folder. */
@@ -153,7 +163,7 @@ export async function uploadAvatar(
   const { error } = await client.storage
     .from(AVATAR_BUCKET)
     .upload(path, decodeBase64(photo.base64), {
-      contentType: photo.mimeType,
+      contentType: toStoredMimeType(photo.mimeType),
     });
 
   if (error) {

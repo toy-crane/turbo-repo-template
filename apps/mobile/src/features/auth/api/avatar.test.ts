@@ -1,6 +1,11 @@
 import { describe, expect, test } from "@jest/globals";
 
-import { buildAvatarPath, decodeBase64, resolveAvatarUrl } from "./avatar";
+import {
+  buildAvatarPath,
+  decodeBase64,
+  resolveAvatarUrl,
+  toStoredMimeType,
+} from "./avatar";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 
@@ -63,6 +68,19 @@ describe("buildAvatarPath", () => {
     expect(buildAvatarPath(USER_ID, "image/heic", "abcd")).toBe(
       `${USER_ID}/abcd.jpg`
     );
+  });
+});
+
+describe("toStoredMimeType", () => {
+  test("버킷이 받는 형식은 그대로 둔다", () => {
+    expect(toStoredMimeType("image/png")).toBe("image/png");
+  });
+
+  // The name and the declared type have to agree. Naming the file .jpg while
+  // still declaring image/heic uploads something the bucket refuses, and the
+  // person is told the whole profile failed to save.
+  test("모르는 형식은 확장자와 같은 기본 형식으로 맞춘다", () => {
+    expect(toStoredMimeType("image/heic")).toBe("image/jpeg");
   });
 });
 

@@ -61,11 +61,19 @@ create policy avatars_delete_own on storage.objects
     and (storage.foldername(name))[1] = (select auth.uid())::text
   );
 
--- Reading is what `public` on the bucket already allows through the public route.
--- This policy is what lets a signed-in client list and read the same objects
--- through the authenticated API — replacing a picture reads the folder first to
--- clear the previous file.
-create policy avatars_select_all on storage.objects
+-- Showing a picture needs no policy at all: a public bucket serves
+-- `/object/public/...` without consulting RLS, which is how every profile picture
+-- in the app loads.
+--
+-- So this covers only the one thing a client does through the authenticated API —
+-- listing its own folder to clear the previous file after a replacement. Scoped to
+-- the owner's folder for the same reason `profiles_select_own` exists: a policy
+-- covering the whole bucket would let any signed-in client list every folder, and
+-- a folder name here is a user's id.
+create policy avatars_select_own on storage.objects
   for select
-  to anon, authenticated
-  using (bucket_id = 'avatars');
+  to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
