@@ -34,7 +34,6 @@ export function NicknameScreen({ onNext }: { onNext: () => void }) {
           <Button.Label>{onboardingLabels.next}</Button.Label>
         </Button>
       }
-      isRoot
       title="닉네임을 정해 주세요"
     >
       <View className="gap-2">

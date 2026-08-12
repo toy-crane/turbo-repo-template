@@ -6,10 +6,9 @@ import { ProfileOnboardingProvider } from "@/features/auth/state/profile-onboard
 /**
  * The onboarding stack.
  *
- * The nickname screen has no header: it is the root, and there is nowhere to go
- * back to — the app screens are not reachable until both values exist, so there
- * is no skip either. The account id screen shows the native header, which is
- * what owns the back control.
+ * Both screens show the same native header shell, so their content starts at
+ * the same height. The nickname screen is the root and hides the back control;
+ * the account id screen uses that control to return to the nickname.
  */
 /**
  * Anchors the stack to the first screen, so a restored navigation state that
@@ -37,7 +36,7 @@ export default function OnboardingLayout() {
           headerTitle: "",
         }}
       >
-        <Stack.Screen name="nickname" options={{ headerShown: false }} />
+        <Stack.Screen name="nickname" options={{ headerBackVisible: false }} />
         <Stack.Screen name="username" />
       </Stack>
     </ProfileOnboardingProvider>
