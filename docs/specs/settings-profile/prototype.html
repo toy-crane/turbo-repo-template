@@ -787,7 +787,7 @@
   saveButton.addEventListener('click', () => {
     if (saveButton.disabled) return;
     if (draft.username !== saved.username) {
-      usernameConfirmationCopy.textContent = `새 아이디는 ${draft.username}입니다. 변경하면 30일 동안 다시 바꿀 수 없어요. 이전 아이디 ${saved.username}도 30일 동안 다른 사람이 사용할 수 없어요.`;
+      usernameConfirmationCopy.textContent = '변경 후 30일 동안 다시 바꿀 수 없어요.';
       usernameConfirmation.hidden = false;
       return;
     }
