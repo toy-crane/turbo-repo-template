@@ -104,8 +104,9 @@ export async function removeSession({
     }
 
     await stopOwnProcesses(worktreePath, state);
-    await shutdownActiveDevice(context, state, record.activePlatform);
 
+    // No separate shutdown here: every assigned device goes through
+    // `eraseToPool` below, which shuts it down before wiping it.
     const released: string[] = [];
 
     for (const platform of PLATFORMS) {
