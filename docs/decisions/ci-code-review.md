@@ -5,7 +5,7 @@
 - PR 코드 리뷰는 `.github/workflows/claude-code-review.yml`이 `anthropics/claude-code-action@v1`으로 실행한다. 리뷰 내용은 `anthropics/claude-code.git` marketplace의 `code-review` 플러그인이 정한다.
 - 리뷰 프롬프트는 `--comment`를 넘긴다. 이 인수가 없으면 플러그인이 결과를 터미널에만 출력하고 PR에는 아무것도 남기지 않는다.
 - `claude_args`의 `--allowedTools`에 `mcp__github_inline_comment__create_inline_comment`와 리뷰가 쓰는 `gh` 명령을 함께 적는다. 액션은 이 목록에 도구 이름이 있을 때만 해당 MCP 서버를 띄운다.
-- 워크플로의 `permissions`는 읽기 권한으로 둔다. 액션이 OIDC로 교환한 GitHub App 토큰을 `GITHUB_TOKEN`과 `GH_TOKEN`으로 넘기고, 코멘트는 그 토큰으로 작성한다.
+- 워크플로의 `permissions`는 저장소 접근을 읽기로 두고 OIDC 교환에 필요한 `id-token: write`만 더한다. 액션이 OIDC로 교환한 GitHub App 토큰을 `GITHUB_TOKEN`과 `GH_TOKEN`으로 넘기고, 코멘트는 그 토큰으로 작성한다.
 
 ## 경계
 
@@ -25,5 +25,5 @@
 
 ## 계속 제외하는 대안
 
-- `permissions`를 쓰기 권한으로 올리기: 코멘트는 App 토큰으로 작성하므로 효과가 없고, 워크플로 토큰의 권한만 넓힌다. 액션이 App 토큰을 쓰지 않는 설정으로 옮길 때만 재검토한다.
+- 저장소 접근 권한을 쓰기로 올리기: 코멘트는 App 토큰으로 작성하므로 효과가 없고, 워크플로 토큰의 권한만 넓힌다. 액션이 App 토큰을 쓰지 않는 설정으로 옮길 때만 재검토한다.
 - `show_full_output: true`를 켜두기: 리뷰 전문이 실행 로그에 남는다. 코멘트가 안 붙는 원인을 찾을 때만 잠깐 켠다.
