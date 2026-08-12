@@ -369,6 +369,42 @@ test("사진을 고르면 저장할 때 자기 폴더에 올리고 프로필이 
   expect(fake.updates.at(-1)?.values.avatar_chosen_by_user).toBe(true);
 });
 
+test("사진이 있으면 삭제 항목을 마지막에 두고, 지우면 사진 열을 비운다", async () => {
+  const fake = resetFakeSupabase({
+    profile: createProfileRow({ ...SAVED, avatar_path: "user-1/old.jpg" }),
+    session: createFakeSession(),
+  });
+
+  await renderEditor();
+
+  const user = userEvent.setup();
+
+  await user.press(screen.getByTestId("profile-edit-photo"));
+
+  const [options] = photoMenu.mock.calls[0];
+
+  expect(options.options).toEqual([
+    "사진 찍기",
+    "사진 보관함에서 선택",
+    "현재 사진 삭제",
+    "취소",
+  ]);
+  // Deleting is the one entry that removes something, so it is the one iOS draws
+  // in red.
+  expect(options.destructiveButtonIndex).toBe(2);
+
+  await choosePhotoSource(2);
+  await saveProfile(fake);
+
+  const saved = fake.updates.at(-1)?.values;
+
+  expect(saved?.avatar_path).toBeNull();
+  // The provider's picture goes with it, and the flag is what stops the next
+  // sign-in from putting that picture back.
+  expect(saved?.avatar_url).toBeNull();
+  expect(saved?.avatar_chosen_by_user).toBe(true);
+});
+
 test("아이디가 그대로면 확인 없이 저장한다", async () => {
   const fake = resetFakeSupabase({
     profile: createProfileRow(SAVED),
