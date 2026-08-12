@@ -19,11 +19,13 @@ import {
 } from "../adapters/android";
 import { androidApkPath } from "../adapters/expo";
 import {
+  approveUrlSchemes,
   bootSimulator,
   createSimulator,
   eraseSimulator,
   installApp,
   installedAppPath,
+  isSimulatorBooted,
   listSimulators,
   missingIosTooling,
   openUrl as openIosUrl,
@@ -31,7 +33,9 @@ import {
   shutdownSimulator,
   terminateApp,
 } from "../adapters/ios";
+import { developmentClientSchemes } from "../environment";
 import type { Platform } from "../options";
+import type { SessionContext } from "./context";
 
 /** The exact device this run talks to. Every command names it explicitly. */
 export interface DeviceHandle {
@@ -91,14 +95,31 @@ export interface DriverInput {
   bundleIdentifier: string;
   mobileDirectory: string;
   platform: Platform;
+  /** Deep-link schemes the development client answers to. */
+  schemes: string[];
 }
 
-function createIosDriver(bundleIdentifier: string): PlatformDriver {
+function createIosDriver(
+  bundleIdentifier: string,
+  schemes: string[]
+): PlatformDriver {
   return {
     buildEnv: (base) => base,
     buildTarget: (handle) => handle.target,
     createDevice: createSimulator,
     ensureBooted: async ({ deviceId }) => {
+      // The device reads its scheme approvals when it boots, so a device that
+      // is already up has to come down for a new approval to take effect.
+      const approved = await approveUrlSchemes(
+        deviceId,
+        bundleIdentifier,
+        schemes
+      );
+
+      if (approved && (await isSimulatorBooted(deviceId))) {
+        await shutdownSimulator(deviceId);
+      }
+
       await bootSimulator(deviceId);
       await openSimulatorApp();
 
@@ -192,8 +213,26 @@ export function createPlatformDriver({
   bundleIdentifier,
   mobileDirectory,
   platform,
+  schemes,
 }: DriverInput): PlatformDriver {
   return platform === "ios"
-    ? createIosDriver(bundleIdentifier)
+    ? createIosDriver(bundleIdentifier, schemes)
     : createAndroidDriver(mobileDirectory, androidPackage);
+}
+
+/** The driver every command wants: this project, that platform. */
+export function driverFor(
+  context: SessionContext,
+  platform: Platform
+): PlatformDriver {
+  return createPlatformDriver({
+    androidPackage: context.project.androidPackage,
+    bundleIdentifier: context.project.bundleIdentifier,
+    mobileDirectory: context.mobileDirectory,
+    platform,
+    schemes: developmentClientSchemes(
+      context.project.scheme,
+      context.project.slug
+    ),
+  });
 }

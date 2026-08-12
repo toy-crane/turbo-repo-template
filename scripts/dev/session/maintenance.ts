@@ -7,7 +7,7 @@ import { worktreeLogDirectory } from "../paths";
 import { type ReleasedDevice, reconcile } from "../reconcile";
 import type { ProcessKind, ProcessRecord, RepositoryState } from "../state";
 import type { SessionContext, SessionIo } from "./context";
-import { createPlatformDriver } from "./platform";
+import { driverFor } from "./platform";
 
 const PROCESS_KINDS: ProcessKind[] = ["api", "metro"];
 
@@ -53,12 +53,7 @@ async function enumerateDevices(
 
   await Promise.all(
     platforms.map(async (platform) => {
-      const driver = createPlatformDriver({
-        androidPackage: context.project.androidPackage,
-        bundleIdentifier: context.project.bundleIdentifier,
-        mobileDirectory: context.mobileDirectory,
-        platform,
-      });
+      const driver = driverFor(context, platform);
 
       try {
         found[platform] = await driver.existingDeviceIds();
@@ -78,12 +73,7 @@ async function eraseReleased(
   io: SessionIo
 ): Promise<void> {
   for (const { deviceId, platform } of released) {
-    const driver = createPlatformDriver({
-      androidPackage: context.project.androidPackage,
-      bundleIdentifier: context.project.bundleIdentifier,
-      mobileDirectory: context.mobileDirectory,
-      platform,
-    });
+    const driver = driverFor(context, platform);
 
     try {
       // biome-ignore lint/performance/noAwaitInLoops: erasing devices in parallel makes the tools contend for the same daemons.

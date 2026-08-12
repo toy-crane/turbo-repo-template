@@ -10,7 +10,7 @@ import {
   type SessionIo,
 } from "./context";
 import { fitStateToReality, stopOwnProcesses } from "./maintenance";
-import { createPlatformDriver } from "./platform";
+import { driverFor } from "./platform";
 
 const PLATFORMS: Platform[] = ["android", "ios"];
 
@@ -21,15 +21,6 @@ export interface StopInput {
 
 export interface StopResult {
   hadSession: boolean;
-}
-
-function driverFor(context: SessionContext, platform: Platform) {
-  return createPlatformDriver({
-    androidPackage: context.project.androidPackage,
-    bundleIdentifier: context.project.bundleIdentifier,
-    mobileDirectory: context.mobileDirectory,
-    platform,
-  });
 }
 
 /**

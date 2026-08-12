@@ -1,3 +1,7 @@
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
 import { run, runOrThrow } from "./command";
 
 /** The spec fixes the default configuration; both ids must exist locally. */
@@ -100,6 +104,103 @@ export async function createSimulator(name: string): Promise<string> {
   }
 
   return udid;
+}
+
+function schemeApprovalPath(udid: string, home: string = homedir()): string {
+  return join(
+    home,
+    "Library",
+    "Developer",
+    "CoreSimulator",
+    "Devices",
+    udid,
+    "data",
+    "Library",
+    "Preferences",
+    "com.apple.launchservices.schemeapproval.plist"
+  );
+}
+
+function approvalKey(scheme: string): string {
+  return `com.apple.CoreSimulator.CoreSimulatorBridge-->${scheme}`;
+}
+
+async function readApprovals(path: string): Promise<Record<string, unknown>> {
+  if (!existsSync(path)) {
+    return {};
+  }
+
+  const { code, stdout } = await run([
+    "plutil",
+    "-convert",
+    "json",
+    "-o",
+    "-",
+    path,
+  ]);
+
+  if (code !== 0) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(stdout) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Without this the simulator asks "Open in …?" for the development client's
+ * URL, and a background session has nobody to answer it: the deep link never
+ * arrives and the app keeps pointing at whichever Metro it last used. The
+ * approvals are read when the device boots, so the caller has to write them
+ * before booting — `true` means something changed and a running device has to
+ * be restarted for it to count.
+ */
+export async function approveUrlSchemes(
+  udid: string,
+  bundleId: string,
+  schemes: string[],
+  home: string = homedir()
+): Promise<boolean> {
+  const path = schemeApprovalPath(udid, home);
+  const current = await readApprovals(path);
+  const missing = schemes.filter(
+    (scheme) => current[approvalKey(scheme)] !== bundleId
+  );
+
+  if (missing.length === 0) {
+    return false;
+  }
+
+  if (!existsSync(path)) {
+    await runOrThrow(["plutil", "-create", "binary1", path]);
+  }
+
+  for (const scheme of missing) {
+    // `plutil` reads `.` as a key-path separator, and every key here contains
+    // several, so each one is escaped back into a literal.
+    const keyPath = approvalKey(scheme).replaceAll(".", String.raw`\.`);
+
+    // biome-ignore lint/performance/noAwaitInLoops: each edit rewrites the same file.
+    await runOrThrow([
+      "plutil",
+      "-replace",
+      keyPath,
+      "-string",
+      bundleId,
+      path,
+    ]);
+  }
+
+  return true;
+}
+
+export async function isSimulatorBooted(udid: string): Promise<boolean> {
+  return (await listSimulators()).some(
+    (device) => device.udid === udid && device.booted
+  );
 }
 
 export async function bootSimulator(udid: string): Promise<void> {

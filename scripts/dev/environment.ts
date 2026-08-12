@@ -93,3 +93,15 @@ export function developmentClientUrl(
 
   return `${scheme}://expo-development-client/?url=${target}`;
 }
+
+/**
+ * Both schemes a Development Build registers: the app's own, and the one
+ * `expo-dev-client` adds. Which of them a given build answers to depends on how
+ * it was made, so the session prepares for both and tries the app's own first.
+ */
+export function developmentClientSchemes(
+  scheme: string,
+  slug: string
+): string[] {
+  return [scheme, `exp+${slug}`];
+}

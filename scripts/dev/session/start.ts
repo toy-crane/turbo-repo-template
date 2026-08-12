@@ -39,7 +39,7 @@ import {
   type SessionIo,
 } from "./context";
 import { fitStateToReality, stopOwnProcesses } from "./maintenance";
-import { createPlatformDriver, type PlatformDriver } from "./platform";
+import { driverFor, type PlatformDriver } from "./platform";
 
 const API_READY_TIMEOUT_MS = 60_000;
 const METRO_READY_TIMEOUT_MS = 120_000;
@@ -172,12 +172,7 @@ async function allocate(
       await stopOwnProcesses(worktreePath, state);
 
       if (otherDevice) {
-        const otherDriver = createPlatformDriver({
-          androidPackage: context.project.androidPackage,
-          bundleIdentifier: context.project.bundleIdentifier,
-          mobileDirectory: context.mobileDirectory,
-          platform: existing.activePlatform,
-        });
+        const otherDriver = driverFor(context, existing.activePlatform);
 
         await otherDriver.shutdown(otherDevice);
       }
@@ -435,12 +430,7 @@ export async function startSession({
   platform,
 }: StartInput): Promise<StartResult> {
   const context = await createSessionContext(cwd);
-  const driver = createPlatformDriver({
-    androidPackage: context.project.androidPackage,
-    bundleIdentifier: context.project.bundleIdentifier,
-    mobileDirectory: context.mobileDirectory,
-    platform,
-  });
+  const driver = driverFor(context, platform);
   const missing = await driver.missingTooling();
 
   if (missing.length > 0) {
