@@ -37,7 +37,6 @@ export async function waitForHttp({
       });
 
       if (response.ok) {
-        // biome-ignore lint/performance/noAwaitInLoops: the body decides whether to accept this attempt.
         const body = await response.text();
 
         if (!accepts || accepts(body)) {
@@ -52,7 +51,6 @@ export async function waitForHttp({
       lastError = error instanceof Error ? error.message : String(error);
     }
 
-    // biome-ignore lint/performance/noAwaitInLoops: polling is sequential by nature.
     await sleep(POLL_INTERVAL_MS);
   }
 

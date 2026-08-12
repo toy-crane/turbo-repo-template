@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 const OWNER_FILE = "owner.json";
 const RETRY_INTERVAL_MS = 100;
@@ -68,6 +68,10 @@ async function acquire(
   options: Required<LockOptions>
 ): Promise<void> {
   const deadline = Date.now() + options.timeoutMs;
+
+  // The parent is created up front so the loop below only ever creates the
+  // lock itself, which is what has to stay a single atomic step.
+  mkdirSync(dirname(lockDirectory), { recursive: true });
 
   for (;;) {
     try {

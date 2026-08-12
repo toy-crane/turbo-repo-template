@@ -70,6 +70,18 @@ describe("allocateSlot", () => {
     ).toEqual({ changed: true, slot: 2 });
   });
 
+  test("자기 세션이 쓰는 포트 때문에 slot을 옮기지 않는다", () => {
+    // 다시 시작할 때 살아 있는 자기 API와 Metro가 포트를 잡고 있다.
+    expect(
+      allocateSlot({
+        currentSlot: 1,
+        isPortFree: () => false,
+        ownPorts: new Set([8091, 3910]),
+        takenSlots: new Set([0]),
+      })
+    ).toEqual({ changed: false, slot: 1 });
+  });
+
   test("빈 slot이 없으면 남의 프로세스를 죽이지 않고 실패한다", () => {
     expect(() =>
       allocateSlot({

@@ -1,7 +1,8 @@
 const METRO_BASE_PORT = 8081;
 const API_BASE_PORT = 3900;
 const SLOT_STRIDE = 10;
-const MAX_SLOT = 64;
+
+export const MAX_SLOT = 32;
 
 export function metroPort(slot: number): number {
   return METRO_BASE_PORT + slot * SLOT_STRIDE;
@@ -20,18 +21,23 @@ export interface AllocateSlotInput {
   /** The slot this worktree used last time, if it has one. */
   currentSlot: number | undefined;
   isPortFree: (port: number) => boolean;
+  /**
+   * Ports this worktree's own running session holds. Without them a restart
+   * would read its own API and Metro as somebody else's and move slot.
+   */
+  ownPorts?: ReadonlySet<number>;
   /** Slots held by the other worktrees of this repository. */
   takenSlots: ReadonlySet<number>;
 }
 
 function isSlotUsable(
   slot: number,
-  { isPortFree, takenSlots }: AllocateSlotInput
+  { isPortFree, ownPorts, takenSlots }: AllocateSlotInput
 ): boolean {
+  const usable = (port: number) => ownPorts?.has(port) || isPortFree(port);
+
   return (
-    !takenSlots.has(slot) &&
-    isPortFree(metroPort(slot)) &&
-    isPortFree(apiPort(slot))
+    !takenSlots.has(slot) && usable(metroPort(slot)) && usable(apiPort(slot))
   );
 }
 

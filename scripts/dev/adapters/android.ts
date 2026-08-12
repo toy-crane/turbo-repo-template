@@ -241,7 +241,6 @@ export async function waitForBoot(
       return;
     }
 
-    // biome-ignore lint/performance/noAwaitInLoops: polling a boot is sequential by nature.
     await sleep(BOOT_POLL_MS);
   }
 

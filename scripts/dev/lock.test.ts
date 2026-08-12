@@ -32,6 +32,13 @@ describe("withLock", () => {
     expect(existsSync(lockDirectory)).toBe(false);
   });
 
+  test("상태 폴더가 아직 없어도 첫 실행이 잠금을 잡는다", async () => {
+    const nested = join(root, "새", "폴더", "state.lock");
+
+    expect(await withLock(nested, () => "지나감")).toBe("지나감");
+    expect(existsSync(nested)).toBe(false);
+  });
+
   test("실패해도 잠금을 푼다", async () => {
     await expect(
       withLock(lockDirectory, () => {
