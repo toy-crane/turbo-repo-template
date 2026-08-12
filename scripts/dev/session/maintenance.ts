@@ -156,4 +156,5 @@ export async function stopOwnProcesses(
 
   record.processes = {};
   record.activePlatform = null;
+  record.environmentFingerprint = null;
 }

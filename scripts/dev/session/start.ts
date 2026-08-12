@@ -24,6 +24,7 @@ import {
 import {
   buildMobileEnvironment,
   developmentClientUrl,
+  mobileEnvironmentFingerprint,
   sessionAddresses,
 } from "../environment";
 import { withLock } from "../lock";
@@ -40,6 +41,7 @@ import {
 } from "./context";
 import { fitStateToReality, stopOwnProcesses } from "./maintenance";
 import { driverFor, type PlatformDriver } from "./platform";
+import { sessionReuseReason } from "./reuse";
 
 const API_READY_TIMEOUT_MS = 60_000;
 const METRO_READY_TIMEOUT_MS = 120_000;
@@ -148,7 +150,8 @@ async function allocate(
   context: SessionContext,
   driver: PlatformDriver,
   platform: Platform,
-  io: SessionIo
+  io: SessionIo,
+  environmentFingerprintForSlot: (slot: number) => string
 ): Promise<Allocation> {
   return await withLock(context.paths.lockDirectory, async () => {
     const { worktreePath } = context.git;
@@ -157,10 +160,18 @@ async function allocate(
     state = await fitStateToReality(context, state, io);
 
     const existing = state.worktrees[worktreePath];
-    const running =
-      existing?.activePlatform === platform &&
-      Boolean(existing.processes.api) &&
-      Boolean(existing.processes.metro);
+    const reuseReason = sessionReuseReason(
+      existing,
+      platform,
+      environmentFingerprintForSlot(existing?.slot ?? 0)
+    );
+    let running = reuseReason === "reuse";
+
+    if (reuseReason === "environment-changed") {
+      io.log("개발 세션 환경이 바뀌어 API와 Metro를 다시 시작합니다.");
+      await stopOwnProcesses(worktreePath, state);
+      running = false;
+    }
 
     if (existing?.activePlatform && existing.activePlatform !== platform) {
       io.log(
@@ -181,9 +192,10 @@ async function allocate(
     const free = await freePorts();
     const ownPorts = new Set(
       running
-        ? [existing.processes.api?.port, existing.processes.metro?.port].filter(
-            (port): port is number => port !== undefined
-          )
+        ? [
+            existing?.processes.api?.port,
+            existing?.processes.metro?.port,
+          ].filter((port): port is number => port !== undefined)
         : []
     );
     const { changed, slot } = allocateSlot({
@@ -204,6 +216,7 @@ async function allocate(
     state.worktrees[worktreePath] = {
       activePlatform: existing?.activePlatform ?? null,
       devices: existing?.devices ?? {},
+      environmentFingerprint: existing?.environmentFingerprint ?? null,
       label: context.git.label,
       processes: existing?.processes ?? {},
       slot,
@@ -442,19 +455,30 @@ export async function startSession({
 
   // The two dynamic addresses are replaced again once the slot is known; this
   // pass exists so a missing key fails before any device or process starts.
-  buildMobileEnvironment({
-    addresses: sessionAddresses(platform, apiPort(0), context.supabasePort),
-    fileValues,
-  });
+  const mobileEnvironmentForSlot = (slot: number) =>
+    buildMobileEnvironment({
+      addresses: sessionAddresses(
+        platform,
+        apiPort(slot),
+        context.supabasePort
+      ),
+      fileValues,
+    });
+
+  mobileEnvironmentForSlot(0);
 
   const logs = sessionLogs(context);
-  const allocation = await allocate(context, driver, platform, io);
+  const allocation = await allocate(context, driver, platform, io, (slot) =>
+    mobileEnvironmentFingerprint(mobileEnvironmentForSlot(slot))
+  );
   const metro = metroPort(allocation.slot);
   const api = apiPort(allocation.slot);
-  const addresses = sessionAddresses(platform, api, context.supabasePort);
+  const mobileEnvironment = mobileEnvironmentForSlot(allocation.slot);
+  const environmentFingerprint =
+    mobileEnvironmentFingerprint(mobileEnvironment);
   const env: Record<string, string> = {
     ...(process.env as Record<string, string>),
-    ...buildMobileEnvironment({ addresses, fileValues }),
+    ...mobileEnvironment,
   };
   const started: number[] = [];
 
@@ -573,6 +597,7 @@ export async function startSession({
 
       if (record) {
         record.activePlatform = platform;
+        record.environmentFingerprint = environmentFingerprint;
         record.processes = {
           api: { logPath: logs.api, pid: apiPid, port: api },
           metro: { logPath: logs.metro, pid: metroPid, port: metro },

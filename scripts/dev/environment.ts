@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { parseMobileEnv } from "../../apps/mobile/env";
 import type { Platform } from "./options";
 
@@ -75,13 +77,24 @@ export function buildMobileEnvironment({
 }: MobileEnvironmentInput): Record<string, string> {
   const merged = {
     ...fileValues,
-    EXPO_PUBLIC_API_URL: addresses.apiUrl,
-    EXPO_PUBLIC_SUPABASE_URL: addresses.supabaseUrl,
+    EXPO_PUBLIC_DEV_SESSION_API_URL: addresses.apiUrl,
+    EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL: addresses.supabaseUrl,
   };
 
-  const validated = parseMobileEnv(merged);
+  parseMobileEnv(merged);
 
-  return { ...merged, ...validated };
+  return merged;
+}
+
+/** A stable, non-reversible identity for the public environment Metro owns. */
+export function mobileEnvironmentFingerprint(
+  environment: Record<string, string>
+): string {
+  const entries = Object.entries(environment).sort(([left], [right]) =>
+    left.localeCompare(right)
+  );
+
+  return createHash("sha256").update(JSON.stringify(entries)).digest("hex");
 }
 
 /** The development client deep link that pins the app to this worktree's Metro. */

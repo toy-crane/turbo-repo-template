@@ -1,6 +1,6 @@
 import { describe, expect, test } from "@jest/globals";
 
-import { parseMobileEnv } from "./env";
+import { getMobileEnv, parseMobileEnv } from "./env";
 
 const envError = /^Invalid mobile environment variables:/;
 const apiUrlVariable = /EXPO_PUBLIC_API_URL/;
@@ -65,5 +65,49 @@ describe("parseMobileEnv", () => {
         EXPO_PUBLIC_SUPABASE_URL: "127.0.0.1:54321",
       })
     ).toThrow(invalidFormattedVariables);
+  });
+
+  test("개발 세션 URL이 있으면 일반 URL보다 우선한다", () => {
+    expect(
+      parseMobileEnv({
+        ...validEnv,
+        EXPO_PUBLIC_DEV_SESSION_API_URL: "http://10.0.2.2:3910",
+        EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL: "http://10.0.2.2:54321",
+      })
+    ).toEqual({
+      ...validEnv,
+      EXPO_PUBLIC_API_URL: "http://10.0.2.2:3910",
+      EXPO_PUBLIC_SUPABASE_URL: "http://10.0.2.2:54321",
+    });
+  });
+});
+
+describe("getMobileEnv", () => {
+  test("프로세스의 개발 세션 URL을 앱이 쓰는 URL로 선택한다", () => {
+    const previousApiUrl = process.env.EXPO_PUBLIC_DEV_SESSION_API_URL;
+    const previousSupabaseUrl =
+      process.env.EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL;
+
+    process.env.EXPO_PUBLIC_DEV_SESSION_API_URL = "http://10.0.2.2:3910";
+    process.env.EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL = "http://10.0.2.2:54321";
+
+    try {
+      expect(getMobileEnv()).toMatchObject({
+        EXPO_PUBLIC_API_URL: "http://10.0.2.2:3910",
+        EXPO_PUBLIC_SUPABASE_URL: "http://10.0.2.2:54321",
+      });
+    } finally {
+      if (previousApiUrl === undefined) {
+        delete process.env.EXPO_PUBLIC_DEV_SESSION_API_URL;
+      } else {
+        process.env.EXPO_PUBLIC_DEV_SESSION_API_URL = previousApiUrl;
+      }
+
+      if (previousSupabaseUrl === undefined) {
+        delete process.env.EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL;
+      } else {
+        process.env.EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL = previousSupabaseUrl;
+      }
+    }
   });
 });
