@@ -46,7 +46,15 @@
       ],
       "expo-sqlite",
       "expo-secure-store",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "프로필 사진을 고를 때 사진 보관함을 사용해요.",
+          "cameraPermission": "새 프로필 사진을 바로 찍을 때 사용해요.",
+          "microphonePermission": false
+        }
+      ]
     ]
   }
 }
