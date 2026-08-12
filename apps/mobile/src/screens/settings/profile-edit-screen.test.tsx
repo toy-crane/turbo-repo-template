@@ -13,7 +13,12 @@ import {
   requestCameraPermissionsAsync,
 } from "expo-image-picker";
 import type { PropsWithChildren, ReactNode } from "react";
-import { ActionSheetIOS, Alert, Pressable } from "react-native";
+import {
+  ActionSheetIOS,
+  ActivityIndicator,
+  Alert,
+  Pressable,
+} from "react-native";
 
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { USERNAME_CHECK_DELAY_MS } from "@/features/auth/state/use-username-step";
@@ -201,13 +206,21 @@ function ProfileEditHarness({ onSaved }: { onSaved?: () => void }) {
   return (
     <>
       <ProfileEditScreen danger={DANGER} flow={flow} />
-      <Pressable
-        accessibilityLabel="저장"
-        accessibilityRole="button"
-        disabled={!flow.edit.canSave}
-        onPress={flow.save}
-        testID="save-button"
-      />
+      {/* The route swaps the toolbar control for a progress view while saving. */}
+      {flow.edit.isSaving ? (
+        <ActivityIndicator
+          accessibilityLabel="저장 중"
+          testID="save-progress"
+        />
+      ) : (
+        <Pressable
+          accessibilityLabel="저장"
+          accessibilityRole="button"
+          disabled={!flow.edit.canSave}
+          onPress={flow.save}
+          testID="save-button"
+        />
+      )}
     </>
   );
 }
@@ -460,6 +473,42 @@ test("사진이 있으면 삭제 항목을 마지막에 두고, 지우면 사진
   // sign-in from putting that picture back.
   expect(saved?.avatar_url).toBeNull();
   expect(saved?.avatar_chosen_by_user).toBe(true);
+});
+
+test("저장하는 동안에는 체크 대신 진행 표시를 보여 준다", async () => {
+  const fake = resetFakeSupabase({
+    profile: createProfileRow(SAVED),
+    session: createFakeSession(),
+  });
+
+  await renderEditor();
+
+  // A save that resolves immediately never shows its in-progress state, so the
+  // fake holds this one where the app is really waiting.
+  const finishSave = fake.holdNextSave();
+
+  await act(() => {
+    fireEvent.changeText(screen.getByTestId("profile-nickname"), "고친 이름");
+  });
+
+  await act(async () => {
+    fireEvent.press(screen.getByTestId("save-button"));
+    await Promise.resolve();
+  });
+
+  // A greyed-out check and a running save look identical. The progress view is
+  // the only thing that tells them apart.
+  expect(await screen.findByTestId("save-progress")).toBeOnTheScreen();
+  expect(screen.queryByTestId("save-button")).toBeNull();
+
+  await act(async () => {
+    finishSave();
+    await Promise.resolve();
+  });
+
+  await waitFor(() => {
+    expect(fake.storedProfile().display_name).toBe("고친 이름");
+  });
 });
 
 test("아이디가 그대로면 확인 없이 저장한다", async () => {

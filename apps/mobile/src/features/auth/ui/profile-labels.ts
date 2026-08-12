@@ -27,6 +27,7 @@ export const profileLabels = {
   pickFromLibrary: "사진 보관함에서 선택",
   preferences: "환경 설정",
   save: "저장",
+  saving: "저장 중",
   settings: "설정",
   signingOut: "로그아웃 중",
   signOut: "로그아웃",

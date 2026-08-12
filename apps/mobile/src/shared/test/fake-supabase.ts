@@ -147,6 +147,8 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
 
   let { profileError } = options;
   let nextSaveError: Error | undefined;
+  /** Set while a test wants the next save to stay in flight. */
+  let saveGate: Promise<void> | undefined;
 
   const emit = (next: Session | null) => {
     session = next;
@@ -220,7 +222,14 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
       : { data: { ...profileRow }, error: null };
   };
 
-  const saveProfileRow = (values: Record<string, unknown>) => {
+  const saveProfileRow = async (values: Record<string, unknown>) => {
+    if (saveGate) {
+      const pending = saveGate;
+
+      saveGate = undefined;
+      await pending;
+    }
+
     if (nextSaveError) {
       const error = nextSaveError;
 
@@ -376,6 +385,24 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
       nextUploadError = error;
     },
     from,
+    /**
+     * Holds the next save in flight and answers with the release.
+     *
+     * A save that resolves immediately never shows its in-progress state, so a
+     * test that wants to see one has to stop time somewhere the app is really
+     * waiting.
+     */
+    holdNextSave: () => {
+      let release = () => {
+        // Replaced below.
+      };
+
+      saveGate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+
+      return release;
+    },
     /** Lets a held profile read succeed after it was made to fail. */
     recoverProfile: () => {
       profileError = undefined;
