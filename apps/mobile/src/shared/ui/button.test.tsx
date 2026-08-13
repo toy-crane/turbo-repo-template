@@ -42,6 +42,25 @@ test("진행 중에는 앞쪽 내용을 스피너로 바꾼다", async () => {
   expect(screen.getByText("업로드하기")).toBeOnTheScreen();
 });
 
+test("전폭 버튼에서도 진행 표시를 가운데 문구 바로 앞에 둔다", async () => {
+  await renderWithHeroUI(
+    <Button isPending style={{ width: "100%" }}>
+      저장하기
+    </Button>
+  );
+
+  const leadingContent = screen.getByTestId("button-leading-content", {
+    includeHiddenElements: true,
+  });
+
+  expect(StyleSheet.flatten(leadingContent.props.style)).toMatchObject({
+    right: "100%",
+  });
+  expect(StyleSheet.flatten(leadingContent.props.style)).not.toHaveProperty(
+    "left"
+  );
+});
+
 test("기본 너비를 정하지 않고 사용처가 준 너비를 따른다", async () => {
   const view = await renderWithHeroUI(<Button>내용만큼</Button>);
 

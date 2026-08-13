@@ -61,13 +61,20 @@ const DYNAMIC_TYPE_LAYOUT: Record<ButtonSize, ViewStyle> = {
   },
 };
 
-const LEADING_OFFSET: Record<ButtonSize, number> = { lg: 10, md: 8, sm: 7 };
+const LEADING_GAP: Record<ButtonSize, number> = { lg: 10, md: 8, sm: 6 };
 const LEADING_SLOT: ViewStyle = {
   height: 16,
   position: "absolute",
+  right: "100%",
   top: "50%",
-  transform: [{ translateY: -8 }],
   width: 16,
+};
+
+const LABEL_GROUP: ViewStyle = {
+  alignItems: "center",
+  flexShrink: 1,
+  justifyContent: "center",
+  position: "relative",
 };
 
 const LABEL_LAYOUT: TextStyle = {
@@ -134,25 +141,36 @@ export function Button({
       style={resolvedStyle}
       variant={variant}
     >
-      <View
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={[LEADING_SLOT, { left: LEADING_OFFSET[size] }]}
-      >
-        {isPending ? (
-          <Spinner
-            accessibilityRole={undefined}
-            accessibilityState={undefined}
-            accessible={false}
-            color={spinnerColor}
-            size="sm"
-          />
-        ) : (
-          startContent
-        )}
+      <View style={LABEL_GROUP}>
+        <View
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          pointerEvents="none"
+          style={[
+            LEADING_SLOT,
+            {
+              transform: [
+                { translateX: -LEADING_GAP[size] },
+                { translateY: -8 },
+              ],
+            },
+          ]}
+          testID="button-leading-content"
+        >
+          {isPending ? (
+            <Spinner
+              accessibilityRole={undefined}
+              accessibilityState={undefined}
+              accessible={false}
+              color={spinnerColor}
+              size="sm"
+            />
+          ) : (
+            startContent
+          )}
+        </View>
+        <HeroButton.Label style={LABEL_LAYOUT}>{children}</HeroButton.Label>
       </View>
-      <HeroButton.Label style={LABEL_LAYOUT}>{children}</HeroButton.Label>
     </HeroButton>
   );
 }
