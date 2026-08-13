@@ -10,12 +10,14 @@ import { ChatPanel } from "@/features/chat/ui/chat-panel";
 /**
  * The native stack tells this screen when its push animation has finished.
  * `useNavigation` types only the events every navigator shares, so the shape of
- * the one event we listen for is declared here.
+ * the one event we listen for is declared here. The payload is optional all the
+ * way down because this declaration is an assertion about someone else's event:
+ * a reshaped payload should still leave the person with a keyboard.
  */
 interface ScreenTransition {
   addListener: (
     event: "transitionEnd",
-    listener: (payload: { data: { closing: boolean } }) => void
+    listener: (payload: { data?: { closing?: boolean } }) => void
   ) => () => void;
 }
 
@@ -44,7 +46,7 @@ export function ChatScreen() {
   useEffect(
     () =>
       navigation.addListener("transitionEnd", ({ data }) => {
-        if (!data.closing) {
+        if (!data?.closing) {
           setHasArrived(true);
         }
       }),

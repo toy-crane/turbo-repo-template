@@ -17,7 +17,10 @@ jest.mock("@/features/chat/state/use-chat-session", () => ({
   useChatSession: jest.fn(),
 }));
 
+// Only the navigation object is stood in for; the rest of expo-router stays
+// real so a later import from it does not silently become undefined here.
 jest.mock("expo-router", () => ({
+  ...(jest.requireActual("expo-router") as object),
   useNavigation: jest.fn(),
 }));
 
