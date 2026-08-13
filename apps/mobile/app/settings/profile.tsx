@@ -1,6 +1,6 @@
 import { router, Stack } from "expo-router";
 import { useCallback } from "react";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator, Platform } from "react-native";
 import { useAppTheme } from "@/core/theme/app-theme-bridge";
 
 import { profileLabels } from "@/features/auth/ui/profile-labels";
@@ -8,6 +8,7 @@ import {
   ProfileEditScreen,
   useProfileEditFlow,
 } from "@/screens/settings/profile-edit-screen";
+import { ProfileSaveHeaderAction } from "@/screens/settings/profile-save-header-action";
 
 export default function ProfileEditRoute() {
   // A finished save is the one exit that keeps the draft. Going back any other
@@ -16,7 +17,30 @@ export default function ProfileEditRoute() {
     router.back();
   }, []);
   const flow = useProfileEditFlow(returnToSettings);
-  const { danger } = useAppTheme();
+  const { danger, foreground } = useAppTheme();
+  const content = flow.edit.isReady ? (
+    <ProfileEditScreen danger={danger} flow={flow} />
+  ) : null;
+
+  if (Platform.OS === "android") {
+    return (
+      <>
+        {content}
+        <Stack.Screen
+          options={{
+            headerRight: ({ tintColor }) => (
+              <ProfileSaveHeaderAction
+                isDisabled={!flow.edit.canSave}
+                isPending={flow.edit.isSaving}
+                onPress={flow.save}
+                tintColor={tintColor ?? foreground}
+              />
+            ),
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -26,9 +50,7 @@ export default function ProfileEditRoute() {
         would show two empty fields and never fill them. Settings has already
         read the profile, so in practice this is the same frame.
       */}
-      {flow.edit.isReady ? (
-        <ProfileEditScreen danger={danger} flow={flow} />
-      ) : null}
+      {content}
       <Stack.Toolbar placement="right">
         {/*
           While the save runs, the control becomes the progress itself. Left as a
@@ -41,7 +63,12 @@ export default function ProfileEditRoute() {
         */}
         {flow.edit.isSaving ? (
           <Stack.Toolbar.View>
-            <ActivityIndicator accessibilityLabel={profileLabels.saving} />
+            <ActivityIndicator
+              accessibilityLabel={profileLabels.saving}
+              accessibilityRole="progressbar"
+              accessibilityState={{ busy: true }}
+              accessible
+            />
           </Stack.Toolbar.View>
         ) : (
           /*
