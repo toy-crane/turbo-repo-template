@@ -56,7 +56,7 @@ test("기본 너비를 정하지 않고 사용처가 준 너비를 따른다", a
   ).toMatchObject({ width: "100%" });
 });
 
-test("진행 중에는 작업을 시작하기 전의 실제 너비를 유지한다", async () => {
+test("진행 중에는 작업을 시작하기 전의 실제 크기를 유지한다", async () => {
   const view = await renderWithHeroUI(<Button>내용만큼</Button>);
   const button = screen.getByRole("button");
 
@@ -70,7 +70,7 @@ test("진행 중에는 작업을 시작하기 전의 실제 너비를 유지한�
 
   expect(
     StyleSheet.flatten(screen.getByRole("button").props.style)
-  ).toMatchObject({ width: 104 });
+  ).toMatchObject({ height: 48, paddingHorizontal: 32, width: 104 });
 });
 
 test("글자 크기를 제한하지 않고 버튼 높이가 내용에 맞춰 늘어난다", async () => {
@@ -87,6 +87,7 @@ test("글자 크기를 제한하지 않고 버튼 높이가 내용에 맞춰 늘
   expect(buttonStyle).toMatchObject({
     height: "auto",
     minHeight: 48,
+    paddingHorizontal: 32,
     paddingVertical: 12,
   });
 });

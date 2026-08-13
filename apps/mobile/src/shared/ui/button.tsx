@@ -7,11 +7,12 @@ import {
 import { type ThemeColor, useThemeColor } from "heroui-native/hooks";
 import { Spinner } from "heroui-native/spinner";
 import { type ReactNode, useCallback, useRef } from "react";
-import type {
-  LayoutChangeEvent,
-  PressableStateCallbackType,
-  TextStyle,
-  ViewStyle,
+import {
+  type LayoutChangeEvent,
+  type PressableStateCallbackType,
+  type TextStyle,
+  View,
+  type ViewStyle,
 } from "react-native";
 
 type OmitButtonState<T> = T extends ButtonRootProps
@@ -37,9 +38,36 @@ const SPINNER_COLOR: Record<ButtonVariant, ThemeColor> = {
 };
 
 const DYNAMIC_TYPE_LAYOUT: Record<ButtonSize, ViewStyle> = {
-  lg: { height: "auto", minHeight: 56, paddingVertical: 14 },
-  md: { height: "auto", minHeight: 48, paddingVertical: 12 },
-  sm: { height: "auto", minHeight: 40, paddingVertical: 10 },
+  lg: {
+    height: "auto",
+    minHeight: 56,
+    paddingHorizontal: 36,
+    paddingVertical: 14,
+    position: "relative",
+  },
+  md: {
+    height: "auto",
+    minHeight: 48,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    position: "relative",
+  },
+  sm: {
+    height: "auto",
+    minHeight: 40,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    position: "relative",
+  },
+};
+
+const LEADING_OFFSET: Record<ButtonSize, number> = { lg: 10, md: 8, sm: 7 };
+const LEADING_SLOT: ViewStyle = {
+  height: 16,
+  position: "absolute",
+  top: "50%",
+  transform: [{ translateY: -8 }],
+  width: 16,
 };
 
 const LABEL_LAYOUT: TextStyle = {
@@ -68,27 +96,29 @@ export function Button({
 }: ButtonProps) {
   const spinnerColor = useThemeColor(SPINNER_COLOR[variant]);
   const effectiveDisabled = isDisabled || isPending;
-  const idleWidth = useRef<number | undefined>(undefined);
+  const idleSize = useRef<{ height: number; width: number } | undefined>(
+    undefined
+  );
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       if (!isPending) {
-        idleWidth.current = event.nativeEvent.layout.width;
+        const { height, width } = event.nativeEvent.layout;
+
+        idleSize.current = { height, width };
       }
       onLayout?.(event);
     },
     [isPending, onLayout]
   );
-  const pendingWidth = isPending ? idleWidth.current : undefined;
-  const widthStyle =
-    pendingWidth === undefined ? undefined : { width: pendingWidth };
+  const pendingSize = isPending ? idleSize.current : undefined;
   const resolvedStyle =
     typeof style === "function"
       ? (state: PressableStateCallbackType) => [
           DYNAMIC_TYPE_LAYOUT[size],
           style(state),
-          widthStyle,
+          pendingSize,
         ]
-      : [DYNAMIC_TYPE_LAYOUT[size], style, widthStyle];
+      : [DYNAMIC_TYPE_LAYOUT[size], style, pendingSize];
 
   return (
     <HeroButton
@@ -104,19 +134,24 @@ export function Button({
       style={resolvedStyle}
       variant={variant}
     >
-      {isPending ? (
-        <Spinner
-          accessibilityElementsHidden
-          accessibilityRole={undefined}
-          accessibilityState={undefined}
-          accessible={false}
-          color={spinnerColor}
-          importantForAccessibility="no-hide-descendants"
-          size="sm"
-        />
-      ) : (
-        startContent
-      )}
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={[LEADING_SLOT, { left: LEADING_OFFSET[size] }]}
+      >
+        {isPending ? (
+          <Spinner
+            accessibilityRole={undefined}
+            accessibilityState={undefined}
+            accessible={false}
+            color={spinnerColor}
+            size="sm"
+          />
+        ) : (
+          startContent
+        )}
+      </View>
       <HeroButton.Label style={LABEL_LAYOUT}>{children}</HeroButton.Label>
     </HeroButton>
   );
