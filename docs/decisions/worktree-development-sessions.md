@@ -11,6 +11,7 @@
 - 로컬 Supabase 스택은 모든 worktree가 공유한다. 개발 세션 명령은 Supabase를 시작하거나 중지하거나 초기화하지 않는다.
 - Portless를 기본 개발 경로에 넣지 않는다. slot에서 실제 포트를 계산하고 개발 세션이 직접 소유한다.
 - 개발 세션이 정한 모바일 API와 Supabase 주소는 `EXPO_PUBLIC_DEV_SESSION_API_URL`과 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL`로 Metro에 전달한다. 앱은 이 값이 있으면 일반 모바일 URL보다 우선한다.
+- iOS Simulator에는 `127.0.0.1`을, Android Emulator에는 `10.0.2.2`를 호스트로 전달한다. API는 worktree slot의 포트를 사용하고 Supabase는 공유 로컬 포트 `54321`을 사용한다.
 - 실행 중인 세션은 공개 모바일 환경의 fingerprint가 같을 때만 API와 Metro를 재사용한다. 환경이 바뀌면 해당 worktree의 두 프로세스만 다시 시작하고 slot, 기기, 설치된 앱과 앱 데이터는 유지한다.
 - 모든 시작 명령은 새 자원을 배정하기 전에 저장소 상태를 실제 Git worktree와 실행 중인 프로세스에 맞춘다. 사라진 worktree의 자원은 회수하고, 살아 있는 worktree의 기기 배정과 앱 데이터는 유지한다.
 
