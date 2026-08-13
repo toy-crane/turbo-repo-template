@@ -9,7 +9,7 @@ import type {
   LegendListRenderItemProps,
 } from "@legendapp/list/react-native";
 import type { UIMessage } from "ai";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type Ref, useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   type LayoutChangeEvent,
@@ -89,17 +89,20 @@ function renderMessage({ item }: LegendListRenderItemProps<UIMessage>) {
 
 export function ChatPanel({
   chat,
-  shouldFocusInput = false,
+  inputRef,
   topInset = 0,
 }: {
   chat: ChatSession;
-  shouldFocusInput?: boolean;
+  /**
+   * Handed down by the screen, which decides when the input should take the
+   * caret. The panel only says which control that is.
+   */
+  inputRef?: Ref<TextInput>;
   topInset?: number;
 }) {
   const insets = useSafeAreaInsets();
   const listRef = useRef<LegendListRef | null>(null);
   const composerRef = useRef<View | null>(null);
-  const inputRef = useRef<TextInput | null>(null);
   const [anchorIndex, setAnchorIndex] = useState<number | undefined>();
   const [isFollowingLatest, setIsFollowingLatest] = useState(true);
   const [isPositioningQuestion, setIsPositioningQuestion] = useState(false);
@@ -113,15 +116,6 @@ export function ChatPanel({
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze, scrollMessageToEnd } = useKeyboardScrollToEnd({ listRef });
-
-  // The screen decides when the arrival is over; the composer only owns which
-  // control takes the focus. Sending closes the keyboard again, and only a tap
-  // on the input reopens it.
-  useEffect(() => {
-    if (shouldFocusInput) {
-      inputRef.current?.focus();
-    }
-  }, [shouldFocusInput]);
 
   const announcedError = useRef<Error | undefined>(undefined);
 

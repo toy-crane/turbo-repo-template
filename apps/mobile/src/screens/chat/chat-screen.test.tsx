@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import type { Session } from "@supabase/supabase-js";
-import { act } from "@testing-library/react-native";
 import { useNavigation } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 
@@ -37,11 +36,11 @@ jest.mock("@/features/chat/ui/chat-panel", () => {
   return {
     ChatPanel: ({
       chat,
-      shouldFocusInput,
+      inputRef,
       topInset,
     }: {
       chat: { tag?: string };
-      shouldFocusInput?: boolean;
+      inputRef?: unknown;
       topInset?: number;
     }) =>
       React.createElement(
@@ -53,7 +52,7 @@ jest.mock("@/features/chat/ui/chat-panel", () => {
           accessibilityLabel: `top inset ${topInset ?? 0}`,
         }),
         React.createElement(View, {
-          accessibilityLabel: `focus input ${shouldFocusInput === true}`,
+          accessibilityLabel: `input ref ${typeof inputRef}`,
         })
       ),
   };
@@ -64,27 +63,15 @@ const mockUseChatSession = jest.mocked(useChatSession);
 const mockUseHeaderHeight = jest.mocked(useHeaderHeight);
 const mockUseNavigation = jest.mocked(useNavigation);
 
-type TransitionListener = (payload: { data: { closing: boolean } }) => void;
-
-/** Stands in for the native stack and hands back its `transitionEnd` listener. */
+/**
+ * Stands in for the native stack. When the arrival lands and what it does to
+ * the caret belong to the hook, and its own test covers them; here the screen
+ * only has to hand the panel the ref that hook returns.
+ */
 function stubNavigation() {
-  const listeners: TransitionListener[] = [];
-
   mockUseNavigation.mockReturnValue({
-    addListener: (_event: string, listener: TransitionListener) => {
-      listeners.push(listener);
-
-      return () => listeners.splice(listeners.indexOf(listener), 1);
-    },
+    addListener: () => () => undefined,
   });
-
-  return {
-    endTransition: (closing: boolean) => {
-      for (const listener of listeners) {
-        listener({ data: { closing } });
-      }
-    },
-  };
 }
 
 const chatSessionStub = { tag: "chat-session" } as unknown as ReturnType<
@@ -121,32 +108,10 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-test("화면이 들어오는 동안에는 입력창 포커스를 요청하지 않는다", async () => {
+test("화면이 도착하면 입력창을 잡을 ref를 패널에 넘긴다", async () => {
   const { getByLabelText } = await renderWithHeroUI(<ChatScreen />);
 
-  expect(getByLabelText("focus input false")).toBeOnTheScreen();
-});
-
-test("들어오는 전환이 끝나면 입력창 포커스를 요청한다", async () => {
-  const transition = stubNavigation();
-  const view = await renderWithHeroUI(<ChatScreen />);
-
-  await act(() => {
-    transition.endTransition(false);
-  });
-
-  expect(view.getByLabelText("focus input true")).toBeOnTheScreen();
-});
-
-test("화면을 닫는 전환에는 입력창 포커스를 요청하지 않는다", async () => {
-  const transition = stubNavigation();
-  const view = await renderWithHeroUI(<ChatScreen />);
-
-  await act(() => {
-    transition.endTransition(true);
-  });
-
-  expect(view.getByLabelText("focus input false")).toBeOnTheScreen();
+  expect(getByLabelText("input ref function")).toBeOnTheScreen();
 });
 
 test("현재 세션의 access token으로 채팅 세션을 만들어 패널에 넘긴다", async () => {

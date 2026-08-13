@@ -1,10 +1,11 @@
 import { useHeaderHeight } from "expo-router/react-navigation";
+import type { TextInput } from "react-native";
 import { Platform } from "react-native";
 
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
 import { ChatPanel } from "@/features/chat/ui/chat-panel";
-import { useScreenArrival } from "@/shared/navigation/use-screen-arrival";
+import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 
 /**
  * One conversation, for as long as this screen is on the stack.
@@ -22,12 +23,12 @@ export function ChatScreen() {
   const { session } = useAuthSession();
   const chat = useChatSession(session?.access_token);
   const headerHeight = useHeaderHeight();
-  const hasArrived = useScreenArrival();
+  const inputRef = useFocusOnArrival<TextInput>();
 
   return (
     <ChatPanel
       chat={chat}
-      shouldFocusInput={hasArrived}
+      inputRef={inputRef}
       topInset={Platform.OS === "ios" ? headerHeight : 0}
     />
   );

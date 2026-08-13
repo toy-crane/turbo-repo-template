@@ -202,7 +202,7 @@ describe("ChatPanel", () => {
   // bottom. The screen decides when to focus instead; see
   // docs/specs/chat-entry-keyboard/spec.md.
   test("입력창은 mount 시점에 스스로 포커스를 잡지 않는다", async () => {
-    await renderWithHeroUI(<ChatPanel chat={chatSession()} shouldFocusInput />);
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
 
     expect(screen.getByLabelText(chatLabels.input).props.autoFocus).toBeFalsy();
   });
