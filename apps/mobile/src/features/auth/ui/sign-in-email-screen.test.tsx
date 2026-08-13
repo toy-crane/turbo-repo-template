@@ -8,6 +8,14 @@ import {
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { SignInEmailScreen } from "./sign-in-email-screen";
 
+// The screen asks the native stack when its own transition ends so it can put
+// the caret in the field. These tests render it outside a navigator, so the
+// event source is stood in for and never reports an arrival.
+jest.mock("expo-router", () => ({
+  ...(jest.requireActual("expo-router") as object),
+  useNavigation: () => ({ addListener: () => () => undefined }),
+}));
+
 jest.mock("@/shared/supabase/client", () => ({
   getSupabaseClient: () =>
     (

@@ -1,6 +1,7 @@
 import { Button } from "heroui-native/button";
 import { InputOTP, REGEXP_ONLY_DIGITS } from "heroui-native/input-otp";
 import { Spinner } from "heroui-native/spinner";
+import type { ComponentRef } from "react";
 import { View } from "react-native";
 
 import { OTP_LENGTH } from "@/features/auth/config/email-otp";
@@ -10,6 +11,7 @@ import {
   toCodeDigits,
 } from "@/features/auth/state/email-code";
 import { useCodeVerify } from "@/features/auth/state/use-code-verify";
+import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 import { AuthError, AuthScreen, AuthSubtitle } from "./auth-screen";
 import { signInLabels } from "./sign-in-labels";
 
@@ -50,6 +52,7 @@ function slotRenderer(isInvalid: boolean) {
 export function SignInCodeScreen({ email }: { email: string }) {
   const form = useCodeVerify(email);
   const isWaiting = form.secondsLeft > 0;
+  const codeRef = useFocusOnArrival<ComponentRef<typeof InputOTP>>();
 
   return (
     <AuthScreen
@@ -71,16 +74,17 @@ export function SignInCodeScreen({ email }: { email: string }) {
       <View className="gap-2">
         <InputOTP
           isDisabled={form.isBusy}
-          // Remounting on every failed attempt is what puts the caret back in
-          // the first box after the wrong code is cleared.
+          // Remounting on every failed attempt is what clears the wrong code
+          // out of the boxes. The ref below puts the caret back in the first
+          // one as the new input attaches.
           key={form.resetCount}
           maxLength={OTP_LENGTH}
           onChange={form.changeCode}
           pasteTransformer={pastedCode}
           pattern={REGEXP_ONLY_DIGITS}
+          ref={codeRef}
           textInputProps={{
             accessibilityLabel: signInLabels.code,
-            autoFocus: true,
             testID: "sign-in-code",
           }}
           value={form.code}

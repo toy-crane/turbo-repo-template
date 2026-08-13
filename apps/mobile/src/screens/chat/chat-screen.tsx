@@ -1,25 +1,10 @@
-import { useNavigation } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
-import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
 import { ChatPanel } from "@/features/chat/ui/chat-panel";
-
-/**
- * The native stack tells this screen when its push animation has finished.
- * `useNavigation` types only the events every navigator shares, so the shape of
- * the one event we listen for is declared here. The payload is optional all the
- * way down because this declaration is an assertion about someone else's event:
- * a reshaped payload should still leave the person with a keyboard.
- */
-interface ScreenTransition {
-  addListener: (
-    event: "transitionEnd",
-    listener: (payload: { data?: { closing?: boolean } }) => void
-  ) => () => void;
-}
+import { useScreenArrival } from "@/shared/navigation/use-screen-arrival";
 
 /**
  * One conversation, for as long as this screen is on the stack.
@@ -30,28 +15,14 @@ interface ScreenTransition {
  * token comes from here because a feature does not read another feature's
  * state.
  *
- * Entry focus is timed here for the same reason. Focusing while the push is
- * still running makes iOS carry the rising keyboard along with the screen, so
- * it slides in from the right and the composer then climbs from the bottom —
- * two directions for one arrival. Waiting for the transition to finish leaves
- * the keyboard and the composer moving up together.
+ * Entry focus is timed here for the same reason: the screen knows when its own
+ * arrival is over, and the panel only owns which control takes the focus.
  */
 export function ChatScreen() {
   const { session } = useAuthSession();
   const chat = useChatSession(session?.access_token);
   const headerHeight = useHeaderHeight();
-  const navigation = useNavigation<ScreenTransition>();
-  const [hasArrived, setHasArrived] = useState(false);
-
-  useEffect(
-    () =>
-      navigation.addListener("transitionEnd", ({ data }) => {
-        if (!data?.closing) {
-          setHasArrived(true);
-        }
-      }),
-    [navigation]
-  );
+  const hasArrived = useScreenArrival();
 
   return (
     <ChatPanel
