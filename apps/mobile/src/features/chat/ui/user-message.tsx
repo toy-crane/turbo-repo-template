@@ -8,6 +8,12 @@ import { chatLabels } from "./chat-labels";
 
 /** Long enough not to fire while the person is scrolling the list. */
 const LONG_PRESS_DELAY_MS = 400;
+/**
+ * The item titles stretch to fill the card, so a card sized to its own content
+ * collapses them to nothing and leaves only the icons standing. This is the
+ * width the approved prototype used.
+ */
+const MENU_WIDTH = 208;
 
 /**
  * A question, and the menu a long press opens on it.
@@ -63,7 +69,12 @@ export function UserMessage({
 
       <Menu.Portal>
         <Menu.Overlay />
-        <Menu.Content align="end" placement="bottom" presentation="popover">
+        <Menu.Content
+          align="end"
+          placement="bottom"
+          presentation="popover"
+          width={MENU_WIDTH}
+        >
           <Menu.Item onPress={onCopy}>
             <Menu.ItemTitle>{chatLabels.copyMessage}</Menu.ItemTitle>
             <Icon name="copy" size="sm" tone="muted" />
