@@ -72,3 +72,17 @@ test("진행 중에는 작업을 시작하기 전의 실제 너비를 유지한�
     StyleSheet.flatten(screen.getByRole("button").props.style)
   ).toMatchObject({ width: 104 });
 });
+
+test("큰 글자에서도 문구를 한 줄 버튼 안에 맞춘다", async () => {
+  await renderWithHeroUI(<Button>인증 코드 받기</Button>);
+
+  expect(screen.getByText("인증 코드 받기")).toHaveProp(
+    "maxFontSizeMultiplier",
+    1.6
+  );
+  expect(screen.getByText("인증 코드 받기")).toHaveProp(
+    "adjustsFontSizeToFit",
+    true
+  );
+  expect(screen.getByText("인증 코드 받기")).toHaveProp("numberOfLines", 1);
+});

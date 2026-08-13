@@ -97,7 +97,13 @@ export function Button({
       ) : (
         startContent
       )}
-      <HeroButton.Label>{children}</HeroButton.Label>
+      <HeroButton.Label
+        adjustsFontSizeToFit
+        maxFontSizeMultiplier={1.6}
+        numberOfLines={1}
+      >
+        {children}
+      </HeroButton.Label>
     </HeroButton>
   );
 }
