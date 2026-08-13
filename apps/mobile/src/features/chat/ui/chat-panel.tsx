@@ -4,6 +4,7 @@ import {
   useKeyboardScrollToEnd,
 } from "@legendapp/list/keyboard";
 import type {
+  AnchoredEndSpaceConfig,
   LegendListRef,
   LegendListRenderItemProps,
 } from "@legendapp/list/react-native";
@@ -99,8 +100,10 @@ export function ChatPanel({
   const composerRef = useRef<View | null>(null);
   const [anchorIndex, setAnchorIndex] = useState<number | undefined>();
   const [isFollowingLatest, setIsFollowingLatest] = useState(true);
+  const [isPositioningQuestion, setIsPositioningQuestion] = useState(false);
   const [composerHeight, setComposerHeight] = useState(0);
   const [inputHeight, setInputHeight] = useState(INPUT_MIN_HEIGHT);
+  const pendingAnchorIndex = useRef<number | undefined>(undefined);
   const userMomentum = useRef<true | undefined>(undefined);
   const userScrollStart = useRef<number | undefined>(undefined);
   const canSend = chat.draft.trim().length > 0 && !chat.isBusy;
@@ -201,28 +204,54 @@ export function ChatPanel({
     },
     [onComposerLayout]
   );
+  const positionQuestion = useCallback<
+    NonNullable<AnchoredEndSpaceConfig["onReady"]>
+  >(
+    async ({ anchorIndex: readyAnchorIndex }) => {
+      if (readyAnchorIndex !== pendingAnchorIndex.current) {
+        return;
+      }
+
+      pendingAnchorIndex.current = undefined;
+      try {
+        await new Promise<void>((resolve, reject) => {
+          requestAnimationFrame(() => {
+            scrollMessageToEnd({ animated: true, closeKeyboard: true }).then(
+              resolve,
+              reject
+            );
+          });
+        });
+      } catch {
+        // The next user action can still recover the scroll position.
+      } finally {
+        setIsPositioningQuestion(false);
+      }
+    },
+    [scrollMessageToEnd]
+  );
   const send = useCallback(() => {
     if (!canSend) {
       return;
     }
 
-    const isFirstQuestion = chat.messages.length === 0;
-    setAnchorIndex(chat.messages.length);
+    const nextAnchorIndex = chat.messages.length;
+    const isFirstQuestion = nextAnchorIndex === 0;
+    setAnchorIndex(nextAnchorIndex);
     setIsFollowingLatest(true);
     setInputHeight(INPUT_MIN_HEIGHT);
+    if (!isFirstQuestion) {
+      pendingAnchorIndex.current = nextAnchorIndex;
+      setIsPositioningQuestion(true);
+    }
     chat.send();
 
-    requestAnimationFrame(() => {
-      if (isFirstQuestion) {
+    if (isFirstQuestion) {
+      requestAnimationFrame(() => {
         KeyboardController.dismiss();
-        return;
-      }
-
-      scrollMessageToEnd({ animated: true, closeKeyboard: true }).catch(
-        () => undefined
-      );
-    });
-  }, [canSend, chat, scrollMessageToEnd]);
+      });
+    }
+  }, [canSend, chat]);
 
   return (
     <View className="flex-1 bg-background">
@@ -233,6 +262,7 @@ export function ChatPanel({
             : {
                 anchorIndex,
                 anchorOffset: topInset + MESSAGE_TOP_SPACING,
+                onReady: positionQuestion,
               }
         }
         contentContainerStyle={{
@@ -249,7 +279,7 @@ export function ChatPanel({
         keyboardShouldPersistTaps="handled"
         keyExtractor={messageKey}
         maintainScrollAtEnd={
-          isFollowingLatest
+          isFollowingLatest && !isPositioningQuestion
             ? {
                 animated: false,
                 on: { dataChange: true, itemLayout: true },

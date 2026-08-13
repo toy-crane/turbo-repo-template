@@ -19,6 +19,16 @@ const mockScrollToEnd = jest.fn<
   (options?: { animated?: boolean }) => Promise<void>
 >(() => Promise.resolve());
 
+interface MockAnchoredEndSpace {
+  anchorIndex: number;
+  anchorOffset: number;
+  onReady?: (info: {
+    anchorIndex: number | undefined;
+    anchorKey: string | undefined;
+    size: number;
+  }) => void;
+}
+
 jest.mock("@legendapp/list/keyboard", () => {
   const React = require("react") as typeof import("react");
   const { KeyboardController: keyboardController } =
@@ -26,7 +36,7 @@ jest.mock("@legendapp/list/keyboard", () => {
   const { View } = require("react-native") as typeof import("react-native");
 
   type MockListProps = React.ComponentProps<typeof View> & {
-    anchoredEndSpace?: unknown;
+    anchoredEndSpace?: MockAnchoredEndSpace;
     contentContainerStyle?: unknown;
     contentInsetEndAdjustment?: unknown;
     data: UIMessage[];
@@ -495,9 +505,68 @@ describe("ChatPanel", () => {
 
     await user.press(screen.getByLabelText(chatLabels.send));
 
-    expect(screen.getByTestId("chat-list").props.anchoredEndSpace).toEqual({
+    expect(
+      screen.getByTestId("chat-list").props.anchoredEndSpace
+    ).toMatchObject({
       anchorIndex: 2,
       anchorOffset: 140,
+    });
+  });
+
+  test("두 번째 질문은 고정 공간이 반영된 다음 프레임에 한 번 이동한다", async () => {
+    const dismiss = jest.mocked(KeyboardController.dismiss);
+    const user = userEvent.setup();
+    const messages = [
+      textMessage("user-1", "user", "이전 질문"),
+      textMessage("assistant-1", "assistant", "이전 답변"),
+    ];
+    dismiss.mockClear();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({ draft: "새 질문", messages, send: jest.fn() })}
+      />
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    const listBeforeReady = screen.getByTestId("chat-list");
+    const anchoredEndSpace = listBeforeReady.props
+      .anchoredEndSpace as MockAnchoredEndSpace;
+    expect(listBeforeReady.props.maintainScrollAtEnd).toBe(false);
+    expect(mockScrollToEnd).not.toHaveBeenCalled();
+    expect(dismiss).not.toHaveBeenCalled();
+    expect(anchoredEndSpace.onReady).toEqual(expect.any(Function));
+
+    let runPositioningFrame: FrameRequestCallback | undefined;
+    jest
+      .spyOn(global, "requestAnimationFrame")
+      .mockImplementation((callback) => {
+        runPositioningFrame = callback;
+        return 1;
+      });
+    let positioning: Promise<void> | undefined;
+    await act(async () => {
+      positioning = anchoredEndSpace.onReady?.({
+        anchorIndex: 2,
+        anchorKey: "user-2",
+        size: 500,
+      }) as unknown as Promise<void>;
+      await Promise.resolve();
+    });
+    expect(mockScrollToEnd).not.toHaveBeenCalled();
+    expect(dismiss).not.toHaveBeenCalled();
+
+    await act(async () => {
+      runPositioningFrame?.(0);
+      await positioning;
+    });
+
+    expect(mockScrollToEnd).toHaveBeenCalledTimes(1);
+    expect(mockScrollToEnd).toHaveBeenCalledWith({ animated: true });
+    expect(dismiss).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("chat-list").props.maintainScrollAtEnd).toEqual({
+      animated: false,
+      on: { dataChange: true, itemLayout: true },
     });
   });
 
