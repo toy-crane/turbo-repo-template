@@ -84,14 +84,14 @@ function CodeInputTarget({
   const showsProgress = isVerifying && visibleAttempt === attempt;
 
   return (
-    <View className="h-14 justify-center">
+    <View className="min-h-14 justify-center">
       {showsProgress ? (
         <View
           accessibilityLabel={signInLabels.verifying}
           accessibilityRole="progressbar"
           accessibilityState={{ busy: true }}
           accessible
-          className="h-14 flex-row items-center justify-center gap-2"
+          className="min-h-14 flex-row items-center justify-center gap-2 px-2"
           testID="sign-in-code-checking"
         >
           <Spinner
@@ -102,12 +102,7 @@ function CodeInputTarget({
             importantForAccessibility="no-hide-descendants"
             size="sm"
           />
-          <Text
-            adjustsFontSizeToFit
-            className="flex-shrink text-center font-medium text-muted"
-            minimumFontScale={0.5}
-            numberOfLines={1}
-          >
+          <Text className="flex-shrink text-center font-medium text-muted">
             {signInLabels.verifying}
           </Text>
         </View>
