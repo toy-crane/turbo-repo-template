@@ -1,5 +1,6 @@
 import {
   type ButtonRootProps,
+  type ButtonSize,
   type ButtonVariant,
   Button as HeroButton,
 } from "heroui-native/button";
@@ -9,6 +10,8 @@ import { type ReactNode, useCallback, useRef } from "react";
 import type {
   LayoutChangeEvent,
   PressableStateCallbackType,
+  TextStyle,
+  ViewStyle,
 } from "react-native";
 
 type OmitButtonState<T> = T extends ButtonRootProps
@@ -33,6 +36,17 @@ const SPINNER_COLOR: Record<ButtonVariant, ThemeColor> = {
   tertiary: "default-foreground",
 };
 
+const DYNAMIC_TYPE_LAYOUT: Record<ButtonSize, ViewStyle> = {
+  lg: { height: "auto", minHeight: 56, paddingVertical: 14 },
+  md: { height: "auto", minHeight: 48, paddingVertical: 12 },
+  sm: { height: "auto", minHeight: 40, paddingVertical: 10 },
+};
+
+const LABEL_LAYOUT: TextStyle = {
+  flexShrink: 1,
+  textAlign: "center",
+};
+
 /**
  * The app's general React Native button.
  *
@@ -46,6 +60,7 @@ export function Button({
   isDisabled = false,
   isPending = false,
   onLayout,
+  size = "md",
   startContent,
   style,
   variant = "primary",
@@ -68,8 +83,12 @@ export function Button({
     pendingWidth === undefined ? undefined : { width: pendingWidth };
   const resolvedStyle =
     typeof style === "function"
-      ? (state: PressableStateCallbackType) => [style(state), widthStyle]
-      : [style, widthStyle];
+      ? (state: PressableStateCallbackType) => [
+          DYNAMIC_TYPE_LAYOUT[size],
+          style(state),
+          widthStyle,
+        ]
+      : [DYNAMIC_TYPE_LAYOUT[size], style, widthStyle];
 
   return (
     <HeroButton
@@ -81,6 +100,7 @@ export function Button({
       }}
       isDisabled={effectiveDisabled}
       onLayout={handleLayout}
+      size={size}
       style={resolvedStyle}
       variant={variant}
     >
@@ -97,13 +117,7 @@ export function Button({
       ) : (
         startContent
       )}
-      <HeroButton.Label
-        adjustsFontSizeToFit
-        maxFontSizeMultiplier={1.6}
-        numberOfLines={1}
-      >
-        {children}
-      </HeroButton.Label>
+      <HeroButton.Label style={LABEL_LAYOUT}>{children}</HeroButton.Label>
     </HeroButton>
   );
 }

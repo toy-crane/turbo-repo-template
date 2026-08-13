@@ -73,16 +73,20 @@ test("진행 중에는 작업을 시작하기 전의 실제 너비를 유지한�
   ).toMatchObject({ width: 104 });
 });
 
-test("큰 글자에서도 문구를 한 줄 버튼 안에 맞춘다", async () => {
+test("글자 크기를 제한하지 않고 버튼 높이가 내용에 맞춰 늘어난다", async () => {
   await renderWithHeroUI(<Button>인증 코드 받기</Button>);
 
-  expect(screen.getByText("인증 코드 받기")).toHaveProp(
-    "maxFontSizeMultiplier",
-    1.6
+  const label = screen.getByText("인증 코드 받기");
+  const buttonStyle = StyleSheet.flatten(
+    screen.getByRole("button").props.style
   );
-  expect(screen.getByText("인증 코드 받기")).toHaveProp(
-    "adjustsFontSizeToFit",
-    true
-  );
-  expect(screen.getByText("인증 코드 받기")).toHaveProp("numberOfLines", 1);
+
+  expect(label.props.maxFontSizeMultiplier).toBeUndefined();
+  expect(label.props.adjustsFontSizeToFit).toBeUndefined();
+  expect(label.props.numberOfLines).toBeUndefined();
+  expect(buttonStyle).toMatchObject({
+    height: "auto",
+    minHeight: 48,
+    paddingVertical: 12,
+  });
 });
