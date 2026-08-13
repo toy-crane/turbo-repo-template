@@ -9,7 +9,7 @@ import type {
   LegendListRenderItemProps,
 } from "@legendapp/list/react-native";
 import type { UIMessage } from "ai";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type Ref, useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   type LayoutChangeEvent,
@@ -89,9 +89,15 @@ function renderMessage({ item }: LegendListRenderItemProps<UIMessage>) {
 
 export function ChatPanel({
   chat,
+  inputRef,
   topInset = 0,
 }: {
   chat: ChatSession;
+  /**
+   * Handed down by the screen, which decides when the input should take the
+   * caret. The panel only says which control that is.
+   */
+  inputRef?: Ref<TextInput>;
   topInset?: number;
 }) {
   const insets = useSafeAreaInsets();
@@ -333,6 +339,7 @@ export function ChatPanel({
               onContentSizeChange={resizeInput}
               onSubmitEditing={send}
               placeholder="메시지를 입력하세요"
+              ref={inputRef}
               returnKeyType="send"
               style={{ height: inputHeight, maxHeight: INPUT_MAX_HEIGHT }}
               submitBehavior="submit"

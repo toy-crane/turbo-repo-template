@@ -2,9 +2,11 @@ import { Button } from "heroui-native/button";
 import { Input } from "heroui-native/input";
 import { Spinner } from "heroui-native/spinner";
 import { TextField } from "heroui-native/text-field";
+import type { TextInput } from "react-native";
 import { View } from "react-native";
 
 import { useEmailRequest } from "@/features/auth/state/use-email-request";
+import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 import { AuthError, AuthScreen } from "./auth-screen";
 import { signInLabels } from "./sign-in-labels";
 
@@ -21,6 +23,7 @@ export function SignInEmailScreen({
   onSent: (email: string) => void;
 }) {
   const form = useEmailRequest(onSent);
+  const inputRef = useFocusOnArrival<TextInput>();
 
   return (
     <AuthScreen
@@ -42,7 +45,6 @@ export function SignInEmailScreen({
             accessibilityLabel={signInLabels.email}
             autoCapitalize="none"
             autoComplete="email"
-            autoFocus
             inputMode="email"
             onChangeText={form.changeEmail}
             // Guarded like the button below it: the return key is the same
@@ -51,6 +53,7 @@ export function SignInEmailScreen({
               form.isBusy || !form.isSendable ? undefined : form.submit
             }
             placeholder="you@example.com"
+            ref={inputRef}
             returnKeyType="send"
             testID="sign-in-email"
             value={form.email}

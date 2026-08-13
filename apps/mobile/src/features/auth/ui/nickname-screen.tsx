@@ -2,9 +2,11 @@ import { Button } from "heroui-native/button";
 import { Input } from "heroui-native/input";
 import { Label } from "heroui-native/label";
 import { TextField } from "heroui-native/text-field";
+import type { TextInput } from "react-native";
 import { View } from "react-native";
 
 import { useNicknameStep } from "@/features/auth/state/use-nickname-step";
+import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 import { AuthError, AuthScreen } from "./auth-screen";
 import { onboardingLabels } from "./onboarding-labels";
 
@@ -22,6 +24,7 @@ import { onboardingLabels } from "./onboarding-labels";
  */
 export function NicknameScreen({ onNext }: { onNext: () => void }) {
   const form = useNicknameStep(onNext);
+  const inputRef = useFocusOnArrival<TextInput>();
 
   return (
     <AuthScreen
@@ -42,10 +45,10 @@ export function NicknameScreen({ onNext }: { onNext: () => void }) {
           <Input
             accessibilityLabel={onboardingLabels.nickname}
             autoComplete="nickname"
-            autoFocus
             onChangeText={form.changeNickname}
             onSubmitEditing={form.canContinue ? form.submit : undefined}
             placeholder={onboardingLabels.nickname}
+            ref={inputRef}
             returnKeyType="next"
             testID="onboarding-nickname"
             value={form.nickname}

@@ -4,9 +4,11 @@ import { Label } from "heroui-native/label";
 import { Spinner } from "heroui-native/spinner";
 import { TextField } from "heroui-native/text-field";
 import { useCallback } from "react";
+import type { TextInput } from "react-native";
 import { Pressable, Text, View } from "react-native";
 
 import { useUsernameStep } from "@/features/auth/state/use-username-step";
+import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 import { AuthError, AuthScreen } from "./auth-screen";
 import { onboardingLabels } from "./onboarding-labels";
 
@@ -23,6 +25,7 @@ import { onboardingLabels } from "./onboarding-labels";
  */
 export function UsernameScreen() {
   const form = useUsernameStep();
+  const inputRef = useFocusOnArrival<TextInput>();
 
   return (
     <AuthScreen
@@ -52,10 +55,10 @@ export function UsernameScreen() {
               autoCapitalize="none"
               autoComplete="username"
               autoCorrect={false}
-              autoFocus
               onChangeText={form.changeUsername}
               onSubmitEditing={form.canSubmit ? form.submit : undefined}
               placeholder={onboardingLabels.username}
+              ref={inputRef}
               returnKeyType="done"
               spellCheck={false}
               testID="onboarding-username"

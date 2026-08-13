@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import type { Session } from "@supabase/supabase-js";
+import { useNavigation } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 
 import { useAuthSession } from "@/features/auth/state/auth-session";
@@ -15,6 +16,13 @@ jest.mock("@/features/chat/state/use-chat-session", () => ({
   useChatSession: jest.fn(),
 }));
 
+// Only the navigation object is stood in for; the rest of expo-router stays
+// real so a later import from it does not silently become undefined here.
+jest.mock("expo-router", () => ({
+  ...(jest.requireActual("expo-router") as object),
+  useNavigation: jest.fn(),
+}));
+
 jest.mock("expo-router/react-navigation", () => ({
   useHeaderHeight: jest.fn(),
 }));
@@ -28,9 +36,11 @@ jest.mock("@/features/chat/ui/chat-panel", () => {
   return {
     ChatPanel: ({
       chat,
+      inputRef,
       topInset,
     }: {
       chat: { tag?: string };
+      inputRef?: unknown;
       topInset?: number;
     }) =>
       React.createElement(
@@ -40,6 +50,9 @@ jest.mock("@/features/chat/ui/chat-panel", () => {
         },
         React.createElement(View, {
           accessibilityLabel: `top inset ${topInset ?? 0}`,
+        }),
+        React.createElement(View, {
+          accessibilityLabel: `input ref ${typeof inputRef}`,
         })
       ),
   };
@@ -48,6 +61,18 @@ jest.mock("@/features/chat/ui/chat-panel", () => {
 const mockUseAuthSession = jest.mocked(useAuthSession);
 const mockUseChatSession = jest.mocked(useChatSession);
 const mockUseHeaderHeight = jest.mocked(useHeaderHeight);
+const mockUseNavigation = jest.mocked(useNavigation);
+
+/**
+ * Stands in for the native stack. When the arrival lands and what it does to
+ * the caret belong to the hook, and its own test covers them; here the screen
+ * only has to hand the panel the ref that hook returns.
+ */
+function stubNavigation() {
+  mockUseNavigation.mockReturnValue({
+    addListener: () => () => undefined,
+  });
+}
 
 const chatSessionStub = { tag: "chat-session" } as unknown as ReturnType<
   typeof useChatSession
@@ -76,10 +101,17 @@ beforeEach(() => {
   });
   mockUseChatSession.mockReturnValue(chatSessionStub);
   mockUseHeaderHeight.mockReturnValue(116);
+  stubNavigation();
 });
 
 afterEach(() => {
   jest.clearAllMocks();
+});
+
+test("화면이 도착하면 입력창을 잡을 ref를 패널에 넘긴다", async () => {
+  const { getByLabelText } = await renderWithHeroUI(<ChatScreen />);
+
+  expect(getByLabelText("input ref function")).toBeOnTheScreen();
 });
 
 test("현재 세션의 access token으로 채팅 세션을 만들어 패널에 넘긴다", async () => {
