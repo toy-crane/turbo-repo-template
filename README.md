@@ -377,11 +377,14 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 대화 화면의 요소에는 `testID`도 있습니다.
 
 - 입력과 전송: `chat-input`, `chat-send`, `chat-latest`
-- 목록과 오류: `chat-list`, `chat-error`
-- 메시지: `chat-message-user`, `chat-message-assistant`
+- 목록과 오류: `chat-list`, `chat-error`, `chat-retry`
+- 메시지: `chat-message-row`, `chat-message-user`, `chat-message-assistant`
 - 답변 아래 아이콘 줄: `chat-message-actions`
 - 답변을 기다리는 동안: `chat-waiting`
-- 수정 상태: `chat-edit-notice`
+- 수정 상태: `chat-edit-notice`, `chat-edit-cancel`
+
+`chat-send`는 한 자리의 이름입니다.
+답변을 받는 동안에는 같은 `testID`가 중지 버튼을 가리킵니다.
 
 메시지 `testID`는 말풍선이 아니라 일반 텍스트 본문에 붙어 있습니다.
 대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 새 대화를 열어 한 건만 보냅니다.
