@@ -1,11 +1,6 @@
 import { InputOTP, REGEXP_ONLY_DIGITS } from "heroui-native/input-otp";
 import { Spinner } from "heroui-native/spinner";
-import {
-  type ComponentRef,
-  type ReactNode,
-  useEffect,
-  useState,
-} from "react";
+import { type ComponentRef, type ReactNode, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 import { OTP_LENGTH } from "@/features/auth/config/email-otp";
