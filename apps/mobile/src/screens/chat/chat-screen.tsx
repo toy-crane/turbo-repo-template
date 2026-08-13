@@ -1,6 +1,3 @@
-import { useHeaderHeight } from "expo-router/react-navigation";
-import { Platform } from "react-native";
-
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
 import { ChatPanel } from "@/features/chat/ui/chat-panel";
@@ -17,12 +14,6 @@ import { ChatPanel } from "@/features/chat/ui/chat-panel";
 export function ChatScreen() {
   const { session } = useAuthSession();
   const chat = useChatSession(session?.access_token);
-  const headerHeight = useHeaderHeight();
 
-  return (
-    <ChatPanel
-      chat={chat}
-      topInset={Platform.OS === "ios" ? headerHeight : 0}
-    />
-  );
+  return <ChatPanel chat={chat} />;
 }

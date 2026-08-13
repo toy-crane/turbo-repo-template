@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import type { Session } from "@supabase/supabase-js";
-import { useHeaderHeight } from "expo-router/react-navigation";
 
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useChatSession } from "@/features/chat/state/use-chat-session";
@@ -13,10 +12,6 @@ jest.mock("@/features/auth/state/auth-session", () => ({
 
 jest.mock("@/features/chat/state/use-chat-session", () => ({
   useChatSession: jest.fn(),
-}));
-
-jest.mock("expo-router/react-navigation", () => ({
-  useHeaderHeight: jest.fn(),
 }));
 
 // The screen owns the session and hands it to the panel, so the panel is
@@ -47,7 +42,6 @@ jest.mock("@/features/chat/ui/chat-panel", () => {
 
 const mockUseAuthSession = jest.mocked(useAuthSession);
 const mockUseChatSession = jest.mocked(useChatSession);
-const mockUseHeaderHeight = jest.mocked(useHeaderHeight);
 
 const chatSessionStub = { tag: "chat-session" } as unknown as ReturnType<
   typeof useChatSession
@@ -75,7 +69,6 @@ beforeEach(() => {
     status: "signedIn",
   });
   mockUseChatSession.mockReturnValue(chatSessionStub);
-  mockUseHeaderHeight.mockReturnValue(116);
 });
 
 afterEach(() => {
@@ -89,10 +82,10 @@ test("현재 세션의 access token으로 채팅 세션을 만들어 패널에 �
   expect(getByLabelText("chat panel with chat-session")).toBeOnTheScreen();
 });
 
-test("투명한 iOS 헤더 높이를 패널의 위쪽 여백으로 넘긴다", async () => {
+test("네이티브 헤더 아래의 본문에는 헤더 높이를 다시 더하지 않는다", async () => {
   const { getByLabelText } = await renderWithHeroUI(<ChatScreen />);
 
-  expect(getByLabelText("top inset 116")).toBeOnTheScreen();
+  expect(getByLabelText("top inset 0")).toBeOnTheScreen();
 });
 
 test("세션이 사라지면 채팅에 토큰을 넘기지 않는다", async () => {

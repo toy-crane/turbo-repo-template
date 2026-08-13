@@ -20,10 +20,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import {
-  KeyboardController,
-  KeyboardStickyView,
-} from "react-native-keyboard-controller";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ChatSession } from "@/features/chat/state/use-chat-session";
@@ -87,13 +84,7 @@ function renderMessage({ item }: LegendListRenderItemProps<UIMessage>) {
   return <PlainTextMessage message={item} />;
 }
 
-export function ChatPanel({
-  chat,
-  topInset = 0,
-}: {
-  chat: ChatSession;
-  topInset?: number;
-}) {
+export function ChatPanel({ chat }: { chat: ChatSession }) {
   const insets = useSafeAreaInsets();
   const listRef = useRef<LegendListRef | null>(null);
   const composerRef = useRef<View | null>(null);
@@ -206,18 +197,12 @@ export function ChatPanel({
       return;
     }
 
-    const isFirstQuestion = chat.messages.length === 0;
     setAnchorIndex(chat.messages.length);
     setIsFollowingLatest(true);
     setInputHeight(INPUT_MIN_HEIGHT);
     chat.send();
 
     requestAnimationFrame(() => {
-      if (isFirstQuestion) {
-        KeyboardController.dismiss();
-        return;
-      }
-
       scrollMessageToEnd({ animated: true, closeKeyboard: true }).catch(
         () => undefined
       );
@@ -230,14 +215,12 @@ export function ChatPanel({
         anchoredEndSpace={
           anchorIndex === undefined || anchorIndex === 0
             ? undefined
-            // The list viewport already begins below the native header.
             : { anchorIndex, anchorOffset: MESSAGE_TOP_SPACING }
         }
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: topInset + MESSAGE_TOP_SPACING,
+          paddingTop: MESSAGE_TOP_SPACING,
         }}
-        contentInsetAdjustmentBehavior="never"
         contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={chat.messages}
         freeze={freeze}

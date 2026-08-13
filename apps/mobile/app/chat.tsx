@@ -18,28 +18,14 @@ export default function ChatRoute() {
       <Stack.Screen
         // Back and the title are the whole header for a pushed conversation:
         // its scroll position lives at the end, where a collapsing large title
-        // would never expand. iOS uses a clear scroll-edge appearance and adds
-        // system material after scrolling; Android keeps the theme background.
+        // would never expand. Android's app bar needs the theme background
+        // spelled out; iOS keeps its own translucent one.
         options={{
           headerLargeTitleEnabled: false,
           title: "대화",
-          ...(Platform.OS === "ios"
-            ? {
-                headerBlurEffect: "systemMaterial",
-                headerLargeStyle: { backgroundColor: "transparent" },
-                headerLargeTitleShadowVisible: false,
-                headerShadowVisible: false,
-                headerTransparent: true,
-                scrollEdgeEffects: {
-                  bottom: "hidden",
-                  left: "hidden",
-                  right: "hidden",
-                  top: "hidden",
-                },
-              }
-            : {
-                headerStyle: { backgroundColor: background },
-              }),
+          ...(Platform.OS === "android" && {
+            headerStyle: { backgroundColor: background },
+          }),
         }}
       />
       <ChatScreen />
