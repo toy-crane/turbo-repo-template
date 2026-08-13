@@ -6,6 +6,8 @@
 
 이 명세는 [최소 채팅 화면 명세](../ai-chat/spec.md)가 제거했던 항목 가운데 다섯 개를 되살린다. 그 명세의 제거할 범위에 있던 "메시지 복사, 편집 후 다시 보내기와 다시 생성"과 "생성 중지, 다시 시도 버튼과 편집 상태"는 이 명세가 대체한다. 그 명세의 완료 조건 가운데 "메시지 작업 UI가 화면과 접근성 트리에 남아 있지 않다"는 항목은 더 이상 적용하지 않는다. 나머지 범위와 [AI 채팅 스크롤 명세](../ai-chat-scrolling/spec.md)는 그대로 유지한다.
 
+확정한 화면은 [프로토타입](prototype.html)에 있다. 더미 데이터로 만든 검토용 사본이며 구현 코드가 아니다.
+
 ## 적용할 결정
 
 - [AI 채팅 프로토콜](../../decisions/ai-chat-protocol.md)
@@ -117,6 +119,8 @@
 - 클립보드는 `expo-clipboard`를 더해서 사용한다. React Native 코어에는 클립보드 API가 없다.
 - Liquid Glass는 `expo-glass-effect`를 더해서 사용한다. `isLiquidGlassAvailable()`로 갈라 쓰고, 지원하지 않는 곳에서는 이 컴포넌트가 평범한 `View`로 떨어져 기존 style을 그대로 그린다.
 - 기다리는 동안의 표시는 문구 하나로 한다. 진행 표시만 있고 무슨 일인지 말해 주지 않는 도형은 쓰지 않는다.
+- 문구의 움직임은 밝은 띠가 글자 위를 왼쪽에서 오른쪽으로 지나가는 형태다. `@react-native-masked-view/masked-view`와 `expo-linear-gradient`를 더해서 만든다. 글자는 일반 `Text`로 남으므로 시스템 글자 크기 확대를 그대로 따른다.
+- SVG로 글자를 그려 그라디언트를 채우는 방법은 쓰지 않는다. 패키지는 늘지 않지만 그 줄만 시스템 글자 크기 확대를 따르지 못한다.
 
 ## 제외할 범위
 
@@ -177,7 +181,8 @@
 - `heroui-native`의 `Menu`는 이 저장소에서 아직 번들해 본 적이 없다. `@gorhom/bottom-sheet`와 `expo-blur`가 optional peer로 빠져 있고 라이브러리가 `src/optional/` 심으로 이를 다루지만, `presentation="popover"`가 Metro에서 문제없이 묶이는지는 첫 Development Build에서 확인한다. 막히면 필요한 패키지를 더한다.
 - 오버레이의 흐림 효과는 `expo-blur`가 없어 빠진다. 불투명 오버레이로 충분한지 실제 기기에서 확인한다.
 - iOS 26에서 `selectable`이 하이라이트와 선택 핸들 없이 복사 메뉴만 띄운다는 React Native의 열린 이슈가 있다([facebook/react-native#55187](https://github.com/facebook/react-native/issues/55187)). 0.81.5에서 보고됐고 고쳐졌다는 표시가 없다. 이 명세가 유지하는 AI 답변의 부분 선택이 iOS에서 실제로 되는지 확인한다. 되지 않으면 답변을 가져가는 길은 아이콘 줄의 복사뿐이다.
-- 기다리는 동안 문구에 움직임을 입히는 방법을 정하지 않았다. 셋 중에 고른다. `@react-native-masked-view/masked-view`와 `expo-linear-gradient`를 더하면 글자 안으로 빛이 지나가고 Dynamic Type도 유지하지만, Expo 문서가 이 패키지의 Android 지원을 실험 단계라고 밝힌다. 이미 있는 `react-native-svg`로 SVG 텍스트에 그라디언트를 채우면 패키지는 늘지 않지만 Dynamic Type을 벗어나 타이포그래피 결정과 어긋난다. 이미 있는 `reanimated`로 글자 밝기만 반복하면 패키지도 늘지 않고 Dynamic Type도 지키지만 빛이 훑지는 않는다.
+- Expo 문서가 `@react-native-masked-view/masked-view`의 Android 지원을 실험 단계이며 플랫폼 사이 동작이 다를 수 있다고 밝힌다. Android에서 띠가 기대대로 지나가는지 첫 Development Build에서 확인한다. 어긋나면 Android만 `reanimated`로 글자 밝기를 반복하는 형태로 내린다.
+- 오류 문구는 `danger` 색을 본문 크기로 쓴다. 화면 배경과의 대비가 라이트 3.25, 다크 4.41이라 본문 기준 4.5에 못 미친다. 이번 범위에서 바꾸지 않는다. 넘기려면 문구를 `foreground`로 두고 `danger`를 옆의 작은 아이콘에만 써야 하는데, 그러면 빨간 글씨가 주던 경고 신호가 약해진다.
 - `stop()`이 받다 만 답변을 대화에 남기는지는 공식 문서가 밝히지 않는다. 남긴다고 보고 만들되 기기에서 확인한다.
 - 메시지를 길게 눌러야 메뉴가 열린다는 것을 알려 주는 표시가 없다. 널리 쓰이는 방식이지만 찾지 못하는 사용자가 있을 수 있다.
 - 최신 메시지 이동 버튼의 fallback은 배경과의 대비가 라이트 1.10, 다크 1.13이라 원의 윤곽이 보이지 않는다. 버튼이 메시지 위에 떠 있을 때 글자를 가리는데 경계가 없어 글자가 잘린 것처럼 보인다. 앱이 iOS 최소 버전을 따로 지정하지 않으므로 iOS 26 미만과 Android 전체가 여기 해당한다. 지금 화면 상태를 그대로 두기로 한 결정에 따르는 결과다.
