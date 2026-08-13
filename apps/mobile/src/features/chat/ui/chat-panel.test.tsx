@@ -36,6 +36,7 @@ jest.mock("@legendapp/list/keyboard", () => {
   const { View } = require("react-native") as typeof import("react-native");
 
   type MockListProps = React.ComponentProps<typeof View> & {
+    applyWorkaroundForContentInsetHitTestBug?: boolean;
     anchoredEndSpace?: MockAnchoredEndSpace;
     contentContainerStyle?: unknown;
     contentInsetEndAdjustment?: unknown;
@@ -476,17 +477,27 @@ describe("ChatPanel", () => {
     expect(list.props.initialScrollAtEnd).toBeUndefined();
   });
 
-  test("첫 질문은 고정용 끝 공간이나 끝 스크롤을 만들지 않는다", async () => {
+  test("첫 질문도 헤더 아래 24px 기준으로 끝 공간을 만든다", async () => {
     const user = userEvent.setup();
     await renderWithHeroUI(
-      <ChatPanel chat={chatSession({ draft: "첫 질문", send: jest.fn() })} />
+      <ChatPanel
+        chat={chatSession({ draft: "첫 질문", send: jest.fn() })}
+        topInset={116}
+      />
     );
 
     await user.press(screen.getByLabelText(chatLabels.send));
 
     expect(
       screen.getByTestId("chat-list").props.anchoredEndSpace
-    ).toBeUndefined();
+    ).toMatchObject({
+      anchorIndex: 0,
+      anchorOffset: 140,
+    });
+    expect(
+      screen.getByTestId("chat-list").props
+        .applyWorkaroundForContentInsetHitTestBug
+    ).toBe(true);
     expect(mockScrollToEnd).not.toHaveBeenCalled();
   });
 

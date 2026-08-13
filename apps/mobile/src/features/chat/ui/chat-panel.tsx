@@ -257,14 +257,15 @@ export function ChatPanel({
     <View className="flex-1 bg-background">
       <KeyboardAwareLegendList
         anchoredEndSpace={
-          anchorIndex === undefined || anchorIndex === 0
+          anchorIndex === undefined
             ? undefined
             : {
                 anchorIndex,
                 anchorOffset: topInset + MESSAGE_TOP_SPACING,
-                onReady: positionQuestion,
+                onReady: anchorIndex === 0 ? undefined : positionQuestion,
               }
         }
+        applyWorkaroundForContentInsetHitTestBug
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: topInset + MESSAGE_TOP_SPACING,
