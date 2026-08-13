@@ -196,13 +196,13 @@ describe("ChatPanel", () => {
     expect(screen.queryByText("무엇을 도와드릴까요?")).not.toBeOnTheScreen();
   });
 
-  test("메시지는 투명한 헤더 아래에 8px 간격을 둔다", async () => {
+  test("메시지는 투명한 헤더 아래에 12px 간격을 둔다", async () => {
     await renderWithHeroUI(<ChatPanel chat={chatSession()} topInset={116} />);
 
     const list = screen.getByTestId("chat-list");
 
     expect(StyleSheet.flatten(list.props.contentContainerStyle)).toMatchObject({
-      paddingTop: 124,
+      paddingTop: 128,
     });
     expect(list.props.contentInsetAdjustmentBehavior).toBe("never");
   });
@@ -504,7 +504,7 @@ describe("ChatPanel", () => {
     expect(list.props.initialScrollAtEnd).toBeUndefined();
   });
 
-  test("첫 질문도 헤더 아래 8px 기준으로 끝 공간을 만든다", async () => {
+  test("첫 질문도 헤더 아래 12px 기준으로 끝 공간을 만든다", async () => {
     const user = userEvent.setup();
     await renderWithHeroUI(
       <ChatPanel
@@ -519,7 +519,7 @@ describe("ChatPanel", () => {
       screen.getByTestId("chat-list").props.anchoredEndSpace
     ).toMatchObject({
       anchorIndex: 0,
-      anchorOffset: 124,
+      anchorOffset: 128,
     });
     expect(
       screen.getByTestId("chat-list").props
@@ -528,7 +528,7 @@ describe("ChatPanel", () => {
     expect(mockScrollToEnd).not.toHaveBeenCalled();
   });
 
-  test("두 번째 질문은 투명한 헤더 아래 8px 위치에 고정한다", async () => {
+  test("두 번째 질문은 투명한 헤더 아래 12px 위치에 고정한다", async () => {
     const user = userEvent.setup();
     const messages = [
       textMessage("user-1", "user", "이전 질문"),
@@ -547,7 +547,7 @@ describe("ChatPanel", () => {
       screen.getByTestId("chat-list").props.anchoredEndSpace
     ).toMatchObject({
       anchorIndex: 2,
-      anchorOffset: 124,
+      anchorOffset: 128,
     });
   });
 
