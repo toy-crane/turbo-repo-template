@@ -7,6 +7,7 @@ import {
   within,
 } from "@testing-library/react-native";
 import type { UIMessage } from "ai";
+import { setStringAsync } from "expo-clipboard";
 import { useState } from "react";
 import { AccessibilityInfo, StyleSheet } from "react-native";
 import { KeyboardController } from "react-native-keyboard-controller";
@@ -47,6 +48,7 @@ jest.mock("@legendapp/list/keyboard", () => {
     keyboardOffset?: unknown;
     keyboardShouldPersistTaps?: unknown;
     keyExtractor: (item: UIMessage) => string;
+    ListFooterComponent?: React.ReactNode;
     maintainScrollAtEnd?: unknown;
     maintainScrollAtEndThreshold?: unknown;
     maintainVisibleContentPosition?: unknown;
@@ -68,7 +70,13 @@ jest.mock("@legendapp/list/keyboard", () => {
 
   const KeyboardAwareLegendList = React.forwardRef<MockListRef, MockListProps>(
     (props, ref) => {
-      const { data, keyExtractor, renderItem, ...viewProps } = props;
+      const {
+        data,
+        keyExtractor,
+        ListFooterComponent,
+        renderItem,
+        ...viewProps
+      } = props;
       const scrollToEnd = React.useCallback(
         (options?: { animated?: boolean }) => mockScrollToEnd(options),
         []
@@ -85,7 +93,7 @@ jest.mock("@legendapp/list/keyboard", () => {
         { ...viewProps, data, keyExtractor } as React.ComponentProps<
           typeof View
         >,
-        data.map((item, index) =>
+        ...data.map((item, index) =>
           React.createElement(
             React.Fragment,
             { key: keyExtractor(item) },
@@ -97,7 +105,8 @@ jest.mock("@legendapp/list/keyboard", () => {
               type: undefined,
             })
           )
-        )
+        ),
+        ListFooterComponent
       );
     }
   );
@@ -137,6 +146,74 @@ jest.mock("@legendapp/list/keyboard", () => {
   };
 });
 
+/**
+ * The menu stands in for HeroUI's, which cannot show itself here: its content
+ * lives in a portal host the raw test provider does not mount, and it will
+ * not place itself until the trigger reports a measurement Jest never makes.
+ * The stand-in keeps the part this panel owns — a long press asks the trigger
+ * to open, and the items call back — and leaves the real gesture, placement
+ * and outside-press to the device checks the spec lists.
+ */
+jest.mock("heroui-native/menu", () => {
+  const React = require("react") as typeof import("react");
+  const { Pressable, Text, View } =
+    require("react-native") as typeof import("react-native");
+
+  const OpenContext = React.createContext<{
+    isOpen: boolean;
+    open: () => void;
+  }>({ isOpen: false, open: () => undefined });
+
+  function Root({ children, ...viewProps }: React.ComponentProps<typeof View>) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const value = React.useMemo(
+      () => ({ isOpen, open: () => setIsOpen(true) }),
+      [isOpen]
+    );
+
+    return React.createElement(
+      OpenContext.Provider,
+      { value },
+      React.createElement(View, viewProps, children)
+    );
+  }
+
+  const Trigger = React.forwardRef<
+    { open: () => void },
+    { asChild?: boolean; children: React.ReactElement }
+  >(({ children }, ref) => {
+    const { open } = React.useContext(OpenContext);
+
+    React.useImperativeHandle(ref, () => ({ open }), [open]);
+
+    return children;
+  });
+
+  function Portal({ children }: { children: React.ReactNode }) {
+    const { isOpen } = React.useContext(OpenContext);
+
+    return isOpen ? React.createElement(React.Fragment, null, children) : null;
+  }
+
+  return {
+    Menu: Object.assign(Root, {
+      Content: ({ children }: { children: React.ReactNode }) =>
+        React.createElement(View, { testID: "chat-message-menu" }, children),
+      Item: Pressable,
+      ItemTitle: Text,
+      Overlay: () => null,
+      Portal,
+      Trigger,
+    }),
+  };
+});
+
+jest.mock("expo-clipboard", () => ({
+  setStringAsync: jest.fn(() => Promise.resolve(true)),
+}));
+
+const mockSetStringAsync = jest.mocked(setStringAsync);
+
 function textMessage(
   id: string,
   role: "assistant" | "user",
@@ -167,6 +244,16 @@ function EditableChat({ onSend }: { onSend: () => void }) {
   const [draft, setDraft] = useState("");
 
   return <ChatPanel chat={chatSession({ draft, send: onSend, setDraft })} />;
+}
+
+/**
+ * The long press asks the trigger to open through a ref rather than through
+ * state React already knows about, so the flush has to be asked for.
+ */
+async function longPressMessage() {
+  await act(() => {
+    fireEvent(screen.getByTestId("chat-message-user"), "longPress");
+  });
 }
 
 async function scrollAwayFromLatest() {
@@ -307,21 +394,207 @@ describe("ChatPanel", () => {
     ).not.toBeOnTheScreen();
   });
 
-  test("메시지 작업을 접근성 트리에 만들지 않는다", async () => {
+  test("완료된 답변 아래에 복사와 다시 받기를 보여 준다", async () => {
     await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({
-          messages: [textMessage("assistant-1", "assistant", "답변")],
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
         })}
       />
     );
 
-    for (const removedLabel of [
-      "메시지 복사",
-      "편집 후 다시 보내기",
-      "다시 생성",
-    ]) {
-      expect(screen.queryByLabelText(removedLabel)).not.toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.copyAnswer)).toBeOnTheScreen();
+    expect(screen.getByLabelText(chatLabels.regenerate)).toBeOnTheScreen();
+  });
+
+  test("받는 중인 답변에는 아이콘 줄을 붙이지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "받는 중"),
+          ],
+        })}
+      />
+    );
+
+    expect(
+      screen.queryByLabelText(chatLabels.copyAnswer)
+    ).not.toBeOnTheScreen();
+  });
+
+  test("앞선 답변은 새 답변을 받는 동안에도 아이콘 줄을 그대로 둔다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [
+            textMessage("user-1", "user", "첫 질문"),
+            textMessage("assistant-1", "assistant", "첫 답변"),
+            textMessage("user-2", "user", "두 번째 질문"),
+            textMessage("assistant-2", "assistant", "받는 중"),
+          ],
+        })}
+      />
+    );
+
+    expect(screen.getAllByLabelText(chatLabels.copyAnswer)).toHaveLength(1);
+  });
+
+  test("답변 복사는 그 답변의 본문 전체를 클립보드에 넣는다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "긴 답변 전체")],
+        })}
+      />
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.copyAnswer));
+
+    expect(mockSetStringAsync).toHaveBeenCalledWith("긴 답변 전체");
+  });
+
+  test("답변 다시 받기는 그 답변을 기준으로 되돌린다", async () => {
+    const regenerateAnswer = jest.fn();
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [
+            textMessage("user-1", "user", "첫 질문"),
+            textMessage("assistant-1", "assistant", "첫 답변"),
+            textMessage("user-2", "user", "두 번째 질문"),
+            textMessage("assistant-2", "assistant", "두 번째 답변"),
+          ],
+          regenerateAnswer,
+        })}
+      />
+    );
+
+    const [firstAnswerAction] = screen.getAllByLabelText(chatLabels.regenerate);
+    await user.press(firstAnswerAction);
+
+    expect(regenerateAnswer).toHaveBeenCalledWith("assistant-1");
+  });
+
+  test("메시지를 길게 누르면 메뉴가 열리고 한 번 누르는 것은 아무 일도 하지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("user-1", "user", "질문")],
+        })}
+      />
+    );
+
+    await act(() => {
+      fireEvent.press(screen.getByTestId("chat-message-user"));
+    });
+
+    expect(screen.queryByTestId("chat-message-menu")).not.toBeOnTheScreen();
+
+    await longPressMessage();
+
+    expect(screen.getByTestId("chat-message-menu")).toBeOnTheScreen();
+    expect(screen.getByText(chatLabels.copyMessage)).toBeOnTheScreen();
+    expect(screen.getByText(chatLabels.editMessage)).toBeOnTheScreen();
+  });
+
+  test("답변을 받는 동안에는 메시지 메뉴를 열지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [textMessage("user-1", "user", "질문")],
+        })}
+      />
+    );
+
+    await longPressMessage();
+
+    expect(screen.queryByTestId("chat-message-menu")).not.toBeOnTheScreen();
+  });
+
+  test("메뉴의 복사는 그 메시지의 본문 전체를 클립보드에 넣는다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("user-1", "user", "가져갈 질문 전체")],
+        })}
+      />
+    );
+
+    await longPressMessage();
+    await user.press(screen.getByText(chatLabels.copyMessage));
+
+    expect(mockSetStringAsync).toHaveBeenCalledWith("가져갈 질문 전체");
+  });
+
+  test("메뉴의 수정은 그 메시지의 수정을 시작한다", async () => {
+    const beginEdit = jest.fn();
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          beginEdit,
+          messages: [textMessage("user-1", "user", "질문")],
+        })}
+      />
+    );
+
+    await longPressMessage();
+    await user.press(screen.getByText(chatLabels.editMessage));
+
+    expect(beginEdit).toHaveBeenCalledWith("user-1");
+  });
+
+  test("메시지 본문은 선택할 수 없고 답변 본문은 선택할 수 있다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
+        })}
+      />
+    );
+
+    expect(screen.getByTestId("chat-message-user").props.selectable).toBe(
+      false
+    );
+    expect(screen.getByTestId("chat-message-assistant").props.selectable).toBe(
+      true
+    );
+  });
+
+  test("사용자 메시지와 AI 답변은 같은 글자 크기와 행간을 쓴다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
+        })}
+      />
+    );
+
+    // The size arrives as a class rather than an inline style, so the check
+    // is that both bodies name the same one instead of falling back to the
+    // React Native default the question used to get.
+    for (const testID of ["chat-message-user", "chat-message-assistant"]) {
+      const body = screen.getByTestId(testID);
+
+      expect(body.props.className).toContain("text-base");
+      expect(body.props.className).toContain("leading-6");
     }
   });
 
@@ -687,26 +960,148 @@ describe("ChatPanel", () => {
     ).toBe(48);
   });
 
-  test("생성 중에는 전송만 비활성화하고 별도 상태 작업을 만들지 않는다", async () => {
+  test("답변을 받는 동안 전송 자리는 중지가 된다", async () => {
+    const stop = jest.fn(() => Promise.resolve());
+    const user = userEvent.setup();
     await renderWithHeroUI(
-      <ChatPanel chat={chatSession({ draft: "질문", isBusy: true })} />
+      <ChatPanel chat={chatSession({ draft: "질문", isBusy: true, stop })} />
     );
 
-    expect(screen.getByLabelText(chatLabels.send)).toBeDisabled();
-    expect(screen.queryByLabelText("생성 중지")).not.toBeOnTheScreen();
-    expect(screen.queryByTestId("chat-generating")).not.toBeOnTheScreen();
+    expect(screen.queryByLabelText(chatLabels.send)).not.toBeOnTheScreen();
+
+    await user.press(screen.getByLabelText(chatLabels.stop));
+
+    expect(stop).toHaveBeenCalledTimes(1);
   });
 
-  test("요청 실패는 짧은 오류만 보여주고 다시 시도 작업을 만들지 않는다", async () => {
+  test("답변을 다 받으면 전송이 돌아온다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ draft: "질문", isBusy: false })} />
+    );
+
+    expect(screen.getByLabelText(chatLabels.send)).toBeOnTheScreen();
+    expect(screen.queryByLabelText(chatLabels.stop)).not.toBeOnTheScreen();
+  });
+
+  test("요청이 실패하면 오류 문구 옆에 다시 시도를 둔다", async () => {
     const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+    const retry = jest.fn();
+    const user = userEvent.setup();
 
     await renderWithHeroUI(
-      <ChatPanel chat={chatSession({ error: new Error("network") })} />
+      <ChatPanel chat={chatSession({ error: new Error("network"), retry })} />
     );
 
     expect(screen.getByText(chatLabels.errorAnnouncement)).toBeOnTheScreen();
-    expect(screen.queryByLabelText("다시 보내기")).not.toBeOnTheScreen();
     expect(announce).toHaveBeenCalledWith(chatLabels.errorAnnouncement);
+
+    await user.press(screen.getByLabelText(chatLabels.retry));
+
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  test("실패하지 않았으면 다시 시도를 두지 않는다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+
+    expect(screen.queryByLabelText(chatLabels.retry)).not.toBeOnTheScreen();
+  });
+
+  test("수정 중에는 안내와 그만두기를 보여 주고 사라질 범위를 흐리게 그린다", async () => {
+    const cancelEdit = jest.fn();
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          cancelEdit,
+          draft: "두 번째 질문",
+          editingMessageId: "user-2",
+          messages: [
+            textMessage("user-1", "user", "첫 질문"),
+            textMessage("assistant-1", "assistant", "첫 답변"),
+            textMessage("user-2", "user", "두 번째 질문"),
+            textMessage("assistant-2", "assistant", "두 번째 답변"),
+          ],
+        })}
+      />
+    );
+
+    expect(screen.getByText(chatLabels.editNotice)).toBeOnTheScreen();
+
+    const rows = screen.getAllByTestId("chat-message-row");
+    expect(
+      rows.map((row) => StyleSheet.flatten(row.props.style).opacity)
+    ).toEqual([1, 1, 0.38, 0.38]);
+
+    await user.press(screen.getByLabelText(chatLabels.endEdit));
+
+    expect(cancelEdit).toHaveBeenCalledTimes(1);
+  });
+
+  test("수정 중이 아니면 안내를 두지 않는다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+
+    expect(screen.queryByTestId("chat-edit-notice")).not.toBeOnTheScreen();
+  });
+
+  test("수정 중에는 답변의 아이콘 줄을 누를 수 없다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          editingMessageId: "user-1",
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
+        })}
+      />
+    );
+
+    expect(screen.getByLabelText(chatLabels.copyAnswer)).toBeDisabled();
+    expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
+  });
+
+  test("첫 글자가 오기 전까지 답변 자리에 쓰고 있다는 문구를 보여 준다", async () => {
+    const { rerender } = await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [textMessage("user-1", "user", "질문")],
+        })}
+      />
+    );
+
+    // The line paints its words twice, once as the mask and once as what the
+    // sweep runs over, so the count is not what is being checked here.
+    expect(screen.queryAllByText(chatLabels.waiting).length).toBeGreaterThan(0);
+
+    await rerender(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "첫"),
+          ],
+        })}
+      />
+    );
+
+    expect(screen.queryAllByText(chatLabels.waiting)).toHaveLength(0);
+  });
+
+  test("답변을 받고 있지 않으면 쓰고 있다는 문구를 두지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
+        })}
+      />
+    );
+
+    expect(screen.queryAllByText(chatLabels.waiting)).toHaveLength(0);
   });
 
   test("입력창의 return 키로 전송한다", async () => {

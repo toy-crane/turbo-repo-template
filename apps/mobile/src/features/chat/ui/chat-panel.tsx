@@ -9,6 +9,7 @@ import type {
   LegendListRenderItemProps,
 } from "@legendapp/list/react-native";
 import type { UIMessage } from "ai";
+import { setStringAsync } from "expo-clipboard";
 import { type Ref, useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -29,7 +30,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ChatSession } from "@/features/chat/state/use-chat-session";
 import { Icon } from "@/shared/ui/icon";
+import { AssistantMessage } from "./assistant-message";
 import { chatLabels } from "./chat-labels";
+import { LatestMessageButton } from "./latest-message-button";
+import { UserMessage } from "./user-message";
+import { WaitingAnswer } from "./waiting-answer";
 
 // biome-ignore lint/performance/noBarrelFile: screens and tests share these accessibility names
 export { chatLabels } from "./chat-labels";
@@ -40,6 +45,9 @@ const KEYBOARD_INPUT_GAP = 8;
 const LATEST_OVERLAY_HEIGHT = 60;
 const USER_SCROLL_THRESHOLD = 24;
 const MESSAGE_TOP_SPACING = 12;
+const MESSAGE_BOTTOM_SPACING = 12;
+/** Enough to read the messages about to go, not enough to mistake them for staying. */
+const DOOMED_OPACITY = 0.38;
 
 function textOfMessage(message: UIMessage): string {
   return message.parts
@@ -48,43 +56,77 @@ function textOfMessage(message: UIMessage): string {
     .join("");
 }
 
-function PlainTextMessage({ message }: { message: UIMessage }) {
-  const isUser = message.role === "user";
+function copyText(text: string) {
+  setStringAsync(text).catch(() => {
+    // Nothing is announced on success either, so a refused clipboard leaves
+    // the same screen behind and the person can try again.
+  });
+}
+
+/**
+ * One message, and what can be done with it.
+ *
+ * `isPending` marks the answer still on its way: it carries no icon row, and
+ * while it is arriving no message opens its menu either. `isDoomed` marks the
+ * messages an edit in progress would drop.
+ */
+function PlainTextMessage({
+  chat,
+  isDoomed,
+  isPending,
+  message,
+}: {
+  chat: ChatSession;
+  isDoomed: boolean;
+  isPending: boolean;
+  message: UIMessage;
+}) {
+  const isEditing = chat.editingMessageId !== undefined;
   const text = textOfMessage(message);
+  const copy = useCallback(() => copyText(text), [text]);
+  const regenerate = useCallback(
+    () => chat.regenerateAnswer(message.id),
+    [chat, message.id]
+  );
+  const edit = useCallback(
+    () => chat.beginEdit(message.id),
+    [chat, message.id]
+  );
 
   if (!text) {
     return null;
   }
 
   return (
-    <View className={isUser ? "mb-3 items-end" : "mb-3 items-start"}>
-      <View
-        className={
-          isUser ? "max-w-[85%] rounded-2xl bg-accent px-4 py-3" : "w-full"
-        }
-      >
-        <Text
-          className={
-            isUser
-              ? "text-accent-foreground"
-              : "text-base text-foreground leading-6"
-          }
-          selectable
-          testID={`chat-message-${message.role}`}
-        >
-          {text}
-        </Text>
-      </View>
+    <View
+      style={{
+        marginBottom: MESSAGE_BOTTOM_SPACING,
+        opacity: isDoomed ? DOOMED_OPACITY : 1,
+      }}
+      testID="chat-message-row"
+    >
+      {message.role === "user" ? (
+        <UserMessage
+          canOpenMenu={!(chat.isBusy || isEditing)}
+          onCopy={copy}
+          onEdit={edit}
+          text={text}
+        />
+      ) : (
+        <AssistantMessage
+          areActionsDisabled={isEditing}
+          hasActions={!isPending}
+          onCopy={copy}
+          onRegenerate={regenerate}
+          text={text}
+        />
+      )}
     </View>
   );
 }
 
 function messageKey(message: UIMessage) {
   return message.id;
-}
-
-function renderMessage({ item }: LegendListRenderItemProps<UIMessage>) {
-  return <PlainTextMessage message={item} />;
 }
 
 export function ChatPanel({
@@ -113,6 +155,16 @@ export function ChatPanel({
   const userScrollStart = useRef<number | undefined>(undefined);
   const canSend = chat.draft.trim().length > 0 && !chat.isBusy;
   const composerBottomPadding = Math.max(insets.bottom, 12);
+  const lastMessage = chat.messages.at(-1);
+  const doomedFromIndex = chat.editingMessageId
+    ? chat.messages.findIndex((message) => message.id === chat.editingMessageId)
+    : -1;
+  // The line stands in for the answer from the moment the question goes until
+  // its first character lands, which is either before any answer exists or
+  // while an answer exists with nothing in it yet.
+  const isWaitingForAnswer =
+    chat.isBusy &&
+    (lastMessage?.role !== "assistant" || textOfMessage(lastMessage) === "");
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze, scrollMessageToEnd } = useKeyboardScrollToEnd({ listRef });
@@ -238,7 +290,10 @@ export function ChatPanel({
       return;
     }
 
-    const nextAnchorIndex = chat.messages.length;
+    // Sending from the edit state drops the message it started from and
+    // everything after it, so the new question lands where that message was.
+    const nextAnchorIndex =
+      doomedFromIndex >= 0 ? doomedFromIndex : chat.messages.length;
     const isFirstQuestion = nextAnchorIndex === 0;
     setAnchorIndex(nextAnchorIndex);
     setIsFollowingLatest(true);
@@ -254,7 +309,23 @@ export function ChatPanel({
         KeyboardController.dismiss();
       });
     }
-  }, [canSend, chat]);
+  }, [canSend, chat, doomedFromIndex]);
+  const stopAnswer = useCallback(() => {
+    chat.stop().catch(() => {
+      // The answer stays where it stopped either way.
+    });
+  }, [chat]);
+  const renderMessage = useCallback(
+    ({ index, item }: LegendListRenderItemProps<UIMessage>) => (
+      <PlainTextMessage
+        chat={chat}
+        isDoomed={doomedFromIndex >= 0 && index >= doomedFromIndex}
+        isPending={chat.isBusy && index === chat.messages.length - 1}
+        message={item}
+      />
+    ),
+    [chat, doomedFromIndex]
+  );
 
   return (
     <View className="flex-1 bg-background">
@@ -282,6 +353,7 @@ export function ChatPanel({
         keyboardOffset={insets.bottom}
         keyboardShouldPersistTaps="handled"
         keyExtractor={messageKey}
+        ListFooterComponent={isWaitingForAnswer ? <WaitingAnswer /> : undefined}
         maintainScrollAtEnd={
           isFollowingLatest && !isPositioningQuestion
             ? {
@@ -320,14 +392,49 @@ export function ChatPanel({
           testID="chat-composer"
         >
           {chat.error ? (
-            <Text
-              accessibilityLiveRegion="assertive"
-              accessibilityRole="alert"
-              className="text-danger text-sm"
-              testID="chat-error"
+            <View className="flex-row items-center gap-2">
+              <Text
+                accessibilityLiveRegion="assertive"
+                accessibilityRole="alert"
+                className="flex-1 text-danger text-sm"
+                testID="chat-error"
+              >
+                {chatLabels.errorAnnouncement}
+              </Text>
+              <Pressable
+                accessibilityLabel={chatLabels.retry}
+                accessibilityRole="button"
+                className="flex-row items-center gap-1 rounded-full border border-border px-3 py-1.5"
+                onPress={chat.retry}
+                testID="chat-retry"
+              >
+                <Icon name="regenerate" size="sm" />
+                <Text className="text-foreground text-sm">
+                  {chatLabels.retry}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {chat.editingMessageId ? (
+            <View
+              className="flex-row items-center gap-2"
+              testID="chat-edit-notice"
             >
-              {chatLabels.errorAnnouncement}
-            </Text>
+              <Icon name="edit" size="sm" tone="muted" />
+              <Text className="flex-1 text-muted text-xs leading-5">
+                {chatLabels.editNotice}
+              </Text>
+              <Pressable
+                accessibilityLabel={chatLabels.endEdit}
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={chat.cancelEdit}
+                testID="chat-edit-cancel"
+              >
+                <Icon name="close" size="sm" tone="muted" />
+              </Pressable>
+            </View>
           ) : null}
 
           <View className="flex-row items-end gap-2">
@@ -346,21 +453,37 @@ export function ChatPanel({
               testID="chat-input"
               value={chat.draft}
             />
-            <Pressable
-              accessibilityLabel={chatLabels.send}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !canSend }}
-              className={
-                canSend
-                  ? "h-11 w-11 items-center justify-center rounded-full bg-accent"
-                  : "h-11 w-11 items-center justify-center rounded-full bg-accent opacity-40"
-              }
-              disabled={!canSend}
-              onPress={send}
-              testID="chat-send"
-            >
-              <Icon name="send" tone="accentForeground" />
-            </Pressable>
+            {/*
+              One place, two jobs. While an answer is arriving that place ends
+              it; the rest of the time it sends what has been typed.
+            */}
+            {chat.isBusy ? (
+              <Pressable
+                accessibilityLabel={chatLabels.stop}
+                accessibilityRole="button"
+                className="h-11 w-11 items-center justify-center rounded-full bg-accent"
+                onPress={stopAnswer}
+                testID="chat-send"
+              >
+                <Icon filled name="stop" size="sm" tone="accentForeground" />
+              </Pressable>
+            ) : (
+              <Pressable
+                accessibilityLabel={chatLabels.send}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !canSend }}
+                className={
+                  canSend
+                    ? "h-11 w-11 items-center justify-center rounded-full bg-accent"
+                    : "h-11 w-11 items-center justify-center rounded-full bg-accent opacity-40"
+                }
+                disabled={!canSend}
+                onPress={send}
+                testID="chat-send"
+              >
+                <Icon name="send" tone="accentForeground" />
+              </Pressable>
+            )}
           </View>
         </View>
       </KeyboardStickyView>
@@ -385,15 +508,7 @@ export function ChatPanel({
             className="h-full items-center justify-end pb-2"
             pointerEvents="box-none"
           >
-            <Pressable
-              accessibilityLabel={chatLabels.latest}
-              accessibilityRole="button"
-              className="h-11 w-11 items-center justify-center rounded-full bg-surface"
-              onPress={moveToLatest}
-              testID="chat-latest"
-            >
-              <Icon name="latest" size="lg" />
-            </Pressable>
+            <LatestMessageButton onPress={moveToLatest} />
           </View>
         </KeyboardStickyView>
       )}
