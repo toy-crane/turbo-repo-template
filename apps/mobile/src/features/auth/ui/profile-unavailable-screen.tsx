@@ -11,7 +11,13 @@ import { Button } from "@/shared/ui/button";
  * cost them a working session and would not fix anything, so the screen holds
  * still and offers the read again.
  */
-export function ProfileUnavailableScreen({ onRetry }: { onRetry: () => void }) {
+export function ProfileUnavailableScreen({
+  isRetrying,
+  onRetry,
+}: {
+  isRetrying: boolean;
+  onRetry: () => void;
+}) {
   return (
     <ScrollView
       className="flex-1 bg-background"
@@ -30,7 +36,11 @@ export function ProfileUnavailableScreen({ onRetry }: { onRetry: () => void }) {
         </Text>
       </View>
 
-      <Button accessibilityLabel="프로필 다시 불러오기" onPress={onRetry}>
+      <Button
+        accessibilityLabel="프로필 다시 불러오기"
+        isPending={isRetrying}
+        onPress={onRetry}
+      >
         프로필 다시 불러오기
       </Button>
     </ScrollView>
