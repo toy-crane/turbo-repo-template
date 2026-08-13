@@ -8,6 +8,7 @@
 
 ## 적용할 결정
 
+- [모바일 진입 키보드](../../decisions/mobile-keyboard-entry-focus.md)
 - [모바일 키보드 회피](../../decisions/mobile-keyboard-avoidance.md)
 - [모바일 테스트와 런타임 검증](../../decisions/mobile-testing-and-verification.md)
 
@@ -23,17 +24,8 @@
 
 ## 선택한 구성
 
-- 화면이 네이티브 스택의 `transitionEnd`를 듣고, 들어오는 전환이 끝났을 때만 입력창에 포커스를 준다. 화면을 닫는 전환은 무시한다.
-- 전환이 끝나는 시점은 화면이 소유하고, 입력창에 포커스를 주는 일은 패널이 맡는다. 화면이 이미 헤더 높이를 읽어 패널에 넘기고 있으므로 같은 방향을 따른다.
-- 입력창의 `autoFocus`는 쓰지 않는다. mount 시점에 포커스를 주면 iOS가 올라오는 키보드를 화면 전환에 실어 오른쪽에서 밀어 넣고, 그 뒤에 입력창만 아래에서 따로 올라와 움직임의 방향이 두 번 바뀐다. 실제 기기에서 확인했다.
-- 화면 전환을 `fade`로 바꿔 키보드를 바로 띄우는 방법은 쓰지 않는다. 키보드는 제자리를 찾지만 뒤로 가기를 포함한 화면 전환 전체가 iOS 기본과 달라진다.
-
-### 근거로 삼은 upstream 사실
-
-- `react-native-keyboard-controller` [#1157](https://github.com/kirillzyusko/react-native-keyboard-controller/issues/1157): 라이브러리 저자가 "AI/chat 앱의 첫 화면을 키보드와 함께 바로 보여 주는" 용도로 `KeyboardController.skipKeyboardAnimation()`을 제안했으나 아직 열려 있다. 설치한 1.22.3의 타입 정의에도 없다. 같은 이슈에서 저자는 native-stack push와 `autoFocus` 조합이 키보드를 바로 띄우지만 추가 버그를 부른다고 적었다.
-- `react-navigation` [#11626](https://github.com/react-navigation/react-navigation/issues/11626): `autoFocus` 화면을 push하면 키보드가 이전 화면 위에 나타났다가 사라지고 새 화면과 함께 애니메이션된다.
-- `wix/react-native-navigation` [#2622](https://github.com/wix/react-native-navigation/issues/2622): iOS 기본 horizontal-slide 전환에서만 생기고 `fade` 전환에서는 생기지 않는다.
-- `react-native-keyboard-controller` [#1215](https://github.com/kirillzyusko/react-native-keyboard-controller/issues/1215): iOS 26에서 expo-router push와 `autoFocus`를 함께 쓰면 레이아웃이 튀고 키보드 색이 잠시 잘못 나온다. 열려 있다.
+- 진입 포커스의 방식과 시점은 [모바일 진입 키보드](../../decisions/mobile-keyboard-entry-focus.md)를 그대로 따른다. `autoFocus`를 쓰지 않는 이유와 upstream 근거도 그 계약에 있다.
+- 채팅 화면이 `useFocusOnArrival()`로 ref를 만들어 `ChatPanel`에 넘긴다. 패널은 그 ref를 입력창에 붙이기만 하고 포커스를 알지 않는다.
 
 ## 제외할 범위
 
@@ -52,20 +44,18 @@
 5. 첫 질문을 보내면 키보드가 닫히고, 입력창을 다시 누르면 열린다.
 6. 뒤로 나간 뒤 대화를 다시 열면 키보드가 다시 올라온다.
 
-자동 테스트는 진입 시 입력창이 포커스를 요청하는지와 기존 입력·전송 동작이 그대로인지 확인한다. 키보드 애니메이션과 Android의 실제 표시 여부는 iOS 및 Android Development Build에서 확인한다.
+자동 테스트는 도착 판정과 포커스 요청, 입력창이 스스로 포커스를 잡지 않는지, 기존 입력·전송 동작이 그대로인지 확인한다. 키보드 애니메이션과 Android의 실제 표시 여부는 iOS 및 Android Development Build에서 확인한다.
 
 ## 가정
 
-- 기존 `autoFocus` 화면들과 같이 스크린리더가 켜져 있어도 예외를 두지 않는다. 채팅에만 다른 규칙을 두면 프로젝트 전체의 접근성 정책을 이 기능에서 새로 정하게 된다.
 - 대화는 화면 수명 동안만 유지되므로 진입 시점의 대화는 항상 비어 있다. 진입과 빈 대화를 따로 구분하지 않는다.
 
 ## 남은 위험
 
 - 키보드가 전환 시간만큼 늦게 올라온다. 화면이 자리를 잡은 뒤 키보드가 올라오는 것이 목표한 움직임이므로 받아들이는 비용이다.
-- 채팅 화면을 밀어 넣지 않고 스택의 첫 화면으로 여는 경로에서는 `transitionEnd`가 오지 않아 키보드가 끝내 올라오지 않을 수 있다. 지금은 Home의 새 대화 버튼이 유일한 진입점이라 이 경로가 없다. 알림이나 외부 링크로 채팅을 바로 여는 기능을 더할 때 다시 확인한다. Development Build에서는 dev client가 콜드 스타트 딥링크를 가로채므로 이 경로를 확인하지 못했다.
-- 진입 포커스를 자동 테스트로 눈에 보이는 키보드까지 확인하지 못한다. 화면이 전환 신호를 포커스 요청으로 바꾸는지까지만 테스트하고, 실제 키보드는 Development Build에서 확인한다.
-- `react-native-keyboard-controller`가 `skipKeyboardAnimation()`을 내놓으면 전환과 동시에 키보드를 띄우는 방식을 다시 검토할 수 있다. 지금 방식은 그때까지의 선택이다.
+- 콜드 스타트 딥링크로 채팅을 바로 여는 경로는 확인하지 못했다. Development Build에서는 dev client가 그 실행을 가로챈다. 지금은 Home의 새 대화 버튼이 유일한 진입점이라 이 경로가 없고, 알림이나 외부 링크로 채팅을 여는 기능을 더할 때 확인한다.
+- 실제로 눈에 보이는 키보드는 자동 테스트가 확인하지 못한다. 포커스 요청까지는 `useFocusOnArrival`의 테스트가 확인하고, 키보드 애니메이션은 Development Build에서 확인한다.
 
 ## 상태
 
-ready for implementation
+completed

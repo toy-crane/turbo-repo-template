@@ -10,6 +10,7 @@
 - [모바일 인증](mobile-authentication.md) — 모바일 로그인 제공자, 인증 세션, 계정 연결, 로그아웃 또는 로컬 인증 검증 경로를 변경할 때 읽는다.
 - [모바일 코드 구조](mobile-code-architecture.md) — 모바일 영역 구분, 기능 내부 책임, 폴더 구조 또는 import 경계를 변경할 때 읽는다.
 - [모바일 키보드 회피](mobile-keyboard-avoidance.md) — 키보드가 입력이나 하단 버튼을 가리는 화면을 만들거나 고칠 때 읽는다.
+- [모바일 진입 키보드](mobile-keyboard-entry-focus.md) — 화면에 들어오자마자 입력을 시작하게 만들거나 고칠 때 읽는다.
 - [모바일 프로필 식별자와 온보딩](mobile-profile-identity-and-onboarding.md) — 닉네임, 아이디, 로그인 뒤 필수 프로필 설정 또는 프로필 완성 조건을 변경할 때 읽는다.
 - [모바일 설정 공개 프로필](mobile-profile-settings.md) — Settings의 프로필 표시, 프로필 수정 진입, 사진 편집 또는 프로필 폼 배치를 변경할 때 읽는다.
 - [모바일 개발 런타임](mobile-development-runtime.md) — 모바일 앱의 Expo SDK, 지원 플랫폼, Development Build 런타임 또는 배포 경계를 변경할 때 읽는다.
