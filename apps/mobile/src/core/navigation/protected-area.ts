@@ -26,6 +26,8 @@ export type ProtectedArea =
 
 export interface ProtectedAreaState {
   area: ProtectedArea;
+  /** True while the recovery button reads a failed profile again. */
+  isRetryingProfile: boolean;
   /** Only set for `misconfigured`, which no screen can recover from. */
   problem?: string;
   /** Reads the profile again after `profileUnavailable`. */
@@ -39,17 +41,18 @@ export function useProtectedArea(): ProtectedAreaState {
   const retryProfile = () => {
     profile.refetch();
   };
+  const isRetryingProfile = profile.isFetching;
 
   if (status === "misconfigured") {
-    return { area: "misconfigured", problem, retryProfile };
+    return { area: "misconfigured", isRetryingProfile, problem, retryProfile };
   }
 
   if (status === "checking") {
-    return { area: "checking", retryProfile };
+    return { area: "checking", isRetryingProfile, retryProfile };
   }
 
   if (status === "signedOut") {
-    return { area: "signedOut", retryProfile };
+    return { area: "signedOut", isRetryingProfile, retryProfile };
   }
 
   // Held values survive a refetch, so a background re-read after the provider
@@ -57,6 +60,7 @@ export function useProtectedArea(): ProtectedAreaState {
   if (profile.data) {
     return {
       area: isProfileComplete(profile.data) ? "app" : "onboarding",
+      isRetryingProfile,
       retryProfile,
     };
   }
@@ -65,8 +69,8 @@ export function useProtectedArea(): ProtectedAreaState {
   // here would cost them a working session over a dropped request, and would
   // hide the one thing they can act on: trying again.
   if (profile.isError) {
-    return { area: "profileUnavailable", retryProfile };
+    return { area: "profileUnavailable", isRetryingProfile, retryProfile };
   }
 
-  return { area: "checking", retryProfile };
+  return { area: "checking", isRetryingProfile, retryProfile };
 }

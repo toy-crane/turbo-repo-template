@@ -1,8 +1,7 @@
-import { Button } from "heroui-native/button";
 import { InputOTP, REGEXP_ONLY_DIGITS } from "heroui-native/input-otp";
 import { Spinner } from "heroui-native/spinner";
-import type { ComponentRef } from "react";
-import { View } from "react-native";
+import { type ComponentRef, type ReactNode, useEffect, useState } from "react";
+import { Text, View } from "react-native";
 
 import { OTP_LENGTH } from "@/features/auth/config/email-otp";
 import {
@@ -12,8 +11,11 @@ import {
 } from "@/features/auth/state/email-code";
 import { useCodeVerify } from "@/features/auth/state/use-code-verify";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
+import { Button } from "@/shared/ui/button";
 import { AuthError, AuthScreen, AuthSubtitle } from "./auth-screen";
 import { signInLabels } from "./sign-in-labels";
+
+const VERIFY_PROGRESS_DELAY_MS = 1000;
 
 /**
  * Pulls the code out of whatever was pasted.
@@ -49,6 +51,63 @@ function slotRenderer(isInvalid: boolean) {
     ));
 }
 
+function CodeInputTarget({
+  attempt,
+  children,
+  isVerifying,
+}: {
+  attempt: number;
+  children: ReactNode;
+  isVerifying: boolean;
+}) {
+  const [visibleAttempt, setVisibleAttempt] = useState<number>();
+
+  useEffect(() => {
+    if (!isVerifying) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setVisibleAttempt(attempt);
+    }, VERIFY_PROGRESS_DELAY_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [attempt, isVerifying]);
+
+  const showsProgress = isVerifying && visibleAttempt === attempt;
+
+  return (
+    <View className="min-h-14 justify-center">
+      {showsProgress ? (
+        <View
+          accessibilityLabel={signInLabels.verifying}
+          accessibilityRole="progressbar"
+          accessibilityState={{ busy: true }}
+          accessible
+          className="min-h-14 flex-row items-center justify-center gap-2 px-2"
+          testID="sign-in-code-checking"
+        >
+          <Spinner
+            accessibilityElementsHidden
+            accessibilityRole={undefined}
+            accessibilityState={undefined}
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            size="sm"
+          />
+          <Text className="flex-shrink text-center font-medium text-muted">
+            {signInLabels.verifying}
+          </Text>
+        </View>
+      ) : (
+        children
+      )}
+    </View>
+  );
+}
+
 export function SignInCodeScreen({ email }: { email: string }) {
   const form = useCodeVerify(email);
   const isWaiting = form.secondsLeft > 0;
@@ -62,52 +121,41 @@ export function SignInCodeScreen({ email }: { email: string }) {
           // carry it too; a fixed name would read the same for all 60 seconds.
           accessibilityLabel={formatResendLabel(form.secondsLeft)}
           isDisabled={form.isBusy || isWaiting}
+          isPending={form.pending === "resend"}
           onPress={form.resend}
           variant="tertiary"
         >
-          <Button.Label>{formatResendLabel(form.secondsLeft)}</Button.Label>
+          {formatResendLabel(form.secondsLeft)}
         </Button>
       }
       subtitle={<AuthSubtitle>{describeCodeSent(email)}</AuthSubtitle>}
       title="코드를 입력해 주세요"
     >
       <View className="gap-2">
-        <InputOTP
-          isDisabled={form.isBusy}
-          // Remounting on every failed attempt is what clears the wrong code
-          // out of the boxes. The ref below puts the caret back in the first
-          // one as the new input attaches.
-          key={form.resetCount}
-          maxLength={OTP_LENGTH}
-          onChange={form.changeCode}
-          pasteTransformer={pastedCode}
-          pattern={REGEXP_ONLY_DIGITS}
-          ref={codeRef}
-          textInputProps={{
-            accessibilityLabel: signInLabels.code,
-            testID: "sign-in-code",
-          }}
-          value={form.code}
+        <CodeInputTarget
+          attempt={form.resetCount}
+          isVerifying={form.pending === "verify"}
         >
-          <InputOTP.Group className="w-full">
-            {slotRenderer(form.failure !== undefined)}
-          </InputOTP.Group>
-        </InputOTP>
-
-        {/*
-          Verification starts on its own once the sixth digit lands, so without
-          this the screen would simply freeze for the whole round trip.
-        */}
-        {form.pending === "verify" ? (
-          <View
-            accessibilityLabel="코드 확인 중"
-            accessible
-            className="flex-row items-center gap-2"
-            testID="sign-in-code-checking"
+          <InputOTP
+            isDisabled={form.isBusy}
+            // Remounting clears the wrong code. The ref focuses the new input.
+            key={form.resetCount}
+            maxLength={OTP_LENGTH}
+            onChange={form.changeCode}
+            pasteTransformer={pastedCode}
+            pattern={REGEXP_ONLY_DIGITS}
+            ref={codeRef}
+            textInputProps={{
+              accessibilityLabel: signInLabels.code,
+              testID: "sign-in-code",
+            }}
+            value={form.code}
           >
-            <Spinner size="sm" />
-          </View>
-        ) : null}
+            <InputOTP.Group className="w-full">
+              {slotRenderer(form.failure !== undefined)}
+            </InputOTP.Group>
+          </InputOTP>
+        </CodeInputTarget>
 
         {form.failure ? (
           <AuthError testID="sign-in-error-code">

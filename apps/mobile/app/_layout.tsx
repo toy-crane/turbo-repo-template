@@ -21,7 +21,7 @@ const heroUIConfig = {
 
 function ThemedRootLayout() {
   const { background } = useAppTheme();
-  const { area, problem, retryProfile } = useProtectedArea();
+  const { area, isRetryingProfile, problem, retryProfile } = useProtectedArea();
 
   if (area === "checking") {
     return <SessionCheckingScreen background={background} />;
@@ -32,7 +32,12 @@ function ThemedRootLayout() {
   }
 
   if (area === "profileUnavailable") {
-    return <ProfileUnavailableScreen onRetry={retryProfile} />;
+    return (
+      <ProfileUnavailableScreen
+        isRetrying={isRetryingProfile}
+        onRetry={retryProfile}
+      />
+    );
   }
 
   return (
