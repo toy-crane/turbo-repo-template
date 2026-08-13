@@ -41,14 +41,20 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
   const [requestError, setRequestError] = useState<Error | undefined>();
   const currentToken = useRef(accessToken);
   const stashedDraft = useRef("");
+  // Read through a ref so that starting an edit does not have to be rebuilt on
+  // every keystroke: it is handed to every message in the list, and a new one
+  // each time would redraw them all while someone is typing.
+  const currentDraft = useRef(draft);
 
   currentToken.current = accessToken;
+  currentDraft.current = draft;
 
   const transport = useMemo(
     () => createChatTransport(() => currentToken.current),
     []
   );
   const {
+    clearError,
     error,
     messages,
     regenerate,
@@ -152,11 +158,16 @@ export function useChatSession(accessToken: string | undefined): ChatSession {
         return;
       }
 
-      stashedDraft.current = draft;
+      // A failure from the last question goes with it. Leaving it up would
+      // put "try again" beside the edit notice, and pressing it would restart
+      // the conversation somewhere other than where the edit says it will.
+      clearError();
+      setRequestError(undefined);
+      stashedDraft.current = currentDraft.current;
       setEditingMessageId(messageId);
       setDraft(textOfMessage(target));
     },
-    [draft, messages]
+    [clearError, messages]
   );
 
   const cancelEdit = useCallback(() => {

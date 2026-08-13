@@ -309,6 +309,45 @@ describe("useChatSession", () => {
     ]);
   });
 
+  test("그만 받은 뒤에 새 메시지를 보낼 수 있다", async () => {
+    const answer = openAnswerStream();
+    let isFirstTurn = true;
+    const transport = fakeTransport(() => {
+      if (isFirstTurn) {
+        isFirstTurn = false;
+
+        return Promise.resolve(answer.stream);
+      }
+
+      return Promise.resolve(answerStream("다음 답변"));
+    });
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await ask(result, "첫 질문");
+    await act(() => {
+      answer.write("받다 만");
+    });
+    await act(async () => {
+      await result.current.stop();
+    });
+    await waitFor(() => {
+      expect(result.current.isBusy).toBe(false);
+    });
+
+    await ask(result, "다음 질문");
+
+    await waitFor(() => {
+      expect(result.current.messages.map(messageText)).toEqual([
+        "첫 질문",
+        "받다 만",
+        "다음 질문",
+        "다음 답변",
+      ]);
+    });
+    expect(transport.sendMessages).toHaveBeenCalledTimes(2);
+    expect(result.current.error).toBeUndefined();
+  });
+
   test("수정을 시작하면 원문이 입력창에 들어가고 쓰던 초안은 보관한다", async () => {
     fakeTransport(() => Promise.resolve(answerStream("답변")));
     const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
@@ -336,6 +375,26 @@ describe("useChatSession", () => {
 
     expect(result.current.draft).toBe("쓰다 만 초안");
     expect(result.current.editingMessageId).toBeUndefined();
+  });
+
+  test("수정을 시작하면 남아 있던 오류를 지운다", async () => {
+    fakeTransport(() => Promise.reject(new Error("network is down")));
+    const { result } = await renderHook(() => useChatSession(ACCESS_TOKEN));
+
+    await ask(result, "질문");
+    await waitFor(() => {
+      expect(result.current.error).toBeDefined();
+    });
+
+    const [questionId] = messageIds(result.current.messages);
+
+    await act(() => {
+      result.current.beginEdit(questionId);
+    });
+
+    // Leaving it up would put "try again" beside the edit notice, and the two
+    // restart the conversation from different places.
+    expect(result.current.error).toBeUndefined();
   });
 
   test("수정 상태에서 보내면 그 메시지부터 대화를 다시 시작한다", async () => {

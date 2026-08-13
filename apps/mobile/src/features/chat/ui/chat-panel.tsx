@@ -71,26 +71,31 @@ function copyText(text: string) {
  * messages an edit in progress would drop.
  */
 function PlainTextMessage({
-  chat,
+  areActionsDisabled,
+  canOpenMenu,
   isDoomed,
   isPending,
   message,
+  onBeginEdit,
+  onRegenerate,
 }: {
-  chat: ChatSession;
+  areActionsDisabled: boolean;
+  canOpenMenu: boolean;
   isDoomed: boolean;
   isPending: boolean;
   message: UIMessage;
+  onBeginEdit: (messageId: string) => void;
+  onRegenerate: (messageId: string) => void;
 }) {
-  const isEditing = chat.editingMessageId !== undefined;
   const text = textOfMessage(message);
   const copy = useCallback(() => copyText(text), [text]);
   const regenerate = useCallback(
-    () => chat.regenerateAnswer(message.id),
-    [chat, message.id]
+    () => onRegenerate(message.id),
+    [message.id, onRegenerate]
   );
   const edit = useCallback(
-    () => chat.beginEdit(message.id),
-    [chat, message.id]
+    () => onBeginEdit(message.id),
+    [message.id, onBeginEdit]
   );
 
   if (!text) {
@@ -107,14 +112,14 @@ function PlainTextMessage({
     >
       {message.role === "user" ? (
         <UserMessage
-          canOpenMenu={!(chat.isBusy || isEditing)}
+          canOpenMenu={canOpenMenu}
           onCopy={copy}
           onEdit={edit}
           text={text}
         />
       ) : (
         <AssistantMessage
-          areActionsDisabled={isEditing}
+          areActionsDisabled={areActionsDisabled}
           hasActions={!isPending}
           onCopy={copy}
           onRegenerate={regenerate}
@@ -315,16 +320,31 @@ export function ChatPanel({
       // The answer stays where it stopped either way.
     });
   }, [chat]);
+  // Named fields rather than the session itself: the session is a new object
+  // on every keystroke, and every message in view would be redrawn with it.
+  const { beginEdit, isBusy, regenerateAnswer } = chat;
+  const isEditing = chat.editingMessageId !== undefined;
+  const messageCount = chat.messages.length;
   const renderMessage = useCallback(
     ({ index, item }: LegendListRenderItemProps<UIMessage>) => (
       <PlainTextMessage
-        chat={chat}
+        areActionsDisabled={isEditing}
+        canOpenMenu={!(isBusy || isEditing)}
         isDoomed={doomedFromIndex >= 0 && index >= doomedFromIndex}
-        isPending={chat.isBusy && index === chat.messages.length - 1}
+        isPending={isBusy && index === messageCount - 1}
         message={item}
+        onBeginEdit={beginEdit}
+        onRegenerate={regenerateAnswer}
       />
     ),
-    [chat, doomedFromIndex]
+    [
+      beginEdit,
+      doomedFromIndex,
+      isBusy,
+      isEditing,
+      messageCount,
+      regenerateAnswer,
+    ]
   );
 
   return (
