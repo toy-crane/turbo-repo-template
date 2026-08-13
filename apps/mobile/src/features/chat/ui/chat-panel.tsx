@@ -327,6 +327,11 @@ export function ChatPanel({
           <View className="flex-row items-end gap-2">
             <TextInput
               accessibilityLabel={chatLabels.input}
+              // The conversation opens empty and the person pushed this screen
+              // to type, so focus at mount lets the keyboard rise with the
+              // push instead of a beat after it. Sending closes the keyboard
+              // again, and only a tap on the input reopens it.
+              autoFocus
               className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
               multiline
               onChangeText={chat.setDraft}
