@@ -16,4 +16,5 @@ export const signInLabels = {
   google: "Google로 계속하기",
   resend: "코드 다시 받기",
   submitEmail: "인증 코드 받기",
+  verifying: "코드를 확인하고 있어요",
 } as const;

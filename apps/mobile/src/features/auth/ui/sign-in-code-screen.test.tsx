@@ -197,10 +197,12 @@ test("보내지 못한 다시 받기는 대기 시간을 걸지 않는다", asyn
   expect(screen.getByLabelText("코드 다시 받기")).toBeOnTheScreen();
 });
 
-test("코드를 확인하는 동안 진행 중임을 보여준다", async () => {
+test("코드 확인이 1초 안에 끝나면 진행 표시를 띄우지 않는다", async () => {
   let release = () => {
     // Replaced by the pending implementation below.
   };
+
+  jest.useFakeTimers();
 
   fake.auth.verifyOtp.mockImplementationOnce(
     () =>
@@ -217,12 +219,64 @@ test("코드를 확인하는 동안 진행 중임을 보여준다", async () => 
 
   await type("인증 코드", CODE);
 
-  // Verification starts on its own once the sixth digit lands, so without a
-  // sign of progress the screen would simply freeze for the round trip.
-  expect(await screen.findByTestId("sign-in-code-checking")).toBeOnTheScreen();
+  expect(screen.queryByRole("progressbar")).not.toBeOnTheScreen();
+
+  await act(async () => {
+    release();
+    await Promise.resolve();
+  });
 
   await act(() => {
+    jest.advanceTimersByTime(1000);
+  });
+
+  expect(screen.queryByRole("progressbar")).not.toBeOnTheScreen();
+});
+
+test("코드 확인이 1초를 넘기면 입력칸 자리에서 진행 상태를 보여준다", async () => {
+  let release = () => {
+    // Replaced by the pending implementation below.
+  };
+
+  jest.useFakeTimers();
+
+  fake.auth.verifyOtp.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        release = () =>
+          resolve({
+            data: { session: null, user: null },
+            error: null,
+          } as never);
+      })
+  );
+
+  await renderCode();
+
+  await type("인증 코드", CODE);
+
+  expect(screen.getByLabelText("인증 코드")).toBeDisabled();
+  expect(screen.queryByRole("progressbar")).not.toBeOnTheScreen();
+
+  await act(() => {
+    jest.advanceTimersByTime(999);
+  });
+
+  expect(screen.queryByRole("progressbar")).not.toBeOnTheScreen();
+
+  await act(() => {
+    jest.advanceTimersByTime(1);
+  });
+
+  expect(
+    screen.getByRole("progressbar", { name: "코드를 확인하고 있어요" })
+  ).toBeOnTheScreen();
+  expect(screen.queryByLabelText("인증 코드")).not.toBeOnTheScreen();
+  expect(screen.getByText("코드를 확인하고 있어요")).toBeOnTheScreen();
+
+  await act(async () => {
     release();
+    await Promise.resolve();
   });
 });
 
