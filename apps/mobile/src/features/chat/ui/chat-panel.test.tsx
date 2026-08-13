@@ -147,12 +147,18 @@ function textMessage(
 
 function chatSession(overrides: Partial<ChatSession> = {}): ChatSession {
   return {
+    beginEdit: jest.fn(),
+    cancelEdit: jest.fn(),
     draft: "",
+    editingMessageId: undefined,
     error: undefined,
     isBusy: false,
     messages: [],
+    regenerateAnswer: jest.fn(),
+    retry: jest.fn(),
     send: jest.fn(),
     setDraft: jest.fn(),
+    stop: jest.fn(() => Promise.resolve()),
     ...overrides,
   };
 }
