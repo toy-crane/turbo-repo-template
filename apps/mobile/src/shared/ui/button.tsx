@@ -5,16 +5,21 @@ import {
 } from "heroui-native/button";
 import { type ThemeColor, useThemeColor } from "heroui-native/hooks";
 import { Spinner } from "heroui-native/spinner";
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useRef } from "react";
+import type {
+  LayoutChangeEvent,
+  PressableStateCallbackType,
+} from "react-native";
 
 type OmitButtonState<T> = T extends ButtonRootProps
-  ? Omit<T, "children" | "isDisabled">
+  ? Omit<T, "children" | "isDisabled" | "onLayout">
   : never;
 
 export type ButtonProps = OmitButtonState<ButtonRootProps> & {
   children: ReactNode;
   isDisabled?: boolean;
   isPending?: boolean;
+  onLayout?: (event: LayoutChangeEvent) => void;
   startContent?: ReactNode;
 };
 
@@ -40,12 +45,31 @@ export function Button({
   children,
   isDisabled = false,
   isPending = false,
+  onLayout,
   startContent,
+  style,
   variant = "primary",
   ...props
 }: ButtonProps) {
   const spinnerColor = useThemeColor(SPINNER_COLOR[variant]);
   const effectiveDisabled = isDisabled || isPending;
+  const idleWidth = useRef<number | undefined>(undefined);
+  const handleLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      if (!isPending) {
+        idleWidth.current = event.nativeEvent.layout.width;
+      }
+      onLayout?.(event);
+    },
+    [isPending, onLayout]
+  );
+  const pendingWidth = isPending ? idleWidth.current : undefined;
+  const widthStyle =
+    pendingWidth === undefined ? undefined : { width: pendingWidth };
+  const resolvedStyle =
+    typeof style === "function"
+      ? (state: PressableStateCallbackType) => [style(state), widthStyle]
+      : [style, widthStyle];
 
   return (
     <HeroButton
@@ -56,6 +80,8 @@ export function Button({
         disabled: effectiveDisabled,
       }}
       isDisabled={effectiveDisabled}
+      onLayout={handleLayout}
+      style={resolvedStyle}
       variant={variant}
     >
       {isPending ? (

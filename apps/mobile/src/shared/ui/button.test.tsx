@@ -1,5 +1,10 @@
 import { expect, jest, test } from "@jest/globals";
-import { screen, userEvent } from "@testing-library/react-native";
+import {
+  act,
+  fireEvent,
+  screen,
+  userEvent,
+} from "@testing-library/react-native";
 import { StyleSheet, View } from "react-native";
 
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
@@ -49,4 +54,21 @@ test("기본 너비를 정하지 않고 사용처가 준 너비를 따른다", a
   expect(
     StyleSheet.flatten(screen.getByRole("button").props.style)
   ).toMatchObject({ width: "100%" });
+});
+
+test("진행 중에는 작업을 시작하기 전의 실제 너비를 유지한다", async () => {
+  const view = await renderWithHeroUI(<Button>내용만큼</Button>);
+  const button = screen.getByRole("button");
+
+  await act(() => {
+    fireEvent(button, "layout", {
+      nativeEvent: { layout: { height: 48, width: 104, x: 0, y: 0 } },
+    });
+  });
+
+  await view.rerender(<Button isPending>내용만큼</Button>);
+
+  expect(
+    StyleSheet.flatten(screen.getByRole("button").props.style)
+  ).toMatchObject({ width: 104 });
 });
