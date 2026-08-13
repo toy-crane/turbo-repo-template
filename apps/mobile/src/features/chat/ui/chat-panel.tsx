@@ -325,6 +325,12 @@ export function ChatPanel({
   const { beginEdit, isBusy, regenerateAnswer } = chat;
   const isEditing = chat.editingMessageId !== undefined;
   const messageCount = chat.messages.length;
+  // The list redraws a row when the messages change or when this does, and a
+  // fresh `renderItem` alone does not reach it. Everything a row reads beyond
+  // its own message belongs here: without it the icon row never appears, since
+  // the last answer arrives while the request is still open and nothing
+  // changes in the list when it closes.
+  const rowState = `${isBusy}|${isEditing}|${doomedFromIndex}`;
   const renderMessage = useCallback(
     ({ index, item }: LegendListRenderItemProps<UIMessage>) => (
       <PlainTextMessage
@@ -367,6 +373,7 @@ export function ChatPanel({
         contentInsetAdjustmentBehavior="never"
         contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={chat.messages}
+        extraData={rowState}
         freeze={freeze}
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         keyboardLiftBehavior="whenAtEnd"

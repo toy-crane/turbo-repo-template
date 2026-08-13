@@ -446,6 +446,46 @@ describe("ChatPanel", () => {
     expect(screen.getAllByLabelText(chatLabels.copyAnswer)).toHaveLength(1);
   });
 
+  // The list keeps its rows until `data` or `extraData` changes; handing it a
+  // new renderItem does not reach them. The last answer arrives while the
+  // request is still open, so nothing about the messages changes when it
+  // closes and only this tells the rows to pick up their icon row.
+  test("답변이 끝나면 목록에 메시지를 다시 그리라고 알린다", async () => {
+    const messages = [
+      textMessage("user-1", "user", "질문"),
+      textMessage("assistant-1", "assistant", "답변"),
+    ];
+    const { rerender } = await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ isBusy: true, messages })} />
+    );
+    const whileBusy = screen.getByTestId("chat-list").props.extraData;
+
+    await rerender(
+      <ChatPanel chat={chatSession({ isBusy: false, messages })} />
+    );
+
+    expect(screen.getByTestId("chat-list").props.extraData).not.toBe(whileBusy);
+  });
+
+  test("수정을 시작해도 목록에 메시지를 다시 그리라고 알린다", async () => {
+    const messages = [
+      textMessage("user-1", "user", "질문"),
+      textMessage("assistant-1", "assistant", "답변"),
+    ];
+    const { rerender } = await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ messages })} />
+    );
+    const beforeEdit = screen.getByTestId("chat-list").props.extraData;
+
+    await rerender(
+      <ChatPanel chat={chatSession({ editingMessageId: "user-1", messages })} />
+    );
+
+    expect(screen.getByTestId("chat-list").props.extraData).not.toBe(
+      beforeEdit
+    );
+  });
+
   test("답변 복사는 그 답변의 본문 전체를 클립보드에 넣는다", async () => {
     const user = userEvent.setup();
     await renderWithHeroUI(
