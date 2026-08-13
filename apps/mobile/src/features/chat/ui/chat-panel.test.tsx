@@ -480,7 +480,7 @@ describe("ChatPanel", () => {
     expect(mockScrollToEnd).not.toHaveBeenCalled();
   });
 
-  test("보낸 질문의 메시지 위치만 다음 답변의 위쪽 기준으로 고정한다", async () => {
+  test("두 번째 질문은 투명한 헤더 아래 24px 위치에 고정한다", async () => {
     const user = userEvent.setup();
     const messages = [
       textMessage("user-1", "user", "이전 질문"),
@@ -489,6 +489,7 @@ describe("ChatPanel", () => {
     await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({ draft: "새 질문", messages, send: jest.fn() })}
+        topInset={116}
       />
     );
 
@@ -496,7 +497,7 @@ describe("ChatPanel", () => {
 
     expect(screen.getByTestId("chat-list").props.anchoredEndSpace).toEqual({
       anchorIndex: 2,
-      anchorOffset: 24,
+      anchorOffset: 140,
     });
   });
 

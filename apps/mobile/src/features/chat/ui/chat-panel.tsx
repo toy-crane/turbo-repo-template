@@ -230,7 +230,10 @@ export function ChatPanel({
         anchoredEndSpace={
           anchorIndex === undefined || anchorIndex === 0
             ? undefined
-            : { anchorIndex, anchorOffset: MESSAGE_TOP_SPACING }
+            : {
+                anchorIndex,
+                anchorOffset: topInset + MESSAGE_TOP_SPACING,
+              }
         }
         contentContainerStyle={{
           paddingHorizontal: 20,
