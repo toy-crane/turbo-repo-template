@@ -321,6 +321,33 @@ describe("ChatPanel", () => {
     expect(screen.getByLabelText("최신 메시지로 이동")).toBeOnTheScreen();
   });
 
+  test("목록 위쪽의 음수 오프셋은 이전 메시지 이동으로 보지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+    const list = screen.getByTestId("chat-list");
+
+    await act(() => {
+      list.props.onScrollBeginDrag({
+        nativeEvent: { contentOffset: { y: 0 } },
+      });
+      list.props.onScroll({
+        nativeEvent: {
+          contentInset: { bottom: 0 },
+          contentOffset: { y: -120 },
+          contentSize: { height: 800 },
+          layoutMeasurement: { height: 400 },
+        },
+      });
+    });
+
+    expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
+  });
+
   test("최신 메시지 버튼은 입력창 밖의 투명한 오버레이에 띄운다", async () => {
     await renderWithHeroUI(
       <ChatPanel

@@ -160,6 +160,10 @@ export function ChatPanel({
 
       const { contentInset, contentOffset, contentSize, layoutMeasurement } =
         event.nativeEvent;
+      if (contentOffset.y < 0) {
+        return;
+      }
+
       const distanceFromEnd =
         contentSize.height +
         (contentInset?.bottom ?? 0) -
