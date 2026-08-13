@@ -349,6 +349,13 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 | `저장` | 프로필 수정 화면 도구막대 |
 | `메시지` | 대화 화면 입력 |
 | `보내기` | 대화 화면 전송 버튼 |
+| `답변 그만 받기` | 답변을 받는 동안의 전송 버튼 자리 |
+| `답변 복사` | AI 답변 아래 아이콘 줄 |
+| `답변 다시 받기` | AI 답변 아래 아이콘 줄 |
+| `복사` | 메시지를 길게 눌러 여는 메뉴 항목 |
+| `수정` | 메시지를 길게 눌러 여는 메뉴 항목 |
+| `수정 그만두기` | 수정 상태의 그만두기 버튼 |
+| `다시 시도하기` | 요청이 실패했을 때 오류 문구 옆 버튼 |
 | `최신 메시지로 이동` | 이전 메시지를 읽을 때 입력창 위에 나타나는 버튼 |
 | `새 대화` | Home 헤더의 새 대화 버튼 |
 | `뒤로 가기` | 대화 화면 헤더의 뒤로 가기 버튼 |
@@ -372,6 +379,9 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 - 입력과 전송: `chat-input`, `chat-send`, `chat-latest`
 - 목록과 오류: `chat-list`, `chat-error`
 - 메시지: `chat-message-user`, `chat-message-assistant`
+- 답변 아래 아이콘 줄: `chat-message-actions`
+- 답변을 기다리는 동안: `chat-waiting`
+- 수정 상태: `chat-edit-notice`
 
 메시지 `testID`는 말풍선이 아니라 일반 텍스트 본문에 붙어 있습니다.
 대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 새 대화를 열어 한 건만 보냅니다.

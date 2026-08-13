@@ -2,12 +2,22 @@ import { type ThemeColor, useThemeColor } from "heroui-native/hooks";
 import ArrowDown from "lucide-react-native/icons/arrow-down";
 import ArrowUp from "lucide-react-native/icons/arrow-up";
 import Bookmark from "lucide-react-native/icons/bookmark";
+import Copy from "lucide-react-native/icons/copy";
+import Pencil from "lucide-react-native/icons/pencil";
+import RefreshCw from "lucide-react-native/icons/refresh-cw";
+import Square from "lucide-react-native/icons/square";
+import X from "lucide-react-native/icons/x";
 import { View } from "react-native";
 
 const icons = {
   bookmark: Bookmark,
+  close: X,
+  copy: Copy,
+  edit: Pencil,
   latest: ArrowDown,
+  regenerate: RefreshCw,
   send: ArrowUp,
+  stop: Square,
 } as const;
 
 const iconSizes = {
@@ -28,6 +38,8 @@ export type IconSize = keyof typeof iconSizes;
 export type IconTone = keyof typeof iconTones;
 
 export interface IconProps {
+  /** Paints the shape solid instead of drawing its outline. */
+  filled?: boolean;
   name: IconName;
   size?: IconSize;
   testID?: string;
@@ -35,6 +47,7 @@ export interface IconProps {
 }
 
 export function Icon({
+  filled = false,
   name,
   size = "md",
   testID,
@@ -56,6 +69,10 @@ export function Icon({
         color={color}
         size={pixelSize}
         strokeWidth={2}
+        // Spread rather than `fill={filled ? color : undefined}`: Lucide passes
+        // whatever it receives down to the shape, and an explicit `undefined`
+        // would replace the "none" that leaves every other icon an outline.
+        {...(filled ? { fill: color } : {})}
       />
     </View>
   );
