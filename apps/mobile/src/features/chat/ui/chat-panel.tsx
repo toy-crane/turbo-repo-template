@@ -89,14 +89,17 @@ function renderMessage({ item }: LegendListRenderItemProps<UIMessage>) {
 
 export function ChatPanel({
   chat,
+  shouldFocusInput = false,
   topInset = 0,
 }: {
   chat: ChatSession;
+  shouldFocusInput?: boolean;
   topInset?: number;
 }) {
   const insets = useSafeAreaInsets();
   const listRef = useRef<LegendListRef | null>(null);
   const composerRef = useRef<View | null>(null);
+  const inputRef = useRef<TextInput | null>(null);
   const [anchorIndex, setAnchorIndex] = useState<number | undefined>();
   const [isFollowingLatest, setIsFollowingLatest] = useState(true);
   const [isPositioningQuestion, setIsPositioningQuestion] = useState(false);
@@ -110,6 +113,15 @@ export function ChatPanel({
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze, scrollMessageToEnd } = useKeyboardScrollToEnd({ listRef });
+
+  // The screen decides when the arrival is over; the composer only owns which
+  // control takes the focus. Sending closes the keyboard again, and only a tap
+  // on the input reopens it.
+  useEffect(() => {
+    if (shouldFocusInput) {
+      inputRef.current?.focus();
+    }
+  }, [shouldFocusInput]);
 
   const announcedError = useRef<Error | undefined>(undefined);
 
@@ -327,17 +339,13 @@ export function ChatPanel({
           <View className="flex-row items-end gap-2">
             <TextInput
               accessibilityLabel={chatLabels.input}
-              // The conversation opens empty and the person pushed this screen
-              // to type, so focus at mount lets the keyboard rise with the
-              // push instead of a beat after it. Sending closes the keyboard
-              // again, and only a tap on the input reopens it.
-              autoFocus
               className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
               multiline
               onChangeText={chat.setDraft}
               onContentSizeChange={resizeInput}
               onSubmitEditing={send}
               placeholder="메시지를 입력하세요"
+              ref={inputRef}
               returnKeyType="send"
               style={{ height: inputHeight, maxHeight: INPUT_MAX_HEIGHT }}
               submitBehavior="submit"

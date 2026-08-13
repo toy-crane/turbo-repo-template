@@ -197,10 +197,14 @@ describe("ChatPanel", () => {
     expect(screen.queryByText("무엇을 도와드릴까요?")).not.toBeOnTheScreen();
   });
 
-  test("화면에 들어오면 입력창이 바로 포커스를 받는다", async () => {
-    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+  // Focusing at mount makes iOS carry the rising keyboard along with the push
+  // animation, so it enters from the right while the composer climbs from the
+  // bottom. The screen decides when to focus instead; see
+  // docs/specs/chat-entry-keyboard/spec.md.
+  test("입력창은 mount 시점에 스스로 포커스를 잡지 않는다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} shouldFocusInput />);
 
-    expect(screen.getByLabelText(chatLabels.input).props.autoFocus).toBe(true);
+    expect(screen.getByLabelText(chatLabels.input).props.autoFocus).toBeFalsy();
   });
 
   test("메시지는 투명한 헤더 아래에 12px 간격을 둔다", async () => {
