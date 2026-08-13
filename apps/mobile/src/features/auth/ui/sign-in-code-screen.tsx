@@ -1,4 +1,3 @@
-import { Button } from "heroui-native/button";
 import { InputOTP, REGEXP_ONLY_DIGITS } from "heroui-native/input-otp";
 import { Spinner } from "heroui-native/spinner";
 import type { ComponentRef } from "react";
@@ -12,6 +11,7 @@ import {
 } from "@/features/auth/state/email-code";
 import { useCodeVerify } from "@/features/auth/state/use-code-verify";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
+import { Button } from "@/shared/ui/button";
 import { AuthError, AuthScreen, AuthSubtitle } from "./auth-screen";
 import { signInLabels } from "./sign-in-labels";
 
@@ -62,10 +62,11 @@ export function SignInCodeScreen({ email }: { email: string }) {
           // carry it too; a fixed name would read the same for all 60 seconds.
           accessibilityLabel={formatResendLabel(form.secondsLeft)}
           isDisabled={form.isBusy || isWaiting}
+          isPending={form.pending === "resend"}
           onPress={form.resend}
           variant="tertiary"
         >
-          <Button.Label>{formatResendLabel(form.secondsLeft)}</Button.Label>
+          {formatResendLabel(form.secondsLeft)}
         </Button>
       }
       subtitle={<AuthSubtitle>{describeCodeSent(email)}</AuthSubtitle>}

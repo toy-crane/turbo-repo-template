@@ -1,4 +1,3 @@
-import { Button } from "heroui-native/button";
 import { InputGroup } from "heroui-native/input-group";
 import { Label } from "heroui-native/label";
 import { Spinner } from "heroui-native/spinner";
@@ -9,6 +8,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { useUsernameStep } from "@/features/auth/state/use-username-step";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
+import { Button } from "@/shared/ui/button";
 import { AuthError, AuthScreen } from "./auth-screen";
 import { onboardingLabels } from "./onboarding-labels";
 
@@ -33,15 +33,10 @@ export function UsernameScreen() {
         <Button
           accessibilityLabel={onboardingLabels.start}
           isDisabled={!form.canSubmit}
+          isPending={form.isSaving}
           onPress={form.submit}
         >
-          {/*
-            The label stays put while saving. Swapping it for "저장 중" would
-            move the one word the person is looking at, so the spinner carries
-            the progress instead.
-          */}
-          {form.isSaving ? <Spinner size="sm" /> : null}
-          <Button.Label>{onboardingLabels.start}</Button.Label>
+          {onboardingLabels.start}
         </Button>
       }
       title="아이디를 정해 주세요"

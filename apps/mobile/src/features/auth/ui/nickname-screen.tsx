@@ -1,4 +1,3 @@
-import { Button } from "heroui-native/button";
 import { Input } from "heroui-native/input";
 import { Label } from "heroui-native/label";
 import { TextField } from "heroui-native/text-field";
@@ -7,6 +6,7 @@ import { View } from "react-native";
 
 import { useNicknameStep } from "@/features/auth/state/use-nickname-step";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
+import { Button } from "@/shared/ui/button";
 import { AuthError, AuthScreen } from "./auth-screen";
 import { onboardingLabels } from "./onboarding-labels";
 
@@ -34,7 +34,7 @@ export function NicknameScreen({ onNext }: { onNext: () => void }) {
           isDisabled={!form.canContinue}
           onPress={form.submit}
         >
-          <Button.Label>{onboardingLabels.next}</Button.Label>
+          {onboardingLabels.next}
         </Button>
       }
       title="닉네임을 정해 주세요"

@@ -1,5 +1,6 @@
-import { Button } from "heroui-native/button";
 import { ScrollView, Text, View } from "react-native";
+
+import { Button } from "@/shared/ui/button";
 
 /**
  * What the app shows when the session is good but the profile could not be
@@ -30,7 +31,7 @@ export function ProfileUnavailableScreen({ onRetry }: { onRetry: () => void }) {
       </View>
 
       <Button accessibilityLabel="프로필 다시 불러오기" onPress={onRetry}>
-        <Button.Label>프로필 다시 불러오기</Button.Label>
+        프로필 다시 불러오기
       </Button>
     </ScrollView>
   );

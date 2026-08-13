@@ -1,12 +1,11 @@
-import { Button } from "heroui-native/button";
 import { Input } from "heroui-native/input";
-import { Spinner } from "heroui-native/spinner";
 import { TextField } from "heroui-native/text-field";
 import type { TextInput } from "react-native";
 import { View } from "react-native";
 
 import { useEmailRequest } from "@/features/auth/state/use-email-request";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
+import { Button } from "@/shared/ui/button";
 import { AuthError, AuthScreen } from "./auth-screen";
 import { signInLabels } from "./sign-in-labels";
 
@@ -31,10 +30,10 @@ export function SignInEmailScreen({
         <Button
           accessibilityLabel={signInLabels.submitEmail}
           isDisabled={form.isBusy || !form.isSendable}
+          isPending={form.isBusy}
           onPress={form.submit}
         >
-          {form.isBusy ? <Spinner size="sm" /> : null}
-          <Button.Label>{signInLabels.submitEmail}</Button.Label>
+          {signInLabels.submitEmail}
         </Button>
       }
       title="이메일 주소를 입력해 주세요"
