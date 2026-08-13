@@ -102,7 +102,12 @@ function CodeInputTarget({
             importantForAccessibility="no-hide-descendants"
             size="sm"
           />
-          <Text className="font-medium text-muted">
+          <Text
+            adjustsFontSizeToFit
+            className="flex-shrink text-center font-medium text-muted"
+            minimumFontScale={0.5}
+            numberOfLines={1}
+          >
             {signInLabels.verifying}
           </Text>
         </View>

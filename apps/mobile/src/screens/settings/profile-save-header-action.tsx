@@ -10,14 +10,15 @@ import {
 
 import { profileLabels } from "@/features/auth/ui/profile-labels";
 
-const ACTION_SIZE = 48;
+const ACTION_HEIGHT = 48;
+const ACTION_WIDTH = 56;
 const DISABLED_OPACITY = 0.35;
 const PRESSED_OPACITY = 0.6;
 const FRAME: ViewStyle = {
   alignItems: "center",
-  height: ACTION_SIZE,
+  height: ACTION_HEIGHT,
   justifyContent: "center",
-  width: ACTION_SIZE,
+  width: ACTION_WIDTH,
 };
 
 export function ProfileSaveHeaderAction({
@@ -70,7 +71,9 @@ export function ProfileSaveHeaderAction({
       style={pressableStyle}
     >
       <Text
+        adjustsFontSizeToFit
         maxFontSizeMultiplier={1.6}
+        minimumFontScale={0.9}
         numberOfLines={1}
         style={{ color: tintColor, fontSize: 16, fontWeight: "600" }}
       >

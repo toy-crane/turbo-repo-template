@@ -272,7 +272,18 @@ test("코드 확인이 1초를 넘기면 입력칸 자리에서 진행 상태를
     screen.getByRole("progressbar", { name: "코드를 확인하고 있어요" })
   ).toBeOnTheScreen();
   expect(screen.queryByLabelText("인증 코드")).not.toBeOnTheScreen();
-  expect(screen.getByText("코드를 확인하고 있어요")).toBeOnTheScreen();
+  expect(screen.getByText("코드를 확인하고 있어요")).toHaveProp(
+    "adjustsFontSizeToFit",
+    true
+  );
+  expect(screen.getByText("코드를 확인하고 있어요")).toHaveProp(
+    "minimumFontScale",
+    0.5
+  );
+  expect(screen.getByText("코드를 확인하고 있어요")).toHaveProp(
+    "numberOfLines",
+    1
+  );
 
   await act(async () => {
     release();
