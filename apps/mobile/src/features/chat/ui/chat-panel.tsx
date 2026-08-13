@@ -483,12 +483,21 @@ export function ChatPanel({
             {/*
               One place, two jobs. While an answer is arriving that place ends
               it; the rest of the time it sends what has been typed.
+
+              Both say whether they are disabled rather than leaving it out.
+              The two sit at the same place in the tree, so React keeps one
+              instance and only changes its props; on Android a `disabled` that
+              stops being passed is never cleared on the native view, and the
+              stop button inherits the send button's disabled state — it draws
+              normally and refuses every touch.
             */}
             {chat.isBusy ? (
               <Pressable
                 accessibilityLabel={chatLabels.stop}
                 accessibilityRole="button"
+                accessibilityState={{ disabled: false }}
                 className="h-11 w-11 items-center justify-center rounded-full bg-accent"
+                disabled={false}
                 onPress={stopAnswer}
                 testID="chat-send"
               >

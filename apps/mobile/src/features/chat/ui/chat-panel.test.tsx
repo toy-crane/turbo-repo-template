@@ -1014,6 +1014,24 @@ describe("ChatPanel", () => {
     expect(stop).toHaveBeenCalledTimes(1);
   });
 
+  // The two share a place in the tree, so React keeps one instance and only
+  // changes its props. On Android a `disabled` that stops being passed is
+  // never cleared, and the stop button inherits the send button's disabled
+  // state: it draws normally and refuses every touch.
+  test("중지는 전송의 비활성 상태를 물려받지 않는다", async () => {
+    const { rerender } = await renderWithHeroUI(
+      <ChatPanel chat={chatSession({ draft: "", isBusy: false })} />
+    );
+
+    expect(screen.getByLabelText(chatLabels.send)).toBeDisabled();
+
+    await rerender(<ChatPanel chat={chatSession({ isBusy: true })} />);
+
+    const stop = screen.getByLabelText(chatLabels.stop);
+    expect(stop).toBeEnabled();
+    expect(stop.props.accessibilityState).toMatchObject({ disabled: false });
+  });
+
   test("답변을 다 받으면 전송이 돌아온다", async () => {
     await renderWithHeroUI(
       <ChatPanel chat={chatSession({ draft: "질문", isBusy: false })} />
