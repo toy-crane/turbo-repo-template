@@ -39,7 +39,6 @@ const INPUT_MIN_HEIGHT = 48;
 const KEYBOARD_INPUT_GAP = 8;
 const LATEST_OVERLAY_HEIGHT = 60;
 const USER_SCROLL_THRESHOLD = 24;
-const LIST_END_THRESHOLD = 20;
 const MESSAGE_TOP_SPACING = 12;
 
 function textOfMessage(message: UIMessage): string {
@@ -158,19 +157,8 @@ export function ChatPanel({
         return;
       }
 
-      const { contentInset, contentOffset, contentSize, layoutMeasurement } =
-        event.nativeEvent;
+      const { contentOffset } = event.nativeEvent;
       if (contentOffset.y < 0) {
-        return;
-      }
-
-      const distanceFromEnd =
-        contentSize.height +
-        (contentInset?.bottom ?? 0) -
-        (contentOffset.y + layoutMeasurement.height);
-
-      if (distanceFromEnd <= LIST_END_THRESHOLD) {
-        setIsFollowingLatest(true);
         return;
       }
 
@@ -186,6 +174,11 @@ export function ChatPanel({
       () => undefined
     );
   }, [scrollMessageToEnd]);
+  const handleEndVisible = useCallback((visible: boolean) => {
+    if (visible) {
+      setIsFollowingLatest(true);
+    }
+  }, []);
   const resizeInput = useCallback(
     (
       event: NativeSyntheticEvent<{
@@ -293,6 +286,7 @@ export function ChatPanel({
         }
         maintainScrollAtEndThreshold={0.05}
         maintainVisibleContentPosition={{ data: false, size: true }}
+        onEndVisible={handleEndVisible}
         onMomentumScrollBegin={beginUserMomentum}
         onMomentumScrollEnd={endUserScroll}
         onScroll={updateScrollPosition}

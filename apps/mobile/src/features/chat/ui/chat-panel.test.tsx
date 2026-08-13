@@ -50,6 +50,7 @@ jest.mock("@legendapp/list/keyboard", () => {
     maintainScrollAtEnd?: unknown;
     maintainScrollAtEndThreshold?: unknown;
     maintainVisibleContentPosition?: unknown;
+    onEndVisible?: (visible: boolean) => void;
     recycleItems?: unknown;
     renderItem: (info: {
       data: UIMessage[];
@@ -404,20 +405,31 @@ describe("ChatPanel", () => {
     const list = screen.getByTestId("chat-list");
 
     await act(() => {
-      list.props.onScrollBeginDrag({
-        nativeEvent: { contentOffset: { y: 160 } },
-      });
-      list.props.onScroll({
-        nativeEvent: {
-          contentInset: { bottom: 0 },
-          contentOffset: { y: 400 },
-          contentSize: { height: 800 },
-          layoutMeasurement: { height: 400 },
-        },
-      });
+      list.props.onEndVisible(true);
     });
 
     expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
+  });
+
+  test("최신 메시지가 보이지 않는다는 신호만으로 자동 추적을 끄지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [textMessage("assistant-1", "assistant", "답변")],
+        })}
+      />
+    );
+    const list = screen.getByTestId("chat-list");
+
+    await act(() => {
+      list.props.onEndVisible(false);
+    });
+
+    expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
+    expect(list.props.maintainScrollAtEnd).toEqual({
+      animated: false,
+      on: { dataChange: true, itemLayout: true },
+    });
   });
 
   test("사용자가 시작한 관성 스크롤이 끝에 닿아도 자동 추적을 다시 켠다", async () => {
@@ -437,14 +449,7 @@ describe("ChatPanel", () => {
       });
       list.props.onScrollEndDrag({ nativeEvent: {} });
       list.props.onMomentumScrollBegin({ nativeEvent: {} });
-      list.props.onScroll({
-        nativeEvent: {
-          contentInset: { bottom: 0 },
-          contentOffset: { y: 400 },
-          contentSize: { height: 800 },
-          layoutMeasurement: { height: 400 },
-        },
-      });
+      list.props.onEndVisible(true);
     });
 
     expect(screen.queryByLabelText(chatLabels.latest)).not.toBeOnTheScreen();
