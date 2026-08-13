@@ -40,7 +40,7 @@ const KEYBOARD_INPUT_GAP = 8;
 const LATEST_OVERLAY_HEIGHT = 60;
 const USER_SCROLL_THRESHOLD = 24;
 const LIST_END_THRESHOLD = 20;
-const MESSAGE_TOP_SPACING = 24;
+const MESSAGE_TOP_SPACING = 8;
 
 function textOfMessage(message: UIMessage): string {
   return message.parts
