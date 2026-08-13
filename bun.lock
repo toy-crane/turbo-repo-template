@@ -35,6 +35,7 @@
         "@ai-sdk/react": "4.0.61",
         "@babel/runtime": "7.29.7",
         "@expo/ui": "~57.0.9",
+        "@legendapp/list": "3.3.5",
         "@noble/ciphers": "2.3.0",
         "@repo/supabase": "workspace:*",
         "@supabase/supabase-js": "2.112.2",
@@ -436,6 +437,8 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
+
+    "@legendapp/list": ["@legendapp/list@3.3.5", "", { "dependencies": { "use-sync-external-store": "^1.5.0" }, "peerDependencies": { "react": "*" } }, "sha512-XTsLYtpg41SVb5uLBYA+YcDSA3w0tgoPq/W8ZggQ2tx+3lrC/rf+ehTP9KYHea9oFaZIuePAgzACs5/auVMJlQ=="],
 
     "@limrun/api": ["@limrun/api@0.24.5", "", { "dependencies": { "eventsource-client": "^1.2.0", "https-proxy-agent": "7.0.6", "ignore": "^7.0.5", "proxy-from-env": "^2.1.0", "undici": "7.24.7", "ws": "^8.18.3" } }, "sha512-bgIs+KcP9xITj1v2gMe8wJrvqPakl1PlXtvxlO6Akci8ijU7V27RWQAq7JBaA89AzwUb5EvLc+nmAMMiKl/g1A=="],
 

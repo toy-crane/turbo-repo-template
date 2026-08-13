@@ -349,6 +349,7 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 | `저장` | 프로필 수정 화면 도구막대 |
 | `메시지` | 대화 화면 입력 |
 | `보내기` | 대화 화면 전송 버튼 |
+| `최신 메시지로 이동` | 이전 메시지를 읽을 때 입력창 위에 나타나는 버튼 |
 | `새 대화` | Home 헤더의 새 대화 버튼 |
 | `뒤로 가기` | 대화 화면 헤더의 뒤로 가기 버튼 |
 
@@ -368,7 +369,7 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 
 대화 화면의 요소에는 `testID`도 있습니다.
 
-- 입력과 전송: `chat-input`, `chat-send`
+- 입력과 전송: `chat-input`, `chat-send`, `chat-latest`
 - 목록과 오류: `chat-list`, `chat-error`
 - 메시지: `chat-message-user`, `chat-message-assistant`
 
