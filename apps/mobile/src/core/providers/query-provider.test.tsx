@@ -3,7 +3,7 @@ import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
 
-import { QueryProvider } from "./query-provider";
+import { QueryProvider, queryClient } from "./query-provider";
 
 function QueryClientProbe({
   onClient,
@@ -27,6 +27,10 @@ async function mountProbe(onClient: (client: QueryClient) => void) {
 }
 
 describe("QueryProvider", () => {
+  test("일반 쿼리는 1분 동안 최신 상태를 유지한다", () => {
+    expect(queryClient.getDefaultOptions().queries?.staleTime).toBe(60_000);
+  });
+
   test("자식 트리에 query client를 제공한다", async () => {
     let client: QueryClient | undefined;
 
