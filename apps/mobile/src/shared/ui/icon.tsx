@@ -2,7 +2,9 @@ import { type ThemeColor, useThemeColor } from "heroui-native/hooks";
 import ArrowDown from "lucide-react-native/icons/arrow-down";
 import ArrowUp from "lucide-react-native/icons/arrow-up";
 import Bookmark from "lucide-react-native/icons/bookmark";
+import ChevronRight from "lucide-react-native/icons/chevron-right";
 import Copy from "lucide-react-native/icons/copy";
+import MessagesSquare from "lucide-react-native/icons/messages-square";
 import Pencil from "lucide-react-native/icons/pencil";
 import RefreshCw from "lucide-react-native/icons/refresh-cw";
 import Square from "lucide-react-native/icons/square";
@@ -14,9 +16,11 @@ const icons = {
   close: X,
   copy: Copy,
   edit: Pencil,
+  forward: ChevronRight,
   latest: ArrowDown,
   regenerate: RefreshCw,
   send: ArrowUp,
+  sideChat: MessagesSquare,
   stop: Square,
 } as const;
 

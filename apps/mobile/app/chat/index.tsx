@@ -1,4 +1,5 @@
 import { router, Stack } from "expo-router";
+import { useCallback } from "react";
 import { Platform } from "react-native";
 
 import { useAppTheme } from "@/core/theme/app-theme-bridge";
@@ -12,6 +13,9 @@ function goBack() {
 
 export default function ChatRoute() {
   const { background } = useAppTheme();
+  const openSideChat = useCallback((id: string) => {
+    router.push({ params: { id }, pathname: "/chat/side" });
+  }, []);
 
   return (
     <>
@@ -34,7 +38,7 @@ export default function ChatRoute() {
               }),
         }}
       />
-      <ChatScreen />
+      <ChatScreen onOpenSideChat={openSideChat} />
       {/*
         The toolbar replaces the stack's own back button, so this one carries
         the name a screen reader reads.

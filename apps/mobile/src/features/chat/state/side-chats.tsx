@@ -24,6 +24,12 @@ export interface SideChat {
   /** True once the first question has gone. Until then nothing counts it. */
   hasAsked: boolean;
   id: string;
+  /**
+   * The newest thing said in it, as it was written. It is what tells two side
+   * chats from similar phrases apart in the list that reopens them, so it is
+   * kept up to date whether or not the sheet showing it is open.
+   */
+  lastText: string;
   /** The words that were selected, shown read-only as the side chat's source. */
   phrase: string;
   /**
@@ -47,6 +53,8 @@ interface SideChatsValue {
   dropChatsWithoutSource: (parentMessages: UIMessage[]) => void;
   /** Counts this side chat from now on: its first question has gone. */
   markAsked: (id: string) => void;
+  /** Takes down the newest thing said, for the list that reopens it. */
+  rememberLastText: (id: string, messages: UIMessage[]) => void;
   /** Opens a side chat for a selected phrase and answers with its id. */
   startSideChat: (input: {
     phrase: string;
@@ -79,8 +87,32 @@ const NO_SIDE_CHATS: SideChatsValue = {
   discardUnasked: () => undefined,
   dropChatsWithoutSource: () => undefined,
   markAsked: () => undefined,
+  rememberLastText: () => undefined,
   startSideChat: () => "",
 };
+
+/**
+ * The newest message that actually says something.
+ *
+ * An answer just starting is an empty message, and the list that reopens a
+ * side chat would read as blank until the first character landed. What was
+ * said before it is the truer answer to "how far has this one gone".
+ */
+function lastSpokenText(messages: UIMessage[]): string {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const text = messages[index].parts
+      .filter((part) => part.type === "text")
+      .map((part) => part.text)
+      .join("")
+      .trim();
+
+    if (text) {
+      return text;
+    }
+  }
+
+  return "";
+}
 
 /**
  * The list and its actions. It changes when a side chat opens, asks or goes,
@@ -149,6 +181,20 @@ export function SideChatsProvider({
     [stashedDrafts]
   );
 
+  const rememberLastText = useCallback((id: string, messages: UIMessage[]) => {
+    const lastText = lastSpokenText(messages);
+
+    setChats((current) =>
+      current.some(
+        (sideChat) => sideChat.id === id && sideChat.lastText !== lastText
+      )
+        ? current.map((sideChat) =>
+            sideChat.id === id ? { ...sideChat, lastText } : sideChat
+          )
+        : current
+    );
+  }, []);
+
   const startSideChat = useCallback<SideChatsValue["startSideChat"]>(
     ({ phrase, snapshot, sourceMessageId }) => {
       nextId.current += 1;
@@ -156,6 +202,9 @@ export function SideChatsProvider({
       const sideChat: SideChat = {
         chat: new Chat<UIMessage>({
           id,
+          // The sheet is not there to notice an answer that lands while it is
+          // closed, so the chat itself reports the finished answer back.
+          onFinish: ({ messages }) => rememberLastText(id, messages),
           transport: createSideChatTransport(
             () => currentToken.current,
             snapshot
@@ -163,6 +212,7 @@ export function SideChatsProvider({
         }),
         hasAsked: false,
         id,
+        lastText: "",
         phrase,
         snapshot,
         sourceMessageId,
@@ -172,7 +222,7 @@ export function SideChatsProvider({
 
       return id;
     },
-    []
+    [rememberLastText]
   );
 
   const markAsked = useCallback((id: string) => {
@@ -249,9 +299,17 @@ export function SideChatsProvider({
       discardUnasked,
       dropChatsWithoutSource,
       markAsked,
+      rememberLastText,
       startSideChat,
     }),
-    [chats, discardUnasked, dropChatsWithoutSource, markAsked, startSideChat]
+    [
+      chats,
+      discardUnasked,
+      dropChatsWithoutSource,
+      markAsked,
+      rememberLastText,
+      startSideChat,
+    ]
   );
   const drafts = useMemo<SideChatDraftsValue>(
     () => ({ setDraft, setEditingMessageId, stashedDrafts, states }),
