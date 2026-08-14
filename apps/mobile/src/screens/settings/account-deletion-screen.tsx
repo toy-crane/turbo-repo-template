@@ -117,7 +117,6 @@ export function AccountDeletionScreen({
                 : accountDeletionLabels.deleteAccount
             }
             onPress={confirmDeletion}
-            style={{ backgroundColor: danger }}
             testID="delete-account-button"
           />
           {failure ? (
