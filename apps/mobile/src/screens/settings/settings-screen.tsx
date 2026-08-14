@@ -13,6 +13,7 @@ import Constants from "expo-constants";
 import { useState } from "react";
 import { Platform } from "react-native";
 
+import { accountDeletionLabels } from "@/features/account-deletion/ui/account-deletion-labels";
 import {
   readProfileAvatarUrl,
   useProfile,
@@ -37,11 +38,13 @@ export function SettingsScreen({
   danger,
   foreground,
   muted,
+  onDeleteAccount,
   onEditProfile,
 }: {
   danger: string;
   foreground: string;
   muted: string;
+  onDeleteAccount: () => void;
   onEditProfile: () => void;
 }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -109,12 +112,25 @@ export function SettingsScreen({
             </Text>
           </ListItem>
           {/*
-            Red because signing out ends something. It is the only row here that
-            does, and no chevron: it acts rather than navigates.
+            Red because signing out ends something. It has no chevron because it
+            acts immediately rather than opening another screen.
           */}
           <ListItem onPress={requestSignOut} testID="sign-out-button">
             <Text textStyle={{ color: danger }}>
               {isSigningOut ? profileLabels.signingOut : profileLabels.signOut}
+            </Text>
+          </ListItem>
+          <ListItem
+            onPress={onDeleteAccount}
+            testID="delete-account-row"
+            trailing={
+              Platform.OS === "ios" ? (
+                <Icon color={muted} name="chevron.right" size={CHEVRON_SIZE} />
+              ) : undefined
+            }
+          >
+            <Text textStyle={{ color: danger }}>
+              {accountDeletionLabels.deleteAccount}
             </Text>
           </ListItem>
           {signOutFailure ? (

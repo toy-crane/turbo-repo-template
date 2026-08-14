@@ -12,6 +12,10 @@ function openProfileEdit() {
   router.push("/settings/profile");
 }
 
+function openAccountDeletion() {
+  router.push("/settings/delete-account");
+}
+
 function SettingsToolbar() {
   if (Platform.OS === "ios") {
     return (
@@ -46,6 +50,7 @@ export default function SettingsRoute() {
         danger={danger}
         foreground={foreground}
         muted={muted}
+        onDeleteAccount={openAccountDeletion}
         onEditProfile={openProfileEdit}
       />
       <SettingsToolbar />

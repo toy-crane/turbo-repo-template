@@ -342,6 +342,12 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
     }),
   };
 
+  const functions = {
+    invoke: jest.fn((_name: string) =>
+      Promise.resolve({ data: { deleted: true }, error: null })
+    ),
+  };
+
   const statusOf = (candidate: string) => {
     if (RESERVED_USERNAMES.has(candidate)) {
       return "reserved";
@@ -374,7 +380,7 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
 
   return {
     auth,
-    client: { auth, from, rpc, storage } as never,
+    client: { auth, from, functions, rpc, storage } as never,
     emit,
     /** Makes the next save fail, for the id somebody took a moment earlier. */
     failNextSave: (error: Error) => {
@@ -385,6 +391,7 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
       nextUploadError = error;
     },
     from,
+    functions,
     /**
      * Holds the next save in flight and answers with the release.
      *

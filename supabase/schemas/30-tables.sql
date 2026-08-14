@@ -21,6 +21,10 @@ create table public.profiles (
   -- deleted photo deleted: without it, `avatar_url` is null again and the next
   -- sign-in would helpfully put the provider's picture straight back.
   avatar_chosen_by_user boolean not null default false,
+  -- Set before account deletion starts. Avatar Storage policies lock this row
+  -- while checking the value, which lets the delete path wait for older writes
+  -- and refuse every new write before it begins removing objects.
+  account_deletion_started_at timestamptz,
   -- Both are written by the username trigger, never by a client. `username_changed_at`
   -- is history; `username_locked_until` is the answer the edit screen shows, so the
   -- server decides the instant and the screen only formats it in the local date.
@@ -75,6 +79,9 @@ comment on column public.profiles.avatar_path is
 
 comment on column public.profiles.avatar_chosen_by_user is
   'True once the person picked or deleted a picture. Blocks providers from filling avatar_url again.';
+
+comment on column public.profiles.account_deletion_started_at is
+  'Write fence set before account deletion removes avatar objects. Clients cannot change it.';
 
 comment on column public.profiles.username_changed_at is
   'When the account id last changed. Null while the person still holds the id they chose at onboarding.';

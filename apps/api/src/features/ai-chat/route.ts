@@ -50,7 +50,17 @@ export function createAiChatRoutes(dependencies: AiChatDependencies = {}) {
       env: { secretKeys: { default: "unused-ai-chat-never-calls-admin" } },
     });
 
-  return new Hono().post("/", requireUser, async (c) => {
+  const requireCurrentUser: MiddlewareHandler = async (c, next) => {
+    const { data, error } = await c.var.supabaseContext.supabase.auth.getUser();
+
+    if (error || !data.user) {
+      return c.json({ error: "Unauthorized." }, 401);
+    }
+
+    await next();
+  };
+
+  return new Hono().post("/", requireUser, requireCurrentUser, async (c) => {
     const body: unknown = await c.req.json().catch(() => null);
     const messages = await safeValidateUIMessages({
       messages: (body as { messages?: unknown } | null)?.messages,

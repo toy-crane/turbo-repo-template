@@ -1,6 +1,7 @@
 import { describe, expect, test } from "@jest/globals";
 
 import {
+  getAccountDeletionRouteOptions,
   getProfileEditRouteOptions,
   getSettingsRouteOptions,
   getSettingsSheetOptions,
@@ -40,5 +41,9 @@ describe("시트 안쪽 화면", () => {
   // the profile behind it stays in place.
   test("프로필 수정은 push한 화면의 제목을 쓴다", () => {
     expect(getProfileEditRouteOptions()).toEqual({ title: "프로필 수정" });
+  });
+
+  test("계정 탈퇴 안내는 push한 화면의 제목을 쓴다", () => {
+    expect(getAccountDeletionRouteOptions()).toEqual({ title: "계정 탈퇴" });
   });
 });

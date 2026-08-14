@@ -3,6 +3,7 @@
 - [AI 채팅 프로토콜](ai-chat-protocol.md) — AI 요청 경로, 스트리밍 응답 형식, 모바일 채팅 상태 또는 AI SDK UI message 사용 방식을 변경할 때 읽는다.
 - [AI 모델 라우팅](ai-model-routing.md) — AI Gateway, 모델 제공자, 모델 식별자 또는 provider fallback 방식을 변경할 때 읽는다.
 - [AI 서버 경계](ai-server-boundary.md) — AI API의 런타임, 배포 위치, 호출 주체 또는 인증 요구를 변경할 때 읽는다.
+- [계정 탈퇴 서버 경계](account-deletion-server-boundary.md) — 계정 탈퇴의 사용자 인증, 관리자 권한, 서버 런타임 또는 secret key 범위를 변경할 때 읽는다.
 - [CI 코드 리뷰](ci-code-review.md) — CI에서 PR 자동 코드 리뷰를 켜거나, 리뷰 도구와 권한을 손대려 할 때 읽는다.
 - [검토 에이전트 실행 경계](reviewer-agent-execution-boundaries.md) — Claude Code와 Codex의 전용 검토 agent, 공용 검토 계약, 읽기 전용 권한 또는 실행 맥락을 추가하거나 바꿀 때 읽는다.
 - [디자인 시스템 생성 작업 흐름](design-system-generation-workflow.md) — 참고 자료에서 테마 후보를 만들거나 미리보기, 승인, 적용 범위를 변경할 때 읽는다.
