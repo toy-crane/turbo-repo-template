@@ -71,7 +71,7 @@ export function WaitingAnswer() {
         The words again, invisible. The mask paints no space of its own, so
         this copy is what gives the row the height and width of the line.
       */}
-      <View style={{ backgroundColor: mutedColor }}>
+      <View className="bg-muted">
         <Text className="text-base leading-6 opacity-0">
           {chatLabels.waiting}
         </Text>

@@ -6,7 +6,7 @@ import { chatLabels } from "./chat-labels";
 
 const BUTTON_SIZE = 44;
 
-const circle = {
+const glassCircle = {
   alignItems: "center",
   borderRadius: BUTTON_SIZE / 2,
   height: BUTTON_SIZE,
@@ -31,11 +31,11 @@ export function LatestMessageButton({ onPress }: { onPress: () => void }) {
       testID="chat-latest"
     >
       {isLiquidGlassAvailable() ? (
-        <GlassView glassEffectStyle="regular" isInteractive style={circle}>
+        <GlassView glassEffectStyle="regular" isInteractive style={glassCircle}>
           <Icon name="latest" size="lg" />
         </GlassView>
       ) : (
-        <View className="bg-surface" style={circle}>
+        <View className="h-11 w-11 items-center justify-center rounded-full bg-surface">
           <Icon name="latest" size="lg" />
         </View>
       )}

@@ -6,13 +6,12 @@ import {
 } from "heroui-native/button";
 import { type ThemeColor, useThemeColor } from "heroui-native/hooks";
 import { Spinner } from "heroui-native/spinner";
+import { cn } from "heroui-native/utils";
 import { type ReactNode, useCallback, useRef } from "react";
 import {
   type LayoutChangeEvent,
   type PressableStateCallbackType,
-  type TextStyle,
   View,
-  type ViewStyle,
 } from "react-native";
 
 type OmitButtonState<T> = T extends ButtonRootProps
@@ -37,50 +36,38 @@ const SPINNER_COLOR: Record<ButtonVariant, ThemeColor> = {
   tertiary: "default-foreground",
 };
 
-const DYNAMIC_TYPE_LAYOUT: Record<ButtonSize, ViewStyle> = {
+const DYNAMIC_TYPE_CLASS_NAME: Record<
+  ButtonSize,
+  { idle: string; pending: string }
+> = {
   lg: {
-    height: "auto",
-    minHeight: 56,
-    paddingHorizontal: 36,
-    paddingVertical: 14,
-    position: "relative",
+    idle: "relative h-auto! min-h-14 px-9! py-3.5",
+    pending: "relative min-h-14 px-9! py-3.5",
   },
   md: {
-    height: "auto",
-    minHeight: 48,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    position: "relative",
+    idle: "relative h-auto! min-h-12 px-8! py-3",
+    pending: "relative min-h-12 px-8! py-3",
   },
   sm: {
-    height: "auto",
-    minHeight: 40,
-    paddingHorizontal: 30,
-    paddingVertical: 10,
-    position: "relative",
+    idle: "relative h-auto! min-h-10 px-[30px]! py-2.5",
+    pending: "relative min-h-10 px-[30px]! py-2.5",
   },
 };
 
-const LEADING_GAP: Record<ButtonSize, number> = { lg: 10, md: 8, sm: 6 };
-const LEADING_SLOT: ViewStyle = {
-  height: 16,
-  position: "absolute",
-  right: "100%",
-  top: "50%",
-  width: 16,
+const LEADING_SLOT_CLASS_NAME: Record<ButtonSize, string> = {
+  lg: "absolute right-full top-1/2 size-4 -translate-x-2.5 -translate-y-2",
+  md: "absolute right-full top-1/2 size-4 -translate-x-2 -translate-y-2",
+  sm: "absolute right-full top-1/2 size-4 -translate-x-1.5 -translate-y-2",
 };
 
-const LABEL_GROUP: ViewStyle = {
-  alignItems: "center",
-  flexShrink: 1,
-  justifyContent: "center",
-  position: "relative",
-};
-
-const LABEL_LAYOUT: TextStyle = {
-  flexShrink: 1,
-  textAlign: "center",
-};
+function getDynamicTypeClassName(
+  size: ButtonSize,
+  pendingSize: { height: number; width: number } | undefined
+) {
+  return pendingSize
+    ? DYNAMIC_TYPE_CLASS_NAME[size].pending
+    : DYNAMIC_TYPE_CLASS_NAME[size].idle;
+}
 
 /**
  * The app's general React Native button.
@@ -92,6 +79,7 @@ const LABEL_LAYOUT: TextStyle = {
 export function Button({
   accessibilityState,
   children,
+  className,
   isDisabled = false,
   isPending = false,
   onLayout,
@@ -118,14 +106,11 @@ export function Button({
     [isPending, onLayout]
   );
   const pendingSize = isPending ? idleSize.current : undefined;
+  const dynamicTypeClassName = getDynamicTypeClassName(size, pendingSize);
   const resolvedStyle =
     typeof style === "function"
-      ? (state: PressableStateCallbackType) => [
-          DYNAMIC_TYPE_LAYOUT[size],
-          style(state),
-          pendingSize,
-        ]
-      : [DYNAMIC_TYPE_LAYOUT[size], style, pendingSize];
+      ? (state: PressableStateCallbackType) => [style(state), pendingSize]
+      : [style, pendingSize];
 
   return (
     <HeroButton
@@ -135,26 +120,19 @@ export function Button({
         busy: isPending,
         disabled: effectiveDisabled,
       }}
+      className={cn(dynamicTypeClassName, className)}
       isDisabled={effectiveDisabled}
       onLayout={handleLayout}
       size={size}
       style={resolvedStyle}
       variant={variant}
     >
-      <View style={LABEL_GROUP}>
+      <View className="relative shrink items-center justify-center">
         <View
           accessibilityElementsHidden
+          className={LEADING_SLOT_CLASS_NAME[size]}
           importantForAccessibility="no-hide-descendants"
           pointerEvents="none"
-          style={[
-            LEADING_SLOT,
-            {
-              transform: [
-                { translateX: -LEADING_GAP[size] },
-                { translateY: -8 },
-              ],
-            },
-          ]}
           testID="button-leading-content"
         >
           {isPending ? (
@@ -169,7 +147,9 @@ export function Button({
             startContent
           )}
         </View>
-        <HeroButton.Label style={LABEL_LAYOUT}>{children}</HeroButton.Label>
+        <HeroButton.Label className="shrink text-center">
+          {children}
+        </HeroButton.Label>
       </View>
     </HeroButton>
   );

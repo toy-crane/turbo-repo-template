@@ -24,7 +24,7 @@ function ThemedRootLayout() {
   const { area, isRetryingProfile, problem, retryProfile } = useProtectedArea();
 
   if (area === "checking") {
-    return <SessionCheckingScreen background={background} />;
+    return <SessionCheckingScreen />;
   }
 
   if (area === "misconfigured") {
