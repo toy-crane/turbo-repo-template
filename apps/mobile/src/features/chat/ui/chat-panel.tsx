@@ -31,6 +31,7 @@ import Animated, {
   FadeInDown,
   FadeOutDown,
   ReduceMotion,
+  SlideInDown,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -39,6 +40,7 @@ import { Icon } from "@/shared/ui/icon";
 import { AssistantMessage } from "./assistant-message";
 import { chatLabels } from "./chat-labels";
 import { LatestMessageButton } from "./latest-message-button";
+import { useEnteringMessage } from "./use-entering-message";
 import { useLateAnswer } from "./use-late-answer";
 import { UserMessage } from "./user-message";
 import { WaitingAnswer } from "./waiting-answer";
@@ -68,6 +70,15 @@ const LATEST_ENTERING = FadeInDown.duration(240)
 const LATEST_EXITING = FadeOutDown.duration(160)
   .easing(Easing.in(Easing.cubic))
   .reduceMotion(ReduceMotion.System);
+/**
+ * The question the person just sent rises from below the screen into the place
+ * the list has already made for it. It sets off quickly and eases to a stop, so
+ * the message is readable well before it settles. The list's own placement is
+ * untouched: this is only how the row gets there.
+ */
+const MESSAGE_ENTERING = SlideInDown.duration(500)
+  .easing(Easing.out(Easing.exp))
+  .reduceMotion(ReduceMotion.System);
 
 function textOfMessage(message: UIMessage): string {
   return message.parts
@@ -88,23 +99,29 @@ function copyText(text: string) {
  *
  * `isPending` marks the answer still on its way: it carries no icon row, and
  * while it is arriving no message opens its menu either. `isDoomed` marks the
- * messages an edit in progress would drop.
+ * messages an edit in progress would drop. `isEntering` marks the one question
+ * that comes in from below, and the row reports back once it has, so the list
+ * rebuilding the row later leaves it where it is.
  */
 function PlainTextMessage({
   areActionsDisabled,
   canOpenMenu,
   isDoomed,
+  isEntering,
   isPending,
   message,
   onBeginEdit,
+  onEntered,
   onRegenerate,
 }: {
   areActionsDisabled: boolean;
   canOpenMenu: boolean;
   isDoomed: boolean;
+  isEntering: boolean;
   isPending: boolean;
   message: UIMessage;
   onBeginEdit: (messageId: string) => void;
+  onEntered: () => void;
   onRegenerate: (messageId: string) => void;
 }) {
   const text = textOfMessage(message);
@@ -117,14 +134,24 @@ function PlainTextMessage({
     () => onBeginEdit(message.id),
     [message.id, onBeginEdit]
   );
+  // The row keeps the answer it was built with. Reporting back below takes the
+  // entry away from every later row, and this row is already on its way in.
+  const [playsEntry] = useState(isEntering);
+
+  useEffect(() => {
+    if (isEntering) {
+      onEntered();
+    }
+  }, [isEntering, onEntered]);
 
   if (!text) {
     return null;
   }
 
   return (
-    <View
+    <Animated.View
       className="mb-4"
+      entering={playsEntry ? MESSAGE_ENTERING : undefined}
       style={{ opacity: isDoomed ? DOOMED_OPACITY : 1 }}
       testID="chat-message-row"
     >
@@ -144,7 +171,7 @@ function PlainTextMessage({
           text={text}
         />
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -190,6 +217,9 @@ export function ChatPanel({
     chat.isBusy &&
     (lastMessage?.role !== "assistant" || textOfMessage(lastMessage) === "");
   const isAnswerLate = useLateAnswer(isWaitingForAnswer);
+  const { enteringMessageId, markEntered, markSent } = useEnteringMessage(
+    chat.messages
+  );
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze, scrollMessageToEnd } = useKeyboardScrollToEnd({ listRef });
@@ -327,6 +357,7 @@ export function ChatPanel({
       pendingAnchorIndex.current = nextAnchorIndex;
       setIsPositioningQuestion(true);
     }
+    markSent();
     chat.send();
 
     if (isFirstQuestion) {
@@ -334,7 +365,7 @@ export function ChatPanel({
         KeyboardController.dismiss();
       });
     }
-  }, [canSend, chat, doomedFromIndex]);
+  }, [canSend, chat, doomedFromIndex, markSent]);
   const stopAnswer = useCallback(() => {
     chat.stop().catch(() => {
       // The answer stays where it stopped either way.
@@ -357,17 +388,21 @@ export function ChatPanel({
         areActionsDisabled={isEditing}
         canOpenMenu={!(isBusy || isEditing)}
         isDoomed={doomedFromIndex >= 0 && index >= doomedFromIndex}
+        isEntering={item.id === enteringMessageId}
         isPending={isBusy && index === messageCount - 1}
         message={item}
         onBeginEdit={beginEdit}
+        onEntered={markEntered}
         onRegenerate={regenerateAnswer}
       />
     ),
     [
       beginEdit,
       doomedFromIndex,
+      enteringMessageId,
       isBusy,
       isEditing,
+      markEntered,
       messageCount,
       regenerateAnswer,
     ]

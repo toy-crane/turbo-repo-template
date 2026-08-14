@@ -247,6 +247,44 @@ function EditableChat({ onSend }: { onSend: () => void }) {
 }
 
 /**
+ * A panel whose send actually puts the question in the conversation, which is
+ * what a message coming in from below depends on.
+ */
+function SendingChat({
+  editingMessageId,
+  messages: initialMessages = [],
+}: {
+  editingMessageId?: string;
+  messages?: UIMessage[];
+}) {
+  const [messages, setMessages] = useState(initialMessages);
+  const send = () =>
+    setMessages((current) => {
+      const kept = editingMessageId
+        ? current.slice(
+            0,
+            current.findIndex((message) => message.id === editingMessageId)
+          )
+        : current;
+
+      return [...kept, textMessage(`sent-${kept.length}`, "user", "새 질문")];
+    });
+
+  return (
+    <ChatPanel
+      chat={chatSession({ draft: "새 질문", editingMessageId, messages, send })}
+    />
+  );
+}
+
+/** Which rows carry an entry animation, in list order. */
+function enteringRows() {
+  return screen
+    .getAllByTestId("chat-message-row")
+    .map((row) => row.props.entering !== undefined);
+}
+
+/**
  * The long press asks the trigger to open through a ref rather than through
  * state React already knows about, so the flush has to be asked for.
  */
@@ -1119,6 +1157,80 @@ describe("ChatPanel", () => {
 
     expect(screen.getByLabelText(chatLabels.copyAnswer)).toBeDisabled();
     expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
+  });
+
+  test("이번에 보낸 질문만 아래에서 올라온다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <SendingChat
+        messages={[
+          textMessage("user-1", "user", "이전 질문"),
+          textMessage("assistant-1", "assistant", "이전 답변"),
+        ]}
+      />
+    );
+
+    expect(enteringRows()).toEqual([false, false]);
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    expect(enteringRows()).toEqual([false, false, true]);
+  });
+
+  test("과거 대화를 처음 보여 줄 때는 아무 메시지도 움직이지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
+        })}
+      />
+    );
+
+    expect(enteringRows()).toEqual([false, false]);
+  });
+
+  // An edited question is a new send, so it arrives the same way a fresh one
+  // does even though the conversation got shorter first.
+  test("수정해서 다시 보낸 질문도 아래에서 올라온다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <SendingChat
+        editingMessageId="user-2"
+        messages={[
+          textMessage("user-1", "user", "첫 질문"),
+          textMessage("assistant-1", "assistant", "첫 답변"),
+          textMessage("user-2", "user", "두 번째 질문"),
+          textMessage("assistant-2", "assistant", "두 번째 답변"),
+        ]}
+      />
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    expect(enteringRows()).toEqual([false, false, true]);
+  });
+
+  test("답변을 다시 받는 것은 질문을 움직이지 않는다", async () => {
+    const regenerateAnswer = jest.fn();
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
+          regenerateAnswer,
+        })}
+      />
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.regenerate));
+
+    expect(enteringRows()).toEqual([false, false]);
   });
 
   test("답변이 늦으면 그 자리에 대기 표시를 두고 첫 글자가 오면 없앤다", async () => {
