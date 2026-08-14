@@ -1,8 +1,3 @@
----
-name: mobile-ui-consistency-reviewer
-description: Review Expo mobile UI diffs for project-specific consistency across Uniwind styling, semantic colors, typography, renderer ownership, icons, Korean copy, interaction states, and accessibility. Use after implementing or before merging changes under apps/mobile that alter screens, shared UI, navigation shell, styles, icons, or visible copy. Perform a read-only review; do not use this skill to design or repair UI.
----
-
 # Mobile UI Consistency Reviewer
 
 Review changed mobile UI code against the repository's settled product and

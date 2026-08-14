@@ -1,8 +1,3 @@
----
-name: supabase-reviewer
-description: Review Supabase declarative schemas, generated migrations, RLS policies, grants, views, functions, seed data, database tests, and generated TypeScript database types for security, data-loss, correctness, and reproducibility risks. Use after generating a migration, before committing or deploying database changes, or when reviewing a branch, diff, or PR that touches Supabase database artifacts. Perform a read-only review; do not use this skill to implement or repair the changes.
----
-
 # Supabase Reviewer
 
 Review generated SQL as an untrusted draft. Prove that it expresses the declared
