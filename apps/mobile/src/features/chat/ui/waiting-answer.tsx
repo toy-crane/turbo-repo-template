@@ -109,6 +109,7 @@ export function WaitingAnswer() {
             },
             sweepStyle,
           ]}
+          testID="chat-waiting-sweep"
         >
           <LinearGradient
             colors={[mutedColor, foregroundColor, mutedColor]}

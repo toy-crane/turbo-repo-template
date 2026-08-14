@@ -380,7 +380,7 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 - 목록과 오류: `chat-list`, `chat-error`, `chat-retry`
 - 메시지: `chat-message-row`, `chat-message-user`, `chat-message-assistant`
 - 답변 아래 아이콘 줄: `chat-message-actions`
-- 답변을 기다리는 동안: `chat-waiting`
+- 답변을 기다리는 동안: `chat-waiting`, `chat-waiting-sweep`
 - 수정 상태: `chat-edit-notice`, `chat-edit-cancel`
 
 `chat-send`는 한 자리의 이름입니다.
