@@ -1,9 +1,13 @@
-import { describe, expect, test } from "@jest/globals";
+import { afterEach, describe, expect, test } from "@jest/globals";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
 
 import { QueryProvider, queryClient } from "./query-provider";
+
+afterEach(() => {
+  queryClient.clear();
+});
 
 function QueryClientProbe({
   onClient,

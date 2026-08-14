@@ -1,4 +1,4 @@
-import { beforeEach, expect, jest, test } from "@jest/globals";
+import { afterEach, beforeEach, expect, jest, test } from "@jest/globals";
 import {
   act,
   renderRouter,
@@ -6,6 +6,7 @@ import {
   waitFor,
 } from "expo-router/testing-library";
 
+import { queryClient } from "@/core/providers/query-provider";
 import {
   createFakeSession,
   resetFakeSupabase,
@@ -31,7 +32,13 @@ jest.mock("@/screens/home/home-screen", () => {
 });
 
 beforeEach(() => {
+  queryClient.clear();
   resetFakeSupabase();
+});
+
+afterEach(async () => {
+  await queryClient.cancelQueries();
+  queryClient.clear();
 });
 
 test("저장된 세션을 읽는 동안에는 로그인 화면도 앱 화면도 보여주지 않는다", async () => {
