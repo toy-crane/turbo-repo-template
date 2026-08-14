@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 import type {
   LinkPressEvent,
   MarkdownStyle,
+  TextContextMenuItem,
 } from "react-native-enriched-markdown";
 import { StreamdownText } from "react-native-streamdown";
 
@@ -47,11 +48,17 @@ const STREAMING_CONFIG = {
  *
  * The renderer ships light-mode colours and has no colour scheme of its own, so
  * every colour it draws comes from the app's semantic tokens here.
+ *
+ * `contextMenuItems` is what this app adds to the system's own text selection
+ * menu. The renderer owns the selection and the menu; the items it is given
+ * only say what else that selection can do.
  */
 export function MarkdownAnswer({
+  contextMenuItems,
   markdown,
   testID,
 }: {
+  contextMenuItems?: TextContextMenuItem[];
   markdown: string;
   testID?: string;
 }) {
@@ -138,6 +145,7 @@ export function MarkdownAnswer({
 
   return (
     <StreamdownText
+      contextMenuItems={contextMenuItems}
       flavor="github"
       markdown={markdown}
       markdownStyle={markdownStyle}

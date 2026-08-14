@@ -10,7 +10,14 @@ import type {
 } from "@legendapp/list/react-native";
 import type { UIMessage } from "ai";
 import { setStringAsync } from "expo-clipboard";
-import { type Ref, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type Ref,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   AccessibilityInfo,
   type LayoutChangeEvent,
@@ -41,6 +48,8 @@ import { AssistantMessage } from "./assistant-message";
 import { chatLabels } from "./chat-labels";
 import { ComposerSurface } from "./composer-surface";
 import { LatestMessageButton } from "./latest-message-button";
+import { SideChatCount, type SideChatEntry } from "./side-chat-count";
+import { SideChatSource } from "./side-chat-source";
 import { useEnteringMessage } from "./use-entering-message";
 import { useLateAnswer } from "./use-late-answer";
 import { UserMessage } from "./user-message";
@@ -48,11 +57,20 @@ import { WaitingAnswer } from "./waiting-answer";
 
 // biome-ignore lint/performance/noBarrelFile: screens and tests share these accessibility names
 export { chatLabels } from "./chat-labels";
+export type { SideChatEntry } from "./side-chat-count";
+
+/** What starting a side chat needs to know: the answer, and the words in it. */
+export interface AskInSideChat {
+  messageId: string;
+  phrase: string;
+}
 
 const INPUT_MAX_HEIGHT = 120;
 const INPUT_MIN_HEIGHT = 48;
 const KEYBOARD_INPUT_GAP = 8;
 const LATEST_OVERLAY_HEIGHT = 60;
+/** The row the side chat count takes when it stacks above the composer too. */
+const SIDE_COUNT_OVERLAY_HEIGHT = 44;
 const USER_SCROLL_THRESHOLD = 24;
 const MESSAGE_TOP_SPACING = 12;
 /** Enough to read the messages about to go, not enough to mistake them for staying. */
@@ -116,6 +134,7 @@ function PlainTextMessage({
   isEntering,
   isPending,
   message,
+  onAskInSideChat,
   onBeginEdit,
   onEntered,
   onRegenerate,
@@ -126,6 +145,7 @@ function PlainTextMessage({
   isEntering: boolean;
   isPending: boolean;
   message: UIMessage;
+  onAskInSideChat: ((input: AskInSideChat) => void) | undefined;
   onBeginEdit: (messageId: string) => void;
   onEntered: () => void;
   onRegenerate: (messageId: string) => void;
@@ -139,6 +159,24 @@ function PlainTextMessage({
   const edit = useCallback(
     () => onBeginEdit(message.id),
     [message.id, onBeginEdit]
+  );
+  // Added to the system's own selection menu rather than replacing it, so
+  // copy, look up and translate stay where they were. It is hidden — not
+  // removed — while an answer is arriving or a message is being rewritten,
+  // which is the same condition that closes the message menus.
+  const selectionMenuItems = useMemo(
+    () =>
+      onAskInSideChat
+        ? [
+            {
+              onPress: ({ text: phrase }: { text: string }) =>
+                onAskInSideChat({ messageId: message.id, phrase }),
+              text: chatLabels.askInSideChat,
+              visible: canOpenMenu,
+            },
+          ]
+        : undefined,
+    [canOpenMenu, message.id, onAskInSideChat]
   );
   // The row keeps the answer it was built with. Reporting back below takes the
   // entry away from every later row, and this row is already on its way in.
@@ -174,6 +212,7 @@ function PlainTextMessage({
           hasActions={!isPending}
           onCopy={copy}
           onRegenerate={regenerate}
+          selectionMenuItems={selectionMenuItems}
           text={text}
         />
       )}
@@ -185,9 +224,60 @@ function messageKey(message: UIMessage) {
   return message.id;
 }
 
+/**
+ * The ways back, stacked in one column just above the composer.
+ *
+ * The newest message and a side chat are both places a person left, and both
+ * are reached from the same spot however far back they have read. The count
+ * takes itself away when there is nothing to go back into.
+ */
+function ReturnControls({
+  isEditing,
+  isFollowingLatest,
+  onMoveToLatest,
+  onOpenSideChat,
+  sideChats,
+}: {
+  isEditing: boolean;
+  isFollowingLatest: boolean;
+  onMoveToLatest: () => void;
+  onOpenSideChat: ((id: string) => void) | undefined;
+  sideChats: SideChatEntry[] | undefined;
+}) {
+  return (
+    <View
+      className="h-full items-center justify-end gap-2 pb-2"
+      pointerEvents="box-none"
+    >
+      {isFollowingLatest ? null : (
+        <Animated.View
+          entering={LATEST_ENTERING}
+          exiting={LATEST_EXITING}
+          pointerEvents="box-none"
+        >
+          <LatestMessageButton onPress={onMoveToLatest} />
+        </Animated.View>
+      )}
+      {sideChats && onOpenSideChat ? (
+        <SideChatCount
+          chats={sideChats}
+          // Pressing it during an edit would leave the notice above a composer
+          // that is no longer the one it is about.
+          isDisabled={isEditing}
+          onOpen={onOpenSideChat}
+        />
+      ) : null}
+    </View>
+  );
+}
+
 export function ChatPanel({
   chat,
   inputRef,
+  onAskInSideChat,
+  onOpenSideChat,
+  sideChats,
+  source,
   topInset = 0,
 }: {
   chat: ChatSession;
@@ -196,6 +286,16 @@ export function ChatPanel({
    * caret. The panel only says which control that is.
    */
   inputRef?: Ref<TextInput>;
+  /**
+   * What selecting part of a finished answer offers. Left out inside a side
+   * chat, which is what keeps a side chat from starting another one.
+   */
+  onAskInSideChat?: (input: AskInSideChat) => void;
+  onOpenSideChat?: (id: string) => void;
+  /** The side chats to get back into, newest first. */
+  sideChats?: SideChatEntry[];
+  /** The read-only phrase a side chat started from. */
+  source?: string;
   topInset?: number;
 }) {
   const insets = useSafeAreaInsets();
@@ -211,6 +311,7 @@ export function ChatPanel({
   const userScrollStart = useRef<number | undefined>(undefined);
   const canSend = chat.draft.trim().length > 0 && !chat.isBusy;
   const composerBottomPadding = Math.max(insets.bottom, 12);
+  const hasSideChats = sideChats !== undefined && sideChats.length > 0;
   const lastMessage = chat.messages.at(-1);
   const doomedFromIndex = chat.editingMessageId
     ? chat.messages.findIndex((message) => message.id === chat.editingMessageId)
@@ -397,6 +498,7 @@ export function ChatPanel({
         isEntering={item.id === enteringMessageId}
         isPending={isBusy && index === messageCount - 1}
         message={item}
+        onAskInSideChat={onAskInSideChat}
         onBeginEdit={beginEdit}
         onEntered={markEntered}
         onRegenerate={regenerateAnswer}
@@ -410,6 +512,7 @@ export function ChatPanel({
       isEditing,
       markEntered,
       messageCount,
+      onAskInSideChat,
       regenerateAnswer,
     ]
   );
@@ -442,6 +545,9 @@ export function ChatPanel({
         keyboardShouldPersistTaps="handled"
         keyExtractor={messageKey}
         ListFooterComponent={isAnswerLate ? <WaitingAnswer /> : undefined}
+        ListHeaderComponent={
+          source === undefined ? undefined : <SideChatSource phrase={source} />
+        }
         maintainScrollAtEnd={
           isFollowingLatest && !isPositioningQuestion
             ? {
@@ -604,6 +710,10 @@ export function ChatPanel({
         animate inside. Only the button itself comes and goes, which is also
         what keeps it out of the accessibility tree while the newest message
         is already in view.
+
+        The way back to the newest message and the way back into a side chat
+        stack here in one column: both are ways back, and both belong just
+        above the composer wherever the person is reading.
       */}
       <KeyboardStickyView
         offset={{
@@ -613,27 +723,22 @@ export function ChatPanel({
         pointerEvents="box-none"
         style={{
           bottom: composerHeight,
-          height: LATEST_OVERLAY_HEIGHT,
+          height:
+            LATEST_OVERLAY_HEIGHT +
+            (hasSideChats ? SIDE_COUNT_OVERLAY_HEIGHT : 0),
           left: 0,
           position: "absolute",
           right: 0,
         }}
         testID="chat-latest-overlay"
       >
-        <View
-          className="h-full items-center justify-end pb-2"
-          pointerEvents="box-none"
-        >
-          {isFollowingLatest ? null : (
-            <Animated.View
-              entering={LATEST_ENTERING}
-              exiting={LATEST_EXITING}
-              pointerEvents="box-none"
-            >
-              <LatestMessageButton onPress={moveToLatest} />
-            </Animated.View>
-          )}
-        </View>
+        <ReturnControls
+          isEditing={isEditing}
+          isFollowingLatest={isFollowingLatest}
+          onMoveToLatest={moveToLatest}
+          onOpenSideChat={onOpenSideChat}
+          sideChats={sideChats}
+        />
       </KeyboardStickyView>
     </View>
   );

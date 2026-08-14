@@ -49,6 +49,7 @@ jest.mock("@legendapp/list/keyboard", () => {
     keyboardShouldPersistTaps?: unknown;
     keyExtractor: (item: UIMessage) => string;
     ListFooterComponent?: React.ReactNode;
+    ListHeaderComponent?: React.ReactNode;
     maintainScrollAtEnd?: unknown;
     maintainScrollAtEndThreshold?: unknown;
     maintainVisibleContentPosition?: unknown;
@@ -74,6 +75,7 @@ jest.mock("@legendapp/list/keyboard", () => {
         data,
         keyExtractor,
         ListFooterComponent,
+        ListHeaderComponent,
         renderItem,
         ...viewProps
       } = props;
@@ -93,6 +95,7 @@ jest.mock("@legendapp/list/keyboard", () => {
         { ...viewProps, data, keyExtractor } as React.ComponentProps<
           typeof View
         >,
+        ListHeaderComponent,
         ...data.map((item, index) =>
           React.createElement(
             React.Fragment,
@@ -200,6 +203,7 @@ jest.mock("heroui-native/menu", () => {
       Content: ({ children }: { children: React.ReactNode }) =>
         React.createElement(View, { testID: "chat-message-menu" }, children),
       Item: Pressable,
+      ItemDescription: Text,
       ItemTitle: Text,
       Overlay: () => null,
       Portal,
@@ -275,6 +279,26 @@ function SendingChat({
       chat={chatSession({ draft: "새 질문", editingMessageId, messages, send })}
     />
   );
+}
+
+/** The items this app adds to an answer's own system selection menu. */
+function selectionMenuItems(answer: {
+  props: {
+    contextMenuItems?: {
+      onPress: (event: {
+        selection: { end: number; start: number };
+        text: string;
+      }) => void;
+      text: string;
+      visible?: boolean;
+    }[];
+  };
+}) {
+  return answer.props.contextMenuItems ?? [];
+}
+
+function sideChatEntry(id: string, phrase: string, lastLine: string) {
+  return { id, lastLine, phrase };
 }
 
 /** Which rows carry an entry animation, in list order. */
@@ -1369,5 +1393,190 @@ describe("ChatPanel", () => {
     fireEvent(screen.getByLabelText(chatLabels.input), "submitEditing");
 
     expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  describe("Side chat", () => {
+    const answered = [
+      textMessage("user-1", "user", "질문"),
+      textMessage("assistant-1", "assistant", "답변"),
+    ];
+
+    test("완료된 답변의 선택 메뉴에 Ask in side chat을 더한다", async () => {
+      await renderWithHeroUI(
+        <ChatPanel
+          chat={chatSession({ messages: answered })}
+          onAskInSideChat={jest.fn()}
+        />
+      );
+
+      expect(
+        selectionMenuItems(screen.getByTestId("chat-message-assistant"))
+      ).toMatchObject([{ text: chatLabels.askInSideChat, visible: true }]);
+    });
+
+    test("메뉴 항목을 누르면 고른 구절과 그 답변을 알린다", async () => {
+      const onAskInSideChat = jest.fn();
+      await renderWithHeroUI(
+        <ChatPanel
+          chat={chatSession({ messages: answered })}
+          onAskInSideChat={onAskInSideChat}
+        />
+      );
+
+      const [item] = selectionMenuItems(
+        screen.getByTestId("chat-message-assistant")
+      );
+      item.onPress({ selection: { end: 6, start: 0 }, text: "고른 구절" });
+
+      expect(onAskInSideChat).toHaveBeenCalledWith({
+        messageId: "assistant-1",
+        phrase: "고른 구절",
+      });
+    });
+
+    test("답변을 받는 동안과 수정 중에는 그 항목을 감춘다", async () => {
+      const { rerender } = await renderWithHeroUI(
+        <ChatPanel
+          chat={chatSession({ isBusy: true, messages: answered })}
+          onAskInSideChat={jest.fn()}
+        />
+      );
+
+      expect(
+        selectionMenuItems(screen.getByTestId("chat-message-assistant"))
+      ).toMatchObject([{ visible: false }]);
+
+      await rerender(
+        <ChatPanel
+          chat={chatSession({ editingMessageId: "user-1", messages: answered })}
+          onAskInSideChat={jest.fn()}
+        />
+      );
+
+      expect(
+        selectionMenuItems(screen.getByTestId("chat-message-assistant"))
+      ).toMatchObject([{ visible: false }]);
+    });
+
+    // The side chat sheet leaves this out, which is what keeps a side chat
+    // from starting another one while its answers stay selectable.
+    test("Side chat을 시작할 수 없는 화면에서는 항목을 두지 않는다", async () => {
+      await renderWithHeroUI(
+        <ChatPanel chat={chatSession({ messages: answered })} />
+      );
+
+      expect(
+        screen.getByTestId("chat-message-assistant").props.contextMenuItems
+      ).toBeUndefined();
+    });
+
+    test("고른 구절을 목록 맨 위에 읽기 전용 출처로 보여 준다", async () => {
+      await renderWithHeroUI(
+        <ChatPanel chat={chatSession()} source="이어받은 구절" />
+      );
+
+      const phrase = screen.getByTestId("side-chat-source-phrase");
+      expect(phrase).toHaveTextContent("이어받은 구절");
+      expect(phrase.props.selectable).toBe(false);
+      expect(
+        within(screen.getByTestId("chat-list")).getByTestId("side-chat-source")
+      ).toBeOnTheScreen();
+    });
+
+    test("출처가 없으면 아무것도 얹지 않는다", async () => {
+      await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+
+      expect(screen.queryByTestId("side-chat-source")).not.toBeOnTheScreen();
+    });
+
+    test("Side chat이 없으면 수 표시를 두지 않는다", async () => {
+      await renderWithHeroUI(
+        <ChatPanel
+          chat={chatSession()}
+          onOpenSideChat={jest.fn()}
+          sideChats={[]}
+        />
+      );
+
+      expect(screen.queryByTestId("chat-side-count")).not.toBeOnTheScreen();
+    });
+
+    test("Side chat이 하나면 눌러서 바로 다시 연다", async () => {
+      const onOpenSideChat = jest.fn();
+      const user = userEvent.setup();
+      await renderWithHeroUI(
+        <ChatPanel
+          chat={chatSession()}
+          onOpenSideChat={onOpenSideChat}
+          sideChats={[sideChatEntry("side-chat-1", "앞 구절", "마지막 말")]}
+        />
+      );
+
+      expect(screen.getByText("Side chat 1개")).toBeOnTheScreen();
+
+      await user.press(screen.getByLabelText("Side chat 1개 다시 열기"));
+
+      expect(onOpenSideChat).toHaveBeenCalledWith("side-chat-1");
+    });
+
+    test("Side chat이 여럿이면 구절과 마지막 말로 갈린 목록에서 고른다", async () => {
+      const onOpenSideChat = jest.fn();
+      const user = userEvent.setup();
+      await renderWithHeroUI(
+        <ChatPanel
+          chat={chatSession()}
+          onOpenSideChat={onOpenSideChat}
+          sideChats={[
+            sideChatEntry("side-chat-2", "같은 구절", "두 번째 대화의 끝"),
+            sideChatEntry("side-chat-1", "같은 구절", "첫 대화의 끝"),
+          ]}
+        />
+      );
+
+      expect(screen.getByText("Side chat 2개")).toBeOnTheScreen();
+
+      await user.press(screen.getByLabelText("Side chat 2개 고르기"));
+
+      expect(screen.getByText("두 번째 대화의 끝")).toBeOnTheScreen();
+      expect(screen.getByText("첫 대화의 끝")).toBeOnTheScreen();
+      expect(onOpenSideChat).not.toHaveBeenCalled();
+
+      await user.press(screen.getAllByLabelText("같은 구절 Side chat 열기")[1]);
+
+      expect(onOpenSideChat).toHaveBeenCalledWith("side-chat-1");
+    });
+
+    test("수 표시는 최신 메시지 버튼과 같은 오버레이에 쌓인다", async () => {
+      await renderWithHeroUI(
+        <ChatPanel
+          chat={chatSession({
+            messages: [textMessage("assistant-1", "assistant", "답변")],
+          })}
+          onOpenSideChat={jest.fn()}
+          sideChats={[sideChatEntry("side-chat-1", "구절", "마지막 말")]}
+        />
+      );
+      await scrollAwayFromLatest();
+
+      const overlay = screen.getByTestId("chat-latest-overlay");
+      expect(within(overlay).getByTestId("chat-side-count")).toBeOnTheScreen();
+      expect(within(overlay).getByTestId("chat-latest")).toBeOnTheScreen();
+      expect(StyleSheet.flatten(overlay.props.style).height).toBe(104);
+    });
+
+    test("수정 중에는 수 표시를 누를 수 없다", async () => {
+      await renderWithHeroUI(
+        <ChatPanel
+          chat={chatSession({
+            editingMessageId: "user-1",
+            messages: [textMessage("user-1", "user", "질문")],
+          })}
+          onOpenSideChat={jest.fn()}
+          sideChats={[sideChatEntry("side-chat-1", "구절", "마지막 말")]}
+        />
+      );
+
+      expect(screen.getByTestId("chat-side-count")).toBeDisabled();
+    });
   });
 });
