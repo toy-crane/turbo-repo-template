@@ -6,7 +6,13 @@ import type { ReactNode } from "react";
  * outlives any render on purpose, which is exactly what would carry one test's
  * profile into the next.
  */
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+    },
+  },
+});
 
 export function QueryProvider({ children }: { children: ReactNode }) {
   return (
