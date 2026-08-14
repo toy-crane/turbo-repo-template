@@ -23,8 +23,39 @@ function createUserAuthMiddleware(): MiddlewareHandler {
   });
 }
 
-/** Stands in for a request that already passed the real check. */
-const bypassAuth: MiddlewareHandler = (_c, next) => next();
+/** Stands in for a request whose token and current user both still exist. */
+const bypassAuth: MiddlewareHandler = (c, next) => {
+  c.set("supabaseContext", {
+    supabase: {
+      auth: {
+        getUser: () =>
+          Promise.resolve({
+            data: { user: { id: "user-1" } },
+            error: null,
+          }),
+      },
+    },
+  } as never);
+
+  return next();
+};
+
+/** A validly signed token left on a device after its account was deleted. */
+const deletedUserAuth: MiddlewareHandler = (c, next) => {
+  c.set("supabaseContext", {
+    supabase: {
+      auth: {
+        getUser: () =>
+          Promise.resolve({
+            data: { user: null },
+            error: new Error("User from sub claim in JWT does not exist"),
+          }),
+      },
+    },
+  } as never);
+
+  return next();
+};
 
 function createMockModel(text: string[]): MockLanguageModelV4 {
   const chunks: LanguageModelV4StreamPart[] = [
@@ -203,6 +234,18 @@ describe("POST /ai/chat", () => {
         { messages: [createUserMessage("안녕")] },
         "not-a-real-token"
       )
+    );
+
+    expect(response.status).toBe(401);
+    expect(model.doStreamCalls).toHaveLength(0);
+  });
+
+  test("rejects a deleted user before calling the model", async () => {
+    const model = createMockModel(["안녕하세요"]);
+    const app = createApp({ authMiddleware: deletedUserAuth, model });
+
+    const response = await app.request(
+      createChatRequest({ messages: [createUserMessage("안녕")] })
     );
 
     expect(response.status).toBe(401);
