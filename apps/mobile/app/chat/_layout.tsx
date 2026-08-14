@@ -21,7 +21,10 @@ export default function ChatLayout() {
     <SideChatsProvider accessToken={session?.access_token}>
       <Stack screenOptions={{ contentStyle: { backgroundColor: background } }}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="side" options={getSideChatSheetOptions()} />
+        <Stack.Screen
+          name="side"
+          options={getSideChatSheetOptions(background)}
+        />
       </Stack>
     </SideChatsProvider>
   );

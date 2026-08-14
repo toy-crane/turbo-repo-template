@@ -22,6 +22,8 @@ function SideChatConversation({ sideChat }: { sideChat: SideChat }) {
       // No `onAskInSideChat`: an answer here can be selected and copied, but a
       // side chat cannot start another one.
       source={sideChat.phrase}
+      // The sheet's header is transparent like the conversation's, so the list
+      // reaches under it and this pushes the source back into view.
       topInset={Platform.OS === "ios" ? headerHeight : 0}
     />
   );
