@@ -12,6 +12,12 @@ Android Settings가 Android의 기본 표현을 유지하면서도 iOS와 같은
 - [모바일 타이포그래피](../../decisions/mobile-typography.md)
 - [모바일 테스트와 런타임 검증](../../decisions/mobile-testing-and-verification.md)
 
+## 참고 근거
+
+- [Expo UI Examples의 Universal Settings 예제](https://github.com/SchroederNathan/expo-ui-examples/blob/f5293ead47a983694b2837b9a99b6e2ca60a951f/src/examples/universal-settings/universal-settings.tsx)는 같은 정보 구조를 두 플랫폼의 기본 표현으로 보여 주는 참고 구현이다. 변경될 수 있는 `main` 대신 조사한 커밋을 고정해서 연결한다.
+- [Expo `FieldGroup` 공식 문서](https://docs.expo.dev/versions/latest/sdk/ui/universal/fieldgroup/)는 섹션 머리말과 꼬리말을 설정 행 바깥에 두고, 섹션의 자식은 각 목록 행으로 다루는 기준을 확인하는 데 사용한다.
+- 참고 구현과 문서는 설계 의도를 확인하는 자료다. 이 명세의 완료 조건과 저장소의 결정 계약을 바꾸지 않는다.
+
 ## 사용자에게 보이는 결과
 
 - 프로필 사진, 닉네임과 아이디는 별도 카드나 설정 행 안에 넣지 않고 화면 배경 위에 바로 표시한다.
