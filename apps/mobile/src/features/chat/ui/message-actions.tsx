@@ -5,16 +5,14 @@ import { Icon, type IconName } from "@/shared/ui/icon";
 import { chatLabels } from "./chat-labels";
 
 /**
- * The row shows 32px buttons and grows each press target to the 44px minimum
- * with `hitSlop`, so reaching an icon does not depend on hitting the drawn
- * shape. That minimum is also what sets the distance between them: two 44px
- * targets that must not overlap put the icons 44px apart centre to centre, so
- * the gap between the drawn boxes is what is left over.
+ * The icons sit 32px apart centre to centre, which is the density the chat
+ * apps people already use settled on and closer than two 44px press targets
+ * could ever sit without overlapping. So the drawn 32px box is the whole
+ * target across, and `hitSlop` only reaches up and down, where the row has no
+ * neighbour to take the touch from.
  */
 const ACTION_SIZE = 32;
-const ACTION_TARGET = 44;
-const ACTION_HIT_SLOP = (ACTION_TARGET - ACTION_SIZE) / 2;
-const ACTION_GAP = ACTION_TARGET - ACTION_SIZE;
+const ACTION_VERTICAL_HIT_SLOP = 6;
 
 function ActionButton({
   isDisabled,
@@ -33,7 +31,10 @@ function ActionButton({
     <PressableFeedback
       accessibilityLabel={label}
       accessibilityRole="button"
-      hitSlop={ACTION_HIT_SLOP}
+      hitSlop={{
+        bottom: ACTION_VERTICAL_HIT_SLOP,
+        top: ACTION_VERTICAL_HIT_SLOP,
+      }}
       isDisabled={isDisabled}
       onPress={onPress}
       style={{
@@ -64,12 +65,12 @@ export function MessageActions({
 }) {
   return (
     <View
-      // The negative margin puts the first icon's drawn shape, not its
-      // padding, on the same left edge as the answer above it.
+      // The boxes sit against each other, and the negative margin puts the
+      // first icon's drawn shape, not the padding around it, on the same left
+      // edge as the answer above.
       style={{
         flexDirection: "row",
-        gap: ACTION_GAP,
-        marginLeft: -ACTION_HIT_SLOP,
+        marginLeft: -ACTION_VERTICAL_HIT_SLOP,
         marginTop: 6,
       }}
       testID="chat-message-actions"
