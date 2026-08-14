@@ -5,8 +5,14 @@ const IMAGE = /!\[([^\]]*)]\([^)]*\)/g;
 const LINK = /\[([^\]]*)]\([^)]*\)/g;
 /** Heading hashes, blockquote arrows and list bullets at the head of a line. */
 const LINE_LEAD = /^[ \t]*(?:[>#]+[ \t]*|[-*+][ \t]+|\d+\.[ \t]+)+/gm;
-/** Only paired marks, so `owner_id` and `a => b` keep their characters. */
-const EMPHASIS = /(\*{1,3}|_{1,3}|~~)(\S(?:.*?\S)?)\1/g;
+/** Only paired marks, so `a => b` and `5 * 3` keep their characters. */
+const EMPHASIS = /(\*{1,3}|~~)(\S(?:.*?\S)?)\1/g;
+/**
+ * Underscores only where a word does not run through them. GFM does not read
+ * `snake_case_name` as emphasis, and neither does this.
+ */
+const UNDERSCORE_EMPHASIS =
+  /(^|[\s([{"'])(_{1,3})(\S(?:.*?\S)?)\2(?=$|[\s).,!?\]}:;"'])/g;
 const WHITESPACE = /\s+/g;
 
 /**
@@ -32,6 +38,7 @@ export function plainLine(markdown: string): string {
     .replace(LINE_LEAD, "")
     .replace(EMPHASIS, "$2")
     .replace(EMPHASIS, "$2")
+    .replace(UNDERSCORE_EMPHASIS, "$1$3")
     .replace(WHITESPACE, " ")
     .trim();
 }

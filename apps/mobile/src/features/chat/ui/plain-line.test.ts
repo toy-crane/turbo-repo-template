@@ -17,6 +17,20 @@ describe("plainLine", () => {
     expect(plainLine("**굵게** 와 *기울임* 과 `코드` 와 ~~취소~~")).toBe(
       "굵게 와 기울임 과 코드 와 취소"
     );
+    expect(plainLine("_밑줄 강조_ 도 마찬가지입니다")).toBe(
+      "밑줄 강조 도 마찬가지입니다"
+    );
+  });
+
+  // GFM does not read a word running through underscores as emphasis, and an
+  // answer about `snake_case_name` is exactly what a side chat gets opened on.
+  test("말 안을 지나는 밑줄은 강조로 보지 않는다", () => {
+    expect(plainLine("snake_case_name 을 씁니다")).toBe(
+      "snake_case_name 을 씁니다"
+    );
+    expect(plainLine("`created_at`과 `updated_at`")).toBe(
+      "created_at과 updated_at"
+    );
   });
 
   test("코드 블록은 통째로 뺀다", () => {
