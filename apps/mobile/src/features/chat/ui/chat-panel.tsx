@@ -39,6 +39,7 @@ import { Icon } from "@/shared/ui/icon";
 import { AssistantMessage } from "./assistant-message";
 import { chatLabels } from "./chat-labels";
 import { LatestMessageButton } from "./latest-message-button";
+import { useLateAnswer } from "./use-late-answer";
 import { UserMessage } from "./user-message";
 import { WaitingAnswer } from "./waiting-answer";
 
@@ -181,12 +182,14 @@ export function ChatPanel({
   const doomedFromIndex = chat.editingMessageId
     ? chat.messages.findIndex((message) => message.id === chat.editingMessageId)
     : -1;
-  // The line stands in for the answer from the moment the question goes until
-  // its first character lands, which is either before any answer exists or
-  // while an answer exists with nothing in it yet.
+  // The answer is still on its way from the moment the question goes until its
+  // first character lands, which is either before any answer exists or while an
+  // answer exists with nothing in it yet. Only a wait long enough to notice
+  // puts a line in the answer's place; a quick one shows nothing at all.
   const isWaitingForAnswer =
     chat.isBusy &&
     (lastMessage?.role !== "assistant" || textOfMessage(lastMessage) === "");
+  const isAnswerLate = useLateAnswer(isWaitingForAnswer);
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze, scrollMessageToEnd } = useKeyboardScrollToEnd({ listRef });
@@ -397,7 +400,7 @@ export function ChatPanel({
         keyboardOffset={insets.bottom}
         keyboardShouldPersistTaps="handled"
         keyExtractor={messageKey}
-        ListFooterComponent={isWaitingForAnswer ? <WaitingAnswer /> : undefined}
+        ListFooterComponent={isAnswerLate ? <WaitingAnswer /> : undefined}
         maintainScrollAtEnd={
           isFollowingLatest && !isPositioningQuestion
             ? {

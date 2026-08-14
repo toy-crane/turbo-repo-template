@@ -278,6 +278,7 @@ describe("ChatPanel", () => {
   afterEach(() => {
     mockScrollToEnd.mockClear();
     jest.restoreAllMocks();
+    jest.useRealTimers();
   });
 
   test("대화가 비어 있으면 메시지 목록과 입력·전송만 보여준다", async () => {
@@ -1120,7 +1121,8 @@ describe("ChatPanel", () => {
     expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
   });
 
-  test("첫 글자가 오기 전까지 답변 자리에 쓰고 있다는 문구를 보여 준다", async () => {
+  test("답변이 늦으면 그 자리에 대기 표시를 두고 첫 글자가 오면 없앤다", async () => {
+    jest.useFakeTimers();
     const { rerender } = await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({
@@ -1130,8 +1132,12 @@ describe("ChatPanel", () => {
       />
     );
 
-    // The line paints its words twice, once as the mask and once as what the
-    // sweep runs over, so the count is not what is being checked here.
+    await act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    // The line paints its word twice, once as the mask and once as what the
+    // band runs over, so the count is not what is being checked here.
     expect(screen.queryAllByText(chatLabels.waiting).length).toBeGreaterThan(0);
 
     await rerender(
@@ -1149,7 +1155,44 @@ describe("ChatPanel", () => {
     expect(screen.queryAllByText(chatLabels.waiting)).toHaveLength(0);
   });
 
-  test("답변을 받고 있지 않으면 쓰고 있다는 문구를 두지 않는다", async () => {
+  // Showing it for an answer that is already landing would put a line in the
+  // answer's place and take it away before anyone could read it.
+  test("첫 글자가 300ms 안에 오면 대기 표시를 한 번도 두지 않는다", async () => {
+    jest.useFakeTimers();
+    const { rerender } = await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [textMessage("user-1", "user", "질문")],
+        })}
+      />
+    );
+
+    await act(() => {
+      jest.advanceTimersByTime(299);
+    });
+
+    expect(screen.queryAllByText(chatLabels.waiting)).toHaveLength(0);
+
+    await rerender(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "첫"),
+          ],
+        })}
+      />
+    );
+    await act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(screen.queryAllByText(chatLabels.waiting)).toHaveLength(0);
+  });
+
+  test("답변을 받고 있지 않으면 대기 표시를 두지 않는다", async () => {
     await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({
