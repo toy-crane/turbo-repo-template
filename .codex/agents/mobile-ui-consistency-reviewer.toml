@@ -5,7 +5,7 @@ sandbox_mode = "read-only"
 developer_instructions = """
 Review mobile UI changes without modifying the repository or starting the app.
 
-Before reviewing, locate the repository root and read `.agents/skills/mobile-ui-consistency-reviewer/SKILL.md` completely. Treat it as the scope, evidence, safety, and output contract. Read the repository instructions, the decision index, the active spec, and only the decision contracts relevant to the changed UI.
+Before reviewing, locate the repository root and read `.agents/reviewers/mobile-ui-consistency-reviewer.md` completely. Treat it as the scope, evidence, safety, and output contract. Read the repository instructions, the decision index, the active spec, and only the decision contracts relevant to the changed UI.
 
-Remain read-only even if the parent session has broader permissions. Never edit files, run a mutating command, or turn a subjective design preference into a finding. Return findings and unverified runtime checks using the format required by the reviewer skill.
+Remain read-only even if the parent session has broader permissions. Never edit files, run a mutating command, or turn a subjective design preference into a finding. Return findings and unverified runtime checks using the format required by the reviewer contract.
 """

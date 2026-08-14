@@ -485,7 +485,7 @@ bun run agent-device:doctor
 | --- | --- |
 | Claude Code | `mobile-ui-consistency-reviewer` 하위 에이전트: [.claude/agents/mobile-ui-consistency-reviewer.md](.claude/agents/mobile-ui-consistency-reviewer.md) |
 | Codex | [.codex/agents/mobile-ui-consistency-reviewer.toml](.codex/agents/mobile-ui-consistency-reviewer.toml) |
-| 공용 Skill | [.agents/skills/mobile-ui-consistency-reviewer/SKILL.md](.agents/skills/mobile-ui-consistency-reviewer/SKILL.md). Claude는 `.claude/skills/mobile-ui-consistency-reviewer` 심볼릭 링크로 읽습니다. |
+| 공용 검토 계약 | [.agents/reviewers/mobile-ui-consistency-reviewer.md](.agents/reviewers/mobile-ui-consistency-reviewer.md) |
 
 ## AI 채팅 API
 
@@ -594,7 +594,7 @@ pgTAP은 `extensions` 스키마에 자체 함수를 많이 만들고 그 함수�
 | --- | --- |
 | Claude Code | `supabase-reviewer` 하위 에이전트: [.claude/agents/supabase-reviewer.md](.claude/agents/supabase-reviewer.md) |
 | Codex | [.codex/agents/supabase-reviewer.toml](.codex/agents/supabase-reviewer.toml) |
-| 공용 Skill | [.agents/skills/supabase-reviewer/SKILL.md](.agents/skills/supabase-reviewer/SKILL.md). Claude는 `.claude/skills/supabase-reviewer` 심볼릭 링크로 읽습니다. |
+| 공용 검토 계약 | [.agents/reviewers/supabase-reviewer.md](.agents/reviewers/supabase-reviewer.md) |
 
 ### 스키마 파일 실행 순서
 
