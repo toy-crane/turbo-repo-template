@@ -39,6 +39,7 @@ import type { ChatSession } from "@/features/chat/state/use-chat-session";
 import { Icon } from "@/shared/ui/icon";
 import { AssistantMessage } from "./assistant-message";
 import { chatLabels } from "./chat-labels";
+import { ComposerSurface } from "./composer-surface";
 import { LatestMessageButton } from "./latest-message-button";
 import { useEnteringMessage } from "./use-entering-message";
 import { useLateAnswer } from "./use-late-answer";
@@ -466,8 +467,14 @@ export function ChatPanel({
           opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
         }}
       >
+        {/*
+          No background of its own: the composer is a control floating over the
+          conversation, and a band across the screen behind it would cut the
+          list off short of where it actually ends. The notice and the error sit
+          on the same open ground, just above the control rather than inside it.
+        */}
         <View
-          className="gap-2 bg-background px-5 pt-2"
+          className="gap-2 px-5 pt-2"
           onLayout={updateComposerLayout}
           ref={composerRef}
           style={{ paddingBottom: composerBottomPadding }}
@@ -519,10 +526,10 @@ export function ChatPanel({
             </View>
           ) : null}
 
-          <View className="flex-row items-end gap-2">
+          <ComposerSurface>
             <TextInput
               accessibilityLabel={chatLabels.input}
-              className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
+              className="flex-1 px-3 py-2.5 text-base text-foreground"
               multiline
               onChangeText={chat.setDraft}
               onContentSizeChange={resizeInput}
@@ -575,7 +582,7 @@ export function ChatPanel({
                 <Icon name="send" tone="accentForeground" />
               </Pressable>
             )}
-          </View>
+          </ComposerSurface>
         </View>
       </KeyboardStickyView>
 

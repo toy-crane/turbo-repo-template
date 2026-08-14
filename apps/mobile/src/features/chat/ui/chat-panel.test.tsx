@@ -1159,6 +1159,38 @@ describe("ChatPanel", () => {
     expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
   });
 
+  test("입력창과 보내기를 하나의 떠 있는 컨트롤로 묶는다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+
+    const surface = screen.getByTestId("chat-composer-surface");
+    expect(within(surface).getByLabelText(chatLabels.input)).toBeOnTheScreen();
+    expect(within(surface).getByLabelText(chatLabels.send)).toBeOnTheScreen();
+    // Nothing paints across the screen behind it: the list runs on underneath.
+    expect(screen.getByTestId("chat-composer").props.className).not.toContain(
+      "bg-"
+    );
+  });
+
+  test("오류와 수정 안내는 컨트롤 안이 아니라 그 위에 둔다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          editingMessageId: "user-1",
+          error: new Error("network"),
+          messages: [textMessage("user-1", "user", "질문")],
+        })}
+      />
+    );
+
+    const surface = screen.getByTestId("chat-composer-surface");
+    expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
+    expect(screen.getByTestId("chat-edit-notice")).toBeOnTheScreen();
+    expect(within(surface).queryByTestId("chat-error")).not.toBeOnTheScreen();
+    expect(
+      within(surface).queryByTestId("chat-edit-notice")
+    ).not.toBeOnTheScreen();
+  });
+
   test("이번에 보낸 질문만 아래에서 올라온다", async () => {
     const user = userEvent.setup();
     await renderWithHeroUI(
