@@ -12,9 +12,22 @@ import { fileURLToPath } from "node:url";
  * later run.
  *
  * Bun does not run a dependency's own install scripts, so the repository runs
- * this one itself. It stays a best-effort step: the library treats a missing
- * asset as the feature being off and builds anyway, so a machine without
- * network access still gets a working install rather than a failed one.
+ * this one itself.
+ *
+ * The usual way out is to name the package in the root `trustedDependencies`,
+ * and it does not reach this one. On Bun 1.3.6 that was tried as a workspace
+ * dependency and as a direct root dependency, followed by `bun pm trust`, then
+ * again with the lockfile and the global cache thrown away. Bun answered every
+ * time that the package has no scripts to run, while a control package with the
+ * same kind of `postinstall` installed normally. The script is declared both in
+ * the registry metadata, which even carries `hasInstallScript: true`, and in the
+ * installed manifest, so there is nothing to fix on this side. Retry
+ * `trustedDependencies` when Bun moves on; until then, deleting this leaves the
+ * assets undownloaded.
+ *
+ * Missing assets are not fatal, so this stays a best-effort step: the library
+ * treats them as the feature being off and builds anyway, which is what lets a
+ * machine with no network access still get a working install.
  */
 const repositoryRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
