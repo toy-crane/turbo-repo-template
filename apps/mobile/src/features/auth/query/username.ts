@@ -56,5 +56,8 @@ export function useUsernameSuggestions(base: string, enabled: boolean) {
     },
     queryKey: ["username-suggestions", base] as const,
     retry: false,
+    // Suggestions are availability answers too. Another account can claim one
+    // while this screen is away, so reopening must confirm the pool again.
+    staleTime: 0,
   });
 }
