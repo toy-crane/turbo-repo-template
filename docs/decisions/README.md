@@ -14,6 +14,7 @@
 - [모바일 프로필 식별자와 온보딩](mobile-profile-identity-and-onboarding.md) — 닉네임, 아이디, 로그인 뒤 필수 프로필 설정 또는 프로필 완성 조건을 변경할 때 읽는다.
 - [모바일 설정 공개 프로필](mobile-profile-settings.md) — Settings의 프로필 표시, 프로필 수정 진입, 사진 편집 또는 프로필 폼 배치를 변경할 때 읽는다.
 - [모바일 라우팅 타입 안전성](mobile-routing-type-safety.md) — Expo Router 경로 타입, 내부 경로 표기 또는 경로 타입 생성 검사를 변경할 때 읽는다.
+- [모바일 Expo 의존성 호환](mobile-expo-dependency-compatibility.md) — 모바일 Expo 또는 네이티브 패키지 버전, 호환 검사와 버전 예외를 변경할 때 읽는다.
 - [모바일 개발 런타임](mobile-development-runtime.md) — 모바일 앱의 Expo SDK, 지원 플랫폼, Development Build 런타임 또는 배포 경계를 변경할 때 읽는다.
 - [모바일 환경 설정](mobile-environment-configuration.md) — 모바일 공개 환경 변수의 필수 여부, 검증 위치, 접근 방식 또는 검증 도구를 변경할 때 읽는다.
 - [모바일 색상 시맨틱](mobile-color-semantics.md) — 모바일 색상 이름, 시맨틱 토큰, 화면 모드 또는 플랫폼별 색상 매핑을 변경할 때 읽는다.
