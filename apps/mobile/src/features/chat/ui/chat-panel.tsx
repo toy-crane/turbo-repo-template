@@ -26,6 +26,11 @@ import {
   KeyboardController,
   KeyboardStickyView,
 } from "react-native-keyboard-controller";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  ReduceMotion,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ChatSession } from "@/features/chat/state/use-chat-session";
@@ -47,6 +52,13 @@ const USER_SCROLL_THRESHOLD = 24;
 const MESSAGE_TOP_SPACING = 12;
 /** Enough to read the messages about to go, not enough to mistake them for staying. */
 const DOOMED_OPACITY = 0.38;
+/**
+ * The button fades rather than blinking in and out. Leaving is quicker than
+ * arriving, so reaching the newest message feels like the button getting out
+ * of the way. Both step aside when the system asks for less motion.
+ */
+const LATEST_ENTERING = FadeIn.duration(180).reduceMotion(ReduceMotion.System);
+const LATEST_EXITING = FadeOut.duration(120).reduceMotion(ReduceMotion.System);
 
 function textOfMessage(message: UIMessage): string {
   return message.parts
@@ -521,30 +533,42 @@ export function ChatPanel({
         </View>
       </KeyboardStickyView>
 
-      {isFollowingLatest ? null : (
-        <KeyboardStickyView
-          offset={{
-            closed: 0,
-            opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
-          }}
+      {/*
+        The overlay stays mounted so that the button leaving has something to
+        animate inside. Only the button itself comes and goes, which is also
+        what keeps it out of the accessibility tree while the newest message
+        is already in view.
+      */}
+      <KeyboardStickyView
+        offset={{
+          closed: 0,
+          opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
+        }}
+        pointerEvents="box-none"
+        style={{
+          bottom: composerHeight,
+          height: LATEST_OVERLAY_HEIGHT,
+          left: 0,
+          position: "absolute",
+          right: 0,
+        }}
+        testID="chat-latest-overlay"
+      >
+        <View
+          className="h-full items-center justify-end pb-2"
           pointerEvents="box-none"
-          style={{
-            bottom: composerHeight,
-            height: LATEST_OVERLAY_HEIGHT,
-            left: 0,
-            position: "absolute",
-            right: 0,
-          }}
-          testID="chat-latest-overlay"
         >
-          <View
-            className="h-full items-center justify-end pb-2"
-            pointerEvents="box-none"
-          >
-            <LatestMessageButton onPress={moveToLatest} />
-          </View>
-        </KeyboardStickyView>
-      )}
+          {isFollowingLatest ? null : (
+            <Animated.View
+              entering={LATEST_ENTERING}
+              exiting={LATEST_EXITING}
+              pointerEvents="box-none"
+            >
+              <LatestMessageButton onPress={moveToLatest} />
+            </Animated.View>
+          )}
+        </View>
+      </KeyboardStickyView>
     </View>
   );
 }
