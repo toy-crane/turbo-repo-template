@@ -176,11 +176,14 @@ jest.mock("react-native-streamdown", () => {
   const { Text } = require("react-native") as typeof import("react-native");
 
   return {
-    StreamdownText: ({
-      markdown,
-      ...props
-    }: { markdown: string } & Record<string, unknown>) =>
-      React.createElement(Text, props, markdown),
+    // Every prop stays on the element, `markdown` included: the tests read the
+    // Markdown and the rendering options from there.
+    StreamdownText: (props: { markdown: string } & Record<string, unknown>) =>
+      React.createElement(
+        Text,
+        props as React.ComponentProps<typeof Text>,
+        props.markdown
+      ),
   };
 });
 

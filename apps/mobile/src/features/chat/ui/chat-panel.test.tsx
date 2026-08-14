@@ -331,7 +331,7 @@ describe("ChatPanel", () => {
     });
   });
 
-  test("사용자 메시지와 AI 답변을 일반 텍스트로 보여준다", async () => {
+  test("AI 답변만 Markdown 렌더러로 보내고 질문은 일반 텍스트로 둔다", async () => {
     const messages = [
       textMessage("user-1", "user", "질문"),
       textMessage("assistant-1", "assistant", "# 제목 **강조**"),
@@ -339,9 +339,13 @@ describe("ChatPanel", () => {
 
     await renderWithHeroUI(<ChatPanel chat={chatSession({ messages })} />);
 
+    expect(screen.getByTestId("chat-message-assistant").props.markdown).toBe(
+      "# 제목 **강조**"
+    );
     expect(screen.getByText("질문")).toBeOnTheScreen();
-    expect(screen.getByText("# 제목 **강조**")).toBeOnTheScreen();
-    expect(screen.queryByTestId("chat-markdown")).not.toBeOnTheScreen();
+    expect(
+      screen.getByTestId("chat-message-user").props.markdown
+    ).toBeUndefined();
   });
 
   test("텍스트가 아닌 응답 part는 표시하지 않는다", async () => {
@@ -595,23 +599,21 @@ describe("ChatPanel", () => {
     expect(beginEdit).toHaveBeenCalledWith("user-1");
   });
 
-  test("메시지 본문은 선택할 수 없고 답변 본문은 선택할 수 있다", async () => {
+  // The answer's own selection now belongs to the Markdown renderer, which
+  // turns it back on once a message stops streaming. Only the question's side
+  // is the panel's to state: selecting it would take the long press its menu
+  // needs.
+  test("메시지 본문은 선택할 수 없다", async () => {
     await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({
-          messages: [
-            textMessage("user-1", "user", "질문"),
-            textMessage("assistant-1", "assistant", "답변"),
-          ],
+          messages: [textMessage("user-1", "user", "질문")],
         })}
       />
     );
 
     expect(screen.getByTestId("chat-message-user").props.selectable).toBe(
       false
-    );
-    expect(screen.getByTestId("chat-message-assistant").props.selectable).toBe(
-      true
     );
   });
 
@@ -627,15 +629,15 @@ describe("ChatPanel", () => {
       />
     );
 
-    // The size arrives as a class rather than an inline style, so the check
-    // is that both bodies name the same one instead of falling back to the
-    // React Native default the question used to get.
-    for (const testID of ["chat-message-user", "chat-message-assistant"]) {
-      const body = screen.getByTestId(testID);
-
-      expect(body.props.className).toContain("text-base");
-      expect(body.props.className).toContain("leading-6");
-    }
+    // The question takes its size from a class and the answer from the numbers
+    // the Markdown renderer accepts, so the check is that the two still meet at
+    // the same body size rather than each keeping its renderer's default.
+    const question = screen.getByTestId("chat-message-user");
+    expect(question.props.className).toContain("text-base");
+    expect(question.props.className).toContain("leading-6");
+    expect(
+      screen.getByTestId("chat-message-assistant").props.markdownStyle.paragraph
+    ).toMatchObject({ fontSize: 16, lineHeight: 24 });
   });
 
   test("사용자가 이전 메시지로 스크롤하면 최신 메시지 이동 버튼을 보여준다", async () => {

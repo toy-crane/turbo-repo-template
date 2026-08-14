@@ -1,12 +1,15 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
+import { MarkdownAnswer } from "./markdown-answer";
 import { MessageActions } from "./message-actions";
 
 /**
  * An answer, and the row of things to do with it once it is finished.
  *
- * The body stays selectable: no menu is attached here, so a long press is
- * left to the system's own text selection.
+ * The body is Markdown from the first character on, so what arrives half
+ * written still reads as an answer rather than as its own source. No menu is
+ * attached here: selection and the code block's own copy button belong to the
+ * renderer, which is also what leaves a long press to the system.
  */
 export function AssistantMessage({
   areActionsDisabled,
@@ -23,13 +26,7 @@ export function AssistantMessage({
 }) {
   return (
     <View className="w-full">
-      <Text
-        className="text-base text-foreground leading-6"
-        selectable
-        testID="chat-message-assistant"
-      >
-        {text}
-      </Text>
+      <MarkdownAnswer markdown={text} testID="chat-message-assistant" />
       {hasActions ? (
         <MessageActions
           isDisabled={areActionsDisabled}
