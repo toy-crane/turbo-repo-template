@@ -1,41 +1,37 @@
-import type { ImageSourcePropType } from "react-native";
-import { Platform } from "react-native";
+import AccountCircle from "@expo/material-symbols/account_circle.xml";
+import Add from "@expo/material-symbols/add.xml";
+import ArrowBack from "@expo/material-symbols/arrow_back.xml";
+import Close from "@expo/material-symbols/close.xml";
 
 /**
  * One toolbar-icon meaning, defined for both platforms in one place.
  *
  * `Stack.Toolbar` draws its items natively, so it cannot use the shared `Icon`
- * component: iOS takes an SF Symbol name and Android takes an image source,
- * and a React Native view hosted inside Android's Compose toolbar cannot be
- * sized reliably. The PNGs are Material Symbols glyphs exported at 1x, 2x
- * and 3x.
+ * component: iOS takes an SF Symbol name and Android takes an image source.
+ * Leaving the Android side out is not a smaller button but no button at all —
+ * `Stack.Toolbar.Button` renders nothing without one.
  *
- * Sources: Google Material Symbols (outlined, 24px),
- * https://github.com/google/material-design-icons — © Google LLC,
- * Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0
+ * The Android side is a Material Symbols vector drawable from
+ * `@expo/material-symbols`, which is what Expo Router's own documentation
+ * points to. Each icon is its own module, so Metro bundles only the ones named
+ * here, the drawable scales without per-density copies, and the toolbar tints
+ * it with its own colour.
  */
-const toolbarIcons = {
-  back: {
-    android:
-      require("../../../../assets/toolbar/back.png") as ImageSourcePropType,
-    ios: "chevron.backward",
-  },
-  newChat: {
-    android:
-      require("../../../../assets/toolbar/new-chat.png") as ImageSourcePropType,
-    ios: "plus",
-  },
-  profile: {
-    android:
-      require("../../../../assets/toolbar/profile.png") as ImageSourcePropType,
-    ios: "person.crop.circle",
-  },
+export const toolbarIcons = {
+  back: { android: ArrowBack, ios: "chevron.backward" },
+  close: { android: Close, ios: "xmark" },
+  newChat: { android: Add, ios: "plus" },
+  profile: { android: AccountCircle, ios: "person.crop.circle" },
 } as const;
 
 export type ToolbarIconName = keyof typeof toolbarIcons;
 
 /**
  * The value for a `Stack.Toolbar.Button`'s `icon` prop on this platform.
+ *
+ * `process.env.EXPO_OS` rather than `Platform.OS`: Metro replaces it with a
+ * string at build time and drops the branch that does not match, so the
+ * drawables stay out of the iOS bundle and the symbol names out of Android's.
  *
  * The prop form rather than a nested `Stack.Toolbar.Icon`: the nested element
  * left the button as an empty pill on iOS, and the prop form is what the
@@ -44,5 +40,5 @@ export type ToolbarIconName = keyof typeof toolbarIcons;
 export function toolbarIcon(name: ToolbarIconName) {
   const icon = toolbarIcons[name];
 
-  return Platform.OS === "ios" ? icon.ios : icon.android;
+  return process.env.EXPO_OS === "ios" ? icon.ios : icon.android;
 }

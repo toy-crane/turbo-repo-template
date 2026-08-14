@@ -1,9 +1,9 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback } from "react";
-import { Platform } from "react-native";
 
 import { chatLabels } from "@/features/chat/ui/chat-labels";
 import { SideChatScreen } from "@/screens/chat/side-chat-screen";
+import { toolbarIcon } from "@/shared/ui/icon/toolbar-icons";
 
 /**
  * Closing is a dismissal rather than a step back: the conversation underneath
@@ -17,26 +17,13 @@ function closeSideChat() {
 }
 
 function SideChatToolbar() {
-  if (Platform.OS === "ios") {
-    return (
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          accessibilityLabel={chatLabels.closeSideChat}
-          icon="xmark"
-          onPress={closeSideChat}
-        />
-      </Stack.Toolbar>
-    );
-  }
-
   return (
     <Stack.Toolbar placement="right">
       <Stack.Toolbar.Button
         accessibilityLabel={chatLabels.closeSideChat}
+        icon={toolbarIcon("close")}
         onPress={closeSideChat}
-      >
-        닫기
-      </Stack.Toolbar.Button>
+      />
     </Stack.Toolbar>
   );
 }
