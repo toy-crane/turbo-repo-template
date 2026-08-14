@@ -470,6 +470,18 @@ bun run --cwd apps/mobile test:watch
 bun run agent-device:doctor
 ```
 
+### 모바일 UI 일관성 검토
+
+모바일 화면, 공용 UI, 네이티브 셸, 스타일, 아이콘 또는 화면 문구를 바꾼 뒤에는 저장소 전용 검토 에이전트로 결정 계약과의 차이를 확인할 수 있습니다.
+검토 에이전트는 읽기 전용이며 파일을 고치거나 앱을 실행하지 않습니다.
+실제 화면에서만 확인할 수 있는 항목은 통과로 처리하지 않고 `UNVERIFIED`로 남깁니다.
+
+| 도구 | 실행 위치 |
+| --- | --- |
+| Claude Code | `mobile-ui-consistency-reviewer` 하위 에이전트: [.claude/agents/mobile-ui-consistency-reviewer.md](.claude/agents/mobile-ui-consistency-reviewer.md) |
+| Codex | [.codex/agents/mobile-ui-consistency-reviewer.toml](.codex/agents/mobile-ui-consistency-reviewer.toml) |
+| 공용 Skill | [.agents/skills/mobile-ui-consistency-reviewer/SKILL.md](.agents/skills/mobile-ui-consistency-reviewer/SKILL.md). Claude는 `.claude/skills/mobile-ui-consistency-reviewer` 심볼릭 링크로 읽습니다. |
+
 ## AI 채팅 API
 
 `apps/api`는 Hono 앱이며 모바일 앱과 다른 Vercel 프로젝트에 배포합니다.

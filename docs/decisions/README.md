@@ -25,6 +25,7 @@
 - [모바일 채팅 스크롤](mobile-chat-scrolling.md) — 모바일 채팅의 질문 배치, 스트리밍 자동 추적, 읽던 위치 또는 최신 메시지 이동을 변경할 때 읽는다.
 - [모바일 테스트와 런타임 검증](mobile-testing-and-verification.md) — 모바일 테스트 계층, `agent-device`, E2E 또는 에이전트 연동 방식을 변경할 때 읽는다.
 - [모바일 타이포그래피](mobile-typography.md) — 모바일 텍스트 역할, 시스템 폰트, monospace 사용, Dynamic Type 또는 렌더러별 타이포그래피 매핑을 변경할 때 읽는다.
+- [모바일 UI 일관성 검토](mobile-ui-consistency-review.md) — 모바일 UI 검토 에이전트의 범위, 근거, 읽기 전용 권한 또는 실행 방식을 변경할 때 읽는다.
 - [모바일 UI 렌더러 경계](mobile-ui-renderer-boundaries.md) — 모바일 화면의 주 렌더러, 네이티브 셸 소유권 또는 Liquid Glass 사용 범위를 선택할 때 읽는다.
 - [Worktree 개발 세션](worktree-development-sessions.md) — 여러 Git worktree의 API·Metro 포트, 기기 풀과 배정, 프로세스 소유권 또는 공용 Development Build 재사용 방식을 변경할 때 읽는다.
 - [Supabase 클라이언트 경계](supabase-client-boundaries.md) — Supabase 타입, 클라이언트 초기화, 세션 저장소 또는 런타임별 키 소유권을 변경할 때 읽는다.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mobile UI Consistency Reviewer"
+  short_description: "Review mobile UI changes against project decisions"
+  default_prompt: "Use $mobile-ui-consistency-reviewer to review the current mobile UI changes for project-specific styling, renderer, copy, state, and accessibility consistency."
