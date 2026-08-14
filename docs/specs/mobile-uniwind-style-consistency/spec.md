@@ -78,4 +78,4 @@ React Native UI의 고정된 화면 규칙을 Uniwind로 표현한다. 실행 �
 
 ## 상태
 
-ready for implementation
+completed

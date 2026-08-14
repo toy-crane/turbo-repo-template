@@ -26,6 +26,12 @@ const iconSizes = {
   sm: 16,
 } as const;
 
+const iconSizeClassNames = {
+  lg: "size-6",
+  md: "size-5",
+  sm: "size-4",
+} as const satisfies Record<keyof typeof iconSizes, string>;
+
 const iconTones = {
   accent: "accent",
   accentForeground: "accent-foreground",
@@ -60,8 +66,8 @@ export function Icon({
   return (
     <View
       accessibilityElementsHidden
+      className={iconSizeClassNames[size]}
       importantForAccessibility="no-hide-descendants"
-      style={{ height: pixelSize, width: pixelSize }}
       testID={testID}
     >
       <IconComponent

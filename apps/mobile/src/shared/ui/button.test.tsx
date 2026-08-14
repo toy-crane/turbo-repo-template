@@ -53,12 +53,8 @@ test("전폭 버튼에서도 진행 표시를 가운데 문구 바로 앞에 둔
     includeHiddenElements: true,
   });
 
-  expect(StyleSheet.flatten(leadingContent.props.style)).toMatchObject({
-    right: "100%",
-  });
-  expect(StyleSheet.flatten(leadingContent.props.style)).not.toHaveProperty(
-    "left"
-  );
+  expect(leadingContent.props.className).toContain("right-full");
+  expect(leadingContent.props.className).not.toContain("left-");
 });
 
 test("기본 너비를 정하지 않고 사용처가 준 너비를 따른다", async () => {
@@ -87,26 +83,42 @@ test("진행 중에는 작업을 시작하기 전의 실제 크기를 유지한�
 
   await view.rerender(<Button isPending>내용만큼</Button>);
 
-  expect(
-    StyleSheet.flatten(screen.getByRole("button").props.style)
-  ).toMatchObject({ height: 48, paddingHorizontal: 32, width: 104 });
-});
+  const pendingButton = screen.getByRole("button");
 
-test("글자 크기를 제한하지 않고 버튼 높이가 내용에 맞춰 늘어난다", async () => {
-  await renderWithHeroUI(<Button>인증 코드 받기</Button>);
-
-  const label = screen.getByText("인증 코드 받기");
-  const buttonStyle = StyleSheet.flatten(
-    screen.getByRole("button").props.style
-  );
-
-  expect(label.props.maxFontSizeMultiplier).toBeUndefined();
-  expect(label.props.adjustsFontSizeToFit).toBeUndefined();
-  expect(label.props.numberOfLines).toBeUndefined();
-  expect(buttonStyle).toMatchObject({
-    height: "auto",
-    minHeight: 48,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
+  expect(StyleSheet.flatten(pendingButton.props.style)).toMatchObject({
+    height: 48,
+    width: 104,
   });
+  expect(pendingButton.props.className).not.toContain("h-auto!");
 });
+
+test("처음부터 진행 중이면 측정 전까지 내용에 맞춘 높이를 유지한다", async () => {
+  await renderWithHeroUI(<Button isPending>내용만큼</Button>);
+
+  const button = screen.getByRole("button");
+
+  expect(button.props.className).toContain("h-auto!");
+  expect(StyleSheet.flatten(button.props.style)).not.toHaveProperty("height");
+});
+
+test.each([
+  { className: "h-auto! min-h-10 px-[30px]! py-2.5", size: "sm" as const },
+  { className: "h-auto! min-h-12 px-8! py-3", size: "md" as const },
+  { className: "h-auto! min-h-14 px-9! py-3.5", size: "lg" as const },
+])(
+  "$size 버튼은 글자 크기를 제한하지 않고 내용에 맞춰 늘어난다",
+  async ({ className, size }) => {
+    await renderWithHeroUI(<Button size={size}>인증 코드 받기</Button>);
+
+    const label = screen.getByText("인증 코드 받기");
+    const button = screen.getByRole("button");
+
+    expect(label.props.maxFontSizeMultiplier).toBeUndefined();
+    expect(label.props.adjustsFontSizeToFit).toBeUndefined();
+    expect(label.props.numberOfLines).toBeUndefined();
+    expect(button.props.className).toContain(className);
+    expect(StyleSheet.flatten(button.props.style)).not.toHaveProperty(
+      "paddingHorizontal"
+    );
+  }
+);

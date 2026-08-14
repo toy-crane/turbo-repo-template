@@ -41,9 +41,11 @@ test("Liquid Glass가 없으면 지금과 같은 surface 원을 그대로 둔다
   await renderWithHeroUI(<LatestMessageButton onPress={jest.fn()} />);
 
   expect(screen.queryByTestId("chat-latest-glass")).not.toBeOnTheScreen();
-  // The circle is painted by a class, so what is checked is that the fallback
-  // still names `surface` and adds no border or shadow of its own.
-  expect(JSON.stringify(screen.toJSON())).toContain("bg-surface");
+  // The fallback owns a plain fixed circle, while the glass branch keeps its
+  // platform-owned style object.
+  expect(JSON.stringify(screen.toJSON())).toContain(
+    "h-11 w-11 items-center justify-center rounded-full bg-surface"
+  );
 });
 
 test("어느 쪽이든 이름과 동작은 같다", async () => {

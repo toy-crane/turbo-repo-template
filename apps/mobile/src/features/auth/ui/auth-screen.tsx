@@ -16,7 +16,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
  */
 
 const BOTTOM_PADDING = 12;
-const SIDE_PADDING = 24;
 const TOP_PADDING = 16;
 
 export function AuthScreen({
@@ -50,7 +49,7 @@ export function AuthScreen({
       */}
       <ScrollView
         className="flex-1"
-        contentContainerClassName="gap-4 px-6 pt-2"
+        contentContainerClassName={isRoot ? "gap-4 px-6" : "gap-4 px-6 pt-2"}
         contentContainerStyle={
           isRoot ? { paddingTop: insets.top + TOP_PADDING } : undefined
         }
@@ -78,11 +77,9 @@ export function AuthScreen({
         }}
       >
         <View
-          className="gap-2.5 pt-3"
+          className="gap-2.5 px-6 pt-3"
           style={{
             paddingBottom: Math.max(insets.bottom, BOTTOM_PADDING),
-            paddingLeft: SIDE_PADDING,
-            paddingRight: SIDE_PADDING,
           }}
         >
           {footer}
