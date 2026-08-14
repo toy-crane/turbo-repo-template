@@ -8,12 +8,8 @@ function dismissSettings() {
   router.dismiss();
 }
 
-function openProfileEdit() {
+function openProfile() {
   router.push("/settings/profile");
-}
-
-function openAccountDeletion() {
-  router.push("/settings/delete-account");
 }
 
 function SettingsToolbar() {
@@ -50,8 +46,7 @@ export default function SettingsRoute() {
         danger={danger}
         foreground={foreground}
         muted={muted}
-        onDeleteAccount={openAccountDeletion}
-        onEditProfile={openProfileEdit}
+        onOpenProfile={openProfile}
       />
       <SettingsToolbar />
     </>

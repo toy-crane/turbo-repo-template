@@ -2,7 +2,7 @@
  * Settings is a sheet with a stack inside it.
  *
  * The outer route decides how the sheet arrives; the stack inside owns the
- * titles, the back gesture and the toolbars, which is what lets 프로필 수정 push
+ * titles, the back gesture and the toolbars, which is what lets 프로필 push
  * within the sheet rather than covering it.
  */
 export function getSettingsSheetOptions() {
@@ -37,16 +37,14 @@ export function getSettingsRouteOptions() {
   };
 }
 
-/** Pushed onto the sheet's stack, so the back arrow is the platform's own. */
-export function getProfileEditRouteOptions() {
+/**
+ * Pushed onto the sheet's stack, so the back arrow is the platform's own.
+ *
+ * Named for where it goes rather than what it edits: the screen also holds
+ * 계정 탈퇴, which 프로필 수정 would not have prepared anyone for.
+ */
+export function getProfileRouteOptions() {
   return {
-    title: "프로필 수정",
-  };
-}
-
-/** Explains permanent deletion before the platform's final confirmation. */
-export function getAccountDeletionRouteOptions() {
-  return {
-    title: "계정 탈퇴",
+    title: "프로필",
   };
 }

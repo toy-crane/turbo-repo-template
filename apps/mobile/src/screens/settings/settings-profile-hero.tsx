@@ -14,9 +14,9 @@ export interface SettingsProfileHeroProps {
  * The profile at the top of Settings: the picture, the nickname, the account id.
  *
  * The picture is the control and the two lines below it are not. Pressing it
- * opens 프로필 수정 rather than a photo menu, so the picture and the 프로필 수정
- * row lead to the same place and a change to any part of the public profile is
- * saved or abandoned as one.
+ * opens 프로필 rather than a photo menu, so the picture and the 프로필 row lead
+ * to the same place and a change to any part of the public profile is saved or
+ * abandoned as one.
  *
  * No `@` in front of the id: `@` means a mention or an address, and this app has
  * neither, so it would promise something that does not exist.
@@ -34,7 +34,7 @@ export function SettingsProfileHero({
   return (
     <View className="items-center gap-3 px-4 pt-2 pb-6">
       <Pressable
-        accessibilityLabel={profileLabels.editProfile}
+        accessibilityLabel={profileLabels.profile}
         accessibilityRole="button"
         onPress={onPress}
         testID="settings-profile-photo"

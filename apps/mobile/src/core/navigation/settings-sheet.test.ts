@@ -1,8 +1,7 @@
 import { describe, expect, test } from "@jest/globals";
 
 import {
-  getAccountDeletionRouteOptions,
-  getProfileEditRouteOptions,
+  getProfileRouteOptions,
   getSettingsRouteOptions,
   getSettingsSheetOptions,
   getSettingsStackScreenOptions,
@@ -39,11 +38,9 @@ describe("시트 안쪽 화면", () => {
 
   // Pushed rather than presented, so the back arrow is the platform's own and
   // the profile behind it stays in place.
-  test("프로필 수정은 push한 화면의 제목을 쓴다", () => {
-    expect(getProfileEditRouteOptions()).toEqual({ title: "프로필 수정" });
-  });
-
-  test("계정 탈퇴 안내는 push한 화면의 제목을 쓴다", () => {
-    expect(getAccountDeletionRouteOptions()).toEqual({ title: "계정 탈퇴" });
+  // Named for the destination, not the errand: the screen holds 계정 탈퇴 as
+  // well as the fields, so 프로필 수정 would promise less than it opens.
+  test("프로필은 push한 화면의 제목을 쓴다", () => {
+    expect(getProfileRouteOptions()).toEqual({ title: "프로필" });
   });
 });
