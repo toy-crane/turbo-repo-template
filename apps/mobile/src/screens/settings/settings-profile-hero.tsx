@@ -39,7 +39,12 @@ export function SettingsProfileHero({
         onPress={onPress}
         testID="settings-profile-photo"
       >
-        <UserAvatar avatarUrl={avatarUrl} displayName={displayName} size="xl" />
+        <UserAvatar
+          avatarUrl={avatarUrl}
+          displayName={displayName}
+          size="xl"
+          transparentPhotoBackground
+        />
       </Pressable>
 
       <View className="items-center gap-1">

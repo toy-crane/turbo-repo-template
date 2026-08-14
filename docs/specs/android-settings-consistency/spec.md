@@ -77,12 +77,15 @@ Android Settings가 Android의 기본 표현을 유지하면서도 iOS와 같은
 ## 검증 결과
 
 - Android Development Build에서 프로필 영역이 App Bar 아래에서 시작하고 화면 가운데에 놓이는 것을 확인했다.
-- Android의 Light 및 Dark 모드에서 사진 유무, 행 중첩, 버전 값과 로그아웃 색상, Switch를 확인했다.
+- Android의 Light 및 Dark 모드에서 실제 사진과 사진이 없는 상태, 행 중첩, 버전 값과 위험 동작 색상, Switch를 확인했다.
+- 실제 사진 뒤에는 앱이 만든 바탕이 보이지 않았고, 사진을 불러오지 못하면 이니셜 원형 바탕으로 돌아가는 동작을 자동 테스트로 확인했다.
 - Android의 기본 글자 크기와 큰 글자 크기에서 프로필과 설정 항목이 겹치거나 잘리지 않는 것을 확인했다.
 - Android에서 `프로필 수정`과 `로그아웃` 행의 빈 오른쪽 부분을 눌러도 각 동작이 실행되는 것을 확인했다.
+- 최신 `main`의 Material Symbols 닫기 아이콘을 합친 뒤 Android Settings에 X가 표시되고 Home으로 닫히는 것을 확인했다.
 - iOS Development Build에서 기존 프로필 배치와 목록 표현, 설정 닫기, 프로필 수정 뒤로가기와 로그아웃을 확인했다.
-- 모바일 테스트 50개 묶음의 테스트 324개, TypeScript 검사와 저장소 검사를 통과했다.
+- 모바일 테스트 57개 묶음의 테스트 382개, TypeScript 검사와 모바일 Ultracite 검사를 통과했다.
+- 저장소 `bun run check`의 코드 검사 전 단계는 기준 브랜치의 Expo 패치 버전이 현재 Expo CLI 권장 버전보다 낮아 멈췄다. 이번 변경과 관련된 코드 검사는 따로 통과했다.
 
 ## 상태
 
-implementation in progress
+implemented

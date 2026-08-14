@@ -1,4 +1,5 @@
 import { Avatar } from "heroui-native/avatar";
+import { useCallback, useState } from "react";
 
 /**
  * `xl` is this app's own step above HeroUI's three.
@@ -19,6 +20,8 @@ export interface UserAvatarProps {
   displayName: string | null;
   size?: "lg" | "md" | "sm" | "xl";
   testID?: string;
+  /** Removes the app-supplied colour only while the photo is visible. */
+  transparentPhotoBackground?: boolean;
 }
 
 /**
@@ -43,12 +46,24 @@ export function UserAvatar({
   displayName,
   size = "sm",
   testID,
+  transparentPhotoBackground = false,
 }: UserAvatarProps) {
   const isExtraLarge = size === "xl";
+  const [loadedPhotoUrl, setLoadedPhotoUrl] = useState<string | null>(null);
+  const showsTransparentPhoto =
+    transparentPhotoBackground &&
+    avatarUrl !== null &&
+    loadedPhotoUrl === avatarUrl;
+  const handlePhotoError = useCallback(() => {
+    setLoadedPhotoUrl(null);
+  }, []);
+  const handlePhotoLoad = useCallback(() => {
+    setLoadedPhotoUrl(avatarUrl);
+  }, [avatarUrl]);
   const rootClassName = [
     isExtraLarge ? XL_ROOT_CLASS : undefined,
     CIRCLE_CLASS,
-    avatarUrl ? PHOTO_ROOT_CLASS : undefined,
+    showsTransparentPhoto ? PHOTO_ROOT_CLASS : undefined,
   ]
     .filter(Boolean)
     .join(" ");
@@ -56,14 +71,20 @@ export function UserAvatar({
   return (
     <Avatar
       alt={displayName ? `${displayName} 프로필 사진` : "프로필 사진"}
-      background={avatarUrl ? null : undefined}
+      background={showsTransparentPhoto ? null : undefined}
       className={rootClassName}
       color="accent"
       size={isExtraLarge ? "lg" : size}
       testID={testID}
       variant="soft"
     >
-      {avatarUrl ? <Avatar.Image source={{ uri: avatarUrl }} /> : null}
+      {avatarUrl ? (
+        <Avatar.Image
+          onError={handlePhotoError}
+          onLoad={handlePhotoLoad}
+          source={{ uri: avatarUrl }}
+        />
+      ) : null}
       <Avatar.Fallback
         classNames={isExtraLarge ? { text: XL_FALLBACK_TEXT_CLASS } : undefined}
       >
