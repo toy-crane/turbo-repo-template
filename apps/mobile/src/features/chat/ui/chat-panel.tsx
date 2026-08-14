@@ -45,7 +45,6 @@ const KEYBOARD_INPUT_GAP = 8;
 const LATEST_OVERLAY_HEIGHT = 60;
 const USER_SCROLL_THRESHOLD = 24;
 const MESSAGE_TOP_SPACING = 12;
-const MESSAGE_BOTTOM_SPACING = 12;
 /** Enough to read the messages about to go, not enough to mistake them for staying. */
 const DOOMED_OPACITY = 0.38;
 
@@ -104,10 +103,8 @@ function PlainTextMessage({
 
   return (
     <View
-      style={{
-        marginBottom: MESSAGE_BOTTOM_SPACING,
-        opacity: isDoomed ? DOOMED_OPACITY : 1,
-      }}
+      className="mb-4"
+      style={{ opacity: isDoomed ? DOOMED_OPACITY : 1 }}
       testID="chat-message-row"
     >
       {message.role === "user" ? (
