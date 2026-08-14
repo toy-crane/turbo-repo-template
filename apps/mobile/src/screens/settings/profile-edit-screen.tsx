@@ -10,7 +10,7 @@ import {
   useNativeState,
 } from "@expo/ui";
 import { useCallback } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 
 import { useAccountDeletion } from "@/features/account-deletion/state/use-account-deletion";
 import { accountDeletionLabels } from "@/features/account-deletion/ui/account-deletion-labels";
@@ -111,9 +111,11 @@ export type ProfileEditFlow = ReturnType<typeof useProfileEditFlow>;
 export function ProfileEditScreen({
   danger,
   flow,
+  foreground,
 }: {
   danger: string;
   flow: ProfileEditFlow;
+  foreground: string;
 }) {
   const { cameraDeniedMessage, edit, menu, menuActions } = flow;
   // Not part of the draft: deleting the account ends the thing being edited, so
@@ -125,6 +127,12 @@ export function ProfileEditScreen({
    * of small print. The check in progress is not a problem, so it stays quiet.
    */
   const problemStyle = { color: danger };
+  // Android's @expo/ui text does not follow the app's appearance on its own, so
+  // anything here without a colour of its own is handed the same foreground the
+  // rest of the app uses. See docs/follow-ups for the fields above, which still
+  // predate this.
+  const androidTextStyle =
+    Platform.OS === "android" ? { color: foreground } : undefined;
   // The native fields hold their own text and report changes back. These carry
   // the two writes that do not come from typing: the saved values this screen
   // opens with, and a suggestion the person pressed.
@@ -286,6 +294,12 @@ export function ProfileEditScreen({
           No chevron: the row does not go anywhere. It raises the platform's
           confirmation where it stands, which is also why the footer has to say
           what disappears — it is read before the press, not after it.
+
+          Progress is the row's own text, the way 로그아웃 already does it in
+          Settings. `@expo/ui 57.0.10`'s `ListItem` has no `disabled` and no
+          accessibility state, so 계정 탈퇴 중 is both what is drawn and what a
+          screen reader announces. Pressing again while it runs opens nothing:
+          `useAccountDeletion` drops the request before the dialog.
         */}
         <FieldGroup.Section testID="account-deletion-section">
           <ListItem
@@ -309,7 +323,10 @@ export function ProfileEditScreen({
                 {deletion.failure}
               </Text>
             ) : (
-              <Text testID="account-deletion-notice">
+              <Text
+                testID="account-deletion-notice"
+                textStyle={androidTextStyle}
+              >
                 {accountDeletionLabels.deletionNotice}
               </Text>
             )}
