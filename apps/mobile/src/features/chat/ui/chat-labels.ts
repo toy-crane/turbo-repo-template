@@ -11,7 +11,7 @@ export const chatLabels = {
   /** Shown as the menu item on a message. */
   editMessage: "수정",
   /** Shown above the composer while a message is being rewritten. */
-  editNotice: "수정하면 여기서부터 대화를 다시 시작해요.",
+  editNotice: "이 메시지부터 다시 물어봐요.",
   /** Not shown: the button that leaves the edit state. */
   endEdit: "수정 그만두기",
   /** Spoken aloud when a request fails. The screen shows the same words. */

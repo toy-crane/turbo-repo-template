@@ -5,13 +5,12 @@ import { Icon, type IconName } from "@/shared/ui/icon";
 import { chatLabels } from "./chat-labels";
 
 /**
- * The buttons are `size-8` and sit against each other, so the icons are one
- * spacing step short of `size-9` apart centre to centre. That is the density
- * the chat apps people already use settled on, and closer than two 44px press
- * targets could sit without overlapping. So the drawn box is the whole target
- * across, and `hitSlop` only reaches up and down, where the row has no
- * neighbour to take the touch from. It is the one measure here that cannot be
- * a class, since `hitSlop` takes a number.
+ * The buttons are `size-7` and sit against each other, so a `size-4` icon
+ * leaves the drawn shapes `size-3` apart and the row reads as one group. That
+ * is closer than two 44px press targets could sit without overlapping, so the
+ * drawn box is the whole target across and `hitSlop` only reaches up and down,
+ * where the row has no neighbour to take the touch from. It is the one measure
+ * here that cannot be a class, since `hitSlop` takes a number.
  */
 const ACTION_VERTICAL_HIT_SLOP = 6;
 
@@ -34,8 +33,8 @@ function ActionButton({
       accessibilityRole="button"
       className={
         isDisabled
-          ? "size-8 items-center justify-center rounded-full opacity-40"
-          : "size-8 items-center justify-center rounded-full"
+          ? "size-7 items-center justify-center rounded-full opacity-40"
+          : "size-7 items-center justify-center rounded-full"
       }
       hitSlop={{
         bottom: ACTION_VERTICAL_HIT_SLOP,
@@ -46,7 +45,7 @@ function ActionButton({
     >
       <PressableFeedback.Highlight />
       <PressableFeedback.Ripple />
-      <Icon name={name} tone="muted" />
+      <Icon name={name} size="sm" tone="muted" />
     </PressableFeedback>
   );
 }
