@@ -25,7 +25,7 @@
     "dev:remove": "bun scripts/dev/cli.ts remove",
     "dev:stop": "bun scripts/dev/cli.ts stop",
     "fix": "turbo run fix",
-    "postinstall": "node apps/mobile/node_modules/react-native-enriched-markdown/postinstall.mjs",
+    "postinstall": "bun scripts/setup/vendor-markdown-assets.ts",
     "setup": "bun scripts/setup/cli.ts",
     "test": "turbo run test",
     "test:integration": "bun run --cwd scripts test:integration"

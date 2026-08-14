@@ -26,6 +26,15 @@ const CELL_PADDING_HORIZONTAL = 10;
 const CELL_PADDING_VERTICAL = 6;
 const QUOTE_BORDER_WIDTH = 3;
 const QUOTE_GAP = 12;
+/**
+ * Written once rather than per render. An answer is redrawn every time the
+ * stream is let through, and a new object each time would hand the native view
+ * a fresh prop to compare on every one of them.
+ */
+const STREAMING_CONFIG = {
+  codeBlockMode: "progressive",
+  tableMode: "progressive",
+} as const;
 
 /**
  * An answer, drawn as Markdown while it is still arriving.
@@ -133,10 +142,7 @@ export function MarkdownAnswer({
       markdown={markdown}
       markdownStyle={markdownStyle}
       onLinkPress={openLink}
-      streamingConfig={{
-        codeBlockMode: "progressive",
-        tableMode: "progressive",
-      }}
+      streamingConfig={STREAMING_CONFIG}
       testID={testID}
     />
   );
