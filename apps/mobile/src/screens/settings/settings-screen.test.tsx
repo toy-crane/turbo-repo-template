@@ -59,6 +59,7 @@ jest.mock("@expo/ui", () => {
   }>) => React.createElement(View, { style, testID }, children);
   const FieldGroup = Object.assign(Container, {
     Section: Container,
+    SectionFooter: Container,
     SectionHeader: Container,
   });
 
@@ -123,9 +124,13 @@ jest.mock("@expo/ui", () => {
       ),
     Text: ({
       children,
+      testID,
       textStyle,
-    }: PropsWithChildren<{ textStyle?: import("react-native").TextStyle }>) =>
-      React.createElement(NativeText, { style: textStyle }, children),
+    }: PropsWithChildren<{
+      testID?: string;
+      textStyle?: import("react-native").TextStyle;
+    }>) =>
+      React.createElement(NativeText, { style: textStyle, testID }, children),
   };
 });
 
@@ -142,16 +147,12 @@ beforeEach(() => {
 });
 
 function renderSettings({
-  onDeleteAccount = () => {
-    // Most tests are about something else on this screen.
-  },
-  onEditProfile = () => {
+  onOpenProfile = () => {
     // Most tests are about something else on this screen.
   },
   queryClient = new QueryClient(),
 }: {
-  onDeleteAccount?: () => void;
-  onEditProfile?: () => void;
+  onOpenProfile?: () => void;
   queryClient?: QueryClient;
 } = {}) {
   return renderWithHeroUI(
@@ -159,8 +160,7 @@ function renderSettings({
       <SettingsScreen
         danger={DANGER}
         muted={MUTED}
-        onDeleteAccount={onDeleteAccount}
-        onEditProfile={onEditProfile}
+        onOpenProfile={onOpenProfile}
       />
     </QueryClientProvider>
   );
@@ -262,28 +262,39 @@ test("현재 공개 프로필을 화면 위에 보여 준다", async () => {
   expect(screen.queryByText("@minseokim")).toBeNull();
 });
 
-test("프로필 사진과 프로필 수정 행이 같은 화면을 연다", async () => {
-  const onEditProfile = jest.fn();
+test("프로필 사진과 프로필 행이 같은 화면을 연다", async () => {
+  const onOpenProfile = jest.fn();
   const user = userEvent.setup();
 
-  await renderSettings({ onEditProfile });
+  await renderSettings({ onOpenProfile });
 
   await user.press(await screen.findByTestId("settings-profile-photo"));
-  await user.press(screen.getByTestId("edit-profile-row"));
+  await user.press(screen.getByTestId("profile-row"));
 
   // Both entry points, one destination: a photo menu opening straight from
   // Settings would split saving the picture from saving the rest of the profile.
-  expect(onEditProfile).toHaveBeenCalledTimes(2);
+  expect(onOpenProfile).toHaveBeenCalledTimes(2);
 });
 
-test("계정 탈퇴 행은 별도 안내 화면을 연다", async () => {
-  const onDeleteAccount = jest.fn();
+test("계정 탈퇴는 설정 목록에 없다", async () => {
+  await renderSettings();
 
-  await renderSettings({ onDeleteAccount });
+  // It lives in 프로필 instead. Two rows that end something, on one screen, take
+  // weight from each other; the one that cannot be undone keeps its own screen.
+  expect(screen.queryByText("계정 탈퇴")).toBeNull();
+  expect(screen.queryByTestId("delete-account-row")).toBeNull();
+});
 
-  await fireEvent.press(screen.getByTestId("delete-account-row"));
+test("로그아웃은 목록 마지막에 이름 없는 그룹으로 혼자 선다", async () => {
+  await renderSettings();
 
-  expect(onDeleteAccount).toHaveBeenCalledTimes(1);
+  const sections = screen.getByTestId("settings-field-group").props.children;
+
+  // Nothing follows it, and nothing shares the group. That placement is what
+  // says this row ends the screen rather than belonging to the settings above.
+  expect(sections.at(-1).props.testID).toBe("sign-out-section");
+  expect(sections.at(-1).props.title).toBeUndefined();
+  expect(screen.getByRole("button", { name: "로그아웃" })).toBeOnTheScreen();
 });
 
 test("iOS 설정 텍스트는 네이티브 기본 색상을 그대로 쓴다", async () => {

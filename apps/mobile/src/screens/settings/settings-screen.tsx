@@ -14,7 +14,6 @@ import { useHeaderHeight } from "expo-router/react-navigation";
 import { type ReactNode, useState } from "react";
 import { Platform } from "react-native";
 
-import { accountDeletionLabels } from "@/features/account-deletion/ui/account-deletion-labels";
 import {
   readProfileAvatarUrl,
   useProfile,
@@ -37,13 +36,11 @@ const CHEVRON_SIZE = 14;
 export function SettingsScreen({
   danger,
   muted,
-  onDeleteAccount,
-  onEditProfile,
+  onOpenProfile,
 }: {
   danger: string;
   muted: string;
-  onDeleteAccount: () => void;
-  onEditProfile: () => void;
+  onOpenProfile: () => void;
 }) {
   const headerHeight = useHeaderHeight();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -70,7 +67,7 @@ export function SettingsScreen({
               <SettingsProfileHero
                 avatarUrl={readProfileAvatarUrl(profile)}
                 displayName={profile?.displayName ?? null}
-                onPress={onEditProfile}
+                onPress={onOpenProfile}
                 username={profile?.username ?? null}
               />
             </RNHostView>
@@ -94,43 +91,16 @@ export function SettingsScreen({
             than drawn from a second icon set.
           */}
           <SettingsActionRow
-            onPress={onEditProfile}
-            testID="edit-profile-row"
+            onPress={onOpenProfile}
+            testID="profile-row"
             trailing={
               Platform.OS === "ios" ? (
                 <Icon color={muted} name="chevron.right" size={CHEVRON_SIZE} />
               ) : undefined
             }
           >
-            <Text>{profileLabels.editProfile}</Text>
+            <Text>{profileLabels.profile}</Text>
           </SettingsActionRow>
-          {/*
-            Red because signing out ends something. It has no chevron because it
-            acts immediately rather than opening another screen.
-          */}
-          <SettingsActionRow onPress={requestSignOut} testID="sign-out-button">
-            <Text textStyle={{ color: danger }}>
-              {isSigningOut ? profileLabels.signingOut : profileLabels.signOut}
-            </Text>
-          </SettingsActionRow>
-          <SettingsActionRow
-            onPress={onDeleteAccount}
-            testID="delete-account-row"
-            trailing={
-              Platform.OS === "ios" ? (
-                <Icon color={muted} name="chevron.right" size={CHEVRON_SIZE} />
-              ) : undefined
-            }
-          >
-            <Text textStyle={{ color: danger }}>
-              {accountDeletionLabels.deleteAccount}
-            </Text>
-          </SettingsActionRow>
-          {signOutFailure ? (
-            <Row testID="sign-out-error">
-              <Text>{signOutFailure}</Text>
-            </Row>
-          ) : null}
         </FieldGroup.Section>
 
         <FieldGroup.Section
@@ -157,6 +127,30 @@ export function SettingsScreen({
             <Spacer flexible />
             <Text textStyle={{ color: muted }}>{appVersion}</Text>
           </Row>
+        </FieldGroup.Section>
+
+        {/*
+          Last, alone and unnamed. A title would have to say what this one row is
+          a group of, and the platform already reads a lone trailing group as the
+          thing that ends the screen. 계정 탈퇴 is not here: two red rows on one
+          screen take weight from each other, so it sits in 프로필 instead.
+
+          Red because signing out ends something. No chevron because it acts
+          immediately rather than opening another screen.
+        */}
+        <FieldGroup.Section testID="sign-out-section">
+          <SettingsActionRow onPress={requestSignOut} testID="sign-out-button">
+            <Text textStyle={{ color: danger }}>
+              {isSigningOut ? profileLabels.signingOut : profileLabels.signOut}
+            </Text>
+          </SettingsActionRow>
+          {signOutFailure ? (
+            <FieldGroup.SectionFooter>
+              <Text testID="sign-out-error" textStyle={{ color: danger }}>
+                {signOutFailure}
+              </Text>
+            </FieldGroup.SectionFooter>
+          ) : null}
         </FieldGroup.Section>
       </FieldGroup>
     </Host>

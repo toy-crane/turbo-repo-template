@@ -20,12 +20,16 @@ export const profileLabels = {
   deletePhoto: "현재 사진 삭제",
   /** The pill under the picture. Its accessible name stays the fuller 사진 편집. */
   edit: "편집",
-  editProfile: "프로필 수정",
   haptics: "햅틱 반응",
   nickname: "닉네임",
   notifications: "알림",
   pickFromLibrary: "사진 보관함에서 선택",
   preferences: "환경 설정",
+  /*
+    The destination, not the errand. This screen holds 계정 탈퇴 as well as the
+    fields, so naming the row 프로필 수정 would promise less than it opens.
+  */
+  profile: "프로필",
   save: "저장",
   saving: "저장 중",
   settings: "설정",

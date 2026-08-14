@@ -1,8 +1,7 @@
 import { Stack } from "expo-router";
 
 import {
-  getAccountDeletionRouteOptions,
-  getProfileEditRouteOptions,
+  getProfileRouteOptions,
   getSettingsRouteOptions,
   getSettingsStackScreenOptions,
 } from "@/core/navigation/settings-sheet";
@@ -11,9 +10,9 @@ import { useAppTheme } from "@/core/theme/app-theme-bridge";
 /**
  * The stack inside the settings sheet.
  *
- * 프로필 수정 is a push rather than another sheet: it edits what the screen
- * behind it is showing, and stacking a second sheet over the first would hide
- * that relationship along with the profile itself.
+ * 프로필 is a push rather than another sheet: it works on what the screen behind
+ * it is showing, and stacking a second sheet over the first would hide that
+ * relationship along with the profile itself.
  */
 export default function SettingsLayout() {
   const { background } = useAppTheme();
@@ -26,11 +25,7 @@ export default function SettingsLayout() {
       }}
     >
       <Stack.Screen name="index" options={getSettingsRouteOptions()} />
-      <Stack.Screen name="profile" options={getProfileEditRouteOptions()} />
-      <Stack.Screen
-        name="delete-account"
-        options={getAccountDeletionRouteOptions()}
-      />
+      <Stack.Screen name="profile" options={getProfileRouteOptions()} />
     </Stack>
   );
 }

@@ -12,6 +12,8 @@ import {
 import { useCallback } from "react";
 import { Alert } from "react-native";
 
+import { useAccountDeletion } from "@/features/account-deletion/state/use-account-deletion";
+import { accountDeletionLabels } from "@/features/account-deletion/ui/account-deletion-labels";
 import {
   NICKNAME_MAX_LENGTH,
   normalizeUsernameInput,
@@ -114,6 +116,9 @@ export function ProfileEditScreen({
   flow: ProfileEditFlow;
 }) {
   const { cameraDeniedMessage, edit, menu, menuActions } = flow;
+  // Not part of the draft: deleting the account ends the thing being edited, so
+  // it neither waits for 저장 nor blocks it.
+  const deletion = useAccountDeletion();
   /*
    * Red is what separates a problem from the standing explanation under it.
    * Both sit in the same footer, and left the same grey they read as one block
@@ -273,6 +278,49 @@ export function ProfileEditScreen({
             ))}
           </FieldGroup.Section>
         ) : null}
+
+        {/*
+          Last, alone and unnamed, the same shape Settings gives 로그아웃. A title
+          would have to say what this one row is a group of.
+
+          No chevron: the row does not go anywhere. It raises the platform's
+          confirmation where it stands, which is also why the footer has to say
+          what disappears — it is read before the press, not after it.
+
+          Progress is the row's own text, the way 로그아웃 already does it in
+          Settings. `@expo/ui 57.0.10`'s `ListItem` has no `disabled` and no
+          accessibility state, so 계정 탈퇴 중 is both what is drawn and what a
+          screen reader announces. Pressing again while it runs opens nothing:
+          `useAccountDeletion` drops the request before the dialog.
+        */}
+        <FieldGroup.Section testID="account-deletion-section">
+          <ListItem
+            onPress={deletion.confirmDeletion}
+            testID="delete-account-row"
+          >
+            <Text textStyle={problemStyle}>
+              {deletion.isDeleting
+                ? accountDeletionLabels.deletingAccount
+                : accountDeletionLabels.deleteAccount}
+            </Text>
+          </ListItem>
+          <FieldGroup.SectionFooter>
+            {/*
+              The failure takes the notice's place rather than stacking under it.
+              Both say what happens to the account, and side by side the one that
+              needs acting on reads as more small print.
+            */}
+            {deletion.failure ? (
+              <Text testID="account-deletion-error" textStyle={problemStyle}>
+                {deletion.failure}
+              </Text>
+            ) : (
+              <Text testID="account-deletion-notice">
+                {accountDeletionLabels.deletionNotice}
+              </Text>
+            )}
+          </FieldGroup.SectionFooter>
+        </FieldGroup.Section>
       </FieldGroup>
 
       {/*

@@ -1,14 +1,28 @@
-import { Button, FieldGroup, Host, Row, Text } from "@expo/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert } from "react-native";
 
 import { deleteAccount } from "@/features/account-deletion/api/delete-account";
 import { accountDeletionLabels } from "@/features/account-deletion/ui/account-deletion-labels";
 import { signOut } from "@/features/auth/api/sign-out";
 import { getSupabaseClient } from "@/shared/supabase/client";
 
-function useAccountDeletionFlow() {
+export interface AccountDeletionState {
+  /** Opens the platform's confirmation; deletion only starts from inside it. */
+  confirmDeletion: () => void;
+  /** What to tell the person when the account outlived the attempt. */
+  failure: string | undefined;
+  isDeleting: boolean;
+}
+
+/**
+ * Deleting the account, as a screen needs it.
+ *
+ * The confirmation belongs here rather than in the screen: it is the only way
+ * into the deletion, so the row that starts it never has to know that the
+ * platform dialog is what actually calls the server.
+ */
+export function useAccountDeletion(): AccountDeletionState {
   const [failure, setFailure] = useState<string | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
@@ -53,6 +67,12 @@ function useAccountDeletionFlow() {
   }, [queryClient]);
 
   const confirmDeletion = useCallback(() => {
+    // Already running: the row is showing progress, and a second dialog would
+    // only offer a request the guard above is going to drop anyway.
+    if (running.current === "running") {
+      return;
+    }
+
     Alert.alert(
       accountDeletionLabels.confirmTitle,
       accountDeletionLabels.confirmBody,
@@ -68,69 +88,4 @@ function useAccountDeletionFlow() {
   }, [deleteCurrentAccount]);
 
   return { confirmDeletion, failure, isDeleting };
-}
-
-/** Explains permanent deletion before the platform's final destructive alert. */
-export function AccountDeletionScreen({
-  danger,
-  foreground,
-}: {
-  danger: string;
-  foreground: string;
-}) {
-  const { confirmDeletion, failure, isDeleting } = useAccountDeletionFlow();
-  const androidTextStyle =
-    Platform.OS === "android" ? { color: foreground } : undefined;
-
-  return (
-    <Host style={{ flex: 1 }} useViewportSizeMeasurement>
-      <FieldGroup testID="account-deletion-field-group">
-        <FieldGroup.Section title={accountDeletionLabels.deletionTargets}>
-          <Row>
-            <Text textStyle={androidTextStyle}>
-              {accountDeletionLabels.account}
-            </Text>
-          </Row>
-          <Row>
-            <Text textStyle={androidTextStyle}>
-              {accountDeletionLabels.profile}
-            </Text>
-          </Row>
-          <Row>
-            <Text textStyle={androidTextStyle}>
-              {accountDeletionLabels.uploadedAvatar}
-            </Text>
-          </Row>
-          <FieldGroup.SectionFooter>
-            <Text textStyle={androidTextStyle}>
-              {accountDeletionLabels.deletionNotice}
-            </Text>
-          </FieldGroup.SectionFooter>
-        </FieldGroup.Section>
-
-        <FieldGroup.Section>
-          <Button
-            disabled={isDeleting}
-            label={
-              isDeleting
-                ? accountDeletionLabels.deletingAccount
-                : accountDeletionLabels.deleteAccount
-            }
-            onPress={confirmDeletion}
-            testID="delete-account-button"
-          />
-          {failure ? (
-            <FieldGroup.SectionFooter>
-              <Text
-                testID="account-deletion-error"
-                textStyle={{ color: danger }}
-              >
-                {failure}
-              </Text>
-            </FieldGroup.SectionFooter>
-          ) : null}
-        </FieldGroup.Section>
-      </FieldGroup>
-    </Host>
-  );
 }

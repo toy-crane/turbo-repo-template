@@ -683,3 +683,158 @@ async function saveProfile(fake: FakeSupabase) {
     expect(fake.updates.length).toBeGreaterThan(before);
   });
 }
+
+/**
+ * Stands in for the platform dialog 계정 탈퇴 raises.
+ *
+ * Deletion only ever starts from inside it, so a test that cannot answer the
+ * dialog cannot reach the request either.
+ */
+function captureDeletionDialog() {
+  let buttons: import("react-native").AlertButton[] = [];
+  const alert = jest
+    .spyOn(Alert, "alert")
+    .mockImplementation((_title, _message, given) => {
+      buttons = given ?? [];
+    });
+
+  return {
+    alert,
+    press(text: string) {
+      const button = buttons.find((candidate) => candidate.text === text);
+
+      if (!button) {
+        throw new Error(`${text} 확인창 버튼이 없습니다.`);
+      }
+
+      return button.onPress?.();
+    },
+  };
+}
+
+async function openDeletionDialog() {
+  await act(() => {
+    fireEvent.press(screen.getByTestId("delete-account-row"));
+  });
+}
+
+test("계정 탈퇴는 화면을 옮기지 않고 그 자리에서 확인창을 연다", async () => {
+  const fake = resetFakeSupabase({
+    profile: createProfileRow(SAVED),
+    session: createFakeSession(),
+  });
+  const dialog = captureDeletionDialog();
+
+  await renderEditor();
+
+  // Read before the press, not after it: with no screen in between, this is the
+  // only place that names what disappears.
+  expect(screen.getByTestId("account-deletion-notice")).toHaveTextContent(
+    "로그인 계정, 프로필과 올린 사진이 모두 삭제됩니다. 되돌릴 수 없습니다."
+  );
+
+  await openDeletionDialog();
+
+  expect(dialog.alert).toHaveBeenCalledWith(
+    "계정을 탈퇴할까요?",
+    "지금 삭제하면 되돌릴 수 없습니다. 다시 가입해도 이전 정보는 돌아오지 않습니다.",
+    expect.arrayContaining([
+      expect.objectContaining({ style: "cancel", text: "취소" }),
+      expect.objectContaining({ style: "destructive", text: "계정 탈퇴" }),
+    ])
+  );
+  expect(fake.functions.invoke).not.toHaveBeenCalled();
+
+  dialog.press("취소");
+
+  // Cancelling leaves both the account and the draft alone.
+  expect(fake.functions.invoke).not.toHaveBeenCalled();
+  expect(screen.getByTestId("profile-nickname").props.value).toBe("김민서");
+});
+
+test("확인 뒤 한 번만 삭제하고 기기 로그인과 사용자 캐시를 지운다", async () => {
+  const fake = resetFakeSupabase({
+    profile: createProfileRow(SAVED),
+    session: createFakeSession(),
+  });
+  const queryClient = new QueryClient();
+  const dialog = captureDeletionDialog();
+  let finishDeletion = () => {
+    // Replaced by the pending call below.
+  };
+
+  fake.functions.invoke.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishDeletion = () =>
+          resolve({ data: { deleted: true }, error: null });
+      })
+  );
+
+  await renderEditor({ queryClient });
+  queryClient.setQueryData(["notes"], ["현재 사용자의 데이터"]);
+
+  await openDeletionDialog();
+  await act(() => {
+    dialog.press("계정 탈퇴");
+  });
+
+  expect(
+    await screen.findByRole("button", { name: "계정 탈퇴 중" })
+  ).toBeOnTheScreen();
+
+  // The row is showing progress, so pressing it again offers no second dialog
+  // and sends no second request.
+  await openDeletionDialog();
+  expect(dialog.alert).toHaveBeenCalledTimes(1);
+
+  await act(async () => {
+    finishDeletion();
+    await Promise.resolve();
+  });
+
+  await waitFor(() => {
+    expect(fake.auth.signOut).toHaveBeenCalledWith({ scope: "local" });
+  });
+  expect(fake.functions.invoke).toHaveBeenCalledTimes(1);
+  expect(queryClient.getQueryData(["notes"])).toBeUndefined();
+});
+
+test("삭제가 실패하면 설명 자리에 안내가 서고 다시 시도할 수 있다", async () => {
+  const fake = resetFakeSupabase({
+    profile: createProfileRow(SAVED),
+    session: createFakeSession(),
+  });
+  const queryClient = new QueryClient();
+  const dialog = captureDeletionDialog();
+
+  fake.functions.invoke.mockResolvedValueOnce({
+    data: null,
+    error: new Error("Network request failed"),
+  } as never);
+
+  await renderEditor({ queryClient });
+  queryClient.setQueryData(["notes"], ["현재 사용자의 데이터"]);
+
+  await openDeletionDialog();
+  await act(async () => {
+    await dialog.press("계정 탈퇴");
+  });
+
+  // The failure takes the notice's place rather than stacking under it.
+  expect(await screen.findByTestId("account-deletion-error")).toHaveTextContent(
+    "계정 탈퇴를 끝내지 못했습니다. 다시 시도해 주세요."
+  );
+  expect(screen.queryByTestId("account-deletion-notice")).toBeNull();
+  expect(fake.auth.signOut).not.toHaveBeenCalled();
+  expect(queryClient.getQueryData(["notes"])).toEqual(["현재 사용자의 데이터"]);
+
+  await openDeletionDialog();
+  await act(async () => {
+    await dialog.press("계정 탈퇴");
+  });
+
+  expect(fake.functions.invoke).toHaveBeenCalledTimes(2);
+  expect(fake.auth.signOut).toHaveBeenCalledWith({ scope: "local" });
+  expect(queryClient.getQueryData(["notes"])).toBeUndefined();
+});
