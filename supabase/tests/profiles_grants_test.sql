@@ -2,7 +2,7 @@
 -- the behaviour, so a grant that widens by accident fails here even when no
 -- query happens to notice it.
 BEGIN;
-SELECT plan(22);
+SELECT plan(23);
 
 SELECT has_table('public', 'profiles', 'public.profiles exists');
 
@@ -75,6 +75,11 @@ SELECT column_privs_are(
 SELECT column_privs_are(
   'public', 'profiles', 'updated_at', 'authenticated', ARRAY['SELECT'],
   'authenticated cannot write updated_at'
+);
+
+SELECT column_privs_are(
+  'public', 'profiles', 'account_deletion_started_at', 'authenticated', ARRAY['SELECT'],
+  'authenticated cannot lower the account deletion write fence'
 );
 
 SELECT function_privs_are(

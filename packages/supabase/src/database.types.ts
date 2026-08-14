@@ -36,6 +36,7 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          account_deletion_started_at: string | null
           avatar_chosen_by_user: boolean
           avatar_path: string | null
           avatar_url: string | null
@@ -48,6 +49,7 @@ export type Database = {
           username_locked_until: string | null
         }
         Insert: {
+          account_deletion_started_at?: string | null
           avatar_chosen_by_user?: boolean
           avatar_path?: string | null
           avatar_url?: string | null
@@ -60,6 +62,7 @@ export type Database = {
           username_locked_until?: string | null
         }
         Update: {
+          account_deletion_started_at?: string | null
           avatar_chosen_by_user?: boolean
           avatar_path?: string | null
           avatar_url?: string | null
