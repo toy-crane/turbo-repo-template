@@ -30,13 +30,12 @@ function SettingsToolbar() {
 }
 
 export default function SettingsRoute() {
-  const { danger, foreground, muted } = useAppTheme();
+  const { danger, muted } = useAppTheme();
 
   return (
     <>
       <SettingsScreen
         danger={danger}
-        foreground={foreground}
         muted={muted}
         onDeleteAccount={openAccountDeletion}
         onEditProfile={openProfileEdit}

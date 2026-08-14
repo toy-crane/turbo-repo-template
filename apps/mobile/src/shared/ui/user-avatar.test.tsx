@@ -9,10 +9,13 @@ const AVATAR_URL = "https://example.test/avatar.png";
 describe("UserAvatar", () => {
   test("사진이 없으면 이름의 첫 글자를 대문자로 보여준다", async () => {
     await renderWithHeroUI(
-      <UserAvatar avatarUrl={null} displayName="toy crane" />
+      <UserAvatar avatarUrl={null} displayName="toy crane" testID="avatar" />
     );
 
     expect(screen.getByText("T")).toBeOnTheScreen();
+    expect(screen.getByTestId("avatar").props.className).not.toContain(
+      "bg-transparent"
+    );
   });
 
   test("사진이 있으면 글자 대신 사진을 그린다", async () => {
@@ -24,9 +27,14 @@ describe("UserAvatar", () => {
       />
     );
 
-    expect(screen.getByTestId("avatar").props.source).toEqual({
-      uri: AVATAR_URL,
-    });
+    expect(screen.getByLabelText("Toy Crane 프로필 사진").props.source).toEqual(
+      {
+        uri: AVATAR_URL,
+      }
+    );
+    expect(screen.getByTestId("avatar").props.className).toContain(
+      "bg-transparent"
+    );
     expect(screen.queryByText("T")).not.toBeOnTheScreen();
   });
 

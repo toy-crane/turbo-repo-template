@@ -11,6 +11,8 @@ const XL_ROOT_CLASS = "h-24 w-24";
 const XL_FALLBACK_TEXT_CLASS = "text-3xl";
 /** A profile picture is a circle everywhere it appears, not a rounded square. */
 const CIRCLE_CLASS = "rounded-full";
+/** An uploaded picture supplies every visible pixel inside the circle. */
+const PHOTO_ROOT_CLASS = "bg-transparent";
 
 export interface UserAvatarProps {
   avatarUrl: string | null;
@@ -43,23 +45,27 @@ export function UserAvatar({
   testID,
 }: UserAvatarProps) {
   const isExtraLarge = size === "xl";
+  const rootClassName = [
+    isExtraLarge ? XL_ROOT_CLASS : undefined,
+    CIRCLE_CLASS,
+    avatarUrl ? PHOTO_ROOT_CLASS : undefined,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Avatar
       alt={displayName ? `${displayName} 프로필 사진` : "프로필 사진"}
-      className={
-        isExtraLarge ? `${XL_ROOT_CLASS} ${CIRCLE_CLASS}` : CIRCLE_CLASS
-      }
+      background={avatarUrl ? null : undefined}
+      className={rootClassName}
       color="accent"
       size={isExtraLarge ? "lg" : size}
+      testID={testID}
       variant="soft"
     >
-      {avatarUrl ? (
-        <Avatar.Image source={{ uri: avatarUrl }} testID={testID} />
-      ) : null}
+      {avatarUrl ? <Avatar.Image source={{ uri: avatarUrl }} /> : null}
       <Avatar.Fallback
         classNames={isExtraLarge ? { text: XL_FALLBACK_TEXT_CLASS } : undefined}
-        testID={testID}
       >
         {toInitial(displayName)}
       </Avatar.Fallback>
