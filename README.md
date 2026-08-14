@@ -357,6 +357,11 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 | `수정 그만두기` | 수정 상태의 그만두기 버튼 |
 | `다시 시도하기` | 요청이 실패했을 때 오류 문구 옆 버튼 |
 | `최신 메시지로 이동` | 이전 메시지를 읽을 때 입력창 위에 나타나는 버튼 |
+| `Ask in side chat` | 완료된 AI 답변의 일부를 선택하면 시스템 선택 메뉴에 붙는 항목 |
+| `Side chat 닫기` | Side chat 시트의 닫기 버튼 |
+| `Side chat 1개 다시 열기` | Side chat이 하나일 때 입력창 위의 수 표시 |
+| `Side chat 2개 고르기` | Side chat이 여럿일 때 입력창 위의 수 표시. 숫자는 실제 개수입니다 |
+| `<구절> Side chat 열기` | 다시 열기 목록의 항목. 앞은 그 Side chat이 시작한 구절입니다 |
 | `새 대화` | Home 헤더의 새 대화 버튼 |
 | `뒤로 가기` | 대화 화면 헤더의 뒤로 가기 버튼 |
 
@@ -382,9 +387,14 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 - 답변 아래 아이콘 줄: `chat-message-actions`
 - 답변을 기다리는 동안: `chat-waiting`, `chat-waiting-sweep`
 - 수정 상태: `chat-edit-notice`, `chat-edit-cancel`
+- Side chat: `chat-side-count`, `side-chat-source`, `side-chat-source-phrase`
 
 `chat-send`는 한 자리의 이름입니다.
 답변을 받는 동안에는 같은 `testID`가 중지 버튼을 가리킵니다.
+
+`chat-side-count`는 Side chat이 하나라도 있을 때만 나타납니다.
+`chat-latest-overlay` 안에서 최신 메시지 버튼과 같은 자리에 쌓입니다.
+`side-chat-source`는 Side chat 시트 목록 맨 위의 읽기 전용 구절입니다.
 
 `chat-composer-surface`는 입력창과 보내기 버튼을 함께 담은 영역입니다.
 iOS 26 이상에서는 Liquid Glass이고 나머지 플랫폼에서는 같은 모양의 일반 surface입니다.
