@@ -8,17 +8,16 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "!.next/dev/**",
-        "dist/**"
-      ]
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"]
     },
     "transit": {
       "dependsOn": ["^transit"]
     },
     "check": {
+      "dependsOn": ["transit"]
+    },
+    "@repo/mobile#check": {
+      "cache": false,
       "dependsOn": ["transit"]
     },
     "fix": {
