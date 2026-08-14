@@ -32,14 +32,19 @@ export function SettingsProfileHero({
   username,
 }: SettingsProfileHeroProps) {
   return (
-    <View className="items-center gap-3 px-4 pt-2 pb-6">
+    <View className="w-full items-center gap-3 pt-2 pb-6">
       <Pressable
         accessibilityLabel={profileLabels.profile}
         accessibilityRole="button"
         onPress={onPress}
         testID="settings-profile-photo"
       >
-        <UserAvatar avatarUrl={avatarUrl} displayName={displayName} size="xl" />
+        <UserAvatar
+          avatarUrl={avatarUrl}
+          displayName={displayName}
+          size="xl"
+          transparentPhotoBackground
+        />
       </Pressable>
 
       <View className="items-center gap-1">

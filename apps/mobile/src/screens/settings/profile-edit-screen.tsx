@@ -10,7 +10,7 @@ import {
   useNativeState,
 } from "@expo/ui";
 import { useCallback } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert } from "react-native";
 
 import { useAccountDeletion } from "@/features/account-deletion/state/use-account-deletion";
 import { accountDeletionLabels } from "@/features/account-deletion/ui/account-deletion-labels";
@@ -111,11 +111,9 @@ export type ProfileEditFlow = ReturnType<typeof useProfileEditFlow>;
 export function ProfileEditScreen({
   danger,
   flow,
-  foreground,
 }: {
   danger: string;
   flow: ProfileEditFlow;
-  foreground: string;
 }) {
   const { cameraDeniedMessage, edit, menu, menuActions } = flow;
   // Not part of the draft: deleting the account ends the thing being edited, so
@@ -127,12 +125,6 @@ export function ProfileEditScreen({
    * of small print. The check in progress is not a problem, so it stays quiet.
    */
   const problemStyle = { color: danger };
-  // Android's @expo/ui text does not follow the app's appearance on its own, so
-  // anything here without a colour of its own is handed the same foreground the
-  // rest of the app uses. See docs/follow-ups for the fields above, which still
-  // predate this.
-  const androidTextStyle =
-    Platform.OS === "android" ? { color: foreground } : undefined;
   // The native fields hold their own text and report changes back. These carry
   // the two writes that do not come from typing: the saved values this screen
   // opens with, and a suggestion the person pressed.
@@ -323,10 +315,7 @@ export function ProfileEditScreen({
                 {deletion.failure}
               </Text>
             ) : (
-              <Text
-                testID="account-deletion-notice"
-                textStyle={androidTextStyle}
-              >
+              <Text testID="account-deletion-notice">
                 {accountDeletionLabels.deletionNotice}
               </Text>
             )}

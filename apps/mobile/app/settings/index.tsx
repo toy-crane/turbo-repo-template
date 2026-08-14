@@ -1,8 +1,9 @@
 import { router, Stack } from "expo-router";
-import { Platform } from "react-native";
 
 import { useAppTheme } from "@/core/theme/app-theme-bridge";
+import { CLOSE_SETTINGS_LABEL } from "@/features/auth/ui/profile-labels";
 import { SettingsScreen } from "@/screens/settings/settings-screen";
+import { toolbarIcon } from "@/shared/ui/icon/toolbar-icons";
 
 function dismissSettings() {
   router.dismiss();
@@ -13,38 +14,24 @@ function openProfile() {
 }
 
 function SettingsToolbar() {
-  if (Platform.OS === "ios") {
-    return (
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          accessibilityLabel="설정 닫기"
-          icon="xmark"
-          onPress={dismissSettings}
-        />
-      </Stack.Toolbar>
-    );
-  }
-
   return (
     <Stack.Toolbar placement="right">
       <Stack.Toolbar.Button
-        accessibilityLabel="설정 닫기"
+        accessibilityLabel={CLOSE_SETTINGS_LABEL}
+        icon={toolbarIcon("close")}
         onPress={dismissSettings}
-      >
-        닫기
-      </Stack.Toolbar.Button>
+      />
     </Stack.Toolbar>
   );
 }
 
 export default function SettingsRoute() {
-  const { danger, foreground, muted } = useAppTheme();
+  const { danger, muted } = useAppTheme();
 
   return (
     <>
       <SettingsScreen
         danger={danger}
-        foreground={foreground}
         muted={muted}
         onOpenProfile={openProfile}
       />

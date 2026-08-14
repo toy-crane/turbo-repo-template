@@ -1,4 +1,5 @@
 import { Avatar } from "heroui-native/avatar";
+import { useCallback, useState } from "react";
 
 /**
  * `xl` is this app's own step above HeroUI's three.
@@ -11,12 +12,16 @@ const XL_ROOT_CLASS = "h-24 w-24";
 const XL_FALLBACK_TEXT_CLASS = "text-3xl";
 /** A profile picture is a circle everywhere it appears, not a rounded square. */
 const CIRCLE_CLASS = "rounded-full";
+/** An uploaded picture supplies every visible pixel inside the circle. */
+const PHOTO_ROOT_CLASS = "bg-transparent";
 
 export interface UserAvatarProps {
   avatarUrl: string | null;
   displayName: string | null;
   size?: "lg" | "md" | "sm" | "xl";
   testID?: string;
+  /** Removes the app-supplied colour only while the photo is visible. */
+  transparentPhotoBackground?: boolean;
 }
 
 /**
@@ -41,25 +46,47 @@ export function UserAvatar({
   displayName,
   size = "sm",
   testID,
+  transparentPhotoBackground = false,
 }: UserAvatarProps) {
   const isExtraLarge = size === "xl";
+  const [loadedPhotoUrl, setLoadedPhotoUrl] = useState<string | null>(null);
+  const showsTransparentPhoto =
+    transparentPhotoBackground &&
+    avatarUrl !== null &&
+    loadedPhotoUrl === avatarUrl;
+  const handlePhotoError = useCallback(() => {
+    setLoadedPhotoUrl(null);
+  }, []);
+  const handlePhotoLoad = useCallback(() => {
+    setLoadedPhotoUrl(avatarUrl);
+  }, [avatarUrl]);
+  const rootClassName = [
+    isExtraLarge ? XL_ROOT_CLASS : undefined,
+    CIRCLE_CLASS,
+    showsTransparentPhoto ? PHOTO_ROOT_CLASS : undefined,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Avatar
       alt={displayName ? `${displayName} 프로필 사진` : "프로필 사진"}
-      className={
-        isExtraLarge ? `${XL_ROOT_CLASS} ${CIRCLE_CLASS}` : CIRCLE_CLASS
-      }
+      background={showsTransparentPhoto ? null : undefined}
+      className={rootClassName}
       color="accent"
       size={isExtraLarge ? "lg" : size}
+      testID={testID}
       variant="soft"
     >
       {avatarUrl ? (
-        <Avatar.Image source={{ uri: avatarUrl }} testID={testID} />
+        <Avatar.Image
+          onError={handlePhotoError}
+          onLoad={handlePhotoLoad}
+          source={{ uri: avatarUrl }}
+        />
       ) : null}
       <Avatar.Fallback
         classNames={isExtraLarge ? { text: XL_FALLBACK_TEXT_CLASS } : undefined}
-        testID={testID}
       >
         {toInitial(displayName)}
       </Avatar.Fallback>

@@ -62,8 +62,12 @@ function ThemedRootLayout() {
             native push covers the tab bar. Hiding the bar from inside the tab
             navigator leaves its strip on screen on Android, where it swallows
             every touch meant for the composer.
+
+            It brings its own stack, which draws the conversation's header and
+            presents a side chat as a sheet over it. Left on, this screen would
+            show a second header above that one.
           */}
-          <Stack.Screen name="chat" options={{ headerShown: true }} />
+          <Stack.Screen name="chat" />
           <Stack.Screen name="settings" options={getSettingsSheetOptions()} />
         </Stack.Protected>
         <Stack.Protected guard={area === "onboarding"}>

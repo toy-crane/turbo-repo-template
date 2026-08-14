@@ -7,6 +7,8 @@ import {
   userEvent,
   waitFor,
 } from "@testing-library/react-native";
+import Constants from "expo-constants";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import type { PropsWithChildren } from "react";
 import { Platform } from "react-native";
 
@@ -20,12 +22,17 @@ import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
 import { SettingsScreen } from "./settings-screen";
 
 /** The colours the root layout would hand this screen. */
-const FOREGROUND = "#111114";
 const DANGER = "#dc2626";
 const MUTED = "#6b7280";
+const APP_VERSION = Constants.expoConfig?.version ?? "Unknown";
+const HEADER_HEIGHT = 108;
 
 jest.mock("@/features/auth/state/auth-session", () => ({
   useAuthSession: jest.fn(),
+}));
+
+jest.mock("expo-router/react-navigation", () => ({
+  useHeaderHeight: jest.fn(),
 }));
 
 jest.mock("@/shared/supabase/client", () => ({
@@ -53,6 +60,7 @@ jest.mock("@expo/ui", () => {
   const FieldGroup = Object.assign(Container, {
     Section: Container,
     SectionFooter: Container,
+    SectionHeader: Container,
   });
 
   return {
@@ -82,7 +90,18 @@ jest.mock("@expo/ui", () => {
     // Hosts plain React Native children inside the native tree, which is exactly
     // what a View does here.
     RNHostView: Container,
-    Row: Container,
+    Row: ({
+      children,
+      onPress,
+      testID,
+    }: PropsWithChildren<{ onPress?: () => void; testID?: string }>) =>
+      onPress
+        ? React.createElement(
+            Pressable,
+            { accessibilityRole: "button", onPress, testID },
+            children
+          )
+        : React.createElement(View, { testID }, children),
     Spacer: Container,
     Switch: ({
       label,
@@ -116,6 +135,7 @@ jest.mock("@expo/ui", () => {
 });
 
 const mockUseAuthSession = jest.mocked(useAuthSession);
+const mockUseHeaderHeight = jest.mocked(useHeaderHeight);
 
 beforeEach(() => {
   resetFakeSupabase({ session: createFakeSession() });
@@ -123,6 +143,7 @@ beforeEach(() => {
     session: createFakeSession(),
     status: "signedIn",
   });
+  mockUseHeaderHeight.mockReturnValue(HEADER_HEIGHT);
 });
 
 function renderSettings({
@@ -138,7 +159,6 @@ function renderSettings({
     <QueryClientProvider client={queryClient}>
       <SettingsScreen
         danger={DANGER}
-        foreground={FOREGROUND}
         muted={MUTED}
         onOpenProfile={onOpenProfile}
       />
@@ -291,9 +311,13 @@ test("Android 설정 스위치가 기본 label 행으로 각 항목을 한 번 �
 
     expect(view.getAllByText("알림")).toHaveLength(1);
     expect(view.getAllByText("햅틱 반응")).toHaveLength(1);
-    // Android's @expo/ui text does not follow the app's appearance on its own,
-    // so the screen has to hand it the same foreground colour.
-    expect(view.getByText("버전")).toHaveStyle({ color: FOREGROUND });
+    expect(view.getByTestId("settings-field-group")).toHaveStyle({
+      paddingTop: HEADER_HEIGHT,
+    });
+    // Text inside a Material row inherits its native content colour. Only the
+    // value is quieter because it is supporting information.
+    expect(view.getByText("버전").props.style).toBeUndefined();
+    expect(view.getByText(APP_VERSION)).toHaveStyle({ color: MUTED });
     expect(
       view.getByTestId("notifications-switch").props.accessibilityState
     ).toEqual({ checked: false });

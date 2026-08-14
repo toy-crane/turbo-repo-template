@@ -167,9 +167,6 @@ const OWN_FOLDER = /^user-1\//;
 /** The colour the route hands the screen for anything that reads as a problem. */
 const DANGER = "#dc2626";
 
-/** What Android text without a colour of its own has to be handed. */
-const FOREGROUND = "#111114";
-
 const SAVED = {
   display_name: "김민서",
   username: "minseokim",
@@ -208,7 +205,7 @@ function ProfileEditHarness({ onSaved }: { onSaved?: () => void }) {
 
   return (
     <>
-      <ProfileEditScreen danger={DANGER} flow={flow} foreground={FOREGROUND} />
+      <ProfileEditScreen danger={DANGER} flow={flow} />
       {/* The route swaps the toolbar control for a progress view while saving. */}
       {flow.edit.isSaving ? (
         <ActivityIndicator

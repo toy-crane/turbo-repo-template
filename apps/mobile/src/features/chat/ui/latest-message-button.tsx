@@ -1,8 +1,8 @@
-import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
 
 import { Icon } from "@/shared/ui/icon";
 import { chatLabels } from "./chat-labels";
+import { FloatingSurface } from "./floating-surface";
 
 const BUTTON_SIZE = 44;
 
@@ -17,10 +17,8 @@ const glassCircle = {
 /**
  * The control that returns to the newest message while reading further back.
  *
- * It floats over the conversation with no native shell to sit in, which is
- * the one case where this app draws Liquid Glass itself. Where the system
- * has no glass to give — Android, and iOS before 26 — it stays the plain
- * `surface` circle it has always been.
+ * It floats over the conversation on the same surface the way back into a side
+ * chat uses, since the two stack in one place above the composer.
  */
 export function LatestMessageButton({ onPress }: { onPress: () => void }) {
   return (
@@ -30,15 +28,13 @@ export function LatestMessageButton({ onPress }: { onPress: () => void }) {
       onPress={onPress}
       testID="chat-latest"
     >
-      {isLiquidGlassAvailable() ? (
-        <GlassView glassEffectStyle="regular" isInteractive style={glassCircle}>
-          <Icon name="latest" size="lg" />
-        </GlassView>
-      ) : (
-        <View className="h-11 w-11 items-center justify-center rounded-full bg-surface">
-          <Icon name="latest" size="lg" />
-        </View>
-      )}
+      <FloatingSurface
+        glassShape={glassCircle}
+        surfaceClassName="h-11 w-11 items-center justify-center rounded-full bg-surface"
+        testID="chat-latest-glass"
+      >
+        <Icon name="latest" size="lg" />
+      </FloatingSurface>
     </Pressable>
   );
 }
