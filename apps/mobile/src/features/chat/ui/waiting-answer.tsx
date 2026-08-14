@@ -18,7 +18,12 @@ import Animated, {
 import { chatLabels } from "./chat-labels";
 
 const SWEEP_DURATION_MS = 1500;
-/** Narrow enough to read as a band crossing the word, not as the word lighting up. */
+/**
+ * Narrow enough to read as a band crossing the word, not as the word lighting
+ * up. It stays a number rather than a width class because the sweep starts at
+ * `-SWEEP_WIDTH`: this is where the band begins as much as how wide it is, and
+ * splitting the two would let a class and an animation drift apart.
+ */
 const SWEEP_WIDTH = 56;
 /**
  * The line has already been kept back until the wait is worth reporting, so it

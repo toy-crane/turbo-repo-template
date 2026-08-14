@@ -28,20 +28,20 @@ afterEach(() => {
   mockIsLiquidGlassAvailable.mockReturnValue(false);
 });
 
-const composer = (
-  <ComposerSurface>
-    <Text>메시지</Text>
-  </ComposerSurface>
-);
-
-function surfaceStyle() {
-  return StyleSheet.flatten(
-    screen.getByTestId("chat-composer-surface").props.style
+/**
+ * A fresh element every time. React skips a rerender handed the very same
+ * element, which would leave the branch under test unchanged.
+ */
+function composer() {
+  return (
+    <ComposerSurface>
+      <Text>메시지</Text>
+    </ComposerSurface>
   );
 }
 
 async function renderSurface() {
-  const view = await renderWithHeroUI(composer);
+  const view = await renderWithHeroUI(composer());
 
   return { surface: screen.getByTestId("chat-composer-surface"), view };
 }
@@ -64,13 +64,26 @@ test("Liquid Glass를 쓸 수 없으면 흉내 내지 않고 일반 surface로 �
   expect(surface.props.className).toContain("bg-surface");
 });
 
-test("두 경우의 크기와 모양이 같다", async () => {
-  const { view } = await renderSurface();
-  const plain = surfaceStyle();
+// The fallback owns a plain fixed shape, while the glass branch keeps the style
+// object its platform API requires. The two are written separately, so what is
+// checked is that each one still names the whole shape.
+test("두 경우 모두 같은 모양을 온전히 지정한다", async () => {
+  const { surface: plain, view } = await renderSurface();
+
+  expect(plain.props.className).toBe(
+    "flex-row items-end gap-2 rounded-[26px] bg-surface p-1.5"
+  );
 
   mockIsLiquidGlassAvailable.mockReturnValue(true);
-  await view.rerender(composer);
+  await view.rerender(composer());
 
-  expect(surfaceStyle()).toEqual(plain);
-  expect(plain).toMatchObject({ alignItems: "flex-end", borderRadius: 26 });
+  expect(
+    StyleSheet.flatten(screen.getByTestId("chat-composer-surface").props.style)
+  ).toEqual({
+    alignItems: "flex-end",
+    borderRadius: 26,
+    flexDirection: "row",
+    gap: 8,
+    padding: 6,
+  });
 });

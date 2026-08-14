@@ -1,21 +1,18 @@
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import type { ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
 /**
- * The input and its button are one control, so one rounded shape holds both.
- * The numbers live here rather than in classes because both branches have to
- * come out the same size, and only one of them can take a class.
+ * The same shape the class below draws, for the one branch that cannot take a
+ * class. Keep the two in step.
  */
-const shape = StyleSheet.create({
-  composer: {
-    alignItems: "flex-end",
-    borderRadius: 26,
-    flexDirection: "row",
-    gap: 8,
-    padding: 6,
-  },
-});
+const glassShape = {
+  alignItems: "flex-end",
+  borderRadius: 26,
+  flexDirection: "row",
+  gap: 8,
+  padding: 6,
+} as const;
 
 /**
  * The surface the composer floats on.
@@ -28,7 +25,7 @@ const shape = StyleSheet.create({
 export function ComposerSurface({ children }: { children: ReactNode }) {
   if (isLiquidGlassAvailable()) {
     return (
-      <GlassView style={shape.composer} testID="chat-composer-surface">
+      <GlassView style={glassShape} testID="chat-composer-surface">
         {children}
       </GlassView>
     );
@@ -36,8 +33,7 @@ export function ComposerSurface({ children }: { children: ReactNode }) {
 
   return (
     <View
-      className="bg-surface"
-      style={shape.composer}
+      className="flex-row items-end gap-2 rounded-[26px] bg-surface p-1.5"
       testID="chat-composer-surface"
     >
       {children}
