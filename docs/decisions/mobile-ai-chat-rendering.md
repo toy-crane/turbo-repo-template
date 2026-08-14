@@ -1,0 +1,75 @@
+# 모바일 AI 채팅 표현
+
+## 결정
+
+- AI 답변은 `StreamdownText`로 스트리밍하고, 그 안의 `EnrichedMarkdownText`가
+  네이티브 Markdown을 그린다. `flavor="github"`을 사용하고 코드 블록과 표는
+  도착한 부분부터 보여 준다.
+- 메시지 스트림을 React 상태에 반영하는 주기는 `useChat`의 `throttle: 50`으로
+  제한한다. `StreamdownText`가 완성되지 않은 Markdown을 보완하는 일과 React
+  렌더 횟수를 제한하는 일은 서로 다른 책임으로 유지한다.
+- 입력창과 보내기 또는 중지 버튼은 하나의 중요한 플로팅 컨트롤이다. iOS 26
+  이상에서는 `expo-glass-effect`의 `GlassView`로 전체 입력 영역을 감싸고, 그 밖의
+  iOS와 Android에서는 같은 배치의 일반 `surface`를 사용한다.
+- 방금 보낸 사용자 메시지만 화면 아래에서 최종 자리로 들어온다. 과거 메시지나
+  목록이 다시 만든 메시지는 움직이지 않으며 시스템의 동작 줄이기 설정을 따른다.
+- 답변의 첫 글자가 오기 전에는 `Thinking`을 보여 준다. 일반 `Text`를 마스크로
+  사용하는 현재 구조를 유지하고, 좁은 밝은 띠만 글자 너비 안에서 움직인다.
+
+## 경계
+
+- 서버 경로, 인증, 모델 라우팅과 스트리밍 프로토콜은 바꾸지 않는다. 모바일은
+  Hono의 `POST /ai/chat`만 호출하고 제공자 비밀값은 서버가 소유한다.
+- 첨부, 추론 요약, 모바일의 모델 제공자 직접 연결, RAG, 도구 호출, 지난 대화
+  Pager는 이 결정에 포함하지 않는다.
+- `@shopify/react-native-skia`, `react-native-nitro-symbols`와
+  `react-native-true-sheet`를 이 표현만 위해 추가하지 않는다. React Native UI의
+  아이콘은 프로젝트 공통 `Icon`을 계속 사용한다.
+- 아래 저장소는 필요할 때 화면 아이디어와 구현 사례를 살펴보는 선택 참고 자료다.
+  AI 채팅 작업마다 읽거나 같은 구현을 따라야 하는 규칙이 아니다. 이 프로젝트의
+  명세, 결정 계약과 현재 코드가 항상 우선한다.
+
+## 이유
+
+`StreamdownText`는 스트리밍 중 닫히지 않은 Markdown을 보완하고
+`EnrichedMarkdownText`는 Markdown을 네이티브로 그린다. 이 조합은 일반 `Text`보다
+풍부한 답변을 보여 주면서, 빠른 토큰 스트림이 React 렌더를 계속 일으키지 않도록 둔
+기존 제한과 함께 쓸 수 있다.
+
+입력창 전체를 하나의 플로팅 컨트롤로 보면 Liquid Glass의 기능 컨트롤 경계를 지킬
+수 있다. 지원하지 않는 플랫폼에서 재질을 흉내 내지 않고 같은 배치만 유지하면
+플랫폼 차이도 숨기지 않는다.
+
+메시지 진입과 `Thinking`의 시점을 나누면 전송 직후 두 움직임이 경쟁하지 않는다.
+한 줄짜리 진행 표시에 Skia를 추가하기보다 현재 마스크의 밝은 띠 너비와 이동 거리를
+고치는 편이 더 작은 변경이며 시스템 글자 크기 확대도 그대로 유지한다.
+
+## 재검토 조건
+
+- `StreamdownText`나 `EnrichedMarkdownText`가 지원하는 React Native 버전 또는
+  접근성 동작이 현재 앱과 맞지 않을 때
+- 실제 배포 빌드에서 `MaskedView`의 반짝임이 특정 플랫폼에서 끊기거나 다르게
+  그려지는 문제가 확인될 때
+- 운영체제의 Liquid Glass 사용 원칙이나 `expo-glass-effect`의 지원 범위가 바뀔 때
+- 첨부, 추론, 도구 결과나 지난 대화를 제품 범위에 넣을 때
+
+## 계속 제외하는 대안
+
+- 스트리밍 중 `EnrichedMarkdownText`만 사용: 닫히지 않은 코드 블록과 표를
+  렌더러가 직접 감당해야 한다. `StreamdownText`가 더 이상 필요 없는 스트리밍 API를
+  제공할 때 다시 검토한다.
+- `Thinking`을 Skia로 그리기: 픽셀 단위 제어는 좋아지지만 한 줄을 위해 네이티브
+  그래픽 의존성과 별도 글자 배치를 추가한다. 현재 방식의 플랫폼 문제가 실제로
+  확인될 때 다시 검토한다.
+- Margelo 예제 구조를 그대로 복사: 화면 표현과 함께 모바일 직접 WebSocket, 비밀값,
+  RAG와 추론 UI까지 들어와 현재 서버 경계를 무너뜨린다. 각 기능이 별도 제품 요구로
+  확정될 때 해당 부분만 다시 검토한다.
+
+## 선택 참고 자료
+
+- Margelo의 [ai-chat-demo](https://github.com/margelo/ai-chat-demo)는 AI 채팅 화면의
+  아이디어가 필요할 때 선택해서 볼 수 있는 공개 예제다. 이번 검토 시점의 고정 사본은
+  [6280b1f](https://github.com/margelo/ai-chat-demo/tree/6280b1f0f6d53d557b160481185e7bdfa7385cb6)다.
+  입력창, 메시지, 대기 표시나 목록 표현을 비교하고 싶을 때 `Composer.tsx`,
+  `MessageBubble.tsx`, `ShimmerText.tsx`와 `ChatMessages.tsx`를 볼 수 있다. 이 목록은
+  따라야 할 기술 선택이나 필수 확인 항목이 아니다.
