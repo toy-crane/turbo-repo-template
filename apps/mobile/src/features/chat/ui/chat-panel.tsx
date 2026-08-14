@@ -27,8 +27,9 @@ import {
   KeyboardStickyView,
 } from "react-native-keyboard-controller";
 import Animated, {
-  FadeIn,
-  FadeOut,
+  Easing,
+  FadeInDown,
+  FadeOutDown,
   ReduceMotion,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -53,12 +54,19 @@ const MESSAGE_TOP_SPACING = 12;
 /** Enough to read the messages about to go, not enough to mistake them for staying. */
 const DOOMED_OPACITY = 0.38;
 /**
- * The button fades rather than blinking in and out. Leaving is quicker than
- * arriving, so reaching the newest message feels like the button getting out
- * of the way. Both step aside when the system asks for less motion.
+ * The button rises out of the composer and tucks back down into it rather than
+ * appearing on the spot. Each direction gets the easing that suits it: coming
+ * in slows as it settles, going out starts gently and clears away. Leaving
+ * stays quicker than arriving, so reaching the newest message feels like the
+ * button getting out of the way. Both step aside when the system asks for less
+ * motion.
  */
-const LATEST_ENTERING = FadeIn.duration(180).reduceMotion(ReduceMotion.System);
-const LATEST_EXITING = FadeOut.duration(120).reduceMotion(ReduceMotion.System);
+const LATEST_ENTERING = FadeInDown.duration(240)
+  .easing(Easing.out(Easing.cubic))
+  .reduceMotion(ReduceMotion.System);
+const LATEST_EXITING = FadeOutDown.duration(160)
+  .easing(Easing.in(Easing.cubic))
+  .reduceMotion(ReduceMotion.System);
 
 function textOfMessage(message: UIMessage): string {
   return message.parts
