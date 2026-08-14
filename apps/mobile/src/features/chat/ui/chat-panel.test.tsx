@@ -247,6 +247,44 @@ function EditableChat({ onSend }: { onSend: () => void }) {
 }
 
 /**
+ * A panel whose send actually puts the question in the conversation, which is
+ * what a message coming in from below depends on.
+ */
+function SendingChat({
+  editingMessageId,
+  messages: initialMessages = [],
+}: {
+  editingMessageId?: string;
+  messages?: UIMessage[];
+}) {
+  const [messages, setMessages] = useState(initialMessages);
+  const send = () =>
+    setMessages((current) => {
+      const kept = editingMessageId
+        ? current.slice(
+            0,
+            current.findIndex((message) => message.id === editingMessageId)
+          )
+        : current;
+
+      return [...kept, textMessage(`sent-${kept.length}`, "user", "새 질문")];
+    });
+
+  return (
+    <ChatPanel
+      chat={chatSession({ draft: "새 질문", editingMessageId, messages, send })}
+    />
+  );
+}
+
+/** Which rows carry an entry animation, in list order. */
+function enteringRows() {
+  return screen
+    .getAllByTestId("chat-message-row")
+    .map((row) => row.props.entering !== undefined);
+}
+
+/**
  * The long press asks the trigger to open through a ref rather than through
  * state React already knows about, so the flush has to be asked for.
  */
@@ -278,6 +316,7 @@ describe("ChatPanel", () => {
   afterEach(() => {
     mockScrollToEnd.mockClear();
     jest.restoreAllMocks();
+    jest.useRealTimers();
   });
 
   test("대화가 비어 있으면 메시지 목록과 입력·전송만 보여준다", async () => {
@@ -331,7 +370,7 @@ describe("ChatPanel", () => {
     });
   });
 
-  test("사용자 메시지와 AI 답변을 일반 텍스트로 보여준다", async () => {
+  test("AI 답변만 Markdown 렌더러로 보내고 질문은 일반 텍스트로 둔다", async () => {
     const messages = [
       textMessage("user-1", "user", "질문"),
       textMessage("assistant-1", "assistant", "# 제목 **강조**"),
@@ -339,9 +378,13 @@ describe("ChatPanel", () => {
 
     await renderWithHeroUI(<ChatPanel chat={chatSession({ messages })} />);
 
+    expect(screen.getByTestId("chat-message-assistant").props.markdown).toBe(
+      "# 제목 **강조**"
+    );
     expect(screen.getByText("질문")).toBeOnTheScreen();
-    expect(screen.getByText("# 제목 **강조**")).toBeOnTheScreen();
-    expect(screen.queryByTestId("chat-markdown")).not.toBeOnTheScreen();
+    expect(
+      screen.getByTestId("chat-message-user").props.markdown
+    ).toBeUndefined();
   });
 
   test("텍스트가 아닌 응답 part는 표시하지 않는다", async () => {
@@ -595,23 +638,21 @@ describe("ChatPanel", () => {
     expect(beginEdit).toHaveBeenCalledWith("user-1");
   });
 
-  test("메시지 본문은 선택할 수 없고 답변 본문은 선택할 수 있다", async () => {
+  // The answer's own selection now belongs to the Markdown renderer, which
+  // turns it back on once a message stops streaming. Only the question's side
+  // is the panel's to state: selecting it would take the long press its menu
+  // needs.
+  test("메시지 본문은 선택할 수 없다", async () => {
     await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({
-          messages: [
-            textMessage("user-1", "user", "질문"),
-            textMessage("assistant-1", "assistant", "답변"),
-          ],
+          messages: [textMessage("user-1", "user", "질문")],
         })}
       />
     );
 
     expect(screen.getByTestId("chat-message-user").props.selectable).toBe(
       false
-    );
-    expect(screen.getByTestId("chat-message-assistant").props.selectable).toBe(
-      true
     );
   });
 
@@ -627,15 +668,15 @@ describe("ChatPanel", () => {
       />
     );
 
-    // The size arrives as a class rather than an inline style, so the check
-    // is that both bodies name the same one instead of falling back to the
-    // React Native default the question used to get.
-    for (const testID of ["chat-message-user", "chat-message-assistant"]) {
-      const body = screen.getByTestId(testID);
-
-      expect(body.props.className).toContain("text-base");
-      expect(body.props.className).toContain("leading-6");
-    }
+    // The question takes its size from a class and the answer from the numbers
+    // the Markdown renderer accepts, so the check is that the two still meet at
+    // the same body size rather than each keeping its renderer's default.
+    const question = screen.getByTestId("chat-message-user");
+    expect(question.props.className).toContain("text-base");
+    expect(question.props.className).toContain("leading-6");
+    expect(
+      screen.getByTestId("chat-message-assistant").props.markdownStyle.paragraph
+    ).toMatchObject({ fontSize: 16, lineHeight: 24 });
   });
 
   test("사용자가 이전 메시지로 스크롤하면 최신 메시지 이동 버튼을 보여준다", async () => {
@@ -1118,7 +1159,122 @@ describe("ChatPanel", () => {
     expect(screen.getByLabelText(chatLabels.regenerate)).toBeDisabled();
   });
 
-  test("첫 글자가 오기 전까지 답변 자리에 쓰고 있다는 문구를 보여 준다", async () => {
+  test("입력창과 보내기를 하나의 떠 있는 컨트롤로 묶는다", async () => {
+    await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
+
+    const surface = screen.getByTestId("chat-composer-surface");
+    expect(within(surface).getByLabelText(chatLabels.input)).toBeOnTheScreen();
+    expect(within(surface).getByLabelText(chatLabels.send)).toBeOnTheScreen();
+    // Nothing paints across the screen behind it, and it takes no row of its
+    // own: laid out as a sibling it would shorten the list and the conversation
+    // would stop at a straight edge above the control instead of running on
+    // under it.
+    expect(screen.getByTestId("chat-composer").props.className).not.toContain(
+      "bg-"
+    );
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("chat-composer").parent?.props.style
+      )
+    ).toMatchObject({ bottom: 0, position: "absolute" });
+  });
+
+  test("오류와 수정 안내는 컨트롤 안이 아니라 그 위에 둔다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          editingMessageId: "user-1",
+          error: new Error("network"),
+          messages: [textMessage("user-1", "user", "질문")],
+        })}
+      />
+    );
+
+    const surface = screen.getByTestId("chat-composer-surface");
+    expect(screen.getByTestId("chat-error")).toBeOnTheScreen();
+    expect(screen.getByTestId("chat-edit-notice")).toBeOnTheScreen();
+    expect(within(surface).queryByTestId("chat-error")).not.toBeOnTheScreen();
+    expect(
+      within(surface).queryByTestId("chat-edit-notice")
+    ).not.toBeOnTheScreen();
+  });
+
+  test("이번에 보낸 질문만 아래에서 올라온다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <SendingChat
+        messages={[
+          textMessage("user-1", "user", "이전 질문"),
+          textMessage("assistant-1", "assistant", "이전 답변"),
+        ]}
+      />
+    );
+
+    expect(enteringRows()).toEqual([false, false]);
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    expect(enteringRows()).toEqual([false, false, true]);
+  });
+
+  test("과거 대화를 처음 보여 줄 때는 아무 메시지도 움직이지 않는다", async () => {
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
+        })}
+      />
+    );
+
+    expect(enteringRows()).toEqual([false, false]);
+  });
+
+  // An edited question is a new send, so it arrives the same way a fresh one
+  // does even though the conversation got shorter first.
+  test("수정해서 다시 보낸 질문도 아래에서 올라온다", async () => {
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <SendingChat
+        editingMessageId="user-2"
+        messages={[
+          textMessage("user-1", "user", "첫 질문"),
+          textMessage("assistant-1", "assistant", "첫 답변"),
+          textMessage("user-2", "user", "두 번째 질문"),
+          textMessage("assistant-2", "assistant", "두 번째 답변"),
+        ]}
+      />
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.send));
+
+    expect(enteringRows()).toEqual([false, false, true]);
+  });
+
+  test("답변을 다시 받는 것은 질문을 움직이지 않는다", async () => {
+    const regenerateAnswer = jest.fn();
+    const user = userEvent.setup();
+    await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "답변"),
+          ],
+          regenerateAnswer,
+        })}
+      />
+    );
+
+    await user.press(screen.getByLabelText(chatLabels.regenerate));
+
+    expect(enteringRows()).toEqual([false, false]);
+  });
+
+  test("답변이 늦으면 그 자리에 대기 표시를 두고 첫 글자가 오면 없앤다", async () => {
+    jest.useFakeTimers();
     const { rerender } = await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({
@@ -1128,8 +1284,12 @@ describe("ChatPanel", () => {
       />
     );
 
-    // The line paints its words twice, once as the mask and once as what the
-    // sweep runs over, so the count is not what is being checked here.
+    await act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    // The line paints its word twice, once as the mask and once as what the
+    // band runs over, so the count is not what is being checked here.
     expect(screen.queryAllByText(chatLabels.waiting).length).toBeGreaterThan(0);
 
     await rerender(
@@ -1147,7 +1307,44 @@ describe("ChatPanel", () => {
     expect(screen.queryAllByText(chatLabels.waiting)).toHaveLength(0);
   });
 
-  test("답변을 받고 있지 않으면 쓰고 있다는 문구를 두지 않는다", async () => {
+  // Showing it for an answer that is already landing would put a line in the
+  // answer's place and take it away before anyone could read it.
+  test("첫 글자가 300ms 안에 오면 대기 표시를 한 번도 두지 않는다", async () => {
+    jest.useFakeTimers();
+    const { rerender } = await renderWithHeroUI(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [textMessage("user-1", "user", "질문")],
+        })}
+      />
+    );
+
+    await act(() => {
+      jest.advanceTimersByTime(299);
+    });
+
+    expect(screen.queryAllByText(chatLabels.waiting)).toHaveLength(0);
+
+    await rerender(
+      <ChatPanel
+        chat={chatSession({
+          isBusy: true,
+          messages: [
+            textMessage("user-1", "user", "질문"),
+            textMessage("assistant-1", "assistant", "첫"),
+          ],
+        })}
+      />
+    );
+    await act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(screen.queryAllByText(chatLabels.waiting)).toHaveLength(0);
+  });
+
+  test("답변을 받고 있지 않으면 대기 표시를 두지 않는다", async () => {
     await renderWithHeroUI(
       <ChatPanel
         chat={chatSession({

@@ -306,8 +306,8 @@ bun run auth:otp -- --email agent-20260809-01@example.test
    표시가 나오는지 확인합니다. **시작하기**를 누릅니다.
 8. 홈이 열렸는지 확인합니다.
 9. 앱을 다시 시작해 온보딩 없이 홈이 열리는지 확인합니다.
-10. Home 헤더의 **새 대화**를 눌러 대화 화면을 열고, 일반 텍스트 메시지를 보내
-    일반 텍스트 답변이 차례로 나오는지 확인합니다. 뒤로 가기를 누르면 Home으로 돌아옵니다.
+10. Home 헤더의 **새 대화**를 눌러 대화 화면을 열고, 제목과 목록이 있는 답변을
+    요청해 Markdown으로 나오는지 확인합니다. 뒤로 가기를 누르면 Home으로 돌아옵니다.
 11. 설정에서 로그아웃합니다.
 12. 로그인 화면으로 돌아왔는지 확인합니다.
 
@@ -376,17 +376,22 @@ adb shell am start -a android.intent.action.VIEW -d "turbo-repo-mobile://setting
 
 대화 화면의 요소에는 `testID`도 있습니다.
 
-- 입력과 전송: `chat-input`, `chat-send`, `chat-latest`
+- 입력과 전송: `chat-composer-surface`, `chat-input`, `chat-send`, `chat-latest`
 - 목록과 오류: `chat-list`, `chat-error`, `chat-retry`
 - 메시지: `chat-message-row`, `chat-message-user`, `chat-message-assistant`
 - 답변 아래 아이콘 줄: `chat-message-actions`
-- 답변을 기다리는 동안: `chat-waiting`
+- 답변을 기다리는 동안: `chat-waiting`, `chat-waiting-sweep`
 - 수정 상태: `chat-edit-notice`, `chat-edit-cancel`
 
 `chat-send`는 한 자리의 이름입니다.
 답변을 받는 동안에는 같은 `testID`가 중지 버튼을 가리킵니다.
 
-메시지 `testID`는 말풍선이 아니라 일반 텍스트 본문에 붙어 있습니다.
+`chat-composer-surface`는 입력창과 보내기 버튼을 함께 담은 영역입니다.
+iOS 26 이상에서는 Liquid Glass이고 나머지 플랫폼에서는 같은 모양의 일반 surface입니다.
+오류와 수정 안내는 이 영역 밖, 바로 위에 있습니다.
+
+메시지 `testID`는 말풍선이 아니라 본문에 붙어 있습니다.
+`chat-message-user`는 일반 텍스트이고 `chat-message-assistant`는 Markdown 렌더러입니다.
 대화가 쌓이면 같은 이름이 여러 개가 되므로, 답변 하나를 이름으로 확인할 때는 새 대화를 열어 한 건만 보냅니다.
 
 Google과 Apple 버튼은 각 제공자가 그리는 네이티브 버튼이지만, 위 표의 이름은 앱이 버튼

@@ -31,6 +31,7 @@ import Animated, {
   FadeInDown,
   FadeOutDown,
   ReduceMotion,
+  SlideInDown,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -38,7 +39,10 @@ import type { ChatSession } from "@/features/chat/state/use-chat-session";
 import { Icon } from "@/shared/ui/icon";
 import { AssistantMessage } from "./assistant-message";
 import { chatLabels } from "./chat-labels";
+import { ComposerSurface } from "./composer-surface";
 import { LatestMessageButton } from "./latest-message-button";
+import { useEnteringMessage } from "./use-entering-message";
+import { useLateAnswer } from "./use-late-answer";
 import { UserMessage } from "./user-message";
 import { WaitingAnswer } from "./waiting-answer";
 
@@ -67,6 +71,20 @@ const LATEST_ENTERING = FadeInDown.duration(240)
 const LATEST_EXITING = FadeOutDown.duration(160)
   .easing(Easing.in(Easing.cubic))
   .reduceMotion(ReduceMotion.System);
+/**
+ * The question the person just sent rises from below the screen into the place
+ * the list has already made for it. It sets off quickly and eases to a stop, so
+ * the message is readable well before it settles. The list's own placement is
+ * untouched: this is only how the row gets there.
+ *
+ * The curve is the one the button above already uses. An exponential ease-out
+ * was tried first and measured on a device: three quarters of the travel was
+ * over before the row cleared the keyboard, so what reached the eye was a jump
+ * rather than a rise.
+ */
+const MESSAGE_ENTERING = SlideInDown.duration(400)
+  .easing(Easing.out(Easing.cubic))
+  .reduceMotion(ReduceMotion.System);
 
 function textOfMessage(message: UIMessage): string {
   return message.parts
@@ -87,23 +105,29 @@ function copyText(text: string) {
  *
  * `isPending` marks the answer still on its way: it carries no icon row, and
  * while it is arriving no message opens its menu either. `isDoomed` marks the
- * messages an edit in progress would drop.
+ * messages an edit in progress would drop. `isEntering` marks the one question
+ * that comes in from below, and the row reports back once it has, so the list
+ * rebuilding the row later leaves it where it is.
  */
 function PlainTextMessage({
   areActionsDisabled,
   canOpenMenu,
   isDoomed,
+  isEntering,
   isPending,
   message,
   onBeginEdit,
+  onEntered,
   onRegenerate,
 }: {
   areActionsDisabled: boolean;
   canOpenMenu: boolean;
   isDoomed: boolean;
+  isEntering: boolean;
   isPending: boolean;
   message: UIMessage;
   onBeginEdit: (messageId: string) => void;
+  onEntered: () => void;
   onRegenerate: (messageId: string) => void;
 }) {
   const text = textOfMessage(message);
@@ -116,14 +140,24 @@ function PlainTextMessage({
     () => onBeginEdit(message.id),
     [message.id, onBeginEdit]
   );
+  // The row keeps the answer it was built with. Reporting back below takes the
+  // entry away from every later row, and this row is already on its way in.
+  const [playsEntry] = useState(isEntering);
+
+  useEffect(() => {
+    if (isEntering) {
+      onEntered();
+    }
+  }, [isEntering, onEntered]);
 
   if (!text) {
     return null;
   }
 
   return (
-    <View
+    <Animated.View
       className="mb-4"
+      entering={playsEntry ? MESSAGE_ENTERING : undefined}
       style={{ opacity: isDoomed ? DOOMED_OPACITY : 1 }}
       testID="chat-message-row"
     >
@@ -143,7 +177,7 @@ function PlainTextMessage({
           text={text}
         />
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -181,12 +215,17 @@ export function ChatPanel({
   const doomedFromIndex = chat.editingMessageId
     ? chat.messages.findIndex((message) => message.id === chat.editingMessageId)
     : -1;
-  // The line stands in for the answer from the moment the question goes until
-  // its first character lands, which is either before any answer exists or
-  // while an answer exists with nothing in it yet.
+  // The answer is still on its way from the moment the question goes until its
+  // first character lands, which is either before any answer exists or while an
+  // answer exists with nothing in it yet. Only a wait long enough to notice
+  // puts a line in the answer's place; a quick one shows nothing at all.
   const isWaitingForAnswer =
     chat.isBusy &&
     (lastMessage?.role !== "assistant" || textOfMessage(lastMessage) === "");
+  const isAnswerLate = useLateAnswer(isWaitingForAnswer);
+  const { enteringMessageId, markEntered, markSent } = useEnteringMessage(
+    chat.messages
+  );
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze, scrollMessageToEnd } = useKeyboardScrollToEnd({ listRef });
@@ -324,6 +363,7 @@ export function ChatPanel({
       pendingAnchorIndex.current = nextAnchorIndex;
       setIsPositioningQuestion(true);
     }
+    markSent();
     chat.send();
 
     if (isFirstQuestion) {
@@ -331,7 +371,7 @@ export function ChatPanel({
         KeyboardController.dismiss();
       });
     }
-  }, [canSend, chat, doomedFromIndex]);
+  }, [canSend, chat, doomedFromIndex, markSent]);
   const stopAnswer = useCallback(() => {
     chat.stop().catch(() => {
       // The answer stays where it stopped either way.
@@ -354,17 +394,21 @@ export function ChatPanel({
         areActionsDisabled={isEditing}
         canOpenMenu={!(isBusy || isEditing)}
         isDoomed={doomedFromIndex >= 0 && index >= doomedFromIndex}
+        isEntering={item.id === enteringMessageId}
         isPending={isBusy && index === messageCount - 1}
         message={item}
         onBeginEdit={beginEdit}
+        onEntered={markEntered}
         onRegenerate={regenerateAnswer}
       />
     ),
     [
       beginEdit,
       doomedFromIndex,
+      enteringMessageId,
       isBusy,
       isEditing,
+      markEntered,
       messageCount,
       regenerateAnswer,
     ]
@@ -397,7 +441,7 @@ export function ChatPanel({
         keyboardOffset={insets.bottom}
         keyboardShouldPersistTaps="handled"
         keyExtractor={messageKey}
-        ListFooterComponent={isWaitingForAnswer ? <WaitingAnswer /> : undefined}
+        ListFooterComponent={isAnswerLate ? <WaitingAnswer /> : undefined}
         maintainScrollAtEnd={
           isFollowingLatest && !isPositioningQuestion
             ? {
@@ -422,14 +466,28 @@ export function ChatPanel({
         testID="chat-list"
       />
 
+      {/*
+        The composer floats over the list rather than taking a row of its own
+        below it. Laid out as a sibling it would shorten the list, and the
+        conversation would stop at a straight edge above the control instead of
+        running on under it — with nothing behind the glass to show through.
+        What keeps the messages clear of it is the end inset the list already
+        reports from this composer's measured height.
+      */}
       <KeyboardStickyView
         offset={{
           closed: 0,
           opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
         }}
+        style={{ bottom: 0, left: 0, position: "absolute", right: 0 }}
       >
+        {/*
+          No background of its own either: a band across the screen would cut
+          the list off just as surely. The notice and the error sit on the same
+          open ground, just above the control rather than inside it.
+        */}
         <View
-          className="gap-2 bg-background px-5 pt-2"
+          className="gap-2 px-5 pt-2"
           onLayout={updateComposerLayout}
           ref={composerRef}
           style={{ paddingBottom: composerBottomPadding }}
@@ -481,10 +539,10 @@ export function ChatPanel({
             </View>
           ) : null}
 
-          <View className="flex-row items-end gap-2">
+          <ComposerSurface>
             <TextInput
               accessibilityLabel={chatLabels.input}
-              className="flex-1 rounded-2xl bg-surface px-4 py-3 text-base text-surface-foreground"
+              className="flex-1 px-3 py-2.5 text-base text-foreground"
               multiline
               onChangeText={chat.setDraft}
               onContentSizeChange={resizeInput}
@@ -537,7 +595,7 @@ export function ChatPanel({
                 <Icon name="send" tone="accentForeground" />
               </Pressable>
             )}
-          </View>
+          </ComposerSurface>
         </View>
       </KeyboardStickyView>
 

@@ -166,6 +166,27 @@ jest.mock("react-native-nitro-google-signin", () => {
   };
 });
 
+// The streaming Markdown renderer is a Fabric view fed by a worklet bundle, so
+// it draws nothing under Jest. The stand-in keeps the seam the app owns: it
+// prints the Markdown it was handed and carries every prop through, which is
+// what the tests read. Real Markdown layout, link opening and the streaming
+// behaviour belong to the device checks the spec lists.
+jest.mock("react-native-streamdown", () => {
+  const React = require("react") as typeof import("react");
+  const { Text } = require("react-native") as typeof import("react-native");
+
+  return {
+    // Every prop stays on the element, `markdown` included: the tests read the
+    // Markdown and the rendering options from there.
+    StreamdownText: (props: { markdown: string } & Record<string, unknown>) =>
+      React.createElement(
+        Text,
+        props as React.ComponentProps<typeof Text>,
+        props.markdown
+      ),
+  };
+});
+
 // The library ships its own stand-in for the native side, which is what lets a
 // screen using KeyboardStickyView render without a device keyboard.
 jest.mock("react-native-keyboard-controller", () =>
