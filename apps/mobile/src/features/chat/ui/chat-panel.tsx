@@ -76,9 +76,14 @@ const LATEST_EXITING = FadeOutDown.duration(160)
  * the list has already made for it. It sets off quickly and eases to a stop, so
  * the message is readable well before it settles. The list's own placement is
  * untouched: this is only how the row gets there.
+ *
+ * The curve is the one the button above already uses. An exponential ease-out
+ * was tried first and measured on a device: three quarters of the travel was
+ * over before the row cleared the keyboard, so what reached the eye was a jump
+ * rather than a rise.
  */
-const MESSAGE_ENTERING = SlideInDown.duration(500)
-  .easing(Easing.out(Easing.exp))
+const MESSAGE_ENTERING = SlideInDown.duration(400)
+  .easing(Easing.out(Easing.cubic))
   .reduceMotion(ReduceMotion.System);
 
 function textOfMessage(message: UIMessage): string {
