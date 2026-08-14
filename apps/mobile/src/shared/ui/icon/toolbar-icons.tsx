@@ -33,9 +33,9 @@ export type ToolbarIconName = keyof typeof toolbarIcons;
  * string at build time and drops the branch that does not match, so the
  * drawables stay out of the iOS bundle and the symbol names out of Android's.
  *
- * The prop form rather than a nested `Stack.Toolbar.Icon`: the nested element
- * left the button as an empty pill on iOS, and the prop form is what the
- * settings toolbar in this app already uses.
+ * Callers pass the result to the `icon` prop rather than to a nested
+ * `Stack.Toolbar.Icon`: the nested element left the button as an empty pill
+ * on iOS.
  */
 export function toolbarIcon(name: ToolbarIconName) {
   const icon = toolbarIcons[name];

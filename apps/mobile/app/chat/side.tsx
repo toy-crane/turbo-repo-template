@@ -1,5 +1,4 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
 
 import { chatLabels } from "@/features/chat/ui/chat-labels";
 import { SideChatScreen } from "@/screens/chat/side-chat-screen";
@@ -30,11 +29,10 @@ function SideChatToolbar() {
 
 export default function SideChatRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const close = useCallback(() => closeSideChat(), []);
 
   return (
     <>
-      <SideChatScreen id={id} onMissing={close} />
+      <SideChatScreen id={id} onMissing={closeSideChat} />
       <SideChatToolbar />
     </>
   );
