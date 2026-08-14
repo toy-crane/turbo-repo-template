@@ -29,6 +29,10 @@
     "check-types": {
       "dependsOn": ["transit"]
     },
+    "@repo/mobile#check-types": {
+      "cache": false,
+      "dependsOn": ["transit"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
