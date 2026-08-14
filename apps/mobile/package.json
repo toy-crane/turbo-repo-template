@@ -9,7 +9,7 @@
     "build:android": "expo export --platform android --output-dir dist/android",
     "build:ios": "expo export --platform ios --output-dir dist/ios",
     "check": "ultracite check .",
-    "check-types": "tsc --noEmit",
+    "check-types": "expo customize tsconfig.json && tsc --noEmit",
     "dev": "expo start --dev-client",
     "fix": "ultracite fix .",
     "ios": "expo run:ios",

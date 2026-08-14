@@ -8,6 +8,9 @@
     "platforms": ["ios", "android"],
     "scheme": "turbo-repo-mobile",
     "userInterfaceStyle": "automatic",
+    "experiments": {
+      "typedRoutes": true
+    },
     "ios": {
       "bundleIdentifier": "com.toycrane.turborepotemplate.mobile",
       "supportsTablet": true,
