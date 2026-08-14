@@ -7,6 +7,7 @@
 - 의존성 검사는 변경을 제안하거나 적용하지 않고 종료 코드로만 결과를 알린다.
 - Expo 권장 버전과 다른 패키지는 경고를 숨기기 위해 제외하지 않는다. 권장 버전에서 실제 회귀가 재현되고 다른 버전에서 해결됨을 iOS와 Android Development Build로 확인한 경우에만 `expo.install.exclude`에 넣는다.
 - 현재 Expo 권장 버전보다 새로운 `react-native-keyboard-controller`는 먼저 권장 버전으로 맞춰 로그인 입력, 채팅 입력, 키보드 회피, 스크롤과 닫기를 두 플랫폼에서 확인한다. 실제 회귀가 있을 때만 새 버전을 복구하고 예외 근거를 이 결정에 남긴다.
+- `react-native-keyboard-controller`는 `1.22.3`을 사용하고 `expo.install.exclude`에 등록한다. Expo 권장 버전 `1.21.9`의 Android Development Build에서는 목록을 드래그해 키보드를 닫은 뒤 입력창이 키보드 높이에 남았다. `1.22.3`을 넣어 새로 만든 iOS와 Android Development Build에서는 키보드가 닫힌 뒤 입력창이 화면 아래로 돌아왔고 메시지 전송도 이어졌다.
 
 ## 경계
 
