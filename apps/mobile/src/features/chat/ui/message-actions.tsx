@@ -5,13 +5,14 @@ import { Icon, type IconName } from "@/shared/ui/icon";
 import { chatLabels } from "./chat-labels";
 
 /**
- * The icons sit 32px apart centre to centre, which is the density the chat
- * apps people already use settled on and closer than two 44px press targets
- * could ever sit without overlapping. So the drawn 32px box is the whole
- * target across, and `hitSlop` only reaches up and down, where the row has no
- * neighbour to take the touch from.
+ * The buttons are `size-8` and sit against each other, so the icons are one
+ * spacing step short of `size-9` apart centre to centre. That is the density
+ * the chat apps people already use settled on, and closer than two 44px press
+ * targets could sit without overlapping. So the drawn box is the whole target
+ * across, and `hitSlop` only reaches up and down, where the row has no
+ * neighbour to take the touch from. It is the one measure here that cannot be
+ * a class, since `hitSlop` takes a number.
  */
-const ACTION_SIZE = 32;
 const ACTION_VERTICAL_HIT_SLOP = 6;
 
 function ActionButton({
@@ -31,20 +32,17 @@ function ActionButton({
     <PressableFeedback
       accessibilityLabel={label}
       accessibilityRole="button"
+      className={
+        isDisabled
+          ? "size-8 items-center justify-center rounded-full opacity-40"
+          : "size-8 items-center justify-center rounded-full"
+      }
       hitSlop={{
         bottom: ACTION_VERTICAL_HIT_SLOP,
         top: ACTION_VERTICAL_HIT_SLOP,
       }}
       isDisabled={isDisabled}
       onPress={onPress}
-      style={{
-        alignItems: "center",
-        borderRadius: ACTION_SIZE / 2,
-        height: ACTION_SIZE,
-        justifyContent: "center",
-        opacity: isDisabled ? 0.4 : 1,
-        width: ACTION_SIZE,
-      }}
     >
       <PressableFeedback.Highlight />
       <PressableFeedback.Ripple />
@@ -64,17 +62,9 @@ export function MessageActions({
   onRegenerate: () => void;
 }) {
   return (
-    <View
-      // The boxes sit against each other, and the negative margin puts the
-      // first icon's drawn shape, not the padding around it, on the same left
-      // edge as the answer above.
-      style={{
-        flexDirection: "row",
-        marginLeft: -ACTION_VERTICAL_HIT_SLOP,
-        marginTop: 6,
-      }}
-      testID="chat-message-actions"
-    >
+    // The negative margin puts the first icon's drawn shape, not the padding
+    // around it, on the same left edge as the answer above.
+    <View className="mt-1.5 -ml-1.5 flex-row" testID="chat-message-actions">
       <ActionButton
         isDisabled={isDisabled}
         label={chatLabels.copyAnswer}
