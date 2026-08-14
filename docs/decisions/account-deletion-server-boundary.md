@@ -2,27 +2,32 @@
 
 ## 결정
 
-- 모바일 앱의 계정 탈퇴 요청은 기존 `apps/api` Hono 앱이 처리한다. 계정 탈퇴만을
-  위한 Supabase Edge Function이나 별도 서버 앱은 추가하지 않는다.
-- 탈퇴 경로는 `@supabase/server`의 `auth: 'user'`로 access token을 검증한다.
-  삭제할 사용자 식별자는 검증한 사용자 정보에서 읽고 요청 본문으로 받지 않는다.
-- 탈퇴 경로는 서버 환경의 `SUPABASE_SECRET_KEYS`로 관리자 클라이언트를 만들어
-  프로필 사진과 현재 사용자의 인증 계정을 삭제한다. secret key는 모바일 앱,
-  공유 패키지, 공개 환경 변수, 로그와 응답에 넣지 않는다.
-- AI 경로는 실제 secret key를 사용하지 않는다. 현재처럼 자격 증명이 아닌
-  자리표시자를 명시해서 그 경로의 `supabaseAdmin`이 관리자 작업에 성공하지 못하게
-  한다.
+- 모바일 앱의 계정 탈퇴 요청은 Supabase Edge Function이 처리한다. 기존 `apps/api`
+  Hono 앱에는 계정 탈퇴 경로를 추가하지 않는다.
+- 모바일 앱은 현재 사용자의 access token으로 Edge Function을 직접 호출한다. 함수는
+  `@supabase/server`의 `auth: 'user'`를 사용하고 플랫폼의 `verify_jwt` 검사를 켠다.
+- 삭제할 사용자 식별자는 검증한 사용자 정보에서 읽는다. 요청 본문으로 사용자
+  식별자를 받지 않는다.
+- Edge Function은 Supabase가 주입한 `SUPABASE_SECRET_KEYS`로 관리자 클라이언트를
+  만들어 프로필 사진과 현재 사용자의 인증 계정을 삭제한다.
+- `apps/api` 배포 환경에는 실제 Supabase secret key를 두지 않는다. AI 경로는 현재
+  자리표시자를 유지하고 `supabaseAdmin`이 관리자 작업에 성공하지 못하게 한다.
+- 함수는 Deno 호환 Edge Runtime에서 실행한다. `@supabase/server`를 `npm:`으로
+  가져오고 함수 전용 `deno.json`에서 버전을 고정한다.
 - 계정 삭제 뒤에도 만료 전 access token의 서명은 유효할 수 있다. 개인정보를
   다루거나 비용이 드는 사용자 경로는 서명만 확인하지 않고, Supabase Auth에 현재
-  사용자 또는 세션이 남아 있는지도 확인한다.
+  사용자가 남아 있는지도 확인한다.
 
 ## 경계
 
-- 모바일 앱은 사용자 access token만 Hono API에 보낸다. secret key를 요청에 넣거나
-  서버끼리 쓰는 `auth: 'secret'`으로 탈퇴를 시작하지 않는다.
-- 같은 프로세스의 환경에는 실제 secret key가 있지만, 관리자 클라이언트를 쓰는
-  코드는 계정 탈퇴 기능 안에만 둔다. 이 선택은 프로세스 수준의 자격 증명 격리를
-  제공하지 않는다.
+- 모바일 앱은 사용자 access token만 Edge Function에 보낸다. secret key를 앱,
+  공유 패키지, 공개 환경 변수, 로그와 응답에 넣지 않는다.
+- Edge Function은 `auth: 'secret'`을 사용하지 않는다. secret key는 호출자를
+  인증하는 값이 아니라, 로그인한 현재 사용자의 삭제를 실행하는 서버 권한이다.
+- 이 선택은 Supabase Edge Function과 `apps/api` 사이의 배포 경계를 만든다. 다만
+  Supabase는 같은 프로젝트의 Edge Function 환경에 관리자 key를 자동으로
+  주입하므로, 앞으로 추가할 모든 Edge Function도 관리자 권한을 다룰 수 있는
+  코드로 검토해야 한다.
 - 새 관리자 기능이 생겼다는 이유만으로 기존 AI 경로에 `supabaseAdmin` 사용을
   허용하지 않는다. 각 기능은 별도 결정을 거쳐야 한다.
 - 탈퇴 화면과 삭제 범위, 확인 단계, 실패 상태는
@@ -30,37 +35,32 @@
 
 ## 이유
 
-프로젝트는 이미 Bun에서 실행하는 Hono API의 로컬 실행, 배포, 인증과 오류 처리를
-갖추고 있다. 계정 탈퇴 경로 하나를 위해 Supabase Edge Function을 추가하면 Deno 호환
-런타임, 함수별 의존성 설정, 로컬 실행과 별도 배포 절차가 함께 생긴다. 기존 Hono
-앱에 사용자 인증 경로를 더하면 현재 작업 흐름을 그대로 쓰면서 관리자 비밀 값은
-서버 밖으로 내보내지 않을 수 있다.
+기존 Hono 앱에서 경로별 환경 값을 덮어쓰면 AI 경로에 작동하는 관리자 클라이언트를
+전달하지 않을 수 있다. 하지만 실제 secret key는 같은 Bun 프로세스에 남으므로 코드
+실수만 줄일 뿐, 프로세스가 침해됐을 때 관리자 권한까지 보호하지는 못한다.
 
-실제 secret key가 같은 프로세스에 들어오는 만큼 완전한 자격 증명 격리는 아니다.
-AI 경로가 계속 자리표시자 관리자 클라이언트를 사용하고, 관리자 코드를 계정 탈퇴
-기능에만 두는 것으로 현재 규모에 맞는 경계를 세운다. 관리자 기능이 늘어나면 별도
-배포로 나눌 이점이 커진다.
+계정 탈퇴는 사용자 계정 전체를 지우는 제한된 관리자 작업이다. Deno 실행과 별도
+배포 절차가 추가되더라도 Supabase Edge Function으로 분리하면 AI 서버는 실제
+Supabase secret key를 전혀 받지 않는다. 현재 `supabase/config.toml`은 이미 로컬
+Edge Runtime과 Deno 2를 켜 두었으므로 새 런타임을 준비하는 범위도 제한적이다.
 
 ## 재검토 조건
 
-- 둘 이상의 사용자 관리자 기능이 생겨 secret key를 쓰는 코드가 계정 탈퇴 밖으로
-  늘어날 때
-- 보안 정책이 프로세스나 배포 단위의 자격 증명 격리를 요구할 때
-- Hono API의 취약점이 계정 관리자 권한까지 이어지는 위험을 현재 경계로 감당하기
-  어려울 때
-- 프로젝트가 다른 기능에도 Supabase Edge Function을 사용해 Deno 실행과 배포가
-  더는 추가 작업 방식이 아닐 때
-- `@supabase/server`가 관리자 클라이언트를 실제로 쓸 때만 만들도록 바뀌어 AI
-  경로의 자리표시자가 필요 없어질 때
+- Supabase Edge Function이 필요한 Auth 또는 Storage 관리자 작업을 안정적으로
+  지원하지 못할 때
+- 관리자 기능이 늘어나 공통 로직, 배포와 상태 확인을 별도 서버 앱에서 관리하는
+  편이 더 단순해질 때
+- 같은 Supabase 프로젝트의 Edge Function끼리도 관리자 key를 격리해야 할 때
+- 프로젝트가 Edge Runtime을 더는 로컬이나 원격에서 운영할 수 없게 될 때
 
 ## 계속 제외하는 대안
 
-- Supabase Edge Function: 관리자 권한을 배포 단위로 나눌 수 있지만 계정 탈퇴
-  기능을 위해 Deno 호환 런타임과 별도 실행·배포 절차를 추가한다. 프로젝트가 이미
-  Edge Function을 운영하게 되면 다시 검토한다.
+- 기존 `apps/api` Hono 앱: 실행과 배포 절차를 재사용할 수 있지만 실제 secret
+  key가 AI 서버와 같은 프로세스에 들어간다. 배포 단위 격리가 더는 필요하지 않을
+  때만 다시 검토한다.
 - 별도 Hono 서버 또는 Vercel 프로젝트: Bun을 유지하면서 자격 증명을 격리하지만
-  배포, 환경 설정과 상태 확인을 하나 더 운영해야 한다. 관리자 기능이 늘어나면 다시
-  검토한다.
+  Supabase가 제공하는 함수 실행과 환경 설정 대신 서버 배포를 하나 더 운영해야
+  한다. Deno 제약이 실제 구현을 막을 때 다시 검토한다.
 - 모바일 앱에서 관리자 API 직접 호출: secret key가 배포된 앱에서 추출될 수 있고
   다른 사용자를 삭제할 권한까지 노출하므로 허용하지 않는다.
 - 공개 데이터베이스 함수로 인증 사용자 삭제: 관리자 삭제와 Storage 파일 정리를
@@ -68,7 +68,11 @@ AI 경로가 계속 자리표시자 관리자 클라이언트를 사용하고, �
 
 ## 보존할 근거
 
-- 설치된 `@supabase/server`는 Hono 경로별 `auth: 'user'`와 서버 전용 관리자
-  클라이언트를 지원한다.
-- Supabase Edge Function은 TypeScript를 사용하지만 Deno 호환 Edge Runtime에서
-  실행하며 함수별 `deno.json`과 별도 로컬 실행·배포 경로를 권장한다.
+- 공식 [Supabase Edge Function 인증 문서](https://supabase.com/docs/guides/functions/auth)는
+  `auth: 'user'`와 기본 `verify_jwt = true`를 로그인 사용자 호출 방식으로 안내한다.
+- Supabase Edge Function은 `SUPABASE_SECRET_KEYS`를 자동으로 주입하고
+  `@supabase/server`의 `supabaseAdmin`을 제공한다.
+- 공식 [의존성 관리 문서](https://supabase.com/docs/guides/functions/dependencies)는 함수별
+  `deno.json` 사용을 권장한다.
+- 현재 `supabase/config.toml`은 Edge Runtime을 켜고 Deno 2를 지정한다.
+- 현재 Supabase CLI 2.113.0은 함수 생성, 로컬 실행과 배포 명령을 제공한다.
