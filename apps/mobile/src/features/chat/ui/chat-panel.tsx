@@ -9,6 +9,7 @@ import type {
   LegendListRenderItemProps,
 } from "@legendapp/list/react-native";
 import type { UIMessage } from "ai";
+import { setStringAsync } from "expo-clipboard";
 import { type Ref, useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -25,11 +26,21 @@ import {
   KeyboardController,
   KeyboardStickyView,
 } from "react-native-keyboard-controller";
+import Animated, {
+  Easing,
+  FadeInDown,
+  FadeOutDown,
+  ReduceMotion,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ChatSession } from "@/features/chat/state/use-chat-session";
 import { Icon } from "@/shared/ui/icon";
+import { AssistantMessage } from "./assistant-message";
 import { chatLabels } from "./chat-labels";
+import { LatestMessageButton } from "./latest-message-button";
+import { UserMessage } from "./user-message";
+import { WaitingAnswer } from "./waiting-answer";
 
 // biome-ignore lint/performance/noBarrelFile: screens and tests share these accessibility names
 export { chatLabels } from "./chat-labels";
@@ -40,6 +51,22 @@ const KEYBOARD_INPUT_GAP = 8;
 const LATEST_OVERLAY_HEIGHT = 60;
 const USER_SCROLL_THRESHOLD = 24;
 const MESSAGE_TOP_SPACING = 12;
+/** Enough to read the messages about to go, not enough to mistake them for staying. */
+const DOOMED_OPACITY = 0.38;
+/**
+ * The button rises out of the composer and tucks back down into it rather than
+ * appearing on the spot. Each direction gets the easing that suits it: coming
+ * in slows as it settles, going out starts gently and clears away. Leaving
+ * stays quicker than arriving, so reaching the newest message feels like the
+ * button getting out of the way. Both step aside when the system asks for less
+ * motion.
+ */
+const LATEST_ENTERING = FadeInDown.duration(240)
+  .easing(Easing.out(Easing.cubic))
+  .reduceMotion(ReduceMotion.System);
+const LATEST_EXITING = FadeOutDown.duration(160)
+  .easing(Easing.in(Easing.cubic))
+  .reduceMotion(ReduceMotion.System);
 
 function textOfMessage(message: UIMessage): string {
   return message.parts
@@ -48,43 +75,80 @@ function textOfMessage(message: UIMessage): string {
     .join("");
 }
 
-function PlainTextMessage({ message }: { message: UIMessage }) {
-  const isUser = message.role === "user";
+function copyText(text: string) {
+  setStringAsync(text).catch(() => {
+    // Nothing is announced on success either, so a refused clipboard leaves
+    // the same screen behind and the person can try again.
+  });
+}
+
+/**
+ * One message, and what can be done with it.
+ *
+ * `isPending` marks the answer still on its way: it carries no icon row, and
+ * while it is arriving no message opens its menu either. `isDoomed` marks the
+ * messages an edit in progress would drop.
+ */
+function PlainTextMessage({
+  areActionsDisabled,
+  canOpenMenu,
+  isDoomed,
+  isPending,
+  message,
+  onBeginEdit,
+  onRegenerate,
+}: {
+  areActionsDisabled: boolean;
+  canOpenMenu: boolean;
+  isDoomed: boolean;
+  isPending: boolean;
+  message: UIMessage;
+  onBeginEdit: (messageId: string) => void;
+  onRegenerate: (messageId: string) => void;
+}) {
   const text = textOfMessage(message);
+  const copy = useCallback(() => copyText(text), [text]);
+  const regenerate = useCallback(
+    () => onRegenerate(message.id),
+    [message.id, onRegenerate]
+  );
+  const edit = useCallback(
+    () => onBeginEdit(message.id),
+    [message.id, onBeginEdit]
+  );
 
   if (!text) {
     return null;
   }
 
   return (
-    <View className={isUser ? "mb-3 items-end" : "mb-3 items-start"}>
-      <View
-        className={
-          isUser ? "max-w-[85%] rounded-2xl bg-accent px-4 py-3" : "w-full"
-        }
-      >
-        <Text
-          className={
-            isUser
-              ? "text-accent-foreground"
-              : "text-base text-foreground leading-6"
-          }
-          selectable
-          testID={`chat-message-${message.role}`}
-        >
-          {text}
-        </Text>
-      </View>
+    <View
+      className="mb-4"
+      style={{ opacity: isDoomed ? DOOMED_OPACITY : 1 }}
+      testID="chat-message-row"
+    >
+      {message.role === "user" ? (
+        <UserMessage
+          canOpenMenu={canOpenMenu}
+          onCopy={copy}
+          onEdit={edit}
+          text={text}
+        />
+      ) : (
+        <AssistantMessage
+          areActionsDisabled={areActionsDisabled}
+          hasActions={!isPending}
+          onCopy={copy}
+          onRegenerate={regenerate}
+          text={text}
+        />
+      )}
     </View>
   );
 }
 
 function messageKey(message: UIMessage) {
   return message.id;
-}
-
-function renderMessage({ item }: LegendListRenderItemProps<UIMessage>) {
-  return <PlainTextMessage message={item} />;
 }
 
 export function ChatPanel({
@@ -113,6 +177,16 @@ export function ChatPanel({
   const userScrollStart = useRef<number | undefined>(undefined);
   const canSend = chat.draft.trim().length > 0 && !chat.isBusy;
   const composerBottomPadding = Math.max(insets.bottom, 12);
+  const lastMessage = chat.messages.at(-1);
+  const doomedFromIndex = chat.editingMessageId
+    ? chat.messages.findIndex((message) => message.id === chat.editingMessageId)
+    : -1;
+  // The line stands in for the answer from the moment the question goes until
+  // its first character lands, which is either before any answer exists or
+  // while an answer exists with nothing in it yet.
+  const isWaitingForAnswer =
+    chat.isBusy &&
+    (lastMessage?.role !== "assistant" || textOfMessage(lastMessage) === "");
   const { contentInsetEndAdjustment, onComposerLayout } =
     useKeyboardChatComposerInset(listRef, composerRef);
   const { freeze, scrollMessageToEnd } = useKeyboardScrollToEnd({ listRef });
@@ -238,7 +312,10 @@ export function ChatPanel({
       return;
     }
 
-    const nextAnchorIndex = chat.messages.length;
+    // Sending from the edit state drops the message it started from and
+    // everything after it, so the new question lands where that message was.
+    const nextAnchorIndex =
+      doomedFromIndex >= 0 ? doomedFromIndex : chat.messages.length;
     const isFirstQuestion = nextAnchorIndex === 0;
     setAnchorIndex(nextAnchorIndex);
     setIsFollowingLatest(true);
@@ -254,7 +331,44 @@ export function ChatPanel({
         KeyboardController.dismiss();
       });
     }
-  }, [canSend, chat]);
+  }, [canSend, chat, doomedFromIndex]);
+  const stopAnswer = useCallback(() => {
+    chat.stop().catch(() => {
+      // The answer stays where it stopped either way.
+    });
+  }, [chat]);
+  // Named fields rather than the session itself: the session is a new object
+  // on every keystroke, and every message in view would be redrawn with it.
+  const { beginEdit, isBusy, regenerateAnswer } = chat;
+  const isEditing = chat.editingMessageId !== undefined;
+  const messageCount = chat.messages.length;
+  // The list redraws a row when the messages change or when this does, and a
+  // fresh `renderItem` alone does not reach it. Everything a row reads beyond
+  // its own message belongs here: without it the icon row never appears, since
+  // the last answer arrives while the request is still open and nothing
+  // changes in the list when it closes.
+  const rowState = `${isBusy}|${isEditing}|${doomedFromIndex}`;
+  const renderMessage = useCallback(
+    ({ index, item }: LegendListRenderItemProps<UIMessage>) => (
+      <PlainTextMessage
+        areActionsDisabled={isEditing}
+        canOpenMenu={!(isBusy || isEditing)}
+        isDoomed={doomedFromIndex >= 0 && index >= doomedFromIndex}
+        isPending={isBusy && index === messageCount - 1}
+        message={item}
+        onBeginEdit={beginEdit}
+        onRegenerate={regenerateAnswer}
+      />
+    ),
+    [
+      beginEdit,
+      doomedFromIndex,
+      isBusy,
+      isEditing,
+      messageCount,
+      regenerateAnswer,
+    ]
+  );
 
   return (
     <View className="flex-1 bg-background">
@@ -276,12 +390,14 @@ export function ChatPanel({
         contentInsetAdjustmentBehavior="never"
         contentInsetEndAdjustment={contentInsetEndAdjustment}
         data={chat.messages}
+        extraData={rowState}
         freeze={freeze}
         keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         keyboardLiftBehavior="whenAtEnd"
         keyboardOffset={insets.bottom}
         keyboardShouldPersistTaps="handled"
         keyExtractor={messageKey}
+        ListFooterComponent={isWaitingForAnswer ? <WaitingAnswer /> : undefined}
         maintainScrollAtEnd={
           isFollowingLatest && !isPositioningQuestion
             ? {
@@ -320,14 +436,49 @@ export function ChatPanel({
           testID="chat-composer"
         >
           {chat.error ? (
-            <Text
-              accessibilityLiveRegion="assertive"
-              accessibilityRole="alert"
-              className="text-danger text-sm"
-              testID="chat-error"
+            <View className="flex-row items-center gap-2">
+              <Text
+                accessibilityLiveRegion="assertive"
+                accessibilityRole="alert"
+                className="flex-1 text-danger text-sm"
+                testID="chat-error"
+              >
+                {chatLabels.errorAnnouncement}
+              </Text>
+              <Pressable
+                accessibilityLabel={chatLabels.retry}
+                accessibilityRole="button"
+                className="flex-row items-center gap-1 rounded-full border border-border px-3 py-1.5"
+                onPress={chat.retry}
+                testID="chat-retry"
+              >
+                <Icon name="regenerate" size="sm" />
+                <Text className="text-foreground text-sm">
+                  {chatLabels.retry}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {chat.editingMessageId ? (
+            <View
+              className="flex-row items-center gap-2"
+              testID="chat-edit-notice"
             >
-              {chatLabels.errorAnnouncement}
-            </Text>
+              <Icon name="edit" size="sm" tone="muted" />
+              <Text className="flex-1 text-muted text-xs leading-5">
+                {chatLabels.editNotice}
+              </Text>
+              <Pressable
+                accessibilityLabel={chatLabels.endEdit}
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={chat.cancelEdit}
+                testID="chat-edit-cancel"
+              >
+                <Icon name="close" size="sm" tone="muted" />
+              </Pressable>
+            </View>
           ) : null}
 
           <View className="flex-row items-end gap-2">
@@ -346,57 +497,86 @@ export function ChatPanel({
               testID="chat-input"
               value={chat.draft}
             />
-            <Pressable
-              accessibilityLabel={chatLabels.send}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !canSend }}
-              className={
-                canSend
-                  ? "h-11 w-11 items-center justify-center rounded-full bg-accent"
-                  : "h-11 w-11 items-center justify-center rounded-full bg-accent opacity-40"
-              }
-              disabled={!canSend}
-              onPress={send}
-              testID="chat-send"
-            >
-              <Icon name="send" tone="accentForeground" />
-            </Pressable>
+            {/*
+              One place, two jobs. While an answer is arriving that place ends
+              it; the rest of the time it sends what has been typed.
+
+              Both say whether they are disabled rather than leaving it out.
+              The two sit at the same place in the tree, so React keeps one
+              instance and only changes its props; on Android a `disabled` that
+              stops being passed is never cleared on the native view, and the
+              stop button inherits the send button's disabled state — it draws
+              normally and refuses every touch.
+            */}
+            {chat.isBusy ? (
+              <Pressable
+                accessibilityLabel={chatLabels.stop}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: false }}
+                className="h-11 w-11 items-center justify-center rounded-full bg-accent"
+                disabled={false}
+                onPress={stopAnswer}
+                testID="chat-send"
+              >
+                <Icon filled name="stop" size="sm" tone="accentForeground" />
+              </Pressable>
+            ) : (
+              <Pressable
+                accessibilityLabel={chatLabels.send}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !canSend }}
+                className={
+                  canSend
+                    ? "h-11 w-11 items-center justify-center rounded-full bg-accent"
+                    : "h-11 w-11 items-center justify-center rounded-full bg-accent opacity-40"
+                }
+                disabled={!canSend}
+                onPress={send}
+                testID="chat-send"
+              >
+                <Icon name="send" tone="accentForeground" />
+              </Pressable>
+            )}
           </View>
         </View>
       </KeyboardStickyView>
 
-      {isFollowingLatest ? null : (
-        <KeyboardStickyView
-          offset={{
-            closed: 0,
-            opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
-          }}
+      {/*
+        The overlay stays mounted so that the button leaving has something to
+        animate inside. Only the button itself comes and goes, which is also
+        what keeps it out of the accessibility tree while the newest message
+        is already in view.
+      */}
+      <KeyboardStickyView
+        offset={{
+          closed: 0,
+          opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
+        }}
+        pointerEvents="box-none"
+        style={{
+          bottom: composerHeight,
+          height: LATEST_OVERLAY_HEIGHT,
+          left: 0,
+          position: "absolute",
+          right: 0,
+        }}
+        testID="chat-latest-overlay"
+      >
+        <View
+          className="h-full items-center justify-end pb-2"
           pointerEvents="box-none"
-          style={{
-            bottom: composerHeight,
-            height: LATEST_OVERLAY_HEIGHT,
-            left: 0,
-            position: "absolute",
-            right: 0,
-          }}
-          testID="chat-latest-overlay"
         >
-          <View
-            className="h-full items-center justify-end pb-2"
-            pointerEvents="box-none"
-          >
-            <Pressable
-              accessibilityLabel={chatLabels.latest}
-              accessibilityRole="button"
-              className="h-11 w-11 items-center justify-center rounded-full bg-surface"
-              onPress={moveToLatest}
-              testID="chat-latest"
+          {isFollowingLatest ? null : (
+            <Animated.View
+              entering={LATEST_ENTERING}
+              exiting={LATEST_EXITING}
+              pointerEvents="box-none"
             >
-              <Icon name="latest" size="lg" />
-            </Pressable>
-          </View>
-        </KeyboardStickyView>
-      )}
+              <LatestMessageButton onPress={moveToLatest} />
+            </Animated.View>
+          )}
+        </View>
+      </KeyboardStickyView>
     </View>
   );
 }

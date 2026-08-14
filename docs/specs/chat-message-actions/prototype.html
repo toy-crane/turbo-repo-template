@@ -1,0 +1,740 @@
+<!--
+  prototype shell: the review chrome every prototype starts from.
+
+  Keep this comment in the prototype you grow from here: it is the contract,
+  and later turns work from that file rather than from this one.
+
+  Contract (extend product screens; keep the review shell):
+  - Product:  .sh-stage contains only end-user product UI. Keep review notes,
+               rationale, instructions, and approval controls in conversation.
+  - Screens:  <section data-screen="slug" data-title="Label"> inside .sh-stage.
+               The selector, arrow keys, and #hash routing build themselves.
+               Use one option per product destination or distinct surface,
+               named by its product role. Keep baselines, variants, comparison
+               labels, steps, indexes, and progress out of names and states.
+               Links may use href="#slug".
+  - States:   "Default" is automatic. A screen declares only representative
+               presets in data-states="Empty,Error". Use natural, screen-specific
+               names. Reserve presets for important multi-step results, forced
+               data or errors, or materially different structure; keep one-click
+               and transient states as interactions. Use data-when="Empty" on
+               preset-only elements. Call prototypeShell.setState("Name") on
+               entry and setState("Default") on exit, including when repeated
+               actions cross a preset condition.
+  - Viewport: "vp (m)" cycles full / 390 / 768. The 390 preset is a
+               fixed-height, internally scrolling phone frame. Start a
+               mobile-first prototype by adding class="sh-vp-390" to <body>
+               (or a bootstrap classList.add before the chrome script runs).
+  - Pinning:  keep in-frame bars (tab bars, CTAs) inside the phone with
+               position: sticky; position: fixed pins to the browser window.
+  - Tokens:   replace the project-tokens block with project tokens copied
+               verbatim. Map differing names to --background, --foreground, and
+               --font afterwards; replace network fonts with a system stack and
+               note that substitution. Without a design system, keep this
+               palette as the finished style.
+  - Placeholders: .wf-pic stands in for pictures the prototype has no real
+               files for. Use real text everywhere text belongs.
+
+  - Chrome:   Keep exactly the screen selector, selected-screen state selector,
+               and viewport cycle. Chrome that needs explaining has failed.
+
+  Self-contained by design: no build, no framework, no network.
+-->
+<meta charset="utf-8">
+<title>채팅 메시지 동작 프로토타입</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* ── project tokens: apps/mobile/global.css + heroui-native v1.0.8 defaults ── */
+  :root {
+    --background: #f4f4f6;
+    --foreground: #111114;
+    --surface: #ffffff;
+    --surface-foreground: var(--foreground);
+    --muted: oklch(0.5517 0.0138 285.94);
+    --accent: oklch(0.6204 0.195 253.83);
+    --accent-foreground: oklch(0.9911 0 0);
+    --danger: oklch(0.6532 0.2328 25.74);
+    --overlay: #ffffff;
+    --overlay-foreground: var(--foreground);
+    --backdrop: oklch(0% 0 0 / 20%);
+    --border: oklch(90% 0.004 286.32);
+    --separator: oklch(74% 0.004 286.32);
+    --radius: 0.5rem;
+    --overlay-shadow: 0 2px 8px 0 rgba(0,0,0,.02), 0 -6px 12px 0 rgba(0,0,0,.01), 0 14px 28px 0 rgba(0,0,0,.03);
+    --font: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --background: #0b0b0d;
+      --foreground: #ffffff;
+      --surface: #1a1a1e;
+      --muted: oklch(70.5% 0.015 286.067);
+      --danger: oklch(0.594 0.1967 24.63);
+      --overlay: oklch(0.2103 0.0059 285.89);
+      --border: oklch(28% 0.006 286.033);
+      --separator: oklch(40% 0.006 286.033);
+      --overlay-shadow: 0 0 1px 0 rgba(255,255,255,.2) inset;
+    }
+  }
+  :root[data-theme="dark"] {
+    --background: #0b0b0d;
+    --foreground: #ffffff;
+    --surface: #1a1a1e;
+    --muted: oklch(70.5% 0.015 286.067);
+    --danger: oklch(0.594 0.1967 24.63);
+    --overlay: oklch(0.2103 0.0059 285.89);
+    --border: oklch(28% 0.006 286.033);
+    --separator: oklch(40% 0.006 286.033);
+    --overlay-shadow: 0 0 1px 0 rgba(255,255,255,.2) inset;
+  }
+
+  /* ── review chrome (sh-*): keep; extend product styles elsewhere ── */
+  * { box-sizing: border-box }
+  body {
+    margin: 0; padding: 0 0 40px;
+    background: var(--background, #f6f6f6); color: var(--foreground, #3a3a3a);
+    font-family: var(--font, system-ui, sans-serif);
+  }
+  .sh-bar {
+    position: sticky; top: 0; z-index: 999;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 8px 12px; background: #191a1c; color: #d7d7d7;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .sh-bar b, .sh-control-label { color: #8a8f98; font-weight: 500 }
+  .sh-control { display: inline-flex; gap: 5px; align-items: center }
+  .sh-bar button {
+    border: 1px solid #3a3d42; background: none; color: inherit;
+    font: inherit; padding: 2px 9px; border-radius: 99px; cursor: pointer;
+  }
+  .sh-bar select {
+    width: 170px; border: 1px solid #3a3d42; background: #232428; color: inherit;
+    font: inherit; padding: 3px 28px 3px 9px; border-radius: 7px; cursor: pointer;
+    color-scheme: dark;
+  }
+  #sh-screen { width: 190px }
+  .sh-bar button.on { background: #d7d7d7; color: #191a1c; border-color: #d7d7d7 }
+  .sh-spacer { flex: 1 }
+  .sh-stage { max-width: 960px; margin: 0 auto; padding: 12px 16px 0 }
+  [hidden] { display: none !important }
+
+  /* viewport presets */
+  .sh-vp-390 .sh-stage {
+    max-width: 390px; background: var(--background, #f6f6f6);
+    border: 10px solid #191a1c; border-radius: 28px;
+    padding: 16px 12px; height: min(844px, calc(100dvh - 52px));
+    overflow-y: auto; margin-top: 12px;
+  }
+  .sh-vp-768 .sh-stage {
+    max-width: 768px; border: 1px solid #c4c4c4; border-radius: 12px;
+    padding: 16px; margin-top: 12px;
+  }
+
+  /* placeholders */
+  .wf-pic  { border-radius: 4px; background:
+             repeating-linear-gradient(45deg, #e9e9e9, #e9e9e9 6px, #f2f2f2 6px, #f2f2f2 12px) }
+
+  /* ── product ── */
+  .sh-vp-390 .sh-stage { padding: 0; overflow: hidden }
+  .sh-stage > section[data-screen] {
+    display: flex; flex-direction: column;
+    height: min(760px, calc(100dvh - 90px)); min-height: 480px;
+  }
+  .sh-vp-390 .sh-stage > section[data-screen] { height: 100%; min-height: 0 }
+
+  .statusbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 22px 2px; font-size: 14px; font-weight: 590; color: var(--foreground);
+  }
+  .statusbar .battery {
+    width: 24px; height: 12px; border-radius: 3px; border: 1.5px solid var(--foreground);
+    opacity: .5; position: relative;
+  }
+  .statusbar .battery::after {
+    content: ''; position: absolute; inset: 2px; right: 7px; border-radius: 1px; background: var(--foreground);
+  }
+
+  .navbar {
+    display: grid; grid-template-columns: 44px 1fr 44px; align-items: center;
+    height: 44px; padding: 0 6px;
+  }
+  .navbar .title { text-align: center; font-size: 17px; font-weight: 590; color: var(--foreground) }
+  .iconbtn {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: none; border: 0; padding: 0; cursor: pointer; color: var(--foreground);
+  }
+  .navbar .iconbtn { width: 44px; height: 44px; color: var(--accent) }
+
+  .list { flex: 1; overflow-y: auto; padding: 12px 20px 4px; scrollbar-width: thin }
+  .msg { margin-bottom: 12px; display: flex; flex-direction: column }
+  .msg.user { align-items: flex-end }
+  .msg.ai { align-items: flex-start }
+  .bubble {
+    max-width: 85%; border-radius: 16px; background: var(--accent);
+    padding: 12px 16px; color: var(--accent-foreground);
+    font-size: 16px; line-height: 24px; cursor: default;
+    -webkit-user-select: none; user-select: none; overflow-wrap: anywhere;
+  }
+  .bubble.pressing { transform: scale(.96); opacity: .85; transition: transform .18s ease, opacity .18s ease }
+  .aitext {
+    width: 100%; font-size: 16px; line-height: 24px; color: var(--foreground);
+    -webkit-user-select: text; user-select: text; overflow-wrap: anywhere;
+  }
+  .actions { display: flex; gap: 12px; margin-top: 6px; margin-left: -6px }
+  .actions .iconbtn { width: 32px; height: 32px; border-radius: 8px; color: var(--muted) }
+  .actions .iconbtn:active { background: var(--surface) }
+  .actions .iconbtn:disabled { opacity: .4; cursor: default }
+  .msg.doomed { opacity: .38 }
+  @keyframes sweep { 0% { background-position: 190% 0 } 100% { background-position: -90% 0 } }
+  .waiting {
+    width: 100%; font-size: 16px; line-height: 24px;
+    background: linear-gradient(100deg, var(--muted) 36%, var(--foreground) 50%, var(--muted) 64%);
+    background-size: 270% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: sweep 1.5s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) { .waiting { animation: none; color: var(--muted); background: none; -webkit-background-clip: border-box; background-clip: border-box } }
+
+  .composer { padding: 8px 20px 0; background: var(--background); position: relative }
+  .composer .pad { padding-bottom: 12px }
+  .errorrow { display: flex; align-items: center; gap: 8px; padding-bottom: 8px }
+  .errortext { flex: 1; color: var(--danger); font-size: 14px; line-height: 20px }
+  .retrybtn {
+    display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border);
+    background: none; color: var(--foreground); font: inherit; font-size: 14px;
+    padding: 5px 12px; border-radius: 999px; cursor: pointer;
+  }
+  .editbanner { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; color: var(--muted) }
+  .editbanner .txt { flex: 1; font-size: 13px; line-height: 18px }
+  .editbanner .iconbtn { width: 28px; height: 28px; color: var(--muted) }
+  .inputrow { display: flex; align-items: flex-end; gap: 8px }
+  .latest {
+    position: absolute; left: 0; right: 0; bottom: calc(100% + 8px);
+    display: flex; justify-content: center; pointer-events: none;
+  }
+  .latest button {
+    pointer-events: auto; width: 44px; height: 44px; border-radius: 999px;
+    background: var(--surface); color: var(--foreground); border: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .field {
+    flex: 1; min-height: 48px; max-height: 120px; overflow-y: auto;
+    border-radius: 16px; background: var(--surface); padding: 12px 16px;
+    font-size: 16px; line-height: 24px; color: var(--surface-foreground);
+    border: 0; outline: 0; resize: none; font-family: inherit;
+  }
+  .field::placeholder { color: var(--muted) }
+  .field.editing { box-shadow: 0 0 0 1.5px var(--accent) }
+  .sendbtn {
+    width: 44px; height: 44px; border-radius: 999px; background: var(--accent);
+    color: var(--accent-foreground); border: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sendbtn:disabled { opacity: .4; cursor: default }
+
+  .menu-backdrop {
+    position: absolute; inset: 0; background: var(--backdrop); z-index: 20;
+  }
+  .menu-card {
+    position: absolute; z-index: 21; min-width: 208px;
+    background: var(--overlay); color: var(--overlay-foreground);
+    border-radius: 14px; box-shadow: var(--overlay-shadow); padding: 6px;
+  }
+  .menu-item {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+    background: none; border: 0; font: inherit; font-size: 16px; color: inherit;
+    padding: 10px 12px; border-radius: 9px; cursor: pointer; text-align: left;
+  }
+  .menu-item:active { background: var(--background) }
+  .menu-item .lbl { flex: 1 }
+  .menu-item svg { color: var(--muted) }
+  .frame { position: relative; display: flex; flex-direction: column; height: 100%; overflow: hidden }
+</style>
+
+<header class="sh-bar">
+  <b>proto</b>
+  <label class="sh-control"><span class="sh-control-label">screen</span><select id="sh-screen"></select></label>
+  <span class="sh-spacer"></span>
+  <label class="sh-control"><span class="sh-control-label">state</span><select id="sh-state"></select></label>
+  <button id="sh-vp">vp: full (m)</button>
+</header>
+
+<main class="sh-stage">
+  <section data-screen="chat" data-title="대화" data-states="답변 받는 중,수정 중,실패,중지됨">
+    <div class="frame" id="frame">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="battery"></span>
+      </div>
+      <div class="navbar">
+        <button class="iconbtn" aria-label="뒤로 가기" data-component="Stack.Toolbar.Button">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="title">대화</div>
+        <span></span>
+      </div>
+      <div class="list" id="list" data-component="KeyboardAwareLegendList"></div>
+      <div class="composer" data-component="new:ChatComposer">
+        <div class="latest" id="latestwrap" hidden>
+          <button id="latest" aria-label="최신 메시지로 이동">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+          </button>
+        </div>
+        <div class="pad">
+          <div class="errorrow" id="errorrow" hidden>
+            <span class="errortext" role="alert">답변을 받지 못했어요.</span>
+            <button class="retrybtn" id="retry" data-component="Button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+              다시 시도하기
+            </button>
+          </div>
+          <div class="editbanner" id="editbanner" hidden data-component="new:EditBanner">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+            <span class="txt">이 메시지부터 다시 물어봐요.</span>
+            <button class="iconbtn" id="canceledit" aria-label="수정 그만두기">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+          <div class="inputrow">
+            <textarea class="field" id="field" rows="1" placeholder="메시지를 입력하세요" aria-label="메시지" data-component="TextInput"></textarea>
+            <button class="sendbtn" id="send" aria-label="보내기" disabled data-component="new:SendButton">
+              <svg id="sendicon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>document.body.classList.add('sh-vp-390');</script>
+
+<script>
+  const stage = document.querySelector('.sh-stage');
+  const screens = [...stage.querySelectorAll('[data-screen]')];
+  const screenSelect = document.getElementById('sh-screen');
+  const stateSelect = document.getElementById('sh-state');
+  const vpBtn = document.getElementById('sh-vp');
+  let current = null;
+  let currentStates = [];
+
+  screens.forEach(s => {
+    const option = document.createElement('option');
+    option.textContent = s.dataset.title || s.dataset.screen;
+    option.value = s.dataset.screen;
+    screenSelect.append(option);
+  });
+  screenSelect.onchange = () => show(screenSelect.value);
+
+  function show(slug) {
+    current = screens.find(s => s.dataset.screen === slug) || screens[0];
+    screens.forEach(s => s.hidden = s !== current);
+    screenSelect.value = current.dataset.screen;
+    history.replaceState(null, '', '#' + current.dataset.screen);
+    buildStates();
+  }
+
+  function buildStates() {
+    const declared = (current.dataset.states || '').split(',').map(x => x.trim()).filter(Boolean);
+    currentStates = ['Default', ...declared.filter(name => name !== 'Default')];
+    stateSelect.innerHTML = '';
+    currentStates.forEach(name => {
+      const option = document.createElement('option');
+      option.textContent = name;
+      option.value = name;
+      stateSelect.append(option);
+    });
+    applyState('Default');
+  }
+
+  function applyState(name) {
+    const active = currentStates.includes(name) ? name : 'Default';
+    current.querySelectorAll('[data-when]').forEach(el => {
+      el.hidden = !el.dataset.when.split(',').map(x => x.trim()).includes(active);
+    });
+    stateSelect.value = active;
+  }
+  stateSelect.onchange = () => applyState(stateSelect.value);
+
+  window.prototypeShell = {
+    showScreen: show,
+    setState: applyState,
+    getScreen: () => current?.dataset.screen,
+    getState: () => stateSelect.value
+  };
+
+  const VPS = ['full', '390', '768'];
+  let vp = VPS.find(v => document.body.classList.contains('sh-vp-' + v)) || 'full';
+  function applyVp() {
+    VPS.forEach(v => document.body.classList.toggle('sh-vp-' + v, v === vp && v !== 'full'));
+    vpBtn.textContent = 'vp: ' + vp + ' (m)';
+    vpBtn.classList.toggle('on', vp !== 'full');
+  }
+  vpBtn.onclick = () => { vp = VPS[(VPS.indexOf(vp) + 1) % VPS.length]; applyVp(); };
+  applyVp();
+
+  addEventListener('keydown', e => {
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const i = screens.indexOf(current);
+    if (e.key === 'ArrowRight') show(screens[(i + 1) % screens.length].dataset.screen);
+    if (e.key === 'ArrowLeft') show(screens[(i - 1 + screens.length) % screens.length].dataset.screen);
+    if (e.key === 'm') vpBtn.click();
+  });
+
+  addEventListener('hashchange', () => show(location.hash.slice(1)));
+  show(location.hash.slice(1));
+</script>
+
+<script>
+  const ICON = {
+    copy: '<path d="M20 8h-8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2Z"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/>',
+    refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+    pencil: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+    arrowUp: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>'
+  };
+  const STOP_ICON = '<rect x="7" y="7" width="10" height="10" rx="2.5" fill="currentColor" stroke="none"/>';
+
+  function svg(paths, size) {
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+  }
+
+  const ANSWER_A = '선언형 스키마는 supabase/schemas에 두고, 생성된 마이그레이션 파일은 supabase/migrations에 쌓입니다. 스키마 파일을 고친 뒤 supabase db diff로 마이그레이션을 만드는 순서예요.';
+  const ANSWER_B = '네. bun run db:start로 로컬 스택을 먼저 올려야 합니다. 스택이 꺼져 있으면 diff가 비교할 대상을 찾지 못해서 빈 마이그레이션이 나와요.';
+  const ANSWER_C = '마이그레이션 이름은 supabase db diff -f 뒤에 직접 적습니다. 적지 않으면 타임스탬프만 붙은 파일이 생겨서 나중에 무엇을 바꾼 건지 알아보기 어려워요.';
+
+  const BASE = [
+    { id: 'm1', role: 'user', text: '이 프로젝트에서 Supabase 마이그레이션은 어디에 두나요?' },
+    { id: 'm2', role: 'ai', text: ANSWER_A },
+    { id: 'm3', role: 'user', text: 'db diff 돌리기 전에 로컬 스택을 먼저 띄워야 하나요' },
+    { id: 'm4', role: 'ai', text: ANSWER_B },
+    { id: 'm5', role: 'user', text: '이미 올린 마이그레이션을 되돌리고 싶으면요' },
+    { id: 'm6', role: 'ai', text: '로컬에서는 bun run db:reset으로 전체를 다시 만드는 쪽이 가장 확실합니다. 이미 배포한 데이터베이스라면 지우지 말고, 되돌리는 내용을 담은 마이그레이션을 새로 만들어 앞으로 적용하세요. 이미 적용된 파일을 고치면 다른 사람의 로컬과 배포 환경이 서로 다른 상태가 됩니다.' },
+    { id: 'm7', role: 'user', text: 'RLS 정책도 스키마 파일에 같이 두나요' },
+    { id: 'm8', role: 'ai', text: '네. 정책도 테이블과 같은 선언형 스키마 파일에 둡니다. 정책을 따로 관리하면 테이블을 바꿀 때 정책이 따라오지 않아서, 열려 있어야 할 데이터가 막히거나 막혀 있어야 할 데이터가 열립니다.' },
+    { id: 'm9', role: 'user', text: '정책이 맞게 걸렸는지는 어떻게 확인해요' },
+    { id: 'm10', role: 'ai', text: 'bun run db:test로 pgTAP 테스트를 돌립니다. 역할별로 보이는 행과 보이지 않는 행을 각각 확인하는 테스트를 함께 두면, 정책을 고칠 때마다 어느 쪽이 깨졌는지 바로 드러나요.' }
+  ];
+
+  const list = document.getElementById('list');
+  const frame = document.getElementById('frame');
+  const field = document.getElementById('field');
+  const send = document.getElementById('send');
+  const sendIcon = document.getElementById('sendicon');
+  const errorRow = document.getElementById('errorrow');
+  const editBanner = document.getElementById('editbanner');
+  const cancelEdit = document.getElementById('canceledit');
+  const retry = document.getElementById('retry');
+  const latestWrap = document.getElementById('latestwrap');
+  const latest = document.getElementById('latest');
+
+  let following = true;
+  let messages = [];
+  let streaming = false;
+  let failed = false;
+  let editingId = null;
+  let stashedDraft = '';
+  let timer = null;
+  let seq = 100;
+  let openMenu = null;
+
+  function nextId() { seq += 1; return 'm' + seq; }
+  function reset(source) { messages = (source || BASE).map(m => ({ ...m })); }
+
+  function render() {
+    closeMenu();
+    const doomedFrom = editingId ? messages.findIndex(m => m.id === editingId) : -1;
+    list.innerHTML = '';
+    messages.forEach((m, index) => {
+      const row = document.createElement('div');
+      row.className = 'msg ' + (m.role === 'user' ? 'user' : 'ai');
+      if (doomedFrom >= 0 && index >= doomedFrom) row.classList.add('doomed');
+
+      if (m.role === 'user') {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = m.text;
+        bubble.dataset.component = 'Menu.Trigger';
+        attachLongPress(bubble, m);
+        row.append(bubble);
+      } else {
+        const isLast = index === messages.length - 1;
+        const body = document.createElement('div');
+        if (streaming && isLast && !m.text) {
+          body.className = 'waiting';
+          body.textContent = '답변을 쓰고 있어요.';
+        } else {
+          body.className = 'aitext';
+          body.textContent = m.text;
+        }
+        row.append(body);
+        if (!(streaming && isLast)) row.append(actionRow(m));
+      }
+      list.append(row);
+    });
+    syncComposer();
+    if (following) list.scrollTop = list.scrollHeight;
+    syncLatest();
+  }
+
+  const LIST_END_THRESHOLD = 20;
+
+  function atEnd() {
+    return list.scrollHeight - (list.scrollTop + list.clientHeight) <= LIST_END_THRESHOLD;
+  }
+
+  function syncLatest() {
+    latestWrap.hidden = following || atEnd();
+  }
+
+  function goLatest() {
+    following = true;
+    list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
+    syncLatest();
+  }
+
+  function actionRow(m) {
+    const bar = document.createElement('div');
+    bar.className = 'actions';
+    bar.dataset.component = 'new:MessageActions';
+
+    const copy = document.createElement('button');
+    copy.className = 'iconbtn';
+    copy.setAttribute('aria-label', '답변 복사');
+    copy.innerHTML = svg(ICON.copy, 18);
+    copy.onclick = () => copyText(m.text);
+
+    const again = document.createElement('button');
+    again.className = 'iconbtn';
+    again.setAttribute('aria-label', '답변 다시 받기');
+    again.innerHTML = svg(ICON.refresh, 18);
+    again.onclick = () => regenerate(m.id);
+
+    if (editingId) { copy.disabled = true; again.disabled = true; }
+
+    bar.append(copy, again);
+    return bar;
+  }
+
+  function attachLongPress(el, m) {
+    let hold = null;
+    const start = event => {
+      if (streaming || editingId) return;
+      el.classList.add('pressing');
+      hold = setTimeout(() => { hold = null; el.classList.remove('pressing'); showMenu(el, m); }, 420);
+      if (event.type === 'touchstart') event.preventDefault();
+    };
+    const cancel = () => { el.classList.remove('pressing'); if (hold) { clearTimeout(hold); hold = null; } };
+    el.addEventListener('mousedown', start);
+    el.addEventListener('touchstart', start, { passive: false });
+    ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(name => el.addEventListener(name, cancel));
+    el.addEventListener('contextmenu', event => event.preventDefault());
+  }
+
+  function showMenu(anchor, m) {
+    closeMenu();
+    const backdrop = document.createElement('div');
+    backdrop.className = 'menu-backdrop';
+    backdrop.onclick = closeMenu;
+
+    const card = document.createElement('div');
+    card.className = 'menu-card';
+    card.dataset.component = 'Menu.Content';
+
+    const copy = document.createElement('button');
+    copy.className = 'menu-item';
+    copy.dataset.component = 'Menu.Item';
+    copy.innerHTML = '<span class="lbl">복사</span>' + svg(ICON.copy, 19);
+    copy.onclick = () => { copyText(m.text); closeMenu(); };
+
+    const edit = document.createElement('button');
+    edit.className = 'menu-item';
+    edit.dataset.component = 'Menu.Item';
+    edit.innerHTML = '<span class="lbl">수정</span>' + svg(ICON.pencil, 19);
+    edit.onclick = () => { closeMenu(); startEdit(m); };
+
+    card.append(copy, edit);
+    frame.append(backdrop, card);
+
+    const frameBox = frame.getBoundingClientRect();
+    const box = anchor.getBoundingClientRect();
+    const width = card.offsetWidth;
+    const height = card.offsetHeight;
+    let top = box.bottom - frameBox.top + 8;
+    if (top + height > frameBox.height - 12) top = box.top - frameBox.top - height - 8;
+    card.style.top = Math.max(12, top) + 'px';
+    card.style.left = Math.max(12, Math.min(box.right - frameBox.left - width, frameBox.width - width - 12)) + 'px';
+    openMenu = { backdrop, card };
+  }
+
+  function closeMenu() {
+    if (!openMenu) return;
+    openMenu.backdrop.remove();
+    openMenu.card.remove();
+    openMenu = null;
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
+  }
+
+  function startEdit(m) {
+    stashedDraft = field.value;
+    editingId = m.id;
+    field.value = m.text;
+    failed = false;
+    render();
+    autosize();
+    field.focus();
+    prototypeShell.setState('수정 중');
+  }
+
+  function stopEdit() {
+    editingId = null;
+    field.value = stashedDraft;
+    stashedDraft = '';
+    render();
+    autosize();
+    prototypeShell.setState('Default');
+  }
+
+  function regenerate(id) {
+    const index = messages.findIndex(m => m.id === id);
+    if (index < 0) return;
+    messages = messages.slice(0, index);
+    failed = false;
+    following = true;
+    render();
+    stream(pickAnswer());
+  }
+
+  function pickAnswer() {
+    const used = messages.filter(m => m.role === 'ai').length;
+    return [ANSWER_A, ANSWER_B, ANSWER_C][used % 3];
+  }
+
+  function stream(text) {
+    const id = nextId();
+    messages.push({ id, role: 'ai', text: '' });
+    streaming = true;
+    render();
+    prototypeShell.setState('답변 받는 중');
+    const words = text.split(' ');
+    let i = 0;
+    timer = setTimeout(() => { timer = setInterval(tick, 90); }, 900);
+    function tick() {
+      const target = messages.find(m => m.id === id);
+      if (!target) { finish(); return; }
+      target.text = words.slice(0, i + 1).join(' ');
+      i += 1;
+      if (i >= words.length) { finish(); return; }
+      render();
+    }
+  }
+
+  function finish() {
+    clearInterval(timer); clearTimeout(timer);
+    timer = null;
+    streaming = false;
+    render();
+    prototypeShell.setState('Default');
+  }
+
+  function halt() {
+    clearInterval(timer); clearTimeout(timer);
+    timer = null;
+    streaming = false;
+    render();
+    prototypeShell.setState('중지됨');
+  }
+
+  function submit() {
+    const text = field.value.trim();
+    if (!text || streaming) return;
+    if (editingId) {
+      const index = messages.findIndex(m => m.id === editingId);
+      messages = messages.slice(0, index);
+      editingId = null;
+      stashedDraft = '';
+    }
+    messages.push({ id: nextId(), role: 'user', text });
+    field.value = '';
+    failed = false;
+    following = true;
+    autosize();
+    render();
+    stream(pickAnswer());
+  }
+
+  function syncComposer() {
+    const hasText = field.value.trim().length > 0;
+    errorRow.hidden = !failed;
+    editBanner.hidden = !editingId;
+    field.classList.toggle('editing', Boolean(editingId));
+    if (streaming) {
+      send.disabled = false;
+      send.setAttribute('aria-label', '답변 그만 받기');
+      sendIcon.innerHTML = STOP_ICON;
+    } else {
+      send.disabled = !hasText;
+      send.setAttribute('aria-label', '보내기');
+      sendIcon.innerHTML = ICON.arrowUp;
+    }
+  }
+
+  function autosize() {
+    field.style.height = 'auto';
+    field.style.height = Math.min(120, Math.max(48, field.scrollHeight)) + 'px';
+  }
+
+  field.addEventListener('input', () => { autosize(); syncComposer(); });
+  field.addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); submit(); }
+  });
+  send.onclick = () => { if (streaming) halt(); else submit(); };
+  cancelEdit.onclick = stopEdit;
+  retry.onclick = () => { failed = false; following = true; render(); stream(pickAnswer()); };
+  latest.onclick = goLatest;
+  list.addEventListener('scroll', () => { following = atEnd(); syncLatest(); });
+
+  const PRESETS = {
+    'Default': () => { reset(); failed = false; editingId = null; field.value = ''; },
+    '답변 받는 중': () => {
+      reset(BASE.concat([{ id: 'm11', role: 'user', text: '마이그레이션 이름은 어떻게 정하나요' }]));
+      messages.push({ id: 'm12', role: 'ai', text: '마이그레이션 이름은 supabase db diff -f 뒤에' });
+      streaming = true; failed = false; editingId = null; field.value = '';
+    },
+    '수정 중': () => {
+      reset(); failed = false; editingId = 'm3'; field.value = 'db diff 돌리기 전에 로컬 스택을 먼저 띄워야 하나요';
+    },
+    '실패': () => {
+      reset(BASE.concat([{ id: 'm11', role: 'user', text: '마이그레이션 이름은 어떻게 정하나요' }]));
+      failed = true; editingId = null; field.value = '';
+    },
+    '중지됨': () => {
+      reset(BASE.concat([{ id: 'm11', role: 'user', text: '마이그레이션 이름은 어떻게 정하나요' }]));
+      messages.push({ id: 'm12', role: 'ai', text: '마이그레이션 이름은 supabase db diff -f 뒤에 직접 적습니다. 적지 않으면' });
+      failed = false; editingId = null; field.value = '';
+    }
+  };
+
+  const shellSetState = prototypeShell.setState;
+  let applying = false;
+  function enterPreset(name) {
+    if (applying) return;
+    applying = true;
+    clearInterval(timer); clearTimeout(timer);
+    timer = null;
+    streaming = false;
+    stashedDraft = '';
+    following = true;
+    (PRESETS[name] || PRESETS.Default)();
+    render();
+    autosize();
+    applying = false;
+  }
+  stateSelect.onchange = () => { enterPreset(stateSelect.value); shellSetState(stateSelect.value); };
+  prototypeShell.setState = name => { if (!applying) shellSetState(name); };
+
+  enterPreset('Default');
+  requestAnimationFrame(autosize);
+</script>

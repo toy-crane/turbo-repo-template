@@ -176,9 +176,15 @@ jest.mock("react-native-worklets", () =>
   require("react-native-worklets/src/mock")
 );
 
+// Motion is allowed by default. A screen that draws something moving has to
+// be seen both ways, so the answer is read from a switch a test can flip
+// rather than fixed here; see src/shared/test/reduced-motion.ts.
 jest.mock("react-native-reanimated", () => ({
   ...require("react-native-reanimated/mock"),
-  useReducedMotion: () => false,
+  useReducedMotion: () =>
+    (
+      require("@/shared/test/reduced-motion") as typeof import("@/shared/test/reduced-motion")
+    ).mockReducedMotion.isOn,
 }));
 
 const reanimated = require("react-native-reanimated");
