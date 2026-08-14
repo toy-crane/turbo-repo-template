@@ -1165,10 +1165,18 @@ describe("ChatPanel", () => {
     const surface = screen.getByTestId("chat-composer-surface");
     expect(within(surface).getByLabelText(chatLabels.input)).toBeOnTheScreen();
     expect(within(surface).getByLabelText(chatLabels.send)).toBeOnTheScreen();
-    // Nothing paints across the screen behind it: the list runs on underneath.
+    // Nothing paints across the screen behind it, and it takes no row of its
+    // own: laid out as a sibling it would shorten the list and the conversation
+    // would stop at a straight edge above the control instead of running on
+    // under it.
     expect(screen.getByTestId("chat-composer").props.className).not.toContain(
       "bg-"
     );
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("chat-composer").parent?.props.style
+      )
+    ).toMatchObject({ bottom: 0, position: "absolute" });
   });
 
   test("오류와 수정 안내는 컨트롤 안이 아니라 그 위에 둔다", async () => {

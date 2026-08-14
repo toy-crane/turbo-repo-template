@@ -461,17 +461,25 @@ export function ChatPanel({
         testID="chat-list"
       />
 
+      {/*
+        The composer floats over the list rather than taking a row of its own
+        below it. Laid out as a sibling it would shorten the list, and the
+        conversation would stop at a straight edge above the control instead of
+        running on under it — with nothing behind the glass to show through.
+        What keeps the messages clear of it is the end inset the list already
+        reports from this composer's measured height.
+      */}
       <KeyboardStickyView
         offset={{
           closed: 0,
           opened: composerBottomPadding - KEYBOARD_INPUT_GAP,
         }}
+        style={{ bottom: 0, left: 0, position: "absolute", right: 0 }}
       >
         {/*
-          No background of its own: the composer is a control floating over the
-          conversation, and a band across the screen behind it would cut the
-          list off short of where it actually ends. The notice and the error sit
-          on the same open ground, just above the control rather than inside it.
+          No background of its own either: a band across the screen would cut
+          the list off just as surely. The notice and the error sit on the same
+          open ground, just above the control rather than inside it.
         */}
         <View
           className="gap-2 px-5 pt-2"
