@@ -1,4 +1,5 @@
-import { Pressable, View } from "react-native";
+import { PressableFeedback } from "heroui-native/pressable-feedback";
+import { View } from "react-native";
 
 import { Icon, type IconName } from "@/shared/ui/icon";
 import { chatLabels } from "./chat-labels";
@@ -6,8 +7,9 @@ import { chatLabels } from "./chat-labels";
 /**
  * The row shows 32px buttons and grows each press target to the 44px minimum
  * with `hitSlop`, so reaching an icon does not depend on hitting the drawn
- * shape. 12px between two icons is what keeps the grown targets from
- * overlapping: each one reaches 6px past its own edge.
+ * shape. That minimum is also what sets the distance between them: two 44px
+ * targets that must not overlap put the icons 44px apart centre to centre, so
+ * the gap between the drawn boxes is what is left over.
  */
 const ACTION_SIZE = 32;
 const ACTION_TARGET = 44;
@@ -26,23 +28,27 @@ function ActionButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    // The library's own pressable: it answers a touch with a scale, and adds
+    // the highlight iOS expects and the ripple Android expects.
+    <PressableFeedback
       accessibilityLabel={label}
       accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
-      disabled={isDisabled}
       hitSlop={ACTION_HIT_SLOP}
+      isDisabled={isDisabled}
       onPress={onPress}
       style={{
         alignItems: "center",
+        borderRadius: ACTION_SIZE / 2,
         height: ACTION_SIZE,
         justifyContent: "center",
         opacity: isDisabled ? 0.4 : 1,
         width: ACTION_SIZE,
       }}
     >
-      <Icon name={name} size="sm" tone="muted" />
-    </Pressable>
+      <PressableFeedback.Highlight />
+      <PressableFeedback.Ripple />
+      <Icon name={name} tone="muted" />
+    </PressableFeedback>
   );
 }
 
