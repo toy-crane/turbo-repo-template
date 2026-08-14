@@ -10,7 +10,8 @@ import {
   Text,
 } from "@expo/ui";
 import Constants from "expo-constants";
-import { useState } from "react";
+import { useHeaderHeight } from "expo-router/react-navigation";
+import { type ReactNode, useState } from "react";
 import { Platform } from "react-native";
 
 import { accountDeletionLabels } from "@/features/account-deletion/ui/account-deletion-labels";
@@ -21,7 +22,6 @@ import {
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useSignOut } from "@/features/auth/state/use-sign-out";
 import { profileLabels } from "@/features/auth/ui/profile-labels";
-import { heroRowModifiers } from "./hero-row";
 import { SettingsProfileHero } from "./settings-profile-hero";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
@@ -31,22 +31,21 @@ const CHEVRON_SIZE = 14;
 /**
  * The app's settings.
  *
- * The foreground colour arrives as a prop: the app theme belongs to the root
- * layout, and a screen does not reach up into it.
+ * Semantic colours that do not come from the native row arrive as props: the
+ * app theme belongs to the root layout, and a screen does not reach up into it.
  */
 export function SettingsScreen({
   danger,
-  foreground,
   muted,
   onDeleteAccount,
   onEditProfile,
 }: {
   danger: string;
-  foreground: string;
   muted: string;
   onDeleteAccount: () => void;
   onEditProfile: () => void;
 }) {
+  const headerHeight = useHeaderHeight();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const { session } = useAuthSession();
@@ -56,37 +55,33 @@ export function SettingsScreen({
     isSigningOut,
     requestSignOut,
   } = useSignOut();
-  // Android's @expo/ui text does not follow the app's appearance on its own, so
-  // the screen passes the same foreground colour the rest of the app uses.
-  const androidTextStyle =
-    Platform.OS === "android" ? { color: foreground } : undefined;
 
   return (
     <Host style={{ flex: 1 }} useViewportSizeMeasurement>
-      <FieldGroup testID="settings-field-group">
-        {/*
-          The header is React Native inside the form rather than a second Host
-          above it: the form owns the whole body, and a separate host would leave
-          the header pinned while the sections scrolled under it. A non-section
-          child renders inline between sections, which is where it belongs.
-        */}
-        <FieldGroup.Section modifiers={heroRowModifiers}>
-          <RNHostView matchContents>
-            <SettingsProfileHero
-              avatarUrl={readProfileAvatarUrl(profile)}
-              displayName={profile?.displayName ?? null}
-              onPress={onEditProfile}
-              username={profile?.username ?? null}
-            />
-          </RNHostView>
+      <FieldGroup
+        style={
+          Platform.OS === "android" ? { paddingTop: headerHeight } : undefined
+        }
+        testID="settings-field-group"
+      >
+        <FieldGroup.Section>
+          <FieldGroup.SectionHeader>
+            <RNHostView matchContents>
+              <SettingsProfileHero
+                avatarUrl={readProfileAvatarUrl(profile)}
+                displayName={profile?.displayName ?? null}
+                onPress={onEditProfile}
+                username={profile?.username ?? null}
+              />
+            </RNHostView>
+          </FieldGroup.SectionHeader>
         </FieldGroup.Section>
 
         <FieldGroup.Section title={profileLabels.account}>
           {/*
-            ListItem rather than Button: a button's press area follows its label,
-            so a tap on the empty right half of the row did nothing. A list row
-            takes the press anywhere across it, which is what the rest of this
-            screen already behaves like.
+            The platform-specific row below takes the press anywhere across its
+            width. A control whose press area follows only its label would leave
+            the empty right half of the row inert.
           */}
           {/*
             The chevron is iOS telling people the row goes somewhere. `@expo/ui`
@@ -98,7 +93,7 @@ export function SettingsScreen({
             Android lists do not use a chevron, so it is left off there rather
             than drawn from a second icon set.
           */}
-          <ListItem
+          <SettingsActionRow
             onPress={onEditProfile}
             testID="edit-profile-row"
             trailing={
@@ -107,20 +102,18 @@ export function SettingsScreen({
               ) : undefined
             }
           >
-            <Text textStyle={androidTextStyle}>
-              {profileLabels.editProfile}
-            </Text>
-          </ListItem>
+            <Text>{profileLabels.editProfile}</Text>
+          </SettingsActionRow>
           {/*
             Red because signing out ends something. It has no chevron because it
             acts immediately rather than opening another screen.
           */}
-          <ListItem onPress={requestSignOut} testID="sign-out-button">
+          <SettingsActionRow onPress={requestSignOut} testID="sign-out-button">
             <Text textStyle={{ color: danger }}>
               {isSigningOut ? profileLabels.signingOut : profileLabels.signOut}
             </Text>
-          </ListItem>
-          <ListItem
+          </SettingsActionRow>
+          <SettingsActionRow
             onPress={onDeleteAccount}
             testID="delete-account-row"
             trailing={
@@ -132,10 +125,10 @@ export function SettingsScreen({
             <Text textStyle={{ color: danger }}>
               {accountDeletionLabels.deleteAccount}
             </Text>
-          </ListItem>
+          </SettingsActionRow>
           {signOutFailure ? (
             <Row testID="sign-out-error">
-              <Text textStyle={androidTextStyle}>{signOutFailure}</Text>
+              <Text>{signOutFailure}</Text>
             </Row>
           ) : null}
         </FieldGroup.Section>
@@ -160,12 +153,48 @@ export function SettingsScreen({
 
         <FieldGroup.Section title={profileLabels.appInfo}>
           <Row alignment="center" testID="version-row">
-            <Text textStyle={androidTextStyle}>{profileLabels.version}</Text>
+            <Text>{profileLabels.version}</Text>
             <Spacer flexible />
-            <Text textStyle={androidTextStyle}>{appVersion}</Text>
+            <Text textStyle={{ color: muted }}>{appVersion}</Text>
           </Row>
         </FieldGroup.Section>
       </FieldGroup>
     </Host>
+  );
+}
+
+/**
+ * A single settings row on both platforms.
+ *
+ * Android's `FieldGroup.Section` already wraps each child in a Material 3
+ * `ListItem`, so nesting another `ListItem` creates the extra card seen behind
+ * the content. iOS sections do not add that interactive wrapper, so they keep
+ * `ListItem` and its full-width button hit area.
+ */
+function SettingsActionRow({
+  children,
+  onPress,
+  testID,
+  trailing,
+}: {
+  children: ReactNode;
+  onPress: () => void;
+  testID: string;
+  trailing?: ReactNode;
+}) {
+  if (Platform.OS === "ios") {
+    return (
+      <ListItem onPress={onPress} testID={testID} trailing={trailing}>
+        {children}
+      </ListItem>
+    );
+  }
+
+  return (
+    <Row alignment="center" onPress={onPress} testID={testID}>
+      {children}
+      <Spacer flexible />
+      {trailing}
+    </Row>
   );
 }
