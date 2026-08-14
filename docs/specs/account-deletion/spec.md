@@ -14,6 +14,7 @@
 - [화면 문구 한국어 말투](../../decisions/korean-ui-writing.md)
 - [모바일 테스트와 런타임 검증](../../decisions/mobile-testing-and-verification.md)
 - [Supabase 클라이언트 경계](../../decisions/supabase-client-boundaries.md)
+- [계정 탈퇴 서버 경계](../../decisions/account-deletion-server-boundary.md)
 
 ## 사용자에게 보이는 결과
 
