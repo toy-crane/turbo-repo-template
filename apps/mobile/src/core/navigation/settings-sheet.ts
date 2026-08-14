@@ -43,3 +43,10 @@ export function getProfileEditRouteOptions() {
     title: "프로필 수정",
   };
 }
+
+/** Explains permanent deletion before the platform's final confirmation. */
+export function getAccountDeletionRouteOptions() {
+  return {
+    title: "계정 탈퇴",
+  };
+}

@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 
 import {
+  getAccountDeletionRouteOptions,
   getProfileEditRouteOptions,
   getSettingsRouteOptions,
   getSettingsStackScreenOptions,
@@ -26,6 +27,10 @@ export default function SettingsLayout() {
     >
       <Stack.Screen name="index" options={getSettingsRouteOptions()} />
       <Stack.Screen name="profile" options={getProfileEditRouteOptions()} />
+      <Stack.Screen
+        name="delete-account"
+        options={getAccountDeletionRouteOptions()}
+      />
     </Stack>
   );
 }

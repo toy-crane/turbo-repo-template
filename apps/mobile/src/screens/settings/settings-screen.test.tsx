@@ -119,11 +119,15 @@ beforeEach(() => {
 });
 
 function renderSettings({
+  onDeleteAccount = () => {
+    // Most tests are about something else on this screen.
+  },
   onEditProfile = () => {
     // Most tests are about something else on this screen.
   },
   queryClient = new QueryClient(),
 }: {
+  onDeleteAccount?: () => void;
   onEditProfile?: () => void;
   queryClient?: QueryClient;
 } = {}) {
@@ -133,6 +137,7 @@ function renderSettings({
         danger={DANGER}
         foreground={FOREGROUND}
         muted={MUTED}
+        onDeleteAccount={onDeleteAccount}
         onEditProfile={onEditProfile}
       />
     </QueryClientProvider>
@@ -247,6 +252,16 @@ test("프로필 사진과 프로필 수정 행이 같은 화면을 연다", asyn
   // Both entry points, one destination: a photo menu opening straight from
   // Settings would split saving the picture from saving the rest of the profile.
   expect(onEditProfile).toHaveBeenCalledTimes(2);
+});
+
+test("계정 탈퇴 행은 별도 안내 화면을 연다", async () => {
+  const onDeleteAccount = jest.fn();
+
+  await renderSettings({ onDeleteAccount });
+
+  await fireEvent.press(screen.getByTestId("delete-account-row"));
+
+  expect(onDeleteAccount).toHaveBeenCalledTimes(1);
 });
 
 test("iOS 설정 텍스트는 네이티브 기본 색상을 그대로 쓴다", async () => {
