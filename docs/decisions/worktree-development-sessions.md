@@ -12,7 +12,10 @@
 - Portless를 기본 개발 경로에 넣지 않는다. slot에서 실제 포트를 계산하고 개발 세션이 직접 소유한다.
 - 개발 세션이 정한 모바일 API와 Supabase 주소는 `EXPO_PUBLIC_DEV_SESSION_API_URL`과 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL`로 Metro에 전달한다. 앱은 이 값이 있으면 일반 모바일 URL보다 우선한다.
 - iOS Simulator에는 `127.0.0.1`을, Android Emulator에는 `10.0.2.2`를 호스트로 전달한다. API는 worktree slot의 포트를 사용하고 Supabase는 공유 로컬 포트 `54321`을 사용한다.
-- 실행 중인 세션은 공개 모바일 환경의 fingerprint가 같을 때만 API와 Metro를 재사용한다. 환경이 바뀌면 해당 worktree의 두 프로세스만 다시 시작하고 slot, 기기, 설치된 앱과 앱 데이터는 유지한다.
+- 실행 중인 세션은 공개 모바일 환경과 Metro 입력의 fingerprint가 모두 같을 때만 API와 Metro를 재사용한다. 하나라도 바뀌면 해당 worktree의 두 프로세스만 다시 시작하고 slot, 기기, 설치된 앱과 앱 데이터는 유지한다.
+- Metro 자식 프로세스에만 worktree별 `TMPDIR`를 전달한다. 이 경로 아래의 변환 캐시와 파일 목록 캐시는 다른 worktree와 섞이지 않는다. API와 네이티브 빌드는 이 경로를 사용하지 않는다.
+- 개발 세션을 시작할 때 `bun.lock`, 루트와 모바일 `package.json`, Expo·Metro·Babel·앱·TypeScript 설정, Metro patch와 설치된 주요 모바일 패키지 정보를 묶어 Metro 입력 fingerprint를 계산한다. 이전 시작과 다르면 해당 worktree의 Metro에만 `expo start --clear`를 적용한다.
+- `bun run dev <ios|android> --clear`는 입력 fingerprint와 관계없이 해당 worktree의 Metro 캐시를 한 번 초기화한다. `dev:stop`은 캐시를 남기고 `dev:remove`와 사라진 worktree 회수는 캐시도 함께 지운다.
 - 모든 시작 명령은 새 자원을 배정하기 전에 저장소 상태를 실제 Git worktree와 실행 중인 프로세스에 맞춘다. 사라진 worktree의 자원은 회수하고, 살아 있는 worktree의 기기 배정과 앱 데이터는 유지한다.
 
 ## 경계
@@ -22,6 +25,9 @@
 - `bun run dev:stop`은 실행 프로세스와 기기만 중단한다. slot, 기기, 앱 데이터와 공용 빌드는 유지한다.
 - `bun run dev:remove`는 현재 worktree에 배정된 기기를 초기화해 풀로 돌려놓고 slot을 반납한다. Git worktree, 풀의 기기와 저장소 공용 빌드는 삭제하지 않는다.
 - Git worktree를 외부에서 먼저 삭제하면 다음 `bun run dev <ios|android>`가 남은 프로세스, slot과 기기 배정을 회수한다. Codex나 Claude Code 전용 삭제 hook과 상시 실행 daemon은 사용하지 않는다.
+- Metro 입력 변경은 다음 `bun run dev <ios|android>`에서 확인한다. 실행 중인 세션이 `bun.lock`이나 설정 파일을 계속 지켜보다가 스스로 다시 시작하지는 않는다.
+- 자동 초기화는 Metro 캐시에만 적용한다. 네이티브 모듈, config plugin, Expo SDK 또는 React Native 변경으로 Development Build가 달라지는지는 별도의 native fingerprint가 판단한다.
+- `watchman watch-del-all`, `node_modules` 삭제와 패키지 재설치는 자동으로 실행하지 않는다. 캐시 초기화로 해결되지 않을 때 사람이 원인을 확인한 뒤 사용하는 진단 절차로 남긴다.
 
 ## 이유
 
@@ -35,6 +41,10 @@ Portless는 고정 hostname과 빈 포트 선택에는 유용하지만 Simulator
 
 Expo SDK 57의 개발 번들은 셸에서 받은 `EXPO_PUBLIC_` 값 뒤에 `.env.local` 값을 다시 합친다. 개발 세션과 일반 설정이 같은 변수 이름을 쓰면 Android용 `10.0.2.2`가 `.env.local`의 `127.0.0.1`로 바뀐다. 개발 세션 전용 이름을 사용하면 `.env.local`을 수정하지 않고도 세션 주소의 소유권을 지킬 수 있다.
 
+Metro의 기본 변환 캐시는 OS 임시 폴더에 있어 여러 프로젝트와 worktree가 함께 쓴다. Expo는 올바른 캐시 키를 만들어 이 결과를 안전하게 공유하는 방향을 택하지만, 플러그인이나 설정이 빠뜨린 입력이 있으면 다른 checkout의 결과가 남을 수 있다. worktree별 임시 폴더는 이 저장소의 병렬 세션을 서로 격리하고, 입력이 바뀔 때만 `--clear`를 쓰면 평소의 빠른 재시작도 유지한다.
+
+fingerprint마다 새 캐시 폴더를 만드는 대신 worktree마다 하나의 폴더를 계속 쓴다. 변경을 발견했을 때 Expo의 공식 초기화 경로를 실행하면 오래된 캐시 세대를 따로 세고 지우는 코드가 필요 없다. 전체 `bun.lock`을 읽으므로 모바일과 관계없는 패키지 변경에도 한 번 더 초기화할 수 있지만, 잘못된 캐시를 재사용하는 것보다 비용이 작고 동작을 설명하기 쉽다.
+
 ## 재검토 조건
 
 - Expo Web이나 브라우저 자동화에 worktree별 고정 hostname이 필요할 때
@@ -43,6 +53,8 @@ Expo SDK 57의 개발 번들은 셸에서 받은 `EXPO_PUBLIC_` 값 뒤에 `.env
 - 실제 기기나 원격 기기를 기본 개발 대상으로 지원할 때
 - 공유 Supabase 때문에 서로 다른 스키마 변경을 동시에 검증하지 못하는 일이 반복될 때
 - 공용 네이티브 빌드가 쌓여 저장 공간 관리가 필요할 때
+- 모바일과 관계없는 `bun.lock` 변경 때문에 Metro의 차가운 시작이 반복될 때
+- Expo가 worktree별 캐시 경계를 공식 지원하거나 공유 캐시의 모든 입력을 안정적으로 구분할 때
 - 다음 개발 세션까지 기다리지 않고 Git worktree 삭제 직후 자원을 반드시 회수해야 할 때
 - 살아 있는 worktree보다 작은 고정 기기 풀 크기를 강제해야 할 때
 
@@ -60,6 +72,11 @@ Expo SDK 57의 개발 번들은 셸에서 받은 `EXPO_PUBLIC_` 값 뒤에 `.env
 - 같은 AVD의 읽기 전용 다중 실행: worktree별 앱 데이터와 로그인 상태를 지속해서 보존하지 못한다.
 - 일반 모바일 URL을 개발 세션에서 덮어쓰기: Expo SDK 57 개발 번들이 `.env.local` 값을 다시 우선하므로 최종 앱 주소를 보장하지 못한다.
 - 앱에서 `Platform.OS`로 개발 주소 계산: 플랫폼과 slot을 이미 아는 개발 세션의 계산을 앱에 중복하고 일반 개발 빌드와 관리 세션을 구분하지 못한다.
+- 모든 시작에 `expo start --clear` 사용: 단순하지만 입력이 그대로인 실행에서도 따뜻한 캐시를 버린다.
+- Metro 캐시를 모든 worktree가 그대로 공유: Expo가 의도한 빠른 경로지만, 이 저장소에서는 새 Metro 프로세스가 이전 `expo-router` 결과를 읽은 일이 실제로 있었다.
+- fingerprint를 Metro 변환 키에 절대 경로로 넣기: 위치에 따라 달라지는 변환 결과를 숨기고 worktree 간 안전한 캐시 공유를 막는다.
+- fingerprint마다 새 캐시 폴더 만들기: 자동 초기화와 같은 결과를 내면서 오래된 폴더를 세고 지우는 수명 관리가 추가된다.
+- `watchman watch-del-all`과 `node_modules` 재설치 자동화: 다른 프로젝트의 watcher를 끊고 실제 의존성 손상과 Metro 캐시 문제를 구분하기 어렵게 만든다.
 
 ## 보존할 근거
 
@@ -68,3 +85,6 @@ Expo SDK 57의 개발 번들은 셸에서 받은 `EXPO_PUBLIC_` 값 뒤에 `.env
 - Expo SDK 57의 `expo/virtual/env` 개발 변환은 `.env` 파일 값을 `process.env` 뒤에 합친다. Expo 이슈 `#41981`과 열린 PR `#41999`도 셸 값이 `.env` 값에 덮이는 같은 동작을 다룬다.
 - Expo SDK 57의 플랫폼별 native fingerprint는 서로 다르므로 공용 빌드는 플랫폼별로 구분해야 한다.
 - 현재 앱에서 `EXPO_PUBLIC_API_URL`만 `http://127.0.0.1:3900`과 `http://127.0.0.1:3910`으로 바꿔 만든 iOS native fingerprint는 모두 `4a36fb8683f551d9b9cf800effec1f673b736511`이었다. slot별 API 포트는 공용 네이티브 빌드 재사용을 막지 않는다.
+- 패키지를 올린 뒤 새 Metro 프로세스를 시작했는데도 `expo-router@57.0.11` 경로가 번들에 남았다. 같은 checkout을 새 `TMPDIR`로 시작하자 현재 설치 버전인 `expo-router@57.0.13`을 사용했다. 실행 중이던 프로세스 재사용이 아니라 OS 임시 폴더 아래 캐시가 관여했다는 직접 근거다.
+- Expo 공식 문서는 설정 변경 뒤 `expo start --clear`를 안내한다. Expo의 Worklets cache-key 수정 [PR #39541](https://github.com/expo/expo/pull/39541)은 서로 다른 프로젝트의 전역 변환 캐시가 섞일 수 있음을 재현했고, 동시 worktree 캐시 쓰기 수정 [PR #46171](https://github.com/expo/expo/pull/46171)은 공유 캐시가 Expo의 기본 방향임을 보여 준다.
+- Expo worktree 캐시 분리 제안 [PR #43113](https://github.com/expo/expo/pull/43113)은 같은 문제 부류를 확인했지만 닫혔다. 유지보수자는 절대 경로로 캐시를 무효화하기보다 위치에 따라 달라지는 변환 결과를 고쳐야 한다고 설명했다. 이 저장소의 `TMPDIR` 분리는 Metro의 변환 키를 바꾸지 않는 로컬 실행 경계다.
