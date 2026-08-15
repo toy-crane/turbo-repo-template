@@ -30,7 +30,9 @@
 - Google 로그아웃에는 로컬 `signOut`을 사용한다. `revokeAccess`는 계정 연결 해제 기능을 따로 만들 때만 사용한다.
 - Apple은 별도 제공자 로그아웃을 호출하지 않는다. 앱 세션과 Supabase 세션만 지운다.
 - 로컬 이메일 도구는 로컬 Supabase와 Mailpit에서만 동작해야 한다. 원격 URL, 관리자 API, `service_role`, 고정 세션과 토큰 출력을 허용하지 않는다.
-- 계정 삭제는 최초 인증 기능에 포함하지 않는다. 계정 삭제가 없으면 앱 스토어 제출에 필요한 계정 생명주기를 완료했다고 보지 않는다.
+- 계정 탈퇴의 사용자 흐름과 삭제 범위는 [모바일 계정 탈퇴](mobile-account-deletion.md)를
+  따르고, 서버 권한과 삭제 순서는
+  [계정 탈퇴 서버 경계](account-deletion-server-boundary.md)를 따른다.
 
 ## 이유
 
