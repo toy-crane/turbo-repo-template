@@ -7,6 +7,7 @@
 - 기본 저장소 폴더와 추가 Git worktree를 같은 실행 단위로 취급한다. 실행 단위는 브랜치 이름이 아니라 정규화된 worktree 절대 경로로 식별한다.
 - worktree마다 고정 slot과 API·Metro 포트를 배정한다. 플랫폼별 기기는 저장소 공용 풀에서 하나씩 독점 배정하고, 일반 종료 뒤에도 이 상태를 유지해 다음 실행에서 재사용한다.
 - 네이티브 Development Build는 저장소 단위로 공유한다. 플랫폼과 Expo native fingerprint가 같은 worktree는 공용 빌드 결과를 설치해 재사용한다.
+- Android Development Build를 새로 만들 때는 worktree별 `GRADLE_USER_HOME`을 사용한다. Gradle wrapper, 의존성과 빌드 캐시가 다른 worktree의 절대 경로를 다시 쓰지 않는다. persistent Gradle daemon은 사용하지 않아 빌드가 끝난 뒤 해당 홈을 쓰는 JVM을 남기지 않는다.
 - 앱 데이터와 로그인 상태는 공용 빌드에 포함하지 않는다. 각 worktree에 배정한 Simulator 또는 AVD가 독립적으로 소유한다.
 - 로컬 Supabase 스택은 모든 worktree가 공유한다. 개발 세션 명령은 Supabase를 시작하거나 중지하거나 초기화하지 않는다.
 - Portless를 기본 개발 경로에 넣지 않는다. slot에서 실제 포트를 계산하고 개발 세션이 직접 소유한다.
@@ -15,7 +16,7 @@
 - 실행 중인 세션은 공개 모바일 환경과 Metro 입력의 fingerprint가 모두 같을 때만 API와 Metro를 재사용한다. 하나라도 바뀌면 해당 worktree의 두 프로세스만 다시 시작하고 slot, 기기, 설치된 앱과 앱 데이터는 유지한다.
 - Metro 자식 프로세스에만 worktree별 `TMPDIR`를 전달한다. 이 경로 아래의 변환 캐시와 파일 목록 캐시는 다른 worktree와 섞이지 않는다. API와 네이티브 빌드는 이 경로를 사용하지 않는다.
 - 개발 세션을 시작할 때 `bun.lock`, 루트와 모바일 `package.json`, Expo·Metro·Babel·앱·TypeScript 설정, Expo 앱 설정이 가져오는 파일, Metro patch와 설치된 주요 모바일 패키지 정보를 묶어 Metro 입력 fingerprint를 계산한다. 이전 시작과 다르면 해당 worktree의 Metro에만 `expo start --clear`를 적용한다.
-- `bun run dev <ios|android> --clear`는 입력 fingerprint와 관계없이 해당 worktree의 Metro 캐시를 한 번 초기화한다. `dev:stop`은 캐시를 남기고 `dev:remove`와 사라진 worktree 회수는 캐시도 함께 지운다.
+- `bun run dev <ios|android> --clear`는 입력 fingerprint와 관계없이 해당 worktree의 Metro 캐시를 한 번 초기화한다. `dev:stop`은 Metro와 Gradle 캐시를 남기고 `dev:remove`와 사라진 worktree 회수는 두 캐시를 함께 지운다.
 - 모든 시작 명령은 새 자원을 배정하기 전에 저장소 상태를 실제 Git worktree와 실행 중인 프로세스에 맞춘다. 사라진 worktree의 자원은 회수하고, 살아 있는 worktree의 기기 배정과 앱 데이터는 유지한다.
 
 ## 경계
@@ -27,6 +28,7 @@
 - Git worktree를 외부에서 먼저 삭제하면 다음 `bun run dev <ios|android>`가 남은 프로세스, slot과 기기 배정을 회수한다. Codex나 Claude Code 전용 삭제 hook과 상시 실행 daemon은 사용하지 않는다.
 - Metro 입력 변경은 다음 `bun run dev <ios|android>`에서 확인한다. 실행 중인 세션이 `bun.lock`이나 설정 파일을 계속 지켜보다가 스스로 다시 시작하지는 않는다.
 - 자동 초기화는 Metro 캐시에만 적용한다. 네이티브 모듈, config plugin, Expo SDK 또는 React Native 변경으로 Development Build가 달라지는지는 별도의 native fingerprint가 판단한다.
+- worktree별 Gradle 홈은 Android native fingerprint를 바꾸지 않는다. 완성한 Android APK는 기존처럼 플랫폼과 native fingerprint를 기준으로 저장소 전체에서 공유한다.
 - `watchman watch-del-all`, `node_modules` 삭제와 패키지 재설치는 자동으로 실행하지 않는다. 캐시 초기화로 해결되지 않을 때 사람이 원인을 확인한 뒤 사용하는 진단 절차로 남긴다.
 
 ## 이유
@@ -34,6 +36,8 @@
 브랜치 이름은 같은 폴더에서 바뀔 수 있고 detached HEAD에는 없으므로 실행 환경의 안정적인 식별자가 아니다. worktree 경로에 고정 slot과 독점 기기 배정을 연결하면 같은 bundle ID를 유지하면서도 여러 checkout을 동시에 실행할 수 있다.
 
 네이티브 빌드는 느리지만 앱 데이터와 로그인 상태는 worktree마다 달라야 한다. 따라서 플랫폼과 native fingerprint가 같은 빌드 결과만 저장소 전체에서 공유하고, 설치 대상 기기는 worktree마다 독점 배정한다. worktree가 사라지면 기기를 초기화해 풀로 돌려놓으므로 이전 로그인 상태는 다음 worktree로 넘어가지 않는다.
+
+Gradle의 기본 사용자 홈은 모든 checkout이 함께 쓴다. Gradle 빌드 캐시에는 입력 checkout의 절대 경로가 남을 수 있어서, 삭제한 worktree에서 만든 manifest 결과를 다른 worktree가 다시 쓰면 Android 패키징이 실패한다. Android 빌드 과정만 worktree별 Gradle 홈으로 나누면 경로가 섞이지 않고, 완성한 APK를 공유하는 기존 최적화도 유지한다. Gradle daemon의 기본 유휴 종료 시간은 3시간이므로 폴더만 지우면 JVM이 남는다. `GRADLE_OPTS`에 `-Dorg.gradle.daemon=false`를 더해 빌드마다 종료되는 프로세스만 사용한다.
 
 도구별 worktree 삭제 시점은 같지 않다. 개발 세션이 실행 전에 Git worktree와 프로세스 상태를 직접 확인하면 Codex, Claude Code와 일반 터미널이 같은 수명 규칙을 사용한다. 삭제 직후의 정리보다 다음 실행 전의 일관된 회수를 택해 hook과 daemon 없이 기기가 삭제한 worktree 수만큼 늘어나는 일을 막는다.
 
@@ -85,6 +89,8 @@ fingerprint마다 새 캐시 폴더를 만드는 대신 worktree마다 하나의
 - Expo SDK 57의 `expo/virtual/env` 개발 변환은 `.env` 파일 값을 `process.env` 뒤에 합친다. Expo 이슈 `#41981`과 열린 PR `#41999`도 셸 값이 `.env` 값에 덮이는 같은 동작을 다룬다.
 - Expo SDK 57의 플랫폼별 native fingerprint는 서로 다르므로 공용 빌드는 플랫폼별로 구분해야 한다.
 - 현재 앱에서 `EXPO_PUBLIC_API_URL`만 `http://127.0.0.1:3900`과 `http://127.0.0.1:3910`으로 바꿔 만든 iOS native fingerprint는 모두 `4a36fb8683f551d9b9cf800effec1f673b736511`이었다. slot별 API 포트는 공용 네이티브 빌드 재사용을 막지 않는다.
+- 삭제한 `.claude/worktrees/hello-8dab8b`에서 만든 Gradle 결과를 다른 worktree가 `FROM-CACHE`로 읽었고, 존재하지 않는 `AndroidManifest.xml` 절대 경로를 열려다 `:app:packageDebug`가 실패했다. Metro와 API가 정상이어도 전역 Gradle 캐시는 별도로 격리해야 한다는 직접 근거다.
+- Gradle 공식 문서는 daemon의 기본 유휴 종료 시간이 3시간이며, `GRADLE_OPTS`의 `-Dorg.gradle.daemon=false`로 daemon을 끌 수 있다고 설명한다. [Gradle Daemon](https://docs.gradle.org/current/userguide/gradle_daemon.html)
 - 패키지를 올린 뒤 새 Metro 프로세스를 시작했는데도 `expo-router@57.0.11` 경로가 번들에 남았다. 같은 checkout을 새 `TMPDIR`로 시작하자 현재 설치 버전인 `expo-router@57.0.13`을 사용했다. 실행 중이던 프로세스 재사용이 아니라 OS 임시 폴더 아래 캐시가 관여했다는 직접 근거다.
 - Expo 공식 문서는 설정 변경 뒤 `expo start --clear`를 안내한다. Expo의 Worklets cache-key 수정 [PR #39541](https://github.com/expo/expo/pull/39541)은 서로 다른 프로젝트의 전역 변환 캐시가 섞일 수 있음을 재현했고, 동시 worktree 캐시 쓰기 수정 [PR #46171](https://github.com/expo/expo/pull/46171)은 공유 캐시가 Expo의 기본 방향임을 보여 준다.
 - Expo worktree 캐시 분리 제안 [PR #43113](https://github.com/expo/expo/pull/43113)은 같은 문제 부류를 확인했지만 닫혔다. 유지보수자는 절대 경로로 캐시를 무효화하기보다 위치에 따라 달라지는 변환 결과를 고쳐야 한다고 설명했다. 이 저장소의 `TMPDIR` 분리는 Metro의 변환 키를 바꾸지 않는 로컬 실행 경계다.
