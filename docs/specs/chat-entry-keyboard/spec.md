@@ -4,7 +4,10 @@
 
 채팅 화면을 열면 입력창을 따로 누르지 않고 바로 질문을 쓴다. 화면이 자리를 잡은 뒤 키보드와 입력창이 아래에서 같이 올라와 움직임의 방향이 하나로 보인다.
 
-이 명세는 [최소 채팅 화면 명세](../ai-chat/spec.md)와 [모바일 채팅 스크롤](../../decisions/mobile-chat-scrolling.md)의 입력, 전송, 키보드 동작을 그대로 두고 화면에 처음 들어올 때의 포커스만 더한다.
+이 명세는 [모바일 AI 채팅 표현](../../decisions/mobile-ai-chat-rendering.md),
+[모바일 채팅 메시지 동작](../../decisions/mobile-chat-message-actions.md)과
+[모바일 채팅 스크롤](../../decisions/mobile-chat-scrolling.md)의 입력, 전송, 키보드
+동작을 그대로 두고 화면에 처음 들어올 때의 포커스만 더한다.
 
 ## 적용할 결정
 

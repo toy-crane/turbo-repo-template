@@ -19,7 +19,7 @@
 모양이라 다시 만날 수 있다.
 
 **What was tried**: 아무것도 손대지 않았다. Markdown 해석은 렌더러가 소유하고,
-[AI 채팅 표현 명세](../specs/ai-chat-rendering/spec.md)는 GFM으로 해석한다는 것까지만
+[모바일 AI 채팅 표현](../decisions/mobile-ai-chat-rendering.md)은 GFM으로 해석한다는 것까지만
 정한다. 앱에서 원문을 고치면 서버가 보낸 답변을 바꾸게 되므로 우회하지 않았다.
 다른 강조는 모두 정상이라 답변을 읽는 데는 지장이 없다.
 

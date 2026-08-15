@@ -3,6 +3,7 @@
 - [AI 채팅 프로토콜](ai-chat-protocol.md) — AI 요청 경로, 스트리밍 응답 형식, 모바일 채팅 상태 또는 AI SDK UI message 사용 방식을 변경할 때 읽는다.
 - [AI 모델 라우팅](ai-model-routing.md) — AI Gateway, 모델 제공자, 모델 식별자 또는 provider fallback 방식을 변경할 때 읽는다.
 - [AI 서버 경계](ai-server-boundary.md) — AI API의 런타임, 배포 위치, 호출 주체 또는 인증 요구를 변경할 때 읽는다.
+- [모바일 계정 탈퇴](mobile-account-deletion.md) — 모바일 계정 탈퇴의 진입 위치, 확인, 삭제 범위, 진행 상태 또는 스토어 제출 조건을 변경할 때 읽는다.
 - [계정 탈퇴 서버 경계](account-deletion-server-boundary.md) — 계정 탈퇴의 사용자 인증, 관리자 권한, 서버 런타임 또는 secret key 범위를 변경할 때 읽는다.
 - [CI 코드 리뷰](ci-code-review.md) — CI에서 PR 자동 코드 리뷰를 켜거나, 리뷰 도구와 권한을 손대려 할 때 읽는다.
 - [검토 에이전트 실행 경계](reviewer-agent-execution-boundaries.md) — Claude Code와 Codex의 전용 검토 agent, 공용 검토 계약, 읽기 전용 권한 또는 실행 맥락을 추가하거나 바꿀 때 읽는다.
@@ -26,6 +27,7 @@
 - [모바일 원격 데이터 상태](mobile-remote-data.md) — 모바일에서 Supabase 원격 데이터의 조회, 캐시, 데이터 변경 또는 비동기 상태 관리를 변경할 때 읽는다.
 - [모바일 작업 진행 표시](mobile-action-progress.md) — 모바일 버튼이나 자동 실행 작업의 진행 중 표시, 중복 실행 차단 또는 표시 위치를 정할 때 읽는다.
 - [모바일 AI 채팅 표현](mobile-ai-chat-rendering.md) — 모바일 AI 채팅의 Liquid Glass 입력창, 스트리밍 Markdown, 메시지 진입 또는 답변 대기 표시를 만들거나 바꿀 때 읽는다.
+- [모바일 채팅 메시지 동작](mobile-chat-message-actions.md) — 채팅 메시지의 복사, 수정, 다시 받기, 중지 또는 실패 뒤 다시 시도를 만들거나 바꿀 때 읽는다.
 - [모바일 채팅 스크롤](mobile-chat-scrolling.md) — 모바일 채팅의 질문 배치, 스트리밍 자동 추적, 읽던 위치 또는 최신 메시지 이동을 변경할 때 읽는다.
 - [모바일 테스트와 런타임 검증](mobile-testing-and-verification.md) — 모바일 테스트 계층, `agent-device`, E2E 또는 에이전트 연동 방식을 변경할 때 읽는다.
 - [모바일 타이포그래피](mobile-typography.md) — 모바일 텍스트 역할, 시스템 폰트, monospace 사용, Dynamic Type 또는 렌더러별 타이포그래피 매핑을 변경할 때 읽는다.
