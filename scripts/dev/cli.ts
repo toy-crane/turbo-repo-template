@@ -28,6 +28,7 @@ async function main(): Promise<void> {
   }
 
   const result = await startSession({
+    clear: command.clear,
     cwd: directory,
     io,
     platform: command.platform,

@@ -22,15 +22,21 @@ function runningRecord(
 
 describe("sessionReuseReason", () => {
   test("같은 플랫폼과 환경으로 실행 중이면 재사용한다", () => {
-    expect(sessionReuseReason(runningRecord(), "android", "current-env")).toBe(
-      "reuse"
-    );
+    expect(
+      sessionReuseReason(runningRecord(), "android", "current-env", true)
+    ).toBe("reuse");
   });
 
   test("실행 중인 세션의 환경이 달라졌으면 다시 시작한다", () => {
-    expect(sessionReuseReason(runningRecord(), "android", "changed-env")).toBe(
-      "environment-changed"
-    );
+    expect(
+      sessionReuseReason(runningRecord(), "android", "changed-env", true)
+    ).toBe("environment-changed");
+  });
+
+  test("실행 중인 세션의 Metro 입력이 달라졌으면 다시 시작한다", () => {
+    expect(
+      sessionReuseReason(runningRecord(), "android", "current-env", false)
+    ).toBe("metro-inputs-changed");
   });
 
   test("이전 상태처럼 환경 fingerprint가 없으면 다시 시작한다", () => {
@@ -38,7 +44,8 @@ describe("sessionReuseReason", () => {
       sessionReuseReason(
         runningRecord({ environmentFingerprint: null }),
         "android",
-        "current-env"
+        "current-env",
+        true
       )
     ).toBe("environment-changed");
   });
@@ -48,7 +55,8 @@ describe("sessionReuseReason", () => {
       sessionReuseReason(
         runningRecord({ processes: {} }),
         "android",
-        "current-env"
+        "current-env",
+        false
       )
     ).toBe("not-running");
   });

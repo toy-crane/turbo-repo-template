@@ -86,6 +86,24 @@ export function worktreeLogDirectory(
   return join(paths.worktreeRoot, worktreeKey(worktreePath));
 }
 
+export interface WorktreeMetroPaths {
+  fingerprintPath: string;
+  tmpDirectory: string;
+}
+
+/** Metro cache state stays with this worktree, but outside Metro's TMPDIR. */
+export function worktreeMetroPaths(
+  paths: RepositoryPaths,
+  worktreePath: string
+): WorktreeMetroPaths {
+  const root = join(worktreeLogDirectory(paths, worktreePath), "metro-cache");
+
+  return {
+    fingerprintPath: join(root, "inputs.sha256"),
+    tmpDirectory: join(root, "tmp"),
+  };
+}
+
 /** `<repository>/<platform>/<native-fingerprint>/artifact` from the spec. */
 export function sharedBuildDirectory(
   paths: RepositoryPaths,
