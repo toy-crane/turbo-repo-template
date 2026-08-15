@@ -356,7 +356,7 @@ describe("ChatPanel", () => {
   // Focusing at mount makes iOS carry the rising keyboard along with the push
   // animation, so it enters from the right while the composer climbs from the
   // bottom. The screen decides when to focus instead; see
-  // docs/specs/chat-entry-keyboard/spec.md.
+  // docs/decisions/mobile-keyboard-entry-focus.md.
   test("입력창은 mount 시점에 스스로 포커스를 잡지 않는다", async () => {
     await renderWithHeroUI(<ChatPanel chat={chatSession()} />);
 

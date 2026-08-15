@@ -22,8 +22,8 @@ const WHITESPACE = /\s+/g;
  * the phrase it started from, and a second line of raw Markdown would tell two
  * similar side chats apart worse than plain words do. Neither
  * `react-native-enriched-markdown@1.0.1` nor `remend@1.3.0` hands out the text
- * it draws, so the app makes this line itself; see the assumption in
- * docs/specs/ask-in-side-chat/spec.md.
+ * it draws, so the app makes this line itself; see the preserved evidence in
+ * docs/decisions/mobile-side-chat.md.
  *
  * Only paired marks are taken away. Stripping single characters would reach
  * into the words themselves, and an answer about `owner_id` or `a => b` is
