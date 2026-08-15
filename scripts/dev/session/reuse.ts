@@ -3,13 +3,15 @@ import type { WorktreeRecord } from "../state";
 
 export type SessionReuseReason =
   | "environment-changed"
+  | "metro-inputs-changed"
   | "not-running"
   | "reuse";
 
 export function sessionReuseReason(
   record: WorktreeRecord | undefined,
   platform: Platform,
-  environmentFingerprint: string
+  environmentFingerprint: string,
+  metroInputsCurrent: boolean
 ): SessionReuseReason {
   const isRunning =
     record?.activePlatform === platform &&
@@ -18,6 +20,10 @@ export function sessionReuseReason(
 
   if (!isRunning) {
     return "not-running";
+  }
+
+  if (!metroInputsCurrent) {
+    return "metro-inputs-changed";
   }
 
   return record.environmentFingerprint === environmentFingerprint

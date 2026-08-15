@@ -28,8 +28,17 @@ import {
   sessionAddresses,
 } from "../environment";
 import { withLock } from "../lock";
+import {
+  metroInputFingerprint,
+  readMetroInputFingerprint,
+  writeMetroInputFingerprint,
+} from "../metro-cache";
 import type { Platform } from "../options";
-import { sharedBuildDirectory, worktreeLogDirectory } from "../paths";
+import {
+  sharedBuildDirectory,
+  worktreeLogDirectory,
+  worktreeMetroPaths,
+} from "../paths";
 import { allocateSlot, apiPort, MAX_SLOT, metroPort } from "../slots";
 import { type RepositoryState, readState, writeState } from "../state";
 import {
@@ -41,7 +50,7 @@ import {
 } from "./context";
 import { fitStateToReality, stopOwnProcesses } from "./maintenance";
 import { driverFor, type PlatformDriver } from "./platform";
-import { sessionReuseReason } from "./reuse";
+import { type SessionReuseReason, sessionReuseReason } from "./reuse";
 
 const API_READY_TIMEOUT_MS = 60_000;
 const METRO_READY_TIMEOUT_MS = 120_000;
@@ -54,6 +63,7 @@ const BUILD_LOCK_TIMEOUT_MS = 60 * 60 * 1000;
 const BUNDLE_PATTERN = /(ios|android)\s+bundl|index\.bundle/i;
 
 export interface StartInput {
+  clear: boolean;
   cwd: string;
   io: SessionIo;
   platform: Platform;
@@ -111,6 +121,7 @@ async function freePorts(): Promise<Set<number>> {
 }
 
 interface Allocation {
+  clearMetroCache: boolean;
   deviceId: string;
   /** What the leased device carries, read under the lease's own lock. */
   installedFingerprint: string | null;
@@ -141,6 +152,37 @@ async function ensureDevice(
   return await driver.createDevice(name);
 }
 
+async function keepRunningSession(
+  worktreePath: string,
+  state: RepositoryState,
+  io: SessionIo,
+  reuseReason: SessionReuseReason,
+  forceClear: boolean
+): Promise<boolean> {
+  if (forceClear && reuseReason === "reuse") {
+    io.log("요청에 따라 API와 Metro를 다시 시작합니다.");
+    await stopOwnProcesses(worktreePath, state);
+
+    return false;
+  }
+
+  if (reuseReason === "metro-inputs-changed") {
+    io.log("Metro 입력이 바뀌어 API와 Metro를 다시 시작합니다.");
+    await stopOwnProcesses(worktreePath, state);
+
+    return false;
+  }
+
+  if (reuseReason === "environment-changed") {
+    io.log("개발 세션 환경이 바뀌어 API와 Metro를 다시 시작합니다.");
+    await stopOwnProcesses(worktreePath, state);
+
+    return false;
+  }
+
+  return reuseReason === "reuse";
+}
+
 /**
  * Reclaiming, the slot and the device assignment happen under one lock, so two
  * worktrees starting at the same moment cannot walk away with the same slot or
@@ -151,7 +193,9 @@ async function allocate(
   driver: PlatformDriver,
   platform: Platform,
   io: SessionIo,
-  environmentFingerprintForSlot: (slot: number) => string
+  environmentFingerprintForSlot: (slot: number) => string,
+  metroInputsCurrent: boolean,
+  forceClear: boolean
 ): Promise<Allocation> {
   return await withLock(context.paths.lockDirectory, async () => {
     const { worktreePath } = context.git;
@@ -163,15 +207,16 @@ async function allocate(
     const reuseReason = sessionReuseReason(
       existing,
       platform,
-      environmentFingerprintForSlot(existing?.slot ?? 0)
+      environmentFingerprintForSlot(existing?.slot ?? 0),
+      metroInputsCurrent
     );
-    let running = reuseReason === "reuse";
-
-    if (reuseReason === "environment-changed") {
-      io.log("개발 세션 환경이 바뀌어 API와 Metro를 다시 시작합니다.");
-      await stopOwnProcesses(worktreePath, state);
-      running = false;
-    }
+    const running = await keepRunningSession(
+      worktreePath,
+      state,
+      io,
+      reuseReason,
+      forceClear
+    );
 
     if (existing?.activePlatform && existing.activePlatform !== platform) {
       io.log(
@@ -228,6 +273,7 @@ async function allocate(
     writeState(context.paths.statePath, state);
 
     return {
+      clearMetroCache: forceClear || !metroInputsCurrent,
       deviceId,
       installedFingerprint:
         state.devicePool[platform][deviceId]?.installedFingerprint ?? null,
@@ -435,6 +481,7 @@ async function openApp({
 }
 
 export async function startSession({
+  clear,
   cwd,
   io,
   platform,
@@ -468,8 +515,24 @@ export async function startSession({
   mobileEnvironmentForSlot(0);
 
   const logs = sessionLogs(context);
-  const allocation = await allocate(context, driver, platform, io, (slot) =>
-    mobileEnvironmentFingerprint(mobileEnvironmentForSlot(slot))
+  const metroCache = worktreeMetroPaths(
+    context.paths,
+    context.git.worktreePath
+  );
+  const currentMetroInputFingerprint = metroInputFingerprint(
+    context.git.worktreePath
+  );
+  const previousMetroInputFingerprint = readMetroInputFingerprint(
+    metroCache.fingerprintPath
+  );
+  const allocation = await allocate(
+    context,
+    driver,
+    platform,
+    io,
+    (slot) => mobileEnvironmentFingerprint(mobileEnvironmentForSlot(slot)),
+    previousMetroInputFingerprint === currentMetroInputFingerprint,
+    clear
   );
   const metro = metroPort(allocation.slot);
   const api = apiPort(allocation.slot);
@@ -548,16 +611,25 @@ export async function startSession({
 
     started.push(apiPid);
 
+    mkdirSync(metroCache.tmpDirectory, { recursive: true });
+
+    const metroArguments = [
+      join(context.mobileDirectory, "node_modules", ".bin", "expo"),
+      "start",
+      "--dev-client",
+      "--port",
+      String(metro),
+    ];
+
+    if (allocation.clearMetroCache) {
+      io.log("이 worktree의 Metro 캐시를 초기화합니다.");
+      metroArguments.push("--clear");
+    }
+
     const metroPid = spawnSession({
-      argv: [
-        join(context.mobileDirectory, "node_modules", ".bin", "expo"),
-        "start",
-        "--dev-client",
-        "--port",
-        String(metro),
-      ],
+      argv: metroArguments,
       cwd: context.mobileDirectory,
-      env,
+      env: { ...env, TMPDIR: metroCache.tmpDirectory },
       logPath: logs.metro,
     });
 
@@ -591,6 +663,11 @@ export async function startSession({
 
     await driver.prepareForMetro(handle, metro);
     await openApp({ context, driver, handle, logs, metro, running });
+
+    writeMetroInputFingerprint(
+      metroCache.fingerprintPath,
+      currentMetroInputFingerprint
+    );
 
     await updateState(context, (state) => {
       const record = state.worktrees[context.git.worktreePath];

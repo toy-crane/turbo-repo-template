@@ -7,10 +7,12 @@ const usageMessage = /bun run dev <ios\|android>/;
 describe("parseDevCommand", () => {
   test("플랫폼 인수를 명령으로 바꾼다", () => {
     expect(parseDevCommand(["ios"])).toEqual({
+      clear: false,
       kind: "start",
       platform: "ios",
     });
     expect(parseDevCommand(["android"])).toEqual({
+      clear: false,
       kind: "start",
       platform: "android",
     });
@@ -18,6 +20,15 @@ describe("parseDevCommand", () => {
 
   test("bun run이 넣는 `--` 구분자는 무시한다", () => {
     expect(parseDevCommand(["--", "ios"])).toEqual({
+      clear: false,
+      kind: "start",
+      platform: "ios",
+    });
+  });
+
+  test("--clear를 해당 worktree의 Metro 초기화 요청으로 바꾼다", () => {
+    expect(parseDevCommand(["ios", "--clear"])).toEqual({
+      clear: true,
       kind: "start",
       platform: "ios",
     });
@@ -40,5 +51,9 @@ describe("parseDevCommand", () => {
   test("인수가 많으면 실패한다", () => {
     expect(() => parseDevCommand(["ios", "android"])).toThrow(usageMessage);
     expect(() => parseDevCommand(["stop", "ios"])).toThrow(usageMessage);
+    expect(() => parseDevCommand(["stop", "--clear"])).toThrow(usageMessage);
+    expect(() => parseDevCommand(["ios", "--clear", "--clear"])).toThrow(
+      usageMessage
+    );
   });
 });
