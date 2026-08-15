@@ -40,7 +40,7 @@
 - 새 관리자 기능이 생겼다는 이유만으로 기존 AI 경로에 `supabaseAdmin` 사용을
   허용하지 않는다. 각 기능은 별도 결정을 거쳐야 한다.
 - 탈퇴 화면과 삭제 범위, 확인 단계, 실패 상태는
-  [계정 탈퇴 명세](../specs/account-deletion/spec.md)가 정한다.
+  [모바일 계정 탈퇴](mobile-account-deletion.md)를 따른다.
 
 ## 이유
 
