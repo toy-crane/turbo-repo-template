@@ -166,19 +166,22 @@ jest.mock("react-native-nitro-google-signin", () => {
   };
 });
 
-// The streaming Markdown renderer is a Fabric view fed by a worklet bundle, so
-// it draws nothing under Jest. The stand-in keeps the seam the app owns: it
-// prints the Markdown it was handed and carries every prop through, which is
-// what the tests read. Real Markdown layout, link opening and the streaming
-// behaviour belong to the device checks the spec lists.
-jest.mock("react-native-streamdown", () => {
+// The Markdown renderer is a Fabric view, so it draws nothing under Jest. Start
+// with the package's own mock, then keep every text-renderer prop on the stand-in
+// because the chat tests verify the app's wiring at that native boundary. Real
+// Markdown layout and streaming behaviour belong to device checks.
+jest.mock("react-native-enriched-markdown", () => {
   const React = require("react") as typeof import("react");
   const { Text } = require("react-native") as typeof import("react-native");
+  const enrichedMarkdownMock = require("react-native-enriched-markdown/jest");
 
   return {
+    ...enrichedMarkdownMock,
     // Every prop stays on the element, `markdown` included: the tests read the
     // Markdown and the rendering options from there.
-    StreamdownText: (props: { markdown: string } & Record<string, unknown>) =>
+    EnrichedMarkdownText: (
+      props: { markdown: string } & Record<string, unknown>
+    ) =>
       React.createElement(
         Text,
         props as React.ComponentProps<typeof Text>,

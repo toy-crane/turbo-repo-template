@@ -23,7 +23,8 @@
 정한다. 앱에서 원문을 고치면 서버가 보낸 답변을 바꾸게 되므로 우회하지 않았다.
 다른 강조는 모두 정상이라 답변을 읽는 데는 지장이 없다.
 
-**Proposed next step**: 같은 입력을 `react-native-enriched-markdown` 저장소의 예제
-앱에서 재현해 md4c 단계에서 갈리는지 확인하고, 재현되면 상류에 이슈로 올린다.
-재현되지 않으면 `StreamdownText`가 스트리밍 중 넣는 보완 문자가 원문을 바꾸는지
-본다.
+**Proposed next step**: 현재 앱은 `StreamdownText`를 거치지 않으므로 먼저 같은 입력이
+여전히 별표로 보이는지 확인한다. 재현되면 `react-native-enriched-markdown` 저장소의
+예제 앱에서도 확인하고, md4c 단계에서 갈리면 상류에 이슈로 올린다. 현재 앱에서
+재현되지 않으면 이전 `StreamdownText` 보완 단계와의 상호 작용이 원인이었는지 별도
+재현으로 확인한다.

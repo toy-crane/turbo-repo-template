@@ -7,7 +7,7 @@ import type {
   MarkdownStyle,
   TextContextMenuItem,
 } from "react-native-enriched-markdown";
-import { StreamdownText } from "react-native-streamdown";
+import { EnrichedMarkdownText } from "react-native-enriched-markdown";
 
 /**
  * The one place the app names a monospaced font; see
@@ -40,11 +40,10 @@ const STREAMING_CONFIG = {
 /**
  * An answer, drawn as Markdown while it is still arriving.
  *
- * `StreamdownText` completes whatever Markdown has not closed yet and hands the
- * result to the native renderer, so a half-written table or code fence shows
- * what has arrived instead of its raw characters. Both block kinds are left on
+ * `EnrichedMarkdownText` draws the stream directly. Tables and code blocks stay
  * `progressive`: they grow row by row and line by line rather than appearing
- * whole at the end.
+ * whole at the end. Incomplete inline Markdown is left to the renderer instead
+ * of being completed by a separate repair step.
  *
  * The renderer ships light-mode colours and has no colour scheme of its own, so
  * every colour it draws comes from the app's semantic tokens here.
@@ -144,12 +143,13 @@ export function MarkdownAnswer({
   }, []);
 
   return (
-    <StreamdownText
+    <EnrichedMarkdownText
       contextMenuItems={contextMenuItems}
       flavor="github"
       markdown={markdown}
       markdownStyle={markdownStyle}
       onLinkPress={openLink}
+      streamingAnimation
       streamingConfig={STREAMING_CONFIG}
       testID={testID}
     />
