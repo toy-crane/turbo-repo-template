@@ -2,14 +2,14 @@
 
 ## 결정
 
-- AI 답변은 `StreamdownText`로 스트리밍하고, 그 안의 `EnrichedMarkdownText`가
-  네이티브 Markdown을 그린다. `flavor="github"`을 사용하고 코드 블록과 표는
-  도착한 부분부터 보여 준다. 제목, 강조, 인용, 목록, 링크, 인라인 코드, 코드
-  블록과 표를 표시하며, 답변 복사는 렌더링된 모양이 아니라 서버에서 받은 Markdown
-  원문을 사용한다.
+- AI 답변은 `EnrichedMarkdownText`가 네이티브 Markdown으로 직접 그린다.
+  `flavor="github"`과 `streamingAnimation`을 사용하고 코드 블록과 표는 도착한
+  부분부터 보여 준다. 제목, 강조, 인용, 목록, 링크, 인라인 코드, 코드 블록과 표를
+  표시하며, 답변 복사는 렌더링된 모양이 아니라 서버에서 받은 Markdown 원문을
+  사용한다.
 - 메시지 스트림을 React 상태에 반영하는 주기는 `useChat`의 `throttle: 50`으로
-  제한한다. `StreamdownText`가 완성되지 않은 Markdown을 보완하는 일과 React
-  렌더 횟수를 제한하는 일은 서로 다른 책임으로 유지한다.
+  제한한다. `EnrichedMarkdownText`의 스트리밍 표시와 React 렌더 횟수를 제한하는
+  일은 서로 다른 책임으로 유지한다.
 - 입력창과 보내기 또는 중지 버튼은 하나의 중요한 플로팅 컨트롤이다. iOS 26
   이상에서는 `expo-glass-effect`의 `GlassView`로 전체 입력 영역을 감싸고, 그 밖의
   iOS와 Android에서는 같은 배치의 일반 `surface`를 사용한다.
@@ -36,10 +36,11 @@
 
 ## 이유
 
-`StreamdownText`는 스트리밍 중 닫히지 않은 Markdown을 보완하고
-`EnrichedMarkdownText`는 Markdown을 네이티브로 그린다. 이 조합은 일반 `Text`보다
-풍부한 답변을 보여 주면서, 빠른 토큰 스트림이 React 렌더를 계속 일으키지 않도록 둔
-기존 제한과 함께 쓸 수 있다.
+`EnrichedMarkdownText`는 Markdown을 네이티브로 그리고, 완성되지 않은 표와 코드
+블록도 도착한 부분부터 표시한다. 별도 Markdown 보정 계층을 두지 않으면 닫히지 않은
+인라인 문법은 완성될 때까지 덜 다듬어진 모습으로 보일 수 있지만, Worklets Bundle
+Mode와 전용 Metro 경로 없이 같은 렌더러, 선택 메뉴와 링크 동작을 유지할 수 있다.
+빠른 토큰 스트림은 기존 `throttle: 50`으로 React 렌더 횟수를 제한한다.
 
 입력창 전체를 하나의 플로팅 컨트롤로 보면 Liquid Glass의 기능 컨트롤 경계를 지킬
 수 있다. 지원하지 않는 플랫폼에서 재질을 흉내 내지 않고 같은 배치만 유지하면
@@ -51,8 +52,10 @@
 
 ## 재검토 조건
 
-- `StreamdownText`나 `EnrichedMarkdownText`가 지원하는 React Native 버전 또는
-  접근성 동작이 현재 앱과 맞지 않을 때
+- `EnrichedMarkdownText`가 지원하는 React Native 버전 또는 접근성 동작이 현재
+  앱과 맞지 않을 때
+- 닫히지 않은 강조, 링크나 인라인 코드가 답변을 읽기 어렵게 만드는 일이 실제
+  스트리밍에서 반복될 때
 - 실제 배포 빌드에서 `MaskedView`의 반짝임이 특정 플랫폼에서 끊기거나 다르게
   그려지는 문제가 확인될 때
 - 운영체제의 Liquid Glass 사용 원칙이나 `expo-glass-effect`의 지원 범위가 바뀔 때
@@ -60,9 +63,12 @@
 
 ## 계속 제외하는 대안
 
-- 스트리밍 중 `EnrichedMarkdownText`만 사용: 닫히지 않은 코드 블록과 표를
-  렌더러가 직접 감당해야 한다. `StreamdownText`가 더 이상 필요 없는 스트리밍 API를
-  제공할 때 다시 검토한다.
+- `react-native-streamdown`과 `remend`: 닫히지 않은 인라인 Markdown을 미리
+  완성하지만 Worklets Bundle Mode와 별도 Babel·Metro 설정이 필요하다. 직접
+  렌더링에서 읽기 문제가 반복될 때 다시 검토한다.
+- `markdown-to-jsx/native`: 불완전한 스트리밍 문법을 다루는 JavaScript 대안이지만
+  현재 네이티브 텍스트 선택과 사용자 정의 선택 메뉴를 그대로 보장하지 않는다.
+  직접 렌더링의 실제 문제가 확인되면 별도 비교 실험으로 검토한다.
 - `Thinking`을 Skia로 그리기: 픽셀 단위 제어는 좋아지지만 한 줄을 위해 네이티브
   그래픽 의존성과 별도 글자 배치를 추가한다. 현재 방식의 플랫폼 문제가 실제로
   확인될 때 다시 검토한다.

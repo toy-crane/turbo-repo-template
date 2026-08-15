@@ -33,9 +33,10 @@ test("GitHub Flavored Markdown으로 해석한다", async () => {
 
 // Hiding either until it closes would leave a gap where the answer is still
 // arriving, which is the opposite of reading it as it comes.
-test("스트리밍 중 코드 블록과 표는 도착한 부분부터 보여 준다", async () => {
+test("새 글자를 움직여 보여 주고 코드 블록과 표는 도착한 부분부터 그린다", async () => {
   const answer = await renderAnswer();
 
+  expect(answer.props.streamingAnimation).toBe(true);
   expect(answer.props.streamingConfig).toEqual({
     codeBlockMode: "progressive",
     tableMode: "progressive",

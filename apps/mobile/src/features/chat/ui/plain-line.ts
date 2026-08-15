@@ -20,9 +20,9 @@ const WHITESPACE = /\s+/g;
  *
  * The list that reopens a side chat shows the newest thing said in it under
  * the phrase it started from, and a second line of raw Markdown would tell two
- * similar side chats apart worse than plain words do. Neither
- * `react-native-enriched-markdown@1.0.1` nor `remend@1.3.0` hands out the text
- * it draws, so the app makes this line itself; see the preserved evidence in
+ * similar side chats apart worse than plain words do.
+ * `react-native-enriched-markdown` does not hand out the plain text it draws,
+ * so the app makes this line itself; see the preserved evidence in
  * docs/decisions/mobile-side-chat.md.
  *
  * Only paired marks are taken away. Stripping single characters would reach
