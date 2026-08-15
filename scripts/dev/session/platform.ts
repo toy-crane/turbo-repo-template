@@ -35,6 +35,7 @@ import {
 } from "../adapters/ios";
 import { developmentClientSchemes } from "../environment";
 import type { Platform } from "../options";
+import { worktreeGradleHome } from "../paths";
 import type { SessionContext } from "./context";
 
 /** The exact device this run talks to. Every command names it explicitly. */
@@ -93,6 +94,7 @@ function nextName(prefix: string, taken: Set<string>): string {
 export interface DriverInput {
   androidPackage: string;
   bundleIdentifier: string;
+  gradleUserHome: string;
   mobileDirectory: string;
   platform: Platform;
   /** Deep-link schemes the development client answers to. */
@@ -149,12 +151,19 @@ function createIosDriver(
 
 function createAndroidDriver(
   mobileDirectory: string,
-  androidPackage: string
+  androidPackage: string,
+  gradleUserHome: string
 ): PlatformDriver {
   const sdk: AndroidSdk = resolveAndroidSdk();
 
   return {
-    buildEnv: (base) => androidEnv(sdk, base),
+    buildEnv: (base) => ({
+      ...androidEnv(sdk, base),
+      GRADLE_OPTS: [base.GRADLE_OPTS?.trim(), "-Dorg.gradle.daemon=false"]
+        .filter(Boolean)
+        .join(" "),
+      GRADLE_USER_HOME: gradleUserHome,
+    }),
     // `expo run:android --device` matches on the AVD name; an adb serial is
     // rejected, which is the opposite of the iOS command.
     buildTarget: (handle) => handle.deviceId,
@@ -211,13 +220,14 @@ function createAndroidDriver(
 export function createPlatformDriver({
   androidPackage,
   bundleIdentifier,
+  gradleUserHome,
   mobileDirectory,
   platform,
   schemes,
 }: DriverInput): PlatformDriver {
   return platform === "ios"
     ? createIosDriver(bundleIdentifier, schemes)
-    : createAndroidDriver(mobileDirectory, androidPackage);
+    : createAndroidDriver(mobileDirectory, androidPackage, gradleUserHome);
 }
 
 /** The driver every command wants: this project, that platform. */
@@ -228,6 +238,7 @@ export function driverFor(
   return createPlatformDriver({
     androidPackage: context.project.androidPackage,
     bundleIdentifier: context.project.bundleIdentifier,
+    gradleUserHome: worktreeGradleHome(context.paths, context.git.worktreePath),
     mobileDirectory: context.mobileDirectory,
     platform,
     schemes: developmentClientSchemes(

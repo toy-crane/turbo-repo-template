@@ -471,6 +471,9 @@ Git worktree, 풀의 기기와 저장소 공용 빌드는 지우지 않습니다
 
 여러 Git worktree에서 같은 앱을 동시에 개발할 수 있습니다.
 폴더마다 다른 포트와 다른 기기를 배정하고, 네이티브 빌드는 플랫폼과 native fingerprint가 같으면 저장소 전체에서 함께 씁니다.
+Android 빌드를 새로 만들 때는 폴더별 Gradle 홈을 사용해 다른 worktree의 빌드 캐시와 섞이지 않습니다.
+빌드가 끝난 뒤에는 이 폴더를 쓰는 Gradle daemon을 남기지 않습니다.
+`dev:stop`은 이 캐시를 남기고, `dev:remove`는 해당 폴더의 Gradle 캐시도 지웁니다.
 JavaScript만 바꾸면 다시 빌드하지 않습니다.
 로컬 Supabase는 모든 폴더가 함께 쓰므로 개발 세션 명령이 시작하거나 중지하지 않습니다.
 먼저 `bun run db:start`로 켜 두세요.

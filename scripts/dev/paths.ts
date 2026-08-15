@@ -86,6 +86,14 @@ export function worktreeLogDirectory(
   return join(paths.worktreeRoot, worktreeKey(worktreePath));
 }
 
+/** Gradle state is path-sensitive, so Android builds never share this home. */
+export function worktreeGradleHome(
+  paths: RepositoryPaths,
+  worktreePath: string
+): string {
+  return join(worktreeLogDirectory(paths, worktreePath), "gradle-home");
+}
+
 export interface WorktreeMetroPaths {
   fingerprintPath: string;
   tmpDirectory: string;
