@@ -7,6 +7,12 @@
   부분부터 보여 준다. 제목, 강조, 인용, 목록, 링크, 인라인 코드, 코드 블록과 표를
   표시하며, 답변 복사는 렌더링된 모양이 아니라 서버에서 받은 Markdown 원문을
   사용한다.
+- `react-native-streamdown`과 `remend`는 사용하지 않는다. 두 패키지를 위해 붙였던
+  Worklets Bundle Mode, 전용 Babel plugin, Metro resolver와 생성 파일 patch도
+  유지하지 않는다. 불완전한 인라인 Markdown은 별도 보정 계층 없이
+  `EnrichedMarkdownText`가 받은 그대로 처리한다.
+- `markdown-to-jsx/native`는 현재 앱에 함께 넣지 않는다. 직접 렌더링에서 실제 읽기
+  문제가 반복될 때만 현재 선택 메뉴와 링크 동작을 포함한 별도 비교 실험으로 검토한다.
 - 메시지 스트림을 React 상태에 반영하는 주기는 `useChat`의 `throttle: 50`으로
   제한한다. `EnrichedMarkdownText`의 스트리밍 표시와 React 렌더 횟수를 제한하는
   일은 서로 다른 책임으로 유지한다.
@@ -30,6 +36,9 @@
 - `@shopify/react-native-skia`, `react-native-nitro-symbols`와
   `react-native-true-sheet`를 이 표현만 위해 추가하지 않는다. React Native UI의
   아이콘은 프로젝트 공통 `Icon`을 계속 사용한다.
+- 이 결정은 Markdown을 위해 사용하던 Worklets Bundle Mode만 제거한다.
+  `react-native-reanimated`와 `react-native-worklets`가 맡는 질문 진입, 대기 표시와
+  다른 화면 동작은 그대로 유지한다.
 - 아래 저장소는 필요할 때 화면 아이디어와 구현 사례를 살펴보는 선택 참고 자료다.
   AI 채팅 작업마다 읽거나 같은 구현을 따라야 하는 규칙이 아니다. 이 프로젝트의
   명세, 결정 계약과 현재 코드가 항상 우선한다.
@@ -64,8 +73,9 @@ Mode와 전용 Metro 경로 없이 같은 렌더러, 선택 메뉴와 링크 동
 ## 계속 제외하는 대안
 
 - `react-native-streamdown`과 `remend`: 닫히지 않은 인라인 Markdown을 미리
-  완성하지만 Worklets Bundle Mode와 별도 Babel·Metro 설정이 필요하다. 직접
-  렌더링에서 읽기 문제가 반복될 때 다시 검토한다.
+  완성하지만 Worklets Bundle Mode와 별도 Babel·Metro 설정이 필요하다. 이 경로에서
+  생성한 `.worklets` 모듈이 worktree와 Metro 캐시 사이에서 섞이는 장애도 겪었다.
+  직접 렌더링에서 읽기 문제가 반복될 때만 다시 검토한다.
 - `markdown-to-jsx/native`: 불완전한 스트리밍 문법을 다루는 JavaScript 대안이지만
   현재 네이티브 텍스트 선택과 사용자 정의 선택 메뉴를 그대로 보장하지 않는다.
   직접 렌더링의 실제 문제가 확인되면 별도 비교 실험으로 검토한다.
