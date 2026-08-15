@@ -25,6 +25,17 @@ function createWorktree(): string {
   temporaryDirectories.push(root);
   mkdirSync(join(root, "patches"), { recursive: true });
   mkdirSync(join(mobile, "node_modules", "expo"), { recursive: true });
+  mkdirSync(
+    join(
+      mobile,
+      "node_modules",
+      "expo",
+      "node_modules",
+      "@expo",
+      "metro-config"
+    ),
+    { recursive: true }
+  );
 
   for (const relativePath of [
     "bun.lock",
@@ -47,6 +58,18 @@ function createWorktree(): string {
   writeFileSync(
     join(mobile, "node_modules", "expo", "package.json"),
     '{"version":"57.0.0"}\n'
+  );
+  writeFileSync(
+    join(
+      mobile,
+      "node_modules",
+      "expo",
+      "node_modules",
+      "@expo",
+      "metro-config",
+      "package.json"
+    ),
+    '{"version":"57.0.8"}\n'
   );
   writeFileSync(join(root, "patches", "metro.patch"), "patch-v1\n");
 
@@ -99,6 +122,28 @@ describe("metroInputFingerprint", () => {
     writeFileSync(
       join(worktree, "apps", "mobile", "node_modules", "expo", "package.json"),
       '{"version":"57.0.1"}\n'
+    );
+
+    expect(metroInputFingerprint(worktree)).not.toBe(before);
+  });
+
+  test("Expo가 실제로 불러오는 Metro config 버전을 감지한다", () => {
+    const worktree = createWorktree();
+    const before = metroInputFingerprint(worktree);
+
+    writeFileSync(
+      join(
+        worktree,
+        "apps",
+        "mobile",
+        "node_modules",
+        "expo",
+        "node_modules",
+        "@expo",
+        "metro-config",
+        "package.json"
+      ),
+      '{"version":"57.0.9"}\n'
     );
 
     expect(metroInputFingerprint(worktree)).not.toBe(before);

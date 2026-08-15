@@ -7,6 +7,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
 const METRO_INPUT_FILES = [
@@ -22,17 +23,22 @@ const METRO_INPUT_FILES = [
   "apps/mobile/tsconfig.json",
 ] as const;
 
-const METRO_PACKAGES = [
-  "@expo/metro-config",
-  "babel-preset-expo",
-  "expo",
-  "expo-router",
-  "react-native",
-  "react-native-enriched-markdown",
-  "react-native-reanimated",
-  "react-native-worklets",
-  "uniwind",
-] as const;
+interface MetroPackageInput {
+  name: string;
+  resolveFrom?: string;
+}
+
+const METRO_PACKAGES: readonly MetroPackageInput[] = [
+  { name: "@expo/metro-config", resolveFrom: "expo" },
+  { name: "babel-preset-expo" },
+  { name: "expo" },
+  { name: "expo-router" },
+  { name: "react-native" },
+  { name: "react-native-enriched-markdown" },
+  { name: "react-native-reanimated" },
+  { name: "react-native-worklets" },
+  { name: "uniwind" },
+];
 
 function isMissingFile(error: unknown): boolean {
   return (error as NodeJS.ErrnoException).code === "ENOENT";
@@ -57,15 +63,37 @@ function patchFiles(worktreePath: string): string[] {
 
 function installedPackageVersion(
   worktreePath: string,
-  packageName: string
+  packageName: string,
+  resolveFrom?: string
 ): string {
   const packagePath = [...packageName.split("/"), "package.json"];
-  const candidates = [
-    join(worktreePath, "apps", "mobile", "node_modules", ...packagePath),
-    join(worktreePath, "node_modules", ...packagePath),
-  ];
+  const candidates: string[] = [];
 
-  for (const candidate of candidates) {
+  if (resolveFrom) {
+    const requireFromMobile = createRequire(
+      join(worktreePath, "apps", "mobile", "metro-cache-resolver.cjs")
+    );
+
+    try {
+      const parentManifest = requireFromMobile.resolve(
+        `${resolveFrom}/package.json`
+      );
+      candidates.push(
+        createRequire(parentManifest).resolve(`${packageName}/package.json`)
+      );
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "MODULE_NOT_FOUND") {
+        throw error;
+      }
+    }
+  }
+
+  candidates.push(
+    join(worktreePath, "apps", "mobile", "node_modules", ...packagePath),
+    join(worktreePath, "node_modules", ...packagePath)
+  );
+
+  for (const candidate of new Set(candidates)) {
     try {
       const manifest = JSON.parse(readFileSync(candidate, "utf8")) as {
         version?: unknown;
@@ -111,9 +139,9 @@ export function metroInputFingerprint(worktreePath: string): string {
     hash.update("\0");
   }
 
-  for (const packageName of METRO_PACKAGES) {
+  for (const { name, resolveFrom } of METRO_PACKAGES) {
     hash.update(
-      `package:${packageName}\0${installedPackageVersion(worktreePath, packageName)}\0`
+      `package:${name}\0${installedPackageVersion(worktreePath, name, resolveFrom)}\0`
     );
   }
 
