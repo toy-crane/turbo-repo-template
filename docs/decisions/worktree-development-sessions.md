@@ -14,7 +14,7 @@
 - iOS Simulator에는 `127.0.0.1`을, Android Emulator에는 `10.0.2.2`를 호스트로 전달한다. API는 worktree slot의 포트를 사용하고 Supabase는 공유 로컬 포트 `54321`을 사용한다.
 - 실행 중인 세션은 공개 모바일 환경과 Metro 입력의 fingerprint가 모두 같을 때만 API와 Metro를 재사용한다. 하나라도 바뀌면 해당 worktree의 두 프로세스만 다시 시작하고 slot, 기기, 설치된 앱과 앱 데이터는 유지한다.
 - Metro 자식 프로세스에만 worktree별 `TMPDIR`를 전달한다. 이 경로 아래의 변환 캐시와 파일 목록 캐시는 다른 worktree와 섞이지 않는다. API와 네이티브 빌드는 이 경로를 사용하지 않는다.
-- 개발 세션을 시작할 때 `bun.lock`, 루트와 모바일 `package.json`, Expo·Metro·Babel·앱·TypeScript 설정, Metro patch와 설치된 주요 모바일 패키지 정보를 묶어 Metro 입력 fingerprint를 계산한다. 이전 시작과 다르면 해당 worktree의 Metro에만 `expo start --clear`를 적용한다.
+- 개발 세션을 시작할 때 `bun.lock`, 루트와 모바일 `package.json`, Expo·Metro·Babel·앱·TypeScript 설정, Expo 앱 설정이 가져오는 파일, Metro patch와 설치된 주요 모바일 패키지 정보를 묶어 Metro 입력 fingerprint를 계산한다. 이전 시작과 다르면 해당 worktree의 Metro에만 `expo start --clear`를 적용한다.
 - `bun run dev <ios|android> --clear`는 입력 fingerprint와 관계없이 해당 worktree의 Metro 캐시를 한 번 초기화한다. `dev:stop`은 캐시를 남기고 `dev:remove`와 사라진 worktree 회수는 캐시도 함께 지운다.
 - 모든 시작 명령은 새 자원을 배정하기 전에 저장소 상태를 실제 Git worktree와 실행 중인 프로세스에 맞춘다. 사라진 worktree의 자원은 회수하고, 살아 있는 worktree의 기기 배정과 앱 데이터는 유지한다.
 

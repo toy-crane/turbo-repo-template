@@ -17,6 +17,8 @@ const METRO_INPUT_FILES = [
   "apps/mobile/babel.config.js",
   "apps/mobile/app.config.ts",
   "apps/mobile/app.json",
+  "apps/mobile/env.ts",
+  "apps/mobile/src/features/auth/config/google-url-scheme.ts",
   "apps/mobile/tsconfig.json",
 ] as const;
 
