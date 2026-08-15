@@ -160,7 +160,7 @@ export function readMetroInputFingerprint(path: string): string | null {
   }
 }
 
-/** Save only after Metro has served the app, so a failed start retries clear. */
+/** Save after Metro is ready, so this records which inputs received a reset. */
 export function writeMetroInputFingerprint(
   path: string,
   fingerprint: string

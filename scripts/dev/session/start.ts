@@ -54,13 +54,13 @@ import { type SessionReuseReason, sessionReuseReason } from "./reuse";
 
 const API_READY_TIMEOUT_MS = 60_000;
 const METRO_READY_TIMEOUT_MS = 120_000;
-const BUNDLE_TIMEOUT_MS = 240_000;
+const APP_METRO_REQUEST_TIMEOUT_MS = 240_000;
 // A cold first bundle regularly runs past two minutes. Trying the second
 // scheme before then would put a "열까요?" dialog on a screen that was about to
 // come up on its own.
 const ALTERNATE_SCHEME_AFTER_MS = 180_000;
 const BUILD_LOCK_TIMEOUT_MS = 60 * 60 * 1000;
-const BUNDLE_PATTERN = /(ios|android)\s+bundl|index\.bundle/i;
+const APP_METRO_REQUEST_PATTERN = /(ios|android)\s+bundl|index\.bundle/i;
 
 export interface StartInput {
   clear: boolean;
@@ -426,9 +426,9 @@ interface OpenAppInput {
 }
 
 /**
- * The command must not report success before the app is up, and the only
- * honest evidence of that is the app's own request arriving at this worktree's
- * Metro.
+ * The app's own request arriving at this worktree's Metro proves that the
+ * development client opened the intended session. Bundle success is a
+ * separate runtime result and does not control Metro cache bookkeeping.
  */
 async function openApp({
   context,
@@ -448,7 +448,7 @@ async function openApp({
   const opened = await waitForLogMatch({
     check: running,
     logPath: logs.metro,
-    pattern: BUNDLE_PATTERN,
+    pattern: APP_METRO_REQUEST_PATTERN,
     since,
     timeoutMs: ALTERNATE_SCHEME_AFTER_MS,
   });
@@ -468,9 +468,9 @@ async function openApp({
   const openedAlternate = await waitForLogMatch({
     check: running,
     logPath: logs.metro,
-    pattern: BUNDLE_PATTERN,
+    pattern: APP_METRO_REQUEST_PATTERN,
     since,
-    timeoutMs: BUNDLE_TIMEOUT_MS - ALTERNATE_SCHEME_AFTER_MS,
+    timeoutMs: APP_METRO_REQUEST_TIMEOUT_MS - ALTERNATE_SCHEME_AFTER_MS,
   });
 
   if (!openedAlternate) {
@@ -661,13 +661,15 @@ export async function startSession({
     });
     io.log(`Metro가 응답합니다: http://127.0.0.1:${metro}`);
 
-    await driver.prepareForMetro(handle, metro);
-    await openApp({ context, driver, handle, logs, metro, running });
-
+    // This marker means Metro reached ready state after applying the requested
+    // cache reset for these inputs. App launch and bundle errors are separate.
     writeMetroInputFingerprint(
       metroCache.fingerprintPath,
       currentMetroInputFingerprint
     );
+
+    await driver.prepareForMetro(handle, metro);
+    await openApp({ context, driver, handle, logs, metro, running });
 
     await updateState(context, (state) => {
       const record = state.worktrees[context.git.worktreePath];
