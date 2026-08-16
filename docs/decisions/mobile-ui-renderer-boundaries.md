@@ -43,4 +43,5 @@
 
 ## 보존할 근거
 
-- 검증에 사용한 `@expo/ui 57.0.9`의 Android `Switch label`은 보이는 라벨과 스위치를 별도 접근성 노드로 내보내고 라벨 색상 API를 제공하지 않는다. 앱은 이 한계를 고치기 위한 패치나 플랫폼별 Settings 트리를 두지 않고 공통 기본 `Switch`를 유지한다. `@expo/ui`를 올릴 때 동작이 바뀌었는지 다시 확인한다.
+- 검증에 사용한 `@expo/ui 57.0.11`의 Android `Switch label`은 보이는 라벨과 스위치를 별도 접근성 노드로 내보내고 라벨 색상 API를 제공하지 않는다. 앱은 이 한계를 고치기 위한 패치나 플랫폼별 Settings 트리를 두지 않고 공통 기본 `Switch`를 유지한다. `@expo/ui`를 올릴 때 동작이 바뀌었는지 다시 확인한다.
+- 2026-08-16 Android Development Build의 설정 화면에서 다시 확인했다. `알림` 라벨은 `android.widget.TextView`로, `notifications-switch`는 이름 없는 `android.view.View`로 같은 행 아래 형제 노드로 나왔다. `햅틱 반응`과 `haptics-switch`도 같았다. `SwitchProps`는 `value`, `onValueChange`, `label`, `disabled`, `testID`, `modifiers`만 선언해 라벨 색상 API도 그대로 없다.

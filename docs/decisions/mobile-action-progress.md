@@ -43,6 +43,6 @@
 ## 보존할 근거
 
 - 설치된 HeroUI Native `1.0.8`의 `Button`은 별도 진행 중 속성이 없고 자식으로 `Spinner`를 조합한다. 버튼 기본 스타일은 높이와 가로 여백을 정하지만 너비는 정하지 않는다.
-- 검증에 사용한 `@expo/ui 57.0.9`의 범용 `Button`은 `disabled`와 사용자 지정 자식을 지원하지만 진행 중 또는 `busy` 속성을 제공하지 않는다.
+- 검증에 사용한 `@expo/ui 57.0.11`의 범용 `Button`은 `disabled`와 사용자 지정 자식을 지원하지만 진행 중 또는 `busy` 속성을 제공하지 않는다. `ButtonProps`는 `children`, `label`, `onPress`, `variant`만 선언하고 `disabled`는 `UniversalBaseProps`에서 온다.
 - [SEED 로딩 지침](https://seed-design.io/docs/guidelines/loading)은 1초 안에 끝나는 작업에 별도 로딩 표시를 권하지 않으며, [Progress Circle 지침](https://seed-design.io/docs/components/progress-circle)은 표시 위치가 로딩 범위를 나타낸다고 설명한다.
 - [Apple 진행 표시 지침](https://developer.apple.com/design/human-interface-guidelines/progress-indicators)은 작은 영역의 작업에 입력이나 관련 컨트롤 가까이 있는 진행 표시를 권한다.
