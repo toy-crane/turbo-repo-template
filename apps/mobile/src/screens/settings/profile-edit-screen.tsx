@@ -1,12 +1,10 @@
 import {
-  Button,
   Column,
   FieldGroup,
   Host,
   ListItem,
   RNHostView,
   Row,
-  Spacer,
   Text,
   TextInput,
   useNativeState,
@@ -30,6 +28,7 @@ import {
   USERNAME_CONFIRM_TITLE,
 } from "@/features/auth/ui/profile-labels";
 import { ActionProgress } from "@/shared/ui/action-progress";
+import { destructiveActionModifiers } from "./destructive-action";
 import { EditableProfileHero } from "./editable-profile-hero";
 import { heroRowModifiers } from "./hero-row";
 import {
@@ -286,35 +285,37 @@ export function ProfileEditScreen({
           Last, alone and unnamed, the same shape Settings gives 로그아웃. A title
           would have to say what this one group is a group of.
 
-          A `Button` rather than a `ListItem`: it does not go anywhere, and its
-          children are where the name and the progress indicator sit together so
-          a screen reader reads them as one control. No icon and no chevron. It
-          raises the platform's confirmation where it stands, which is also why
-          the footer has to say what disappears — it is read before the press,
-          not after it.
+          A `ListItem`, which on iOS is a SwiftUI `Button` that takes the press
+          anywhere across the row. The universal `Button` only answers on the
+          text it draws, and neither `contentShape` on the button nor on its
+          content extends that, so the right of the row would look pressable and
+          do nothing. No icon and no chevron: it does not go anywhere. It raises
+          the platform's confirmation where it stands, which is also why the
+          footer has to say what disappears — it is read before the press, not
+          after it.
 
-          The name stays 계정 삭제 the whole time; only the indicator appears.
-          Nothing is disabled: SwiftUI dims a disabled button, which would drain
-          the red out of the one word that marks this as destructive. Pressing
-          again while it runs opens nothing anyway — `useAccountDeletion` drops
-          the request before the dialog.
+          The name stays 계정 삭제 the whole time; the indicator appears in the
+          trailing slot and `accessibilityValue` is what says it is running.
+          Nothing is disabled: SwiftUI dims a disabled row, which would drain the
+          red out of the one word that marks this as destructive. Pressing again
+          while it runs opens nothing anyway — `useAccountDeletion` drops the
+          request before the dialog.
         */}
         <FieldGroup.Section testID="account-deletion-section">
-          <Button
+          <ListItem
+            modifiers={destructiveActionModifiers(deletion.isDeleting)}
             onPress={deletion.confirmDeletion}
             testID="delete-account-row"
-            variant="text"
-          >
-            <Row alignment="center">
-              <Text textStyle={problemStyle}>
-                {accountDeletionLabels.deleteAccount}
-              </Text>
-              <Spacer flexible />
-              {deletion.isDeleting ? (
+            trailing={
+              deletion.isDeleting ? (
                 <ActionProgress testID="delete-account-progress" />
-              ) : null}
-            </Row>
-          </Button>
+              ) : undefined
+            }
+          >
+            <Text textStyle={problemStyle}>
+              {accountDeletionLabels.deleteAccount}
+            </Text>
+          </ListItem>
           <FieldGroup.SectionFooter>
             {/*
               The failure takes the notice's place rather than stacking under it.

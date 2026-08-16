@@ -1,5 +1,4 @@
 import {
-  Button,
   FieldGroup,
   Host,
   Icon,
@@ -10,6 +9,7 @@ import {
   Switch,
   Text,
 } from "@expo/ui";
+import type { ModifierConfig } from "@expo/ui/swift-ui/modifiers";
 import Constants from "expo-constants";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { type ReactNode, useState } from "react";
@@ -23,6 +23,7 @@ import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useSignOut } from "@/features/auth/state/use-sign-out";
 import { profileLabels } from "@/features/auth/ui/profile-labels";
 import { ActionProgress } from "@/shared/ui/action-progress";
+import { destructiveActionModifiers } from "./destructive-action";
 import { SettingsProfileHero } from "./settings-profile-hero";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
@@ -140,24 +141,23 @@ export function SettingsScreen({
           Red because signing out ends something. No chevron because it acts
           immediately rather than opening another screen.
 
-          A `Button`, like 계정 삭제: the name and the progress indicator are its
-          children, so a screen reader reads one control. The name stays 로그아웃
-          the whole time. `useSignOut` already drops a second press.
+          The name stays 로그아웃 the whole time; the indicator appears in the
+          trailing slot and `accessibilityValue` is what says it is running.
+          `useSignOut` already drops a second press.
         */}
         <FieldGroup.Section testID="sign-out-section">
-          <Button
+          <SettingsActionRow
+            modifiers={destructiveActionModifiers(isSigningOut)}
             onPress={requestSignOut}
             testID="sign-out-button"
-            variant="text"
-          >
-            <Row alignment="center">
-              <Text textStyle={{ color: danger }}>{profileLabels.signOut}</Text>
-              <Spacer flexible />
-              {isSigningOut ? (
+            trailing={
+              isSigningOut ? (
                 <ActionProgress testID="sign-out-progress" />
-              ) : null}
-            </Row>
-          </Button>
+              ) : undefined
+            }
+          >
+            <Text textStyle={{ color: danger }}>{profileLabels.signOut}</Text>
+          </SettingsActionRow>
           {signOutFailure ? (
             <FieldGroup.SectionFooter>
               <Text testID="sign-out-error" textStyle={{ color: danger }}>
@@ -181,18 +181,25 @@ export function SettingsScreen({
  */
 function SettingsActionRow({
   children,
+  modifiers,
   onPress,
   testID,
   trailing,
 }: {
   children: ReactNode;
+  modifiers?: ModifierConfig[];
   onPress: () => void;
   testID: string;
   trailing?: ReactNode;
 }) {
   if (Platform.OS === "ios") {
     return (
-      <ListItem onPress={onPress} testID={testID} trailing={trailing}>
+      <ListItem
+        modifiers={modifiers}
+        onPress={onPress}
+        testID={testID}
+        trailing={trailing}
+      >
         {children}
       </ListItem>
     );
