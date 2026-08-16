@@ -41,7 +41,7 @@ export function getSettingsRouteOptions() {
  * Pushed onto the sheet's stack, so the back arrow is the platform's own.
  *
  * Named for where it goes rather than what it edits: the screen also holds
- * 계정 탈퇴, which 프로필 수정 would not have prepared anyone for.
+ * 계정 삭제, which 프로필 수정 would not have prepared anyone for.
  */
 export function getProfileRouteOptions() {
   return {

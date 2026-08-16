@@ -26,14 +26,13 @@ export const profileLabels = {
   pickFromLibrary: "사진 보관함에서 선택",
   preferences: "환경 설정",
   /*
-    The destination, not the errand. This screen holds 계정 탈퇴 as well as the
+    The destination, not the errand. This screen holds 계정 삭제 as well as the
     fields, so naming the row 프로필 수정 would promise less than it opens.
   */
   profile: "프로필",
   save: "저장",
   saving: "저장 중",
   settings: "설정",
-  signingOut: "로그아웃 중",
   signOut: "로그아웃",
   suggestions: "사용할 수 있는 아이디",
   takePhoto: "사진 찍기",
