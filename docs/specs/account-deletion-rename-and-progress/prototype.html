@@ -1,0 +1,538 @@
+<!--
+  prototype shell: the review chrome every prototype starts from.
+
+  Keep this comment in the prototype you grow from here: it is the contract,
+  and later turns work from that file rather than from this one.
+
+  Contract (extend product screens; keep the review shell):
+  - Product:  .sh-stage contains only end-user product UI. Keep review notes,
+               rationale, instructions, and approval controls in conversation.
+  - Screens:  <section data-screen="slug" data-title="Label"> inside .sh-stage.
+               The selector, arrow keys, and #hash routing build themselves.
+               Use one option per product destination or distinct surface,
+               named by its product role. Keep baselines, variants, comparison
+               labels, steps, indexes, and progress out of names and states.
+               Links may use href="#slug".
+  - States:   "Default" is automatic. A screen declares only representative
+               presets in data-states="Empty,Error". Use natural, screen-specific
+               names. Reserve presets for important multi-step results, forced
+               data or errors, or materially different structure; keep one-click
+               and transient states as interactions. Use data-when="Empty" on
+               preset-only elements. Call prototypeShell.setState("Name") on
+               entry and setState("Default") on exit, including when repeated
+               actions cross a preset condition.
+  - Viewport: "vp (m)" cycles full / 390 / 768. The 390 preset is a
+               fixed-height, internally scrolling phone frame. Start a
+               mobile-first prototype by adding class="sh-vp-390" to <body>
+               (or a bootstrap classList.add before the chrome script runs).
+  - Pinning:  keep in-frame bars (tab bars, CTAs) inside the phone with
+               position: sticky; position: fixed pins to the browser window.
+  - Tokens:   replace the project-tokens block with project tokens copied
+               verbatim. Map differing names to --background, --foreground, and
+               --font afterwards; replace network fonts with a system stack and
+               note that substitution. Without a design system, keep this
+               palette as the finished style.
+  - Placeholders: .wf-pic stands in for pictures the prototype has no real
+               files for. Use real text everywhere text belongs.
+
+  - Chrome:   Keep exactly the screen selector, selected-screen state selector,
+               and viewport cycle. Chrome that needs explaining has failed.
+
+  Self-contained by design: no build, no framework, no network.
+-->
+<meta charset="utf-8">
+<title>계정 삭제와 로그아웃 흐름</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* ── project tokens ──
+     apps/mobile/global.css의 앱 재정의와 heroui-native
+     src/styles/variables.css의 값을 그대로 옮겼다. */
+  :root {
+    --background: #f4f4f6;
+    --foreground: #111114;
+    --surface: #ffffff;
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.9524 0.0013 286.37);
+    --overlay: #ffffff;
+    --backdrop: oklch(0% 0 0 / 20%);
+    --muted: oklch(0.5517 0.0138 285.94);
+    --danger: oklch(0.6532 0.2328 25.74);
+    --accent: oklch(0.6204 0.195 253.83);
+    --border: oklch(90% 0.004 286.32);
+    --separator: oklch(74% 0.004 286.32);
+    --radius: 12px;
+    /* 앱은 플랫폼 시스템 서체를 쓴다. 브라우저에서는 시스템 스택으로 대신한다. */
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo",
+            "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  }
+
+  /* ── review chrome (sh-*): keep; extend product styles elsewhere ── */
+  * { box-sizing: border-box }
+  body {
+    margin: 0; padding: 0 0 40px;
+    background: var(--background, #f6f6f6); color: var(--foreground, #3a3a3a);
+    font-family: var(--font, system-ui, sans-serif);
+  }
+  .sh-bar {
+    position: sticky; top: 0; z-index: 999;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 8px 12px; background: #191a1c; color: #d7d7d7;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .sh-bar b, .sh-control-label { color: #8a8f98; font-weight: 500 }
+  .sh-control { display: inline-flex; gap: 5px; align-items: center }
+  .sh-bar button {
+    border: 1px solid #3a3d42; background: none; color: inherit;
+    font: inherit; padding: 2px 9px; border-radius: 99px; cursor: pointer;
+  }
+  .sh-bar select {
+    width: 170px; border: 1px solid #3a3d42; background: #232428; color: inherit;
+    font: inherit; padding: 3px 28px 3px 9px; border-radius: 7px; cursor: pointer;
+    color-scheme: dark;
+  }
+  #sh-screen { width: 190px }
+  .sh-bar button.on { background: #d7d7d7; color: #191a1c; border-color: #d7d7d7 }
+  .sh-spacer { flex: 1 }
+  .sh-stage { max-width: 960px; margin: 0 auto; padding: 12px 16px 0 }
+  [hidden] { display: none !important }
+
+  /* viewport presets */
+  .sh-vp-390 .sh-stage {
+    max-width: 390px; background: var(--background, #f6f6f6);
+    border: 10px solid #191a1c; border-radius: 28px;
+    padding: 16px 12px; height: min(844px, calc(100dvh - 52px));
+    overflow-y: auto; margin-top: 12px;
+  }
+  .sh-vp-768 .sh-stage {
+    max-width: 768px; border: 1px solid #c4c4c4; border-radius: 12px;
+    padding: 16px; margin-top: 12px;
+  }
+
+  /* placeholders */
+  .wf-pic  { border-radius: 4px; background:
+             repeating-linear-gradient(45deg, #e9e9e9, #e9e9e9 6px, #f2f2f2 6px, #f2f2f2 12px) }
+
+  /* ── product styles ── */
+  /* 한국어는 어절 단위로 끊는다. 플랫폼 줄바꿈과 같은 결과를 낸다. */
+  section[data-screen] { position: relative; min-height: 100%; word-break: keep-all; }
+
+  .navbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding: 2px 2px 14px;
+  }
+  .navbtn {
+    width: 34px; height: 34px; border-radius: 999px; border: none;
+    background: var(--surface); color: var(--accent);
+    font-size: 16px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit;
+  }
+  .navbtn[disabled] { opacity: .38; cursor: default; }
+  .navtitle { font-size: 16px; font-weight: 600; }
+
+  .hero { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 10px 0 26px; }
+  .hero.small { margin: 4px 0 22px; }
+  .avatar {
+    width: 92px; height: 92px; border-radius: 999px;
+    background: color-mix(in oklab, var(--accent) 22%, white);
+    color: var(--accent); font-size: 32px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .avatar.sm { width: 76px; height: 76px; font-size: 27px; }
+  .editpill {
+    background: var(--surface); border: none; border-radius: 999px;
+    padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--foreground);
+    cursor: pointer; font-family: inherit;
+  }
+  .heroname { font-size: 19px; font-weight: 650; margin: 4px 0 0; }
+  .heroid { font-size: 13.5px; color: var(--muted); }
+
+  .grouptitle {
+    font-size: 12.5px; color: var(--muted); font-weight: 500;
+    margin: 22px 6px 7px; text-transform: none;
+  }
+  .group { background: var(--surface); border-radius: var(--radius); overflow: hidden; }
+  .row {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 13px 15px; font-size: 15px; text-align: left;
+    background: none; border: none; color: var(--foreground);
+    font-family: inherit; cursor: pointer;
+  }
+  .row + .row { box-shadow: inset 0 1px 0 var(--border); }
+  .row .headline { flex: 1; }
+  .row .trailing { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 15px; }
+  .row .chev { color: var(--separator); font-size: 15px; }
+  .row.static { cursor: default; }
+  .row.danger .headline { color: var(--danger); }
+  .footnote { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 8px 16px 0; }
+  .footnote.problem { color: var(--danger); }
+
+  /* 플랫폼 활동 표시. Apple 문서가 "작은 바퀴의 살"이라고 설명하는 모양이다.
+     실제 앱에서는 SwiftUI ProgressView와 Compose LoadingIndicator가 이 자리를 그린다. */
+  .spinner {
+    position: relative; width: 16px; height: 16px; flex: 0 0 auto;
+    color: var(--muted);
+  }
+  .spinner i { position: absolute; inset: 0; animation: ios-spoke .8s linear infinite; }
+  .spinner i::before {
+    content: ""; position: absolute; left: 50%; top: 0;
+    width: 1.8px; height: 5px; margin-left: -0.9px;
+    border-radius: 1px; background: currentColor;
+  }
+  .spinner i:nth-child(1) { transform: rotate(0deg);   animation-delay: -.80s }
+  .spinner i:nth-child(2) { transform: rotate(45deg);  animation-delay: -.70s }
+  .spinner i:nth-child(3) { transform: rotate(90deg);  animation-delay: -.60s }
+  .spinner i:nth-child(4) { transform: rotate(135deg); animation-delay: -.50s }
+  .spinner i:nth-child(5) { transform: rotate(180deg); animation-delay: -.40s }
+  .spinner i:nth-child(6) { transform: rotate(225deg); animation-delay: -.30s }
+  .spinner i:nth-child(7) { transform: rotate(270deg); animation-delay: -.20s }
+  .spinner i:nth-child(8) { transform: rotate(315deg); animation-delay: -.10s }
+  @keyframes ios-spoke { 0% { opacity: 1 } 100% { opacity: .2 } }
+
+  .switch {
+    width: 42px; height: 25px; border-radius: 999px; background: var(--accent);
+    position: relative; flex: 0 0 auto;
+  }
+  .switch.off { background: color-mix(in oklab, var(--muted) 35%, white); }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; left: 19px;
+    width: 21px; height: 21px; border-radius: 999px; background: #fff;
+  }
+  .switch.off::after { left: 2px; }
+
+  /* confirm dialog */
+  /* 각 뷰포트의 .sh-stage 안쪽 여백만큼 되돌려 프레임 전체를 덮는다 */
+  .backdrop {
+    position: absolute; inset: -12px -16px 0; background: var(--backdrop);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    z-index: 20;
+  }
+  .sh-vp-390 .backdrop { inset: -16px -12px; }
+  .sh-vp-768 .backdrop { inset: -16px; }
+  .alert {
+    width: 270px; background: var(--overlay); border-radius: 14px;
+    overflow: hidden; text-align: center;
+  }
+  .alert .body { padding: 19px 16px 15px; }
+  .alert .t { font-size: 16px; font-weight: 650; margin: 0 0 5px; }
+  .alert .m { font-size: 12.5px; color: var(--foreground); line-height: 1.5; margin: 0; }
+  .alert .acts { display: flex; border-top: 1px solid var(--border); }
+  .alert .acts button {
+    flex: 1; padding: 11px 6px; background: none; border: none;
+    font-family: inherit; font-size: 15.5px; color: var(--accent); cursor: pointer;
+  }
+  .alert .acts button + button { border-left: 1px solid var(--border); }
+  .alert .acts button.destructive { color: var(--danger); font-weight: 600; }
+
+  /* login */
+  .login { display: flex; flex-direction: column; min-height: 700px; }
+  .login h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 30px 0 0; }
+  .login .grow { flex: 1; }
+  .loginbtn {
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    width: 100%; padding: 15px 16px; margin-bottom: 11px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    font-family: inherit; font-size: 15.5px; font-weight: 600; color: var(--foreground);
+    cursor: pointer;
+  }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12.5px; margin: 6px 0 13px; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  .glyph { font-size: 16px; }
+</style>
+
+<header class="sh-bar">
+  <b>proto</b>
+  <label class="sh-control"><span class="sh-control-label">screen</span><select id="sh-screen"></select></label>
+  <span class="sh-spacer"></span>
+  <label class="sh-control"><span class="sh-control-label">state</span><select id="sh-state"></select></label>
+  <button id="sh-vp">vp: full (m)</button>
+</header>
+
+<main class="sh-stage">
+
+  <!-- 설정 -->
+  <section data-screen="settings" data-title="설정" data-states="로그아웃 중,로그아웃 실패">
+    <div class="navbar" data-component="네이티브 셸">
+      <span style="width:34px"></span>
+      <span class="navtitle">설정</span>
+      <button class="navbtn" data-component="Stack.Toolbar.Button" onclick="return false">✕</button>
+    </div>
+
+    <div class="hero small">
+      <div class="avatar sm" data-component="new:ProfileHero">김</div>
+      <p class="heroname">김도윤</p>
+      <p class="heroid">doyun_kim</p>
+    </div>
+
+    <p class="grouptitle">계정</p>
+    <div class="group" data-component="FieldGroup.Section">
+      <button class="row" data-component="ListItem" onclick="goProfile()">
+        <span class="headline">프로필</span>
+        <span class="chev">›</span>
+      </button>
+    </div>
+
+    <p class="grouptitle">환경 설정</p>
+    <div class="group" data-component="FieldGroup.Section">
+      <div class="row static" data-component="ListItem">
+        <span class="headline">알림</span>
+        <span class="switch" data-component="Switch"></span>
+      </div>
+      <div class="row static" data-component="ListItem">
+        <span class="headline">햅틱 반응</span>
+        <span class="switch off" data-component="Switch"></span>
+      </div>
+    </div>
+
+    <p class="grouptitle">앱 정보</p>
+    <div class="group" data-component="FieldGroup.Section">
+      <div class="row static" data-component="ListItem">
+        <span class="headline">버전</span>
+        <span class="trailing">1.0.0</span>
+      </div>
+    </div>
+
+    <div class="group" style="margin-top:22px" data-component="FieldGroup.Section">
+      <button class="row danger" id="signout-row" data-component="Button" onclick="startSignOut()">
+        <span class="headline">로그아웃</span>
+        <span class="trailing" id="signout-trailing" hidden>
+          <span class="spinner" data-component="ProgressView / LoadingIndicator"
+            ><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        </span>
+      </button>
+    </div>
+    <p class="footnote problem" id="signout-problem" data-when="로그아웃 실패" hidden
+       data-component="FieldGroup.SectionFooter">
+      로그아웃을 끝내지 못했습니다. 다시 시도해 주세요.
+    </p>
+  </section>
+
+  <!-- 프로필 -->
+  <section data-screen="profile" data-title="프로필" data-states="삭제 중,삭제 실패">
+    <div class="navbar" data-component="네이티브 셸">
+      <button class="navbtn" id="p-back" data-component="Stack 뒤로 가기" onclick="goSettings()">‹</button>
+      <span class="navtitle">프로필</span>
+      <button class="navbtn" id="p-save" data-component="Stack.Toolbar.Button" onclick="return false">✓</button>
+    </div>
+
+    <div class="hero">
+      <div class="avatar" data-component="new:EditableProfileHero">김</div>
+      <button class="editpill" data-component="Button" onclick="return false">편집</button>
+    </div>
+
+    <div class="group" data-component="FieldGroup.Section">
+      <div class="row static" data-component="ListItem">
+        <span class="headline">닉네임</span>
+        <span class="trailing" style="color:var(--foreground)">김도윤</span>
+      </div>
+      <div class="row static" data-component="ListItem">
+        <span class="headline">아이디</span>
+        <span class="trailing" style="color:var(--foreground)">doyun_kim</span>
+      </div>
+    </div>
+    <p class="footnote" data-component="FieldGroup.SectionFooter">
+      아이디는 30일에 한 번 바꿀 수 있어요. 이전 아이디는 30일 동안 다른 사람이 사용할 수 없어요.
+    </p>
+
+    <div class="group" style="margin-top:24px" data-component="FieldGroup.Section">
+      <button class="row danger" id="delete-row" data-component="Button" onclick="openConfirm()">
+        <span class="headline">계정 삭제</span>
+        <span class="trailing" id="delete-trailing" hidden>
+          <span class="spinner" data-component="ProgressView / LoadingIndicator"
+            ><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        </span>
+      </button>
+    </div>
+    <p class="footnote" id="delete-notice" data-component="FieldGroup.SectionFooter">
+      로그인 계정, 프로필과 올린 사진이 모두 삭제됩니다. 되돌릴 수 없습니다.
+    </p>
+    <p class="footnote problem" id="delete-problem" data-when="삭제 실패" hidden
+       data-component="FieldGroup.SectionFooter">
+      계정 삭제를 끝내지 못했습니다. 다시 시도해 주세요.
+    </p>
+
+    <div class="backdrop" id="confirm" hidden data-component="Alert">
+      <div class="alert">
+        <div class="body">
+          <p class="t">계정을 삭제할까요?</p>
+          <p class="m">지금 삭제하면 되돌릴 수 없습니다. 다시 가입해도 이전 정보는 돌아오지 않습니다.</p>
+        </div>
+        <div class="acts">
+          <button onclick="closeConfirm()">취소</button>
+          <button class="destructive" onclick="startDeletion()">계정 삭제</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 로그인 -->
+  <section data-screen="signin" data-title="로그인">
+    <div class="login">
+      <h1>Turbo Repo Mobile</h1>
+      <div class="grow"></div>
+      <button class="loginbtn" data-component="LoginButton" onclick="return false">
+        Google로 계속하기
+      </button>
+      <button class="loginbtn" data-component="LoginButton" onclick="return false">
+        Apple로 계속하기
+      </button>
+      <div class="or">또는</div>
+      <button class="loginbtn" data-component="LoginButton" onclick="return false">
+        이메일로 계속하기
+      </button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const stage = document.querySelector('.sh-stage');
+  const screens = [...stage.querySelectorAll('[data-screen]')];
+  const screenSelect = document.getElementById('sh-screen');
+  const stateSelect = document.getElementById('sh-state');
+  const vpBtn = document.getElementById('sh-vp');
+  let current = null;
+  let currentStates = [];
+
+  screens.forEach(s => {
+    const option = document.createElement('option');
+    option.textContent = s.dataset.title || s.dataset.screen;
+    option.value = s.dataset.screen;
+    screenSelect.append(option);
+  });
+  screenSelect.onchange = () => show(screenSelect.value);
+
+  function show(slug) {
+    current = screens.find(s => s.dataset.screen === slug) || screens[0];
+    screens.forEach(s => s.hidden = s !== current);
+    screenSelect.value = current.dataset.screen;
+    history.replaceState(null, '', '#' + current.dataset.screen);
+    buildStates();
+    // 화면을 떠났다 돌아와도 도는 요청은 그대로 남는다
+    if (current.dataset.screen === 'profile' && deleting) applyState('삭제 중');
+    if (current.dataset.screen === 'settings' && signingOut) applyState('로그아웃 중');
+  }
+
+  function buildStates() {
+    const declared = (current.dataset.states || '').split(',').map(x => x.trim()).filter(Boolean);
+    currentStates = ['Default', ...declared.filter(name => name !== 'Default')];
+    stateSelect.innerHTML = '';
+    currentStates.forEach(name => {
+      const option = document.createElement('option');
+      option.textContent = name;
+      option.value = name;
+      stateSelect.append(option);
+    });
+    applyState('Default');
+  }
+
+  function applyState(name) {
+    const active = currentStates.includes(name) ? name : 'Default';
+    current.querySelectorAll('[data-when]').forEach(el => {
+      el.hidden = !el.dataset.when.split(',').map(x => x.trim()).includes(active);
+    });
+    stateSelect.value = active;
+    if (current.dataset.screen === 'profile') paintProfile(active);
+    if (current.dataset.screen === 'settings') paintSettings(active);
+  }
+  stateSelect.onchange = () => { cancelPending(); applyState(stateSelect.value); };
+
+  window.prototypeShell = {
+    showScreen: show,
+    setState: applyState,
+    getScreen: () => current?.dataset.screen,
+    getState: () => stateSelect.value
+  };
+
+  const VPS = ['full', '390', '768'];
+  // 모바일 우선. body 태그에 클래스를 다는 대신 여기서 시작 값을 정한다.
+  let vp = VPS.find(v => document.body.classList.contains('sh-vp-' + v)) || '390';
+  function applyVp() {
+    VPS.forEach(v => document.body.classList.toggle('sh-vp-' + v, v === vp && v !== 'full'));
+    vpBtn.textContent = 'vp: ' + vp + ' (m)';
+    vpBtn.classList.toggle('on', vp !== 'full');
+  }
+  vpBtn.onclick = () => { vp = VPS[(VPS.indexOf(vp) + 1) % VPS.length]; applyVp(); };
+  applyVp();
+
+  addEventListener('keydown', e => {
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const i = screens.indexOf(current);
+    if (e.key === 'ArrowRight') show(screens[(i + 1) % screens.length].dataset.screen);
+    if (e.key === 'ArrowLeft') show(screens[(i - 1 + screens.length) % screens.length].dataset.screen);
+    if (e.key === 'm') vpBtn.click();
+  });
+
+  addEventListener('hashchange', () => show(location.hash.slice(1)));
+
+  /* ── product behavior ── */
+  const trailing = document.getElementById('delete-trailing');
+  const notice = document.getElementById('delete-notice');
+  const confirmBox = document.getElementById('confirm');
+  let deleting = false;               // 실제로 요청이 도는 중인지
+  let timer = null;
+
+  // 문구는 언제나 `계정 삭제`. 진행 중이라는 사실은 표시만 말한다.
+  function paintProfile(state) {
+    const pending = state === '삭제 중';
+    trailing.hidden = !pending;
+    notice.hidden = state === '삭제 실패';
+    confirmBox.hidden = true;
+  }
+
+  function cancelPending() {
+    if (timer) { clearTimeout(timer); timer = null; }
+    deleting = false;
+    if (signOutTimer) { clearTimeout(signOutTimer); signOutTimer = null; }
+    signingOut = false;
+  }
+
+  function openConfirm() {
+    // 도는 동안 같은 요청을 다시 시작하지 않는다
+    if (!trailing.hidden) return;
+    confirmBox.hidden = false;
+  }
+  function closeConfirm() { confirmBox.hidden = true; }
+
+  function startDeletion() {
+    confirmBox.hidden = true;
+    deleting = true;
+    applyState('삭제 중');
+    timer = setTimeout(finishDeletion, 1500);
+  }
+
+  function finishDeletion() {
+    timer = null;
+    deleting = false;
+    if (current.dataset.screen === 'profile') applyState('Default');
+    show('signin');
+  }
+
+  function goProfile() { show('profile'); }
+  // 삭제가 도는 동안에도 화면의 나머지는 그대로 받는다.
+  function goSettings() { show('settings'); }
+
+  /* 로그아웃도 같은 규칙이다. 문구는 `로그아웃` 그대로, 표시만 나타난다.
+     계정 삭제와 달리 확인창 없이 바로 실행된다. */
+  const signOutTrailing = document.getElementById('signout-trailing');
+  let signingOut = false;
+  let signOutTimer = null;
+
+  function paintSettings(state) {
+    signOutTrailing.hidden = state !== '로그아웃 중';
+  }
+
+  function startSignOut() {
+    if (signingOut) return;
+    signingOut = true;
+    applyState('로그아웃 중');
+    signOutTimer = setTimeout(() => {
+      signOutTimer = null;
+      signingOut = false;
+      applyState('Default');
+      show('signin');
+    }, 1200);
+  }
+
+  show(location.hash.slice(1));
+</script>
