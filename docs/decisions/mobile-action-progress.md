@@ -9,7 +9,7 @@
 - 사용자가 버튼을 누르지 않아 자동으로 시작한 작업은 처리하는 대상이 진행 상태를 소유한다. 기존 내용과 관계없는 새 줄에 진행 표시를 추가하지 않는다.
 - 자동 실행 작업이 1초 안에 끝나면 시각적인 진행 표시를 띄우지 않는다. 1초를 넘기면 작업 대상이 있던 영역을 유지한 채 진행 표시와 구체적인 상태 문구를 보여 준다.
 - 네이티브 셸과 `@expo/ui` 화면은 프로젝트 공통 `Button`을 사용하지 않는다. 각 렌더러가 제공하는 버튼, 행과 진행 표시로 같은 의미를 표현한다.
-- `@expo/ui` 화면에서 사용자가 시작한 작업은 그 작업을 시작한 컨트롤에서 진행 중임을 표시한다. 컨트롤의 문구는 바꾸지 않고 진행 표시만 더한다. iOS는 SwiftUI `ProgressView`, Android는 Compose `LoadingIndicator`가 그 자리를 그린다.
+- `@expo/ui` 화면에서 사용자가 시작한 작업은 그 작업을 시작한 컨트롤에서 진행 중임을 표시한다. 컨트롤의 문구는 바꾸지 않고 진행 표시만 더한다. iOS는 SwiftUI `ProgressView`, Android는 Compose `CircularProgressIndicator`가 그 자리를 그린다. 두 플랫폼 모두 문구 옆에 서는 얇은 원형 링이며, Android는 Material 기본값 대신 20dp에 선 2dp를 쓴다.
 - 설정 화면의 파괴적 동작은 `FieldGroup.Section` 안의 `ListItem`으로 만든다. 아이콘과 셰브론은 두지 않는다. 진행 표시는 trailing 슬롯에 두고, 진행 중임은 `accessibilityValue`로 알린다.
 
 ## 경계
@@ -28,6 +28,8 @@
 하나의 공통 버튼이 HeroUI Native, 네이티브 셸과 `@expo/ui`를 모두 감싸면 각 렌더러가 제공하는 상태, 배치와 접근성 표현을 잃는다. 공통으로 유지할 것은 진행 상태의 의미이며, 실제 표시는 화면의 주 렌더러가 담당한다.
 
 문구를 바꾸면 같은 컨트롤이 상태마다 다른 이름을 갖는다. Apple 설정 앱은 행의 이름을 고정한 채 상태를 별도 요소나 값으로 붙인다. 이 앱의 React Native `Button`도 처음부터 문구와 크기를 유지하고 표시만 바꿔 왔으므로 `@expo/ui` 화면만 다른 규칙을 쓸 이유가 없다.
+
+Android에서 Material 3 Expressive의 `LoadingIndicator`를 쓰지 않는 이유는 모양이다. 속을 채운 33dp 덩어리가 일곱 모양 사이를 오가서 한 줄짜리 문구 옆에서는 진행이 아니라 도장이나 얼룩처럼 읽힌다. 얇은 원형 링은 두 플랫폼이 같은 인상을 주고, 같은 동작이 기기를 바꿨다고 다르게 보이지 않는다. 크기를 Material 기본값인 40dp에서 줄이는 것도 같은 이유다. 표시가 옆에 선 한 단어보다 커지면 행의 주인공이 바뀐다.
 
 ## 재검토 조건
 
@@ -58,3 +60,6 @@
 - 진행 표시만으로는 접근성 트리에 아무것도 남지 않는다. `accessibilityValue`를 붙이면 iOS Simulator에서 행이 label `계정 삭제`에 value `진행 중`을 함께 보고했다. Apple 설정 앱이 `Voice, American (Voice 4)`로 읽히는 것과 같은 구조다.
 - Apple 설정 앱의 접근성 트리에서 행의 상태는 이름을 고정한 채 전달된다. 사전 선택은 셀 `Catalan` 옆의 `selected` 요소로, Siri 음성은 셀의 `selected` 트레잇과 별도 `Checkmark` 요소로, 값이 있는 행은 `Voice, American (Voice 4)`처럼 이름과 값으로 읽힌다.
 - [App Store 심사 지침 5.1.1(v)](https://developer.apple.com/support/offering-account-deletion-in-your-app/)은 계정 삭제를 앱에서 찾기 쉬운 곳에 두고 오래 걸리면 알리라고 요구하지만 버튼 문구는 정하지 않는다.
+- `@expo/ui 57.0.11`의 Compose 진행 표시는 `LoadingIndicator`, `ContainedLoadingIndicator`, `CircularProgressIndicator`, `CircularWavyProgressIndicator`, `LinearProgressIndicator`, `LinearWavyProgressIndicator`다. 원형인 넷을 계정 삭제 행에 나란히 그려 Android Emulator에서 비교했다. `LoadingIndicator`는 33dp를 채운 덩어리이고, `CircularWavyProgressIndicator`는 48dp라 넷 중 가장 크며 호가 짧아지는 구간에서 링으로 보이지 않는다. `CircularProgressIndicator`만 크기와 선 두께를 함께 조절할 수 있다.
+- `CircularProgressIndicator`는 `color`, `trackColor`, `strokeWidth`, `strokeCap`, `gapSize`를 props로 받고 크기는 `@expo/ui/jetpack-compose/modifiers`의 `size(width, height)`로 정한다. Compose 컴포넌트는 `testID`를 받지 않아 감싸는 `Row`가 대신 지닌다.
+- Android Emulator에서 계정 삭제가 도는 시간은 614ms였다. 로컬 Supabase를 부른 값이며 확인창이 닫히는 애니메이션이 그 앞부분을 덮는다.
