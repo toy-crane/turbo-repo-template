@@ -1,3 +1,4 @@
+import { QueryClient } from "@tanstack/react-query";
 import { render } from "@testing-library/react-native";
 import { HeroUINativeProviderRaw } from "heroui-native/provider-raw";
 import type { ReactElement } from "react";
@@ -11,6 +12,17 @@ const testSafeAreaMetrics = {
   frame: { height: 852, width: 393, x: 0, y: 0 },
   insets: { bottom: 34, left: 0, right: 0, top: 59 },
 };
+
+export function createTestQueryClient() {
+  // A finite GC delay leaves a real Node timer behind after unmount. Each test
+  // owns its client, so background eviction only keeps the Jest worker alive.
+  return new QueryClient({
+    defaultOptions: {
+      mutations: { gcTime: Number.POSITIVE_INFINITY },
+      queries: { gcTime: Number.POSITIVE_INFINITY },
+    },
+  });
+}
 
 function withProviders(element: ReactElement, safeAreaBottomInset: number) {
   const safeAreaMetrics = {

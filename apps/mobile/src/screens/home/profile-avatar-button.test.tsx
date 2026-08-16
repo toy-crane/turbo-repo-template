@@ -1,5 +1,5 @@
 import { beforeEach, expect, jest, test } from "@jest/globals";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { screen, userEvent, waitFor } from "@testing-library/react-native";
 
 import { useAuthSession } from "@/features/auth/state/auth-session";
@@ -8,7 +8,10 @@ import {
   createProfileRow,
   resetFakeSupabase,
 } from "@/shared/test/fake-supabase";
-import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
+import {
+  createTestQueryClient,
+  renderWithHeroUI,
+} from "@/shared/test/render-with-heroui";
 import { ProfileAvatarButton } from "./profile-avatar-button";
 
 jest.mock("@/features/auth/state/auth-session", () => ({
@@ -33,7 +36,7 @@ function signedIn() {
 
 function renderButton(onPress: () => void) {
   return renderWithHeroUI(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={createTestQueryClient()}>
       <ProfileAvatarButton onPress={onPress} />
     </QueryClientProvider>
   );
