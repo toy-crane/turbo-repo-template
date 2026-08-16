@@ -464,6 +464,7 @@ bun run dev:remove
 플랫폼 인수는 필수입니다.
 한 폴더에서 두 플랫폼을 함께 띄울 수 있습니다.
 `bun run dev ios`를 실행한 뒤 `bun run dev android`를 실행하면 iOS 세션이 살아 있는 채로 Android가 더해지고, 두 기기가 같은 API와 Metro에 붙습니다.
+세션은 포트만 정하고 호스트는 앱이 정합니다. iOS는 `127.0.0.1`, Android Emulator는 `10.0.2.2`로 개발 컴퓨터에 닿습니다.
 Metro 입력이나 환경이 바뀌어 API와 Metro를 다시 시작할 때는 붙어 있던 두 기기의 앱을 모두 다시 엽니다.
 
 `bun run dev:stop`은 프로세스와 기기만 멈춥니다.

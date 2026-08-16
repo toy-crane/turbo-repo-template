@@ -2,14 +2,6 @@ import { createHash } from "node:crypto";
 
 import { parseMobileEnv } from "../../apps/mobile/env";
 
-/**
- * Both platforms read the same address. An Android emulator would otherwise
- * need `10.0.2.2`, but the session forwards its ports with `adb reverse`, so
- * the value baked into the bundle no longer depends on the platform and one
- * Metro can serve both.
- */
-const SESSION_HOST = "127.0.0.1";
-
 const LINE_PATTERN = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/;
 
 /**
@@ -40,40 +32,32 @@ export function parseEnvFile(contents: string): Record<string, string> {
   return values;
 }
 
-export interface SessionAddresses {
-  apiUrl: string;
-  supabaseUrl: string;
-}
-
-export function sessionAddresses(
-  apiPort: number,
-  supabasePort: number
-): SessionAddresses {
-  return {
-    apiUrl: `http://${SESSION_HOST}:${apiPort}`,
-    supabaseUrl: `http://${SESSION_HOST}:${supabasePort}`,
-  };
+export interface SessionPorts {
+  api: number;
+  supabase: number;
 }
 
 export interface MobileEnvironmentInput {
-  addresses: SessionAddresses;
   /** Values read from `apps/mobile/.env.local`. */
   fileValues: Record<string, string>;
+  ports: SessionPorts;
 }
 
 /**
- * The session decides the two addresses and keeps every other value the
- * developer already has. Validation runs through the app's own schema so a
- * missing key fails here rather than on the app's first screen.
+ * The session owns the two ports and keeps every other value the developer
+ * already has. Ports carry no host, so the same environment serves both
+ * platforms and one Metro can bundle for either; the app turns each port into
+ * an address its own platform can reach. Validation runs through the app's own
+ * schema so a missing key fails here rather than on the app's first screen.
  */
 export function buildMobileEnvironment({
-  addresses,
   fileValues,
+  ports,
 }: MobileEnvironmentInput): Record<string, string> {
   const merged = {
     ...fileValues,
-    EXPO_PUBLIC_DEV_SESSION_API_URL: addresses.apiUrl,
-    EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL: addresses.supabaseUrl,
+    EXPO_PUBLIC_DEV_SESSION_API_PORT: String(ports.api),
+    EXPO_PUBLIC_DEV_SESSION_SUPABASE_PORT: String(ports.supabase),
   };
 
   parseMobileEnv(merged);

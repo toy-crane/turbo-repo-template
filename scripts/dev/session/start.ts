@@ -25,7 +25,6 @@ import {
   buildMobileEnvironment,
   developmentClientUrl,
   mobileEnvironmentFingerprint,
-  sessionAddresses,
 } from "../environment";
 import { withLock } from "../lock";
 import {
@@ -466,7 +465,6 @@ interface ReopenInput {
   context: SessionContext;
   devices: Partial<Record<Platform, string>>;
   env: Record<string, string>;
-  hostPorts: number[];
   installedFingerprints: Partial<Record<Platform, string | null>>;
   io: SessionIo;
   logs: SessionLogs;
@@ -555,7 +553,6 @@ async function reopenOtherPlatforms({
   context,
   devices,
   env,
-  hostPorts,
   installedFingerprints: installed,
   io,
   logs,
@@ -601,7 +598,7 @@ async function reopenOtherPlatforms({
         slot,
       });
 
-      await driver.prepareHostPorts(handle, hostPorts);
+      await driver.prepareForMetro(handle, metro);
       await openApp({
         context,
         driver,
@@ -648,8 +645,8 @@ export async function startSession({
   // pass exists so a missing key fails before any device or process starts.
   const mobileEnvironmentForSlot = (slot: number) =>
     buildMobileEnvironment({
-      addresses: sessionAddresses(apiPort(slot), context.supabasePort),
       fileValues,
+      ports: { api: apiPort(slot), supabase: context.supabasePort },
     });
 
   mobileEnvironmentForSlot(0);
@@ -684,9 +681,6 @@ export async function startSession({
     ...mobileEnvironment,
   };
   const started: number[] = [];
-  // Every address the app uses is `127.0.0.1`, so an emulator needs all three
-  // forwarded before it can reach this worktree's session.
-  const hostPorts = [metro, api, context.supabasePort];
   // A build or a first bundle can run for many minutes; whichever processes
   // this run depends on are checked throughout rather than at the end, so a
   // session that died is reported as that instead of as an unresponsive app.
@@ -714,7 +708,7 @@ export async function startSession({
 
     if (plan === "relaunch") {
       io.log("이미 실행 중인 세션을 그대로 두고 앱만 다시 엽니다.");
-      await driver.prepareHostPorts(handle, hostPorts);
+      await driver.prepareForMetro(handle, metro);
       await openApp({
         context,
         driver,
@@ -764,7 +758,7 @@ export async function startSession({
 
     if (plan === "join") {
       io.log(`실행 중인 세션에 ${platform}를 더합니다.`);
-      await driver.prepareHostPorts(handle, hostPorts);
+      await driver.prepareForMetro(handle, metro);
       await openApp({
         context,
         driver,
@@ -861,7 +855,7 @@ export async function startSession({
       currentMetroInputFingerprint
     );
 
-    await driver.prepareHostPorts(handle, hostPorts);
+    await driver.prepareForMetro(handle, metro);
     await openApp({ context, driver, handle, logs, metro, platform, running });
 
     const reattached = await reopenOtherPlatforms({
@@ -869,7 +863,6 @@ export async function startSession({
       context,
       devices: allocation.devices,
       env,
-      hostPorts,
       installedFingerprints: allocation.installedFingerprints,
       io,
       logs,
