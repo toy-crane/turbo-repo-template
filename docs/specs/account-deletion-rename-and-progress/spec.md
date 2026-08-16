@@ -59,13 +59,15 @@
 iOS Simulator와 Android Emulator의 Development Build에서 각각 확인했다.
 
 - 두 동작 모두 기존 행과 같은 모양으로 그려지고 행 전체가 눌린다.
-- 진행 중에는 문구가 그대로이고 trailing 자리에 플랫폼 진행 표시가 돈다. iOS는 SwiftUI 활동 표시, Android는 Material 3 Expressive `LoadingIndicator`다.
+- 진행 중에는 문구가 그대로이고 trailing 자리에 플랫폼 진행 표시가 돈다. 두 플랫폼 모두 얇은 원형 링이며 iOS는 SwiftUI 활동 표시, Android는 Compose `CircularProgressIndicator`다.
 - 삭제와 로그아웃 모두 끝나면 로그인 화면으로 돌아간다.
 - iOS 접근성 트리가 label `계정 삭제`와 `로그아웃`에 value `진행 중`을 함께 보고한다.
+- Android는 작업이 시작될 때 `계정 삭제 진행 중`, `로그아웃 진행 중`을 한 번 알린다.
 
 ## 남은 위험
 
-- **Android는 진행 중임을 화면 읽기에 알리지 못한다.** `accessibilityValue`는 SwiftUI modifier이고 `@expo/ui 57.0.11`의 Compose 쪽에는 대응하는 modifier가 없다. 접근성 트리에도 진행 표시가 남지 않는다. React Native의 `AccessibilityInfo.announceForAccessibility`가 대안이지만 아직 넣지 않았고, 넣어도 화면 읽기로 직접 확인하기 어렵다.
+- **Android 알림은 한 번 말하고 끝난다.** iOS는 행이 값을 지녀 다시 초점을 맞춰도 읽지만 Android는 그러지 못한다. `@expo/ui 57.0.11`의 Compose modifier에 `liveRegion`이나 `stateDescription`이 없어서 행에 상태를 걸 자리가 없다. 삭제가 1초 안에 끝나므로 돌아와서 확인할 일은 적다.
+- **TalkBack이 실제로 읽은 문장은 확인하지 못했다.** 에뮬레이터에서 TalkBack을 켜고 삭제를 돌려 음성이 나가는 것까지는 봤지만, 프로덕션 이미지라 TalkBack의 로그 수준을 올릴 수 없어 발화 내용을 로그로 가르지 못했다.
 - 실패 상태는 기기에서 재현하지 않았다. 단위 테스트로만 확인했다.
 
 ## 승인한 화면
