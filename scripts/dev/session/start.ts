@@ -53,7 +53,7 @@ import {
   type SessionIo,
 } from "./context";
 import { fitStateToReality, stopOwnProcesses } from "./maintenance";
-import { driverFor, type PlatformDriver } from "./platform";
+import { type DeviceHandle, driverFor, type PlatformDriver } from "./platform";
 import {
   platformsAfterMultiStart,
   type SessionReuseReason,
@@ -439,7 +439,7 @@ interface BuildStepInput {
   driver: PlatformDriver;
   env: Record<string, string>;
   fingerprint: string;
-  handle: { deviceId: string; target: string };
+  handle: DeviceHandle;
   installedFingerprint: string | null;
   io: SessionIo;
   logs: SessionLogs;
@@ -448,7 +448,7 @@ interface BuildStepInput {
 
 async function installShared(
   driver: PlatformDriver,
-  handle: { deviceId: string; target: string },
+  handle: DeviceHandle,
   artifactPath: string,
   io: SessionIo
 ): Promise<void> {
@@ -557,7 +557,7 @@ async function resolveBuild({
 interface OpenAppInput {
   context: SessionContext;
   driver: PlatformDriver;
-  handle: { deviceId: string; target: string };
+  handle: DeviceHandle;
   logs: SessionLogs;
   metro: number;
   platform: Platform;
@@ -780,33 +780,27 @@ async function startOnRunningSession(setup: SessionSetup): Promise<{
     });
 
     try {
-      const boot = driver.ensureBooted({
-        deviceId,
-        leasedElsewhere: allocation.leasedElsewhere[platform],
-        logPath: logs.device,
-        slot: allocation.slot,
-      });
       let build: BuildOutcome = "reused";
-      let handle: { deviceId: string; target: string };
+      let handle: DeviceHandle;
 
       if (plan === "join") {
         io.log(`실행 중인 세션에 ${platform}를 더합니다.`);
 
-        // The fingerprint reads no device, so it need not wait for the boot.
         // biome-ignore lint/performance/noAwaitInLoops: platforms start in the order the command names them.
-        const [bootedHandle, fingerprint] = await Promise.all([
-          boot,
-          generateFingerprint(context.mobileDirectory, platform, env),
-        ]);
+        const booted = await bootWithFingerprint(
+          setup,
+          platform,
+          driver,
+          deviceId
+        );
 
-        handle = bootedHandle;
-        io.log(`${platform} native fingerprint: ${fingerprint}`);
+        ({ handle } = booted);
         build = await resolveBuild({
           context,
           deviceTarget: driver.buildTarget(handle),
           driver,
           env,
-          fingerprint,
+          fingerprint: booted.fingerprint,
           handle,
           installedFingerprint:
             allocation.installedFingerprints[platform] ?? null,
@@ -818,7 +812,12 @@ async function startOnRunningSession(setup: SessionSetup): Promise<{
         io.log(
           `이미 실행 중인 세션을 그대로 두고 ${platform} 앱만 다시 엽니다.`
         );
-        handle = await boot;
+        handle = await driver.ensureBooted({
+          deviceId,
+          leasedElsewhere: allocation.leasedElsewhere[platform],
+          logPath: logs.device,
+          slot: allocation.slot,
+        });
       }
 
       await driver.prepareForMetro(handle, metro);
@@ -851,106 +850,127 @@ async function startOnRunningSession(setup: SessionSetup): Promise<{
   return { attachedNow, failedNow, successes };
 }
 
-interface PreparedPlatform {
-  build: BuildOutcome;
-  deviceId: string;
-  driver: PlatformDriver;
-  handle: { deviceId: string; target: string };
-  platform: Platform;
-}
-
 interface BootedPlatform {
   deviceId: string;
   driver: PlatformDriver;
   fingerprint: string;
-  handle: { deviceId: string; target: string };
+  handle: DeviceHandle;
   platform: Platform;
 }
 
+interface PreparedPlatform extends Omit<BootedPlatform, "fingerprint"> {
+  build: BuildOutcome;
+}
+
 /**
- * Boots the device and computes the native fingerprint for one platform. Both
- * are independent of the other platform: a Simulator and an Emulator answer
- * to different daemons, and the fingerprint reads only this platform's inputs.
+ * Boots the device and computes the native fingerprint for one platform at
+ * the same time; the fingerprint reads no device, so neither waits for the
+ * other. Both outcomes are always observed: a fingerprint that fails fast must
+ * not leave a boot in flight with nobody to report it, and when both fail the
+ * boot's own error is reported alongside rather than hidden.
  */
-async function bootAndFingerprint(
+async function bootWithFingerprint(
   setup: SessionSetup,
-  platform: Platform
-): Promise<BootedPlatform | undefined> {
-  const { allocation, context, drivers, env, failures, io, logs } = setup;
-  const driver = drivers.get(platform);
-  const deviceId = allocation.devices[platform];
+  platform: Platform,
+  driver: PlatformDriver,
+  deviceId: string
+): Promise<BootedPlatform> {
+  const { allocation, context, env, io, logs } = setup;
+  const [boot, fingerprint] = await Promise.allSettled([
+    driver.ensureBooted({
+      deviceId,
+      leasedElsewhere: allocation.leasedElsewhere[platform],
+      logPath: logs.device,
+      slot: allocation.slot,
+    }),
+    generateFingerprint(context.mobileDirectory, platform, env),
+  ]);
+  const problems = [boot, fingerprint]
+    .filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    )
+    .map((result) => failureMessage(result.reason));
 
-  if (!(driver && deviceId)) {
-    return;
+  if (boot.status === "rejected" || fingerprint.status === "rejected") {
+    throw new Error(problems.join("\n"));
   }
 
-  try {
-    const [handle, fingerprint] = await Promise.all([
-      driver.ensureBooted({
-        deviceId,
-        leasedElsewhere: allocation.leasedElsewhere[platform],
-        logPath: logs.device,
-        slot: allocation.slot,
-      }),
-      generateFingerprint(context.mobileDirectory, platform, env),
-    ]);
+  io.log(`${platform} native fingerprint: ${fingerprint.value}`);
 
-    io.log(`${platform} native fingerprint: ${fingerprint}`);
-
-    return { deviceId, driver, fingerprint, handle, platform };
-  } catch (error) {
-    // The other requested platform still gets its session.
-    failures.push({ message: failureMessage(error), platform });
-  }
+  return {
+    deviceId,
+    driver,
+    fingerprint: fingerprint.value,
+    handle: boot.value,
+    platform,
+  };
 }
 
 /**
  * Everything native happens here, before any session process exists: devices
  * boot and builds resolve while no Metro of this worktree is alive to watch
- * the project churn underneath it. Boots and fingerprints run for every
- * platform at once so an emulator's cold boot overlaps the other platform's
- * work; the builds stay one at a time because both write into `apps/mobile`.
+ * the project churn underneath it. Every platform's boot and fingerprint start
+ * at once, so an emulator's cold boot overlaps the other platform's work; each
+ * platform then builds as soon as its own preparation is done, in the order
+ * the command named them, because both builds write into `apps/mobile`.
  */
 async function prepareFreshPlatforms(
   setup: SessionSetup
 ): Promise<PreparedPlatform[]> {
-  const { allocation, context, env, failures, io, logs, startable } = setup;
-  const booted = (
-    await Promise.all(
-      startable.map((platform) => bootAndFingerprint(setup, platform))
-    )
-  ).filter((entry): entry is BootedPlatform => entry !== undefined);
+  const { allocation, context, drivers, env, failures, io, logs, startable } =
+    setup;
+  const preparations = startable.map((platform) => {
+    const driver = drivers.get(platform);
+    const deviceId = allocation.devices[platform];
+
+    return {
+      platform,
+      // Started here so every boot is already under way before the first
+      // build; the rejection is consumed in order below, never left dangling.
+      ready:
+        driver && deviceId
+          ? bootWithFingerprint(setup, platform, driver, deviceId)
+          : Promise.reject(new Error("배정된 기기가 없습니다.")),
+    };
+  });
   const prepared: PreparedPlatform[] = [];
 
-  for (const entry of booted) {
+  for (const { platform, ready } of preparations) {
     try {
-      // biome-ignore lint/performance/noAwaitInLoops: both platforms' builds write into the same native project folder.
+      // biome-ignore lint/performance/noAwaitInLoops: platforms build one at a time, in the order the command names them.
+      const entry = await ready;
+      // The device may have gone away while another platform was building;
+      // Android in particular is addressed by a serial that a relaunch changes.
+      const handle = await entry.driver.ensureBooted({
+        deviceId: entry.deviceId,
+        leasedElsewhere: allocation.leasedElsewhere[platform],
+        logPath: logs.device,
+        slot: allocation.slot,
+      });
       const build = await resolveBuild({
         context,
-        deviceTarget: entry.driver.buildTarget(entry.handle),
+        deviceTarget: entry.driver.buildTarget(handle),
         driver: entry.driver,
         env,
         fingerprint: entry.fingerprint,
-        handle: entry.handle,
+        handle,
         installedFingerprint:
-          allocation.installedFingerprints[entry.platform] ?? null,
+          allocation.installedFingerprints[platform] ?? null,
         io,
         logs,
-        platform: entry.platform,
+        platform,
       });
 
       prepared.push({
         build,
         deviceId: entry.deviceId,
         driver: entry.driver,
-        handle: entry.handle,
-        platform: entry.platform,
+        handle,
+        platform,
       });
     } catch (error) {
-      failures.push({
-        message: failureMessage(error),
-        platform: entry.platform,
-      });
+      // The other requested platform still gets its session.
+      failures.push({ message: failureMessage(error), platform });
     }
   }
 

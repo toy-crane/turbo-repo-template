@@ -41,7 +41,7 @@ async function shutdownOwnDevices(
       continue;
     }
 
-    // biome-ignore lint/performance/noAwaitInLoops: the device tools contend with each other when driven in parallel.
+    // biome-ignore lint/performance/noAwaitInLoops: shutdowns wait on the device going away, and two at once make the polling ambiguous.
     await driverFor(context, platform).shutdown(deviceId);
   }
 }
