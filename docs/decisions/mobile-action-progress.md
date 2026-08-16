@@ -10,7 +10,8 @@
 - 자동 실행 작업이 1초 안에 끝나면 시각적인 진행 표시를 띄우지 않는다. 1초를 넘기면 작업 대상이 있던 영역을 유지한 채 진행 표시와 구체적인 상태 문구를 보여 준다.
 - 네이티브 셸과 `@expo/ui` 화면은 프로젝트 공통 `Button`을 사용하지 않는다. 각 렌더러가 제공하는 버튼, 행과 진행 표시로 같은 의미를 표현한다.
 - `@expo/ui` 화면에서 사용자가 시작한 작업은 그 작업을 시작한 컨트롤에서 진행 중임을 표시한다. 컨트롤의 문구는 바꾸지 않고 진행 표시만 더한다. iOS는 SwiftUI `ProgressView`, Android는 Compose `CircularProgressIndicator`가 그 자리를 그린다. 두 플랫폼 모두 문구 옆에 서는 얇은 원형 링이며, Android는 Material 기본값 대신 20dp에 선 2dp를 쓴다.
-- 설정 화면의 파괴적 동작은 `FieldGroup.Section` 안의 `ListItem`으로 만든다. 아이콘과 셰브론은 두지 않는다. 진행 표시는 trailing 슬롯에 두고, 진행 중임은 `accessibilityValue`로 알린다.
+- 설정 화면의 파괴적 동작은 `FieldGroup.Section` 안의 `ListItem`으로 만든다. 아이콘과 셰브론은 두지 않는다. 진행 표시는 trailing 슬롯에 둔다.
+- 진행 중임을 화면 읽기에 알리는 방법은 플랫폼마다 다르다. iOS는 행의 `accessibilityValue`로 상태를 지니고, Android는 작업이 시작될 때 `AccessibilityInfo.announceForAccessibility`로 한 번 알린다. Android 문구는 행이 앞에 서지 않으므로 `계정 삭제 진행 중`처럼 동작 이름을 함께 담는다.
 
 ## 경계
 
@@ -29,6 +30,8 @@
 
 문구를 바꾸면 같은 컨트롤이 상태마다 다른 이름을 갖는다. Apple 설정 앱은 행의 이름을 고정한 채 상태를 별도 요소나 값으로 붙인다. 이 앱의 React Native `Button`도 처음부터 문구와 크기를 유지하고 표시만 바꿔 왔으므로 `@expo/ui` 화면만 다른 규칙을 쓸 이유가 없다.
 
+화면 읽기 알림이 플랫폼마다 갈리는 이유는 Compose 쪽에 걸 자리가 없어서다. iOS는 행이 상태를 지니므로 나중에 다시 초점을 맞춰도 진행 중임을 읽지만, Android는 한 번 말하고 끝난다. 이 앱의 파괴적 동작은 1초 안에 끝나므로 돌아와서 다시 확인할 일이 사실상 없다.
+
 Android에서 Material 3 Expressive의 `LoadingIndicator`를 쓰지 않는 이유는 모양이다. 속을 채운 33dp 덩어리가 일곱 모양 사이를 오가서 한 줄짜리 문구 옆에서는 진행이 아니라 도장이나 얼룩처럼 읽힌다. 얇은 원형 링은 두 플랫폼이 같은 인상을 주고, 같은 동작이 기기를 바꿨다고 다르게 보이지 않는다. 크기를 Material 기본값인 40dp에서 줄이는 것도 같은 이유다. 표시가 옆에 선 한 단어보다 커지면 행의 주인공이 바뀐다.
 
 ## 재검토 조건
@@ -36,6 +39,8 @@ Android에서 Material 3 Expressive의 `LoadingIndicator`를 쓰지 않는 이�
 - HeroUI Native가 문구, 크기와 접근성을 유지하는 공식 진행 중 상태를 제공한다.
 - `@expo/ui`가 iOS와 Android에서 같은 방식으로 쓸 수 있는 버튼 진행 상태와 접근성 상태를 제공한다.
 - `@expo/ui`가 행이나 버튼에 `busy` 상태를 직접 제공한다.
+- `@expo/ui`가 Compose에 `liveRegion`이나 `stateDescription` modifier를 제공한다. Google이 권하는 방법이므로 나오면 Android 알림을 그쪽으로 옮긴다.
+- Android가 `announceForAccessibility`를 deprecated에서 실제 동작 중지로 바꾼다.
 - 실제 작업 시간 측정이나 사용자 검증에서 자동 실행 작업의 1초 표시 기준이 너무 짧거나 길다는 결과가 나온다.
 - 진행 중인 작업을 취소하거나 정확한 완료량을 보여 줘야 하는 흐름이 생긴다.
 
@@ -63,3 +68,7 @@ Android에서 Material 3 Expressive의 `LoadingIndicator`를 쓰지 않는 이�
 - `@expo/ui 57.0.11`의 Compose 진행 표시는 `LoadingIndicator`, `ContainedLoadingIndicator`, `CircularProgressIndicator`, `CircularWavyProgressIndicator`, `LinearProgressIndicator`, `LinearWavyProgressIndicator`다. 원형인 넷을 계정 삭제 행에 나란히 그려 Android Emulator에서 비교했다. `LoadingIndicator`는 33dp를 채운 덩어리이고, `CircularWavyProgressIndicator`는 48dp라 넷 중 가장 크며 호가 짧아지는 구간에서 링으로 보이지 않는다. `CircularProgressIndicator`만 크기와 선 두께를 함께 조절할 수 있다.
 - `CircularProgressIndicator`는 `color`, `trackColor`, `strokeWidth`, `strokeCap`, `gapSize`를 props로 받고 크기는 `@expo/ui/jetpack-compose/modifiers`의 `size(width, height)`로 정한다. Compose 컴포넌트는 `testID`를 받지 않아 감싸는 `Row`가 대신 지닌다.
 - Android Emulator에서 계정 삭제가 도는 시간은 614ms였다. 로컬 Supabase를 부른 값이며 확인창이 닫히는 애니메이션이 그 앞부분을 덮는다.
+- `@expo/ui 57.0.11`의 Compose modifier 42개 중 접근성에 닿는 것은 `semantics` 하나뿐이고, 이 modifier는 자동 완성용 `contentType`만 받는다. `ModifierRegistry.kt`가 `Modifier.semantics { contentType = ct }`로만 옮긴다. `contentDescription`, `stateDescription`, `liveRegion`에 해당하는 modifier는 없다. 그래서 Compose 쪽 행에는 진행 중 상태를 걸 자리가 없다.
+- [Android 16 동작 변경](https://developer.android.com/about/versions/16/behavior-changes-all)은 `announceForAccessibility`와 `TYPE_ANNOUNCEMENT` 이벤트를 deprecated로 표시했다. 동작하지 않게 만들지는 않았고, 권장 대안은 `setAccessibilityLiveRegion`과 Compose의 `Modifier.semantics { liveRegion = ... }`이다. React Native는 [무엇으로 대체할지 아직 논의 중](https://github.com/react-native-community/discussions-and-proposals/discussions/848)이다.
+- React Native 0.86.2의 `AccessibilityInfo.announceForAccessibility`는 화면 읽기가 꺼져 있으면 아무것도 보내지 않고 바로 돌아온다(`AccessibilityInfoModule.kt`). 켜져 있을 때만 `TYPE_ANNOUNCEMENT` 이벤트를 보낸다.
+- 이 앱은 채팅 오류 안내에서 이미 같은 방법을 쓴다(`chat-panel.tsx`).

@@ -10,7 +10,7 @@ import {
 import Constants from "expo-constants";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import type { PropsWithChildren } from "react";
-import { Platform } from "react-native";
+import { AccessibilityInfo, Platform } from "react-native";
 
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import {
@@ -240,6 +240,40 @@ test("로그아웃이 끝나기 전에는 같은 버튼을 다시 실행하지 �
   });
 
   expect(fake.auth.signOut).toHaveBeenCalledTimes(1);
+});
+
+test("Android는 로그아웃이 시작되면 진행 중임을 화면 읽기에 알린다", async () => {
+  const fake = resetFakeSupabase({ session: createFakeSession() });
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  const platform = jest.replaceProperty(Platform, "OS", "android");
+  let release = () => {
+    // Replaced by the pending implementation below.
+  };
+
+  fake.auth.signOut.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        release = () => resolve({ error: null });
+      })
+  );
+
+  try {
+    await renderSettings();
+
+    expect(announce).not.toHaveBeenCalled();
+
+    await act(() => {
+      fireEvent.press(screen.getByRole("button", { name: "로그아웃" }));
+    });
+
+    expect(announce).toHaveBeenCalledWith("로그아웃 진행 중");
+
+    await act(() => {
+      release();
+    });
+  } finally {
+    platform.restore();
+  }
 });
 
 test("로그아웃이 실패해도 이전 사용자의 캐시는 남기지 않는다", async () => {

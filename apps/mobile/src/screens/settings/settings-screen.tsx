@@ -21,7 +21,10 @@ import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useSignOut } from "@/features/auth/state/use-sign-out";
 import { profileLabels } from "@/features/auth/ui/profile-labels";
 import { ActionProgress } from "@/shared/ui/action-progress";
-import { destructiveActionModifiers } from "./destructive-action";
+import {
+  destructiveActionModifiers,
+  useDestructiveActionAnnouncement,
+} from "./destructive-action";
 import { SettingsActionRow } from "./settings-action-row";
 import { SettingsProfileHero } from "./settings-profile-hero";
 
@@ -54,6 +57,7 @@ export function SettingsScreen({
     isSigningOut,
     requestSignOut,
   } = useSignOut();
+  useDestructiveActionAnnouncement(profileLabels.signOut, isSigningOut);
 
   return (
     <Host style={{ flex: 1 }} useViewportSizeMeasurement>

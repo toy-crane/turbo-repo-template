@@ -29,7 +29,10 @@ import {
   USERNAME_CONFIRM_TITLE,
 } from "@/features/auth/ui/profile-labels";
 import { ActionProgress } from "@/shared/ui/action-progress";
-import { destructiveActionModifiers } from "./destructive-action";
+import {
+  destructiveActionModifiers,
+  useDestructiveActionAnnouncement,
+} from "./destructive-action";
 import { EditableProfileHero } from "./editable-profile-hero";
 import {
   type PhotoSourceActions,
@@ -125,6 +128,10 @@ export function ProfileEditScreen({
   // Not part of the draft: deleting the account ends the thing being edited, so
   // it neither waits for 저장 nor blocks it.
   const deletion = useAccountDeletion();
+  useDestructiveActionAnnouncement(
+    accountDeletionLabels.deleteAccount,
+    deletion.isDeleting
+  );
   /*
    * Red is what separates a problem from the standing explanation under it.
    * Both sit in the same footer, and left the same grey they read as one block
