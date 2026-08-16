@@ -143,6 +143,32 @@ async function runningSerials(sdk: AndroidSdk): Promise<string[]> {
     .map((parts) => parts[0] as string);
 }
 
+/** Serial per running AVD, for read-only display. Asks each emulator once. */
+export async function listRunningAvds(
+  sdk: AndroidSdk
+): Promise<Map<string, string>> {
+  const found = new Map<string, string>();
+
+  for (const serial of await runningSerials(sdk)) {
+    // biome-ignore lint/performance/noAwaitInLoops: each emulator console answers one query at a time.
+    const { code, stdout } = await run([
+      sdk.adb,
+      "-s",
+      serial,
+      "emu",
+      "avd",
+      "name",
+    ]);
+    const name = stdout.split("\n")[0]?.trim();
+
+    if (code === 0 && name) {
+      found.set(name, serial);
+    }
+  }
+
+  return found;
+}
+
 /**
  * The adb serial is decided by whichever console port was free at boot, so it
  * is looked up from the AVD name every run instead of being stored.
