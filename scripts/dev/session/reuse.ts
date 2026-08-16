@@ -63,20 +63,30 @@ export function startPlan({
   return attached.includes(platform) ? "relaunch" : "join";
 }
 
+export interface MultiStartOutcome {
+  /** Platforms attached before this command ran. */
+  attached: readonly Platform[];
+  /** Requested platforms whose app attached this run, in start order. */
+  attachedNow: readonly Platform[];
+  /** Restart only: platforms outside the request that were reopened. */
+  reattached?: readonly Platform[];
+  /** The session's API and Metro were reused rather than restarted. */
+  running: boolean;
+}
+
 /** The platforms attached once this run finishes, in the order they attached. */
-export function platformsAfterStart(
-  plan: StartPlan,
-  attached: readonly Platform[],
-  platform: Platform,
-  reattached: readonly Platform[] = []
-): Platform[] {
-  if (plan === "relaunch") {
-    return [...attached];
+export function platformsAfterMultiStart({
+  attached,
+  attachedNow,
+  reattached = [],
+  running,
+}: MultiStartOutcome): Platform[] {
+  if (running) {
+    return [
+      ...attached,
+      ...attachedNow.filter((platform) => !attached.includes(platform)),
+    ];
   }
 
-  if (plan === "join") {
-    return [...attached, platform];
-  }
-
-  return [platform, ...reattached];
+  return [...attachedNow, ...reattached];
 }

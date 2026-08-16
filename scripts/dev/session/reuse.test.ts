@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
 import type { WorktreeRecord } from "../state";
-import { platformsAfterStart, sessionReuseReason, startPlan } from "./reuse";
+import {
+  platformsAfterMultiStart,
+  sessionReuseReason,
+  startPlan,
+} from "./reuse";
 
 function runningRecord(
   overrides: Partial<WorktreeRecord> = {}
@@ -108,27 +112,65 @@ describe("startPlan", () => {
   });
 });
 
-describe("platformsAfterStart", () => {
-  test("다시 열기만 하면 붙어 있는 목록이 그대로다", () => {
-    expect(platformsAfterStart("relaunch", ["ios"], "ios")).toEqual(["ios"]);
+describe("platformsAfterMultiStart", () => {
+  test("실행 중인 세션에서 다시 열기만 하면 목록이 그대로다", () => {
+    expect(
+      platformsAfterMultiStart({
+        attached: ["ios"],
+        attachedNow: ["ios"],
+        running: true,
+      })
+    ).toEqual(["ios"]);
   });
 
-  test("더해진 플랫폼은 기존 목록 뒤에 붙는다", () => {
-    expect(platformsAfterStart("join", ["ios"], "android")).toEqual([
-      "ios",
-      "android",
-    ]);
+  test("실행 중인 세션에 더해진 플랫폼은 기존 목록 뒤에 붙는다", () => {
+    expect(
+      platformsAfterMultiStart({
+        attached: ["ios"],
+        attachedNow: ["android"],
+        running: true,
+      })
+    ).toEqual(["ios", "android"]);
   });
 
-  test("다시 시작하면 요청한 플랫폼과 다시 연결한 플랫폼만 남는다", () => {
-    expect(platformsAfterStart("restart", ["ios"], "android", ["ios"])).toEqual(
-      ["android", "ios"]
-    );
+  test("실행 중인 세션에서 두 플랫폼을 함께 요청해도 순서를 지킨다", () => {
+    expect(
+      platformsAfterMultiStart({
+        attached: ["ios"],
+        attachedNow: ["android", "ios"],
+        running: true,
+      })
+    ).toEqual(["ios", "android"]);
   });
 
-  test("다시 연결하지 못한 플랫폼은 목록에서 빠진다", () => {
-    expect(platformsAfterStart("restart", ["ios"], "android")).toEqual([
-      "android",
-    ]);
+  test("실행 중인 세션에서 붙이지 못한 플랫폼은 더하지 않는다", () => {
+    expect(
+      platformsAfterMultiStart({
+        attached: ["ios"],
+        attachedNow: [],
+        running: true,
+      })
+    ).toEqual(["ios"]);
+  });
+
+  test("다시 시작하면 이번에 붙인 플랫폼과 다시 연결한 플랫폼만 남는다", () => {
+    expect(
+      platformsAfterMultiStart({
+        attached: ["ios"],
+        attachedNow: ["android"],
+        reattached: ["ios"],
+        running: false,
+      })
+    ).toEqual(["android", "ios"]);
+  });
+
+  test("다시 시작에서 다시 연결하지 못한 플랫폼은 목록에서 빠진다", () => {
+    expect(
+      platformsAfterMultiStart({
+        attached: ["ios"],
+        attachedNow: ["android"],
+        running: false,
+      })
+    ).toEqual(["android"]);
   });
 });
