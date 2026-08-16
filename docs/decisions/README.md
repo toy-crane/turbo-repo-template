@@ -16,6 +16,7 @@
 - [모바일 진입 키보드](mobile-keyboard-entry-focus.md) — 화면에 들어오자마자 입력을 시작하게 만들거나 고칠 때 읽는다.
 - [모바일 프로필 식별자와 온보딩](mobile-profile-identity-and-onboarding.md) — 닉네임, 아이디, 로그인 뒤 필수 프로필 설정 또는 프로필 완성 조건을 변경할 때 읽는다.
 - [모바일 설정 공개 프로필](mobile-profile-settings.md) — Settings의 프로필 표시, `프로필` 화면 진입, 사진 편집, 프로필 폼 배치 또는 계정 삭제 자리를 변경할 때 읽는다.
+- [모바일 설정 폼 저장](mobile-settings-form-save.md) — 여러 값을 모아 한 번에 저장하는 설정 화면을 만들거나, 저장 컨트롤의 자리, 모양 또는 저장 가능 조건을 바꿀 때 읽는다.
 - [모바일 라우팅 타입 안전성](mobile-routing-type-safety.md) — Expo Router 경로 타입, 내부 경로 표기 또는 경로 타입 생성 검사를 변경할 때 읽는다.
 - [모바일 Expo 의존성 호환](mobile-expo-dependency-compatibility.md) — 모바일 Expo 또는 네이티브 패키지 버전, 호환 검사와 버전 예외를 변경할 때 읽는다.
 - [모바일 개발 런타임](mobile-development-runtime.md) — 모바일 앱의 Expo SDK, 지원 플랫폼, Development Build 런타임 또는 배포 경계를 변경할 때 읽는다.
