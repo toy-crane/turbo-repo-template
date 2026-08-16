@@ -35,3 +35,11 @@
 - MCP 또는 Plugin을 기본 연동으로 사용: 현재 Codex와 Claude는 프로젝트 터미널에서 동일한 CLI를 사용할 수 있어 추가 구성의 이점이 작다.
 - UI 스냅샷 테스트 중심 구성: 사용자 관점의 동작과 실제 네이티브 렌더링을 충분히 검증하지 못한다.
 - `react-test-renderer`를 직접 사용하는 구성: React 19 이상에서 권장되지 않으며 React Native Testing Library가 대체한다.
+
+## 보존할 근거
+
+- `agent-device 0.20.5`의 `fill`과 `type`은 글자를 넣은 뒤 그 입력칸을 다시 읽는다. 값이 기대와 다르면 칸을 비우고 같은 글자를 다시 친다. CLI가 `fill`에 `textEntryMode: "replace"`를, `type`에 `"append"`를 넘기고(`dist/src/interactor.js`), 다시 치는 코드는 iOS 러너의 `RunnerTests+TextEntry.swift`에 있는 `verifyTextEntryWithRepairIfNeeded`다. 이 확인을 끄는 옵션은 없다.
+- 마지막 글자가 화면을 넘기는 입력에서는 다시 읽을 입력칸이 이미 다음 화면의 것이다. 다음 화면에 글자를 받을 입력칸이 있으면 러너가 그 칸을 비우고 방금 친 글자를 다시 친다. 앱은 이 값을 사람이 친 것과 똑같이 받으므로 다음 화면의 상태에 그대로 저장된다.
+- 인증 코드 여섯 자리를 `fill`로 넣는 로그인 검증이 이 경우다. 여섯 번째 자리가 코드 확인과 화면 전환을 시작하고, 러너는 닉네임 칸을 비운 뒤 코드를 다시 친다. iOS와 Android 모두에서 같은 결과가 나온다.
+- iOS는 러너 로그에 `AGENT_DEVICE_RUNNER_REPAIR_TEXT_ENTRY expectedLength=6 observedLength=3`을 남긴다. `observedLength=3`은 닉네임 칸의 placeholder `닉네임`이다. 로그 경로는 `agent-device logs path`가 알려 주는 세션 폴더의 `runner.log`다.
+- 시뮬레이터 키패드를 직접 눌러 넣거나 `adb shell input text`로 넣으면 다음 화면의 입력칸은 비어 있다. 앱이 화면 사이로 값을 옮기는 것이 아니다. 화면을 넘기는 입력에서 다음 화면에 값이 남아 있으면 앱보다 이 동작을 먼저 의심한다.
