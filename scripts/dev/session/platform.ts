@@ -16,6 +16,7 @@ import {
   reversePort,
   shutdownEmulator,
   startEmulator,
+  writeAvdDisplayName,
 } from "../adapters/android";
 import { androidApkPath } from "../adapters/expo";
 import {
@@ -30,9 +31,18 @@ import {
   missingIosTooling,
   openUrl as openIosUrl,
   openSimulatorApp,
+  renameSimulator,
   shutdownSimulator,
   terminateApp,
 } from "../adapters/ios";
+import {
+  androidDisplayName,
+  nextName,
+  planPoolRename,
+  planSimulatorRename,
+  poolNamePrefix,
+  simulatorSlotName,
+} from "../device-names";
 import { developmentClientSchemes } from "../environment";
 import type { Platform } from "../options";
 import { worktreeGradleHome } from "../paths";
@@ -81,16 +91,6 @@ export interface PlatformDriver {
   shutdown: (deviceId: string) => Promise<void>;
 }
 
-function nextName(prefix: string, taken: Set<string>): string {
-  for (let index = 1; ; index += 1) {
-    const name = `${prefix}${index}`;
-
-    if (!taken.has(name)) {
-      return name;
-    }
-  }
-}
-
 export interface DriverInput {
   androidPackage: string;
   bundleIdentifier: string;
@@ -99,17 +99,40 @@ export interface DriverInput {
   platform: Platform;
   /** Deep-link schemes the development client answers to. */
   schemes: string[];
+  slug: string;
+}
+
+/** The leased device shows its slot by name; a name collision is freed first. */
+async function applySimulatorSlotName(
+  deviceId: string,
+  slug: string,
+  slot: number
+): Promise<void> {
+  const steps = planSimulatorRename(
+    await listSimulators(),
+    deviceId,
+    simulatorSlotName(slug, slot),
+    poolNamePrefix(slug)
+  );
+
+  for (const step of steps) {
+    // biome-ignore lint/performance/noAwaitInLoops: the collision holder must be renamed before its name is reused.
+    await renameSimulator(step.udid, step.name);
+  }
 }
 
 function createIosDriver(
   bundleIdentifier: string,
-  schemes: string[]
+  schemes: string[],
+  slug: string
 ): PlatformDriver {
   return {
     buildEnv: (base) => base,
     buildTarget: (handle) => handle.target,
     createDevice: createSimulator,
-    ensureBooted: async ({ deviceId }) => {
+    ensureBooted: async ({ deviceId, slot }) => {
+      await applySimulatorSlotName(deviceId, slug, slot);
+
       // The device reads its scheme approvals when it boots, so a device that
       // is already up has to come down for a new approval to take effect.
       const approved = await approveUrlSchemes(
@@ -127,7 +150,20 @@ function createIosDriver(
 
       return { deviceId, target: deviceId };
     },
-    eraseToPool: eraseSimulator,
+    eraseToPool: async (deviceId) => {
+      await eraseSimulator(deviceId);
+
+      // The slot name goes with the lease; a pool device is anonymous again.
+      const step = planPoolRename(
+        await listSimulators(),
+        deviceId,
+        poolNamePrefix(slug)
+      );
+
+      if (step) {
+        await renameSimulator(step.udid, step.name);
+      }
+    },
     existingDeviceIds: async () =>
       new Set((await listSimulators()).map((device) => device.udid)),
     existingDeviceNames: async () =>
@@ -135,7 +171,8 @@ function createIosDriver(
     installArtifact: (handle, artifactPath) =>
       installApp(handle.target, artifactPath),
     missingTooling: missingIosTooling,
-    nextDeviceName: (slug, taken) => nextName(`${slug}-dev-`, taken),
+    nextDeviceName: (projectSlug, taken) =>
+      nextName(poolNamePrefix(projectSlug), taken),
     prepareForMetro: () => Promise.resolve(),
     producedArtifact: (handle) =>
       installedAppPath(handle.target, bundleIdentifier),
@@ -152,7 +189,8 @@ function createIosDriver(
 function createAndroidDriver(
   mobileDirectory: string,
   androidPackage: string,
-  gradleUserHome: string
+  gradleUserHome: string,
+  slug: string
 ): PlatformDriver {
   const sdk: AndroidSdk = resolveAndroidSdk();
 
@@ -169,6 +207,16 @@ function createAndroidDriver(
     buildTarget: (handle) => handle.deviceId,
     createDevice: (name) => createAvd(sdk, name),
     ensureBooted: async ({ deviceId, logPath, slot }) => {
+      const running = await findSerialForAvd(sdk, deviceId);
+
+      if (running) {
+        return { deviceId, target: running };
+      }
+
+      // The emulator reads its config at boot and may rewrite it on exit, so
+      // the label only goes in while the device is down.
+      writeAvdDisplayName(deviceId, androidDisplayName(slug, slot));
+
       const target = await startEmulator({
         avdName: deviceId,
         logPath,
@@ -186,6 +234,8 @@ function createAndroidDriver(
       }
 
       eraseAvdData(deviceId);
+      // The label goes with the lease, same as the iOS slot name.
+      writeAvdDisplayName(deviceId, undefined);
     },
     existingDeviceIds: async () => new Set(await listAvds(sdk)),
     // An AVD is addressed by its name, so the ids are the names.
@@ -193,7 +243,7 @@ function createAndroidDriver(
     installArtifact: (handle, artifactPath) =>
       installApk(sdk, handle.target, artifactPath),
     missingTooling: () => Promise.resolve(missingAndroidTooling(sdk)),
-    nextDeviceName: (slug, taken) => nextName(`${slug}_dev_`, taken),
+    nextDeviceName: (projectSlug, taken) => nextName(`${projectSlug}_dev_`, taken),
     prepareForMetro: (handle, metroPort) =>
       reversePort(sdk, handle.target, metroPort),
     producedArtifact: () => {
@@ -224,10 +274,11 @@ export function createPlatformDriver({
   mobileDirectory,
   platform,
   schemes,
+  slug,
 }: DriverInput): PlatformDriver {
   return platform === "ios"
-    ? createIosDriver(bundleIdentifier, schemes)
-    : createAndroidDriver(mobileDirectory, androidPackage, gradleUserHome);
+    ? createIosDriver(bundleIdentifier, schemes, slug)
+    : createAndroidDriver(mobileDirectory, androidPackage, gradleUserHome, slug);
 }
 
 /** The driver every command wants: this project, that platform. */
@@ -245,5 +296,6 @@ export function driverFor(
       context.project.scheme,
       context.project.slug
     ),
+    slug: context.project.slug,
   });
 }

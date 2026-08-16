@@ -225,6 +225,14 @@ export async function installApp(udid: string, appPath: string): Promise<void> {
   await runOrThrow(["xcrun", "simctl", "install", udid, appPath]);
 }
 
+/** Changes only the display name; the udid, app and data stay untouched. */
+export async function renameSimulator(
+  udid: string,
+  name: string
+): Promise<void> {
+  await runOrThrow(["xcrun", "simctl", "rename", udid, name]);
+}
+
 export async function openUrl(udid: string, url: string): Promise<void> {
   await runOrThrow(["xcrun", "simctl", "openurl", udid, url]);
 }

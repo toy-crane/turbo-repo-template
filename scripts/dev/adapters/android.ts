@@ -1,4 +1,4 @@
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -374,6 +374,75 @@ export function avdDirectory(
   home: string = homedir()
 ): string {
   return join(home, ".android", "avd", `${avdName}.avd`);
+}
+
+const DISPLAY_NAME_KEY = "avd.ini.displayname";
+
+function avdConfigPath(avdName: string, home: string): string {
+  return join(avdDirectory(avdName, home), "config.ini");
+}
+
+/** The display name Android Studio and the emulator window show for an AVD. */
+export function readAvdDisplayName(
+  avdName: string,
+  home: string = homedir()
+): string | undefined {
+  let contents: string;
+
+  try {
+    contents = readFileSync(avdConfigPath(avdName, home), "utf8");
+  } catch {
+    return;
+  }
+
+  for (const line of contents.split("\n")) {
+    const separator = line.indexOf("=");
+
+    if (separator > 0 && line.slice(0, separator).trim() === DISPLAY_NAME_KEY) {
+      return line.slice(separator + 1).trim() || undefined;
+    }
+  }
+}
+
+/**
+ * Only safe while the emulator is down: the emulator reads the config at boot
+ * and may rewrite it on exit. `undefined` removes the key, so a released AVD
+ * stops carrying the previous worktree's label.
+ */
+export function writeAvdDisplayName(
+  avdName: string,
+  displayName: string | undefined,
+  home: string = homedir()
+): void {
+  const path = avdConfigPath(avdName, home);
+  let contents: string;
+
+  try {
+    contents = readFileSync(path, "utf8");
+  } catch {
+    // An AVD without a config cannot be labeled; the id keeps identifying it.
+    return;
+  }
+
+  const lines = contents
+    .split("\n")
+    .filter((line) => {
+      const separator = line.indexOf("=");
+
+      return !(
+        separator > 0 && line.slice(0, separator).trim() === DISPLAY_NAME_KEY
+      );
+    });
+
+  while (lines.at(-1) === "") {
+    lines.pop();
+  }
+
+  if (displayName !== undefined) {
+    lines.push(`${DISPLAY_NAME_KEY}=${displayName}`);
+  }
+
+  writeFileSync(path, `${lines.join("\n")}\n`);
 }
 
 /**
