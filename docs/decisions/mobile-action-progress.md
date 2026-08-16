@@ -9,12 +9,14 @@
 - 사용자가 버튼을 누르지 않아 자동으로 시작한 작업은 처리하는 대상이 진행 상태를 소유한다. 기존 내용과 관계없는 새 줄에 진행 표시를 추가하지 않는다.
 - 자동 실행 작업이 1초 안에 끝나면 시각적인 진행 표시를 띄우지 않는다. 1초를 넘기면 작업 대상이 있던 영역을 유지한 채 진행 표시와 구체적인 상태 문구를 보여 준다.
 - 네이티브 셸과 `@expo/ui` 화면은 프로젝트 공통 `Button`을 사용하지 않는다. 각 렌더러가 제공하는 버튼, 행과 진행 표시로 같은 의미를 표현한다.
+- `@expo/ui` 화면에서 사용자가 시작한 작업은 그 작업을 시작한 컨트롤에서 진행 중임을 표시한다. 컨트롤의 문구는 바꾸지 않고 진행 표시만 더한다. iOS는 SwiftUI `ProgressView`, Android는 Compose `LoadingIndicator`가 그 자리를 그린다.
+- 설정 화면의 파괴적 동작은 `FieldGroup.Section` 안의 `@expo/ui` `Button`으로 만든다. 문구와 진행 표시를 버튼의 자식으로 함께 두어 화면 읽기가 하나의 이름으로 읽는다. 아이콘은 두지 않는다.
 
 ## 경계
 
 - Google, Apple과 이메일 로그인 버튼은 제공자 브랜드 규칙과 동일한 묶음 모양을 소유하는 기존 `LoginButton`을 유지한다. 진행 상태의 의미와 접근성 규칙만 공통 결정에 맞춘다.
 - 프로필 저장은 플랫폼의 헤더 방식을 유지한다. iOS는 `Stack.Toolbar.Button`의 실행 아이콘을, Android는 `Stack.Screen`의 헤더 저장 버튼을 같은 자리의 시스템 진행 표시로 바꾼다.
-- `@expo/ui`의 설정 행처럼 버튼 모양이 아닌 작업은 해당 행의 문구나 보조 영역으로 진행 상태를 표현한다. 이를 위해 React Native UI 버튼을 `Host` 안에 넣지 않는다.
+- `@expo/ui` 화면의 진행 표시는 각 플랫폼이 제공하는 진행 컴포넌트가 그린다. 이를 위해 React Native UI 버튼을 `Host` 안에 넣지 않는다.
 - 자동 확인, 자동 저장과 뒤에서 갱신하는 작업의 구체적인 위치와 문구는 작업 대상을 소유한 기능이 정한다.
 - 완료량을 알 수 있는 업로드나 다운로드, 오래 걸리는 작업과 백그라운드 작업은 이 결정의 작은 회전 진행 표시만으로 다루지 않는다.
 - 채팅처럼 별도 명세가 진행 상태를 정한 화면은 그 명세를 우선한다.
@@ -25,10 +27,13 @@
 
 하나의 공통 버튼이 HeroUI Native, 네이티브 셸과 `@expo/ui`를 모두 감싸면 각 렌더러가 제공하는 상태, 배치와 접근성 표현을 잃는다. 공통으로 유지할 것은 진행 상태의 의미이며, 실제 표시는 화면의 주 렌더러가 담당한다.
 
+문구를 바꾸면 같은 컨트롤이 상태마다 다른 이름을 갖는다. Apple 설정 앱은 행의 이름을 고정한 채 상태를 별도 요소나 값으로 붙인다. 이 앱의 React Native `Button`도 처음부터 문구와 크기를 유지하고 표시만 바꿔 왔으므로 `@expo/ui` 화면만 다른 규칙을 쓸 이유가 없다.
+
 ## 재검토 조건
 
 - HeroUI Native가 문구, 크기와 접근성을 유지하는 공식 진행 중 상태를 제공한다.
 - `@expo/ui`가 iOS와 Android에서 같은 방식으로 쓸 수 있는 버튼 진행 상태와 접근성 상태를 제공한다.
+- `@expo/ui`가 행이나 버튼에 `busy` 상태를 직접 제공한다.
 - 실제 작업 시간 측정이나 사용자 검증에서 자동 실행 작업의 1초 표시 기준이 너무 짧거나 길다는 결과가 나온다.
 - 진행 중인 작업을 취소하거나 정확한 완료량을 보여 줘야 하는 흐름이 생긴다.
 
@@ -39,10 +44,15 @@
 - 모든 버튼을 전폭으로 고정하기: 너비는 버튼의 상태가 아니라 화면 배치다. 제품의 모든 React Native UI 버튼이 전폭이라는 별도 화면 규칙이 생길 때만 다시 검토한다.
 - 모든 렌더러를 하나의 공통 버튼으로 감싸기: 네이티브 셸, 호스팅된 SwiftUI와 Compose의 상태 표현을 React Native UI가 대신하게 된다. 렌더러 경계가 사라질 때만 다시 검토한다.
 - 자동 작업이 시작되자마자 별도 줄에 진행 표시를 추가하기: 짧은 작업은 깜빡이고 긴 작업은 대상과 떨어진 표시만 남는다. 별도 진행 영역 자체가 제품 정보가 될 때만 다시 검토한다.
+- 진행 중에 컨트롤의 문구를 `…중`으로 바꾸기: 접근성 이름을 얻는 가장 쉬운 방법이지만 컨트롤의 이름이 상태마다 달라진다. 표시와 접근성을 함께 전달할 다른 방법이 없어질 때만 다시 검토한다.
 
 ## 보존할 근거
 
 - 설치된 HeroUI Native `1.0.8`의 `Button`은 별도 진행 중 속성이 없고 자식으로 `Spinner`를 조합한다. 버튼 기본 스타일은 높이와 가로 여백을 정하지만 너비는 정하지 않는다.
 - 검증에 사용한 `@expo/ui 57.0.11`의 범용 `Button`은 `disabled`와 사용자 지정 자식을 지원하지만 진행 중 또는 `busy` 속성을 제공하지 않는다. `ButtonProps`는 `children`, `label`, `onPress`, `variant`만 선언하고 `disabled`는 `UniversalBaseProps`에서 온다.
 - [SEED 로딩 지침](https://seed-design.io/docs/guidelines/loading)은 1초 안에 끝나는 작업에 별도 로딩 표시를 권하지 않으며, [Progress Circle 지침](https://seed-design.io/docs/components/progress-circle)은 표시 위치가 로딩 범위를 나타낸다고 설명한다.
-- [Apple 진행 표시 지침](https://developer.apple.com/design/human-interface-guidelines/progress-indicators)은 작은 영역의 작업에 입력이나 관련 컨트롤 가까이 있는 진행 표시를 권한다.
+- [Apple 진행 표시 지침](https://developer.apple.com/design/human-interface-guidelines/progress-indicators)은 진행 표시를 일관된 자리에 두라고 안내한다. 컨트롤 바로 옆에 두라는 문장은 macOS 절에 있으므로 iOS 규칙으로 인용하지 않는다.
+- `@expo/ui 57.0.11`은 접근성을 props가 아니라 modifier로 제공한다. `@expo/ui/swift-ui/modifiers`의 `accessibilityLabel`, `accessibilityValue`, `accessibilityHint`, `accessibilityAddTraits`, `accessibilityHidden`과 `disabled`를 `modifiers` 배열로 넘긴다. `ListItem`과 범용 `Button` 모두 `modifiers`를 받는다.
+- `@expo/ui`의 `ProgressView`는 SwiftUI `ProgressView`에 자식을 라벨로 넘긴다. 자식을 주면 화면에도 보이므로 진행 표시만 필요할 때는 자식 없이 사용한다.
+- Apple 설정 앱의 접근성 트리에서 행의 상태는 이름을 고정한 채 전달된다. 사전 선택은 셀 `Catalan` 옆의 `selected` 요소로, Siri 음성은 셀의 `selected` 트레잇과 별도 `Checkmark` 요소로, 값이 있는 행은 `Voice, American (Voice 4)`처럼 이름과 값으로 읽힌다.
+- [App Store 심사 지침 5.1.1(v)](https://developer.apple.com/support/offering-account-deletion-in-your-app/)은 계정 삭제를 앱에서 찾기 쉬운 곳에 두고 오래 걸리면 알리라고 요구하지만 버튼 문구는 정하지 않는다.

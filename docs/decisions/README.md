@@ -3,8 +3,8 @@
 - [AI 채팅 프로토콜](ai-chat-protocol.md) — AI 요청 경로, 스트리밍 응답 형식, 모바일 채팅 상태 또는 AI SDK UI message 사용 방식을 변경할 때 읽는다.
 - [AI 모델 라우팅](ai-model-routing.md) — AI Gateway, 모델 제공자, 모델 식별자 또는 provider fallback 방식을 변경할 때 읽는다.
 - [AI 서버 경계](ai-server-boundary.md) — AI API의 런타임, 배포 위치, 호출 주체 또는 인증 요구를 변경할 때 읽는다.
-- [모바일 계정 탈퇴](mobile-account-deletion.md) — 모바일 계정 탈퇴의 진입 위치, 확인, 삭제 범위, 진행 상태 또는 스토어 제출 조건을 변경할 때 읽는다.
-- [계정 탈퇴 서버 경계](account-deletion-server-boundary.md) — 계정 탈퇴의 사용자 인증, 관리자 권한, 서버 런타임 또는 secret key 범위를 변경할 때 읽는다.
+- [모바일 계정 삭제](mobile-account-deletion.md) — 모바일 계정 삭제의 진입 위치, 확인, 삭제 범위, 진행 상태 또는 스토어 제출 조건을 변경할 때 읽는다.
+- [계정 삭제 서버 경계](account-deletion-server-boundary.md) — 계정 삭제의 사용자 인증, 관리자 권한, 서버 런타임 또는 secret key 범위를 변경할 때 읽는다.
 - [CI 코드 리뷰](ci-code-review.md) — CI에서 PR 자동 코드 리뷰를 켜거나, 리뷰 도구와 권한을 손대려 할 때 읽는다.
 - [검토 에이전트 실행 경계](reviewer-agent-execution-boundaries.md) — Claude Code와 Codex의 전용 검토 agent, 공용 검토 계약, 읽기 전용 권한 또는 실행 맥락을 추가하거나 바꿀 때 읽는다.
 - [디자인 시스템 생성 작업 흐름](design-system-generation-workflow.md) — 참고 자료에서 테마 후보를 만들거나 미리보기, 승인, 적용 범위를 변경할 때 읽는다.
@@ -15,7 +15,7 @@
 - [모바일 키보드 회피](mobile-keyboard-avoidance.md) — 키보드가 입력이나 하단 버튼을 가리는 화면을 만들거나 고칠 때 읽는다.
 - [모바일 진입 키보드](mobile-keyboard-entry-focus.md) — 화면에 들어오자마자 입력을 시작하게 만들거나 고칠 때 읽는다.
 - [모바일 프로필 식별자와 온보딩](mobile-profile-identity-and-onboarding.md) — 닉네임, 아이디, 로그인 뒤 필수 프로필 설정 또는 프로필 완성 조건을 변경할 때 읽는다.
-- [모바일 설정 공개 프로필](mobile-profile-settings.md) — Settings의 프로필 표시, `프로필` 화면 진입, 사진 편집, 프로필 폼 배치 또는 계정 탈퇴 자리를 변경할 때 읽는다.
+- [모바일 설정 공개 프로필](mobile-profile-settings.md) — Settings의 프로필 표시, `프로필` 화면 진입, 사진 편집, 프로필 폼 배치 또는 계정 삭제 자리를 변경할 때 읽는다.
 - [모바일 라우팅 타입 안전성](mobile-routing-type-safety.md) — Expo Router 경로 타입, 내부 경로 표기 또는 경로 타입 생성 검사를 변경할 때 읽는다.
 - [모바일 Expo 의존성 호환](mobile-expo-dependency-compatibility.md) — 모바일 Expo 또는 네이티브 패키지 버전, 호환 검사와 버전 예외를 변경할 때 읽는다.
 - [모바일 개발 런타임](mobile-development-runtime.md) — 모바일 앱의 Expo SDK, 지원 플랫폼, Development Build 런타임 또는 배포 경계를 변경할 때 읽는다.
