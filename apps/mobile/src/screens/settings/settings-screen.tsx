@@ -1,4 +1,5 @@
 import {
+  Button,
   FieldGroup,
   Host,
   Icon,
@@ -21,6 +22,7 @@ import {
 import { useAuthSession } from "@/features/auth/state/auth-session";
 import { useSignOut } from "@/features/auth/state/use-sign-out";
 import { profileLabels } from "@/features/auth/ui/profile-labels";
+import { ActionProgress } from "@/shared/ui/action-progress";
 import { SettingsProfileHero } from "./settings-profile-hero";
 
 const appVersion = Constants.expoConfig?.version ?? "Unknown";
@@ -132,18 +134,30 @@ export function SettingsScreen({
         {/*
           Last, alone and unnamed. A title would have to say what this one row is
           a group of, and the platform already reads a lone trailing group as the
-          thing that ends the screen. 계정 탈퇴 is not here: two red rows on one
+          thing that ends the screen. 계정 삭제 is not here: two red rows on one
           screen take weight from each other, so it sits in 프로필 instead.
 
           Red because signing out ends something. No chevron because it acts
           immediately rather than opening another screen.
+
+          A `Button`, like 계정 삭제: the name and the progress indicator are its
+          children, so a screen reader reads one control. The name stays 로그아웃
+          the whole time. `useSignOut` already drops a second press.
         */}
         <FieldGroup.Section testID="sign-out-section">
-          <SettingsActionRow onPress={requestSignOut} testID="sign-out-button">
-            <Text textStyle={{ color: danger }}>
-              {isSigningOut ? profileLabels.signingOut : profileLabels.signOut}
-            </Text>
-          </SettingsActionRow>
+          <Button
+            onPress={requestSignOut}
+            testID="sign-out-button"
+            variant="text"
+          >
+            <Row alignment="center">
+              <Text textStyle={{ color: danger }}>{profileLabels.signOut}</Text>
+              <Spacer flexible />
+              {isSigningOut ? (
+                <ActionProgress testID="sign-out-progress" />
+              ) : null}
+            </Row>
+          </Button>
           {signOutFailure ? (
             <FieldGroup.SectionFooter>
               <Text testID="sign-out-error" textStyle={{ color: danger }}>

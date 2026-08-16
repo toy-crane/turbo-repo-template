@@ -42,6 +42,18 @@ jest.mock("@/shared/supabase/client", () => ({
     ).getFakeSupabase().client,
 }));
 
+jest.mock("@/shared/ui/action-progress", () => {
+  const React = require("react") as typeof import("react");
+  const { View } = require("react-native") as typeof import("react-native");
+
+  // The platform indicator itself is native. What a test can check is that it
+  // appeared, so the stand-in is a node carrying the same testID.
+  return {
+    ActionProgress: ({ testID }: { testID?: string }) =>
+      React.createElement(View, { testID }),
+  };
+});
+
 jest.mock("@expo/ui", () => {
   const React = require("react") as typeof import("react");
   const {
@@ -64,6 +76,21 @@ jest.mock("@expo/ui", () => {
   });
 
   return {
+    // A native button takes a press anywhere across it and reads its own
+    // children as its accessible name, so the stand-in does the same.
+    Button: ({
+      children,
+      onPress,
+      testID,
+    }: PropsWithChildren<{
+      onPress?: () => void;
+      testID?: string;
+    }>) =>
+      React.createElement(
+        Pressable,
+        { accessibilityRole: "button", onPress, testID },
+        children
+      ),
     FieldGroup,
     Host: Container,
     // Renders as its own node so a test can assert the row shows a chevron.
@@ -197,7 +224,11 @@ test("로그아웃이 끝나기 전에는 같은 버튼을 다시 실행하지 �
     fireEvent.press(screen.getByRole("button", { name: "로그아웃" }));
   });
 
-  const pending = await screen.findByRole("button", { name: "로그아웃 중" });
+  // The button keeps its name for the whole action; only the indicator appears.
+  expect(await screen.findByTestId("sign-out-progress")).toBeOnTheScreen();
+  expect(screen.queryByText("로그아웃 중")).toBeNull();
+
+  const pending = screen.getByRole("button", { name: "로그아웃" });
 
   await act(() => {
     fireEvent.press(pending);
@@ -276,12 +307,12 @@ test("프로필 사진과 프로필 행이 같은 화면을 연다", async () =>
   expect(onOpenProfile).toHaveBeenCalledTimes(2);
 });
 
-test("계정 탈퇴는 설정 목록에 없다", async () => {
+test("계정 삭제는 설정 목록에 없다", async () => {
   await renderSettings();
 
   // It lives in 프로필 instead. Two rows that end something, on one screen, take
   // weight from each other; the one that cannot be undone keeps its own screen.
-  expect(screen.queryByText("계정 탈퇴")).toBeNull();
+  expect(screen.queryByText("계정 삭제")).toBeNull();
   expect(screen.queryByTestId("delete-account-row")).toBeNull();
 });
 

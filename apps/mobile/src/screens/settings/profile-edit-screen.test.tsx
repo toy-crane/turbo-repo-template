@@ -57,6 +57,18 @@ jest.mock("expo-image-picker", () => ({
  * screen — a suggestion being chosen, a capital being corrected — shows up here
  * exactly as it would on a device.
  */
+jest.mock("@/shared/ui/action-progress", () => {
+  const React = require("react") as typeof import("react");
+  const { View } = require("react-native") as typeof import("react-native");
+
+  // The platform indicator itself is native. What a test can check is that it
+  // appeared, so the stand-in is a node carrying the same testID.
+  return {
+    ActionProgress: ({ testID }: { testID?: string }) =>
+      React.createElement(View, { testID }),
+  };
+});
+
 jest.mock("@expo/ui", () => {
   const React = require("react") as typeof import("react");
   const {
@@ -82,6 +94,9 @@ jest.mock("@expo/ui", () => {
       isPresented,
     }: PropsWithChildren<{ isPresented: boolean }>) =>
       isPresented ? React.createElement(View, null, children) : null,
+    // A native button takes a press anywhere across it and reads its own
+    // children as its accessible name. A label arrives as a string; a composed
+    // one arrives as elements that already carry their own text.
     Button: ({
       children,
       onPress,
@@ -90,7 +105,9 @@ jest.mock("@expo/ui", () => {
       React.createElement(
         NativePressable,
         { accessibilityRole: "button", onPress, testID },
-        React.createElement(NativeText, null, children as ReactNode)
+        typeof children === "string"
+          ? React.createElement(NativeText, null, children)
+          : (children as ReactNode)
       ),
     Column: Container,
     FieldGroup,
@@ -685,7 +702,7 @@ async function saveProfile(fake: FakeSupabase) {
 }
 
 /**
- * Stands in for the platform dialog 계정 탈퇴 raises.
+ * Stands in for the platform dialog 계정 삭제 raises.
  *
  * Deletion only ever starts from inside it, so a test that cannot answer the
  * dialog cannot reach the request either.
@@ -718,7 +735,7 @@ async function openDeletionDialog() {
   });
 }
 
-test("계정 탈퇴는 화면을 옮기지 않고 그 자리에서 확인창을 연다", async () => {
+test("계정 삭제는 화면을 옮기지 않고 그 자리에서 확인창을 연다", async () => {
   const fake = resetFakeSupabase({
     profile: createProfileRow(SAVED),
     session: createFakeSession(),
@@ -736,11 +753,11 @@ test("계정 탈퇴는 화면을 옮기지 않고 그 자리에서 확인창을 
   await openDeletionDialog();
 
   expect(dialog.alert).toHaveBeenCalledWith(
-    "계정을 탈퇴할까요?",
+    "계정을 삭제할까요?",
     "지금 삭제하면 되돌릴 수 없습니다. 다시 가입해도 이전 정보는 돌아오지 않습니다.",
     expect.arrayContaining([
       expect.objectContaining({ style: "cancel", text: "취소" }),
-      expect.objectContaining({ style: "destructive", text: "계정 탈퇴" }),
+      expect.objectContaining({ style: "destructive", text: "계정 삭제" }),
     ])
   );
   expect(fake.functions.invoke).not.toHaveBeenCalled();
@@ -776,15 +793,18 @@ test("확인 뒤 한 번만 삭제하고 기기 로그인과 사용자 캐시를
 
   await openDeletionDialog();
   await act(() => {
-    dialog.press("계정 탈퇴");
+    dialog.press("계정 삭제");
   });
 
+  // The button keeps its name for the whole action; only the indicator appears.
   expect(
-    await screen.findByRole("button", { name: "계정 탈퇴 중" })
+    await screen.findByTestId("delete-account-progress")
   ).toBeOnTheScreen();
+  expect(screen.getByText("계정 삭제")).toBeOnTheScreen();
+  expect(screen.queryByText("계정 삭제 중")).toBeNull();
 
-  // The row is showing progress, so pressing it again offers no second dialog
-  // and sends no second request.
+  // The button is showing progress, so pressing it again offers no second
+  // dialog and sends no second request.
   await openDeletionDialog();
   expect(dialog.alert).toHaveBeenCalledTimes(1);
 
@@ -818,12 +838,12 @@ test("삭제가 실패하면 설명 자리에 안내가 서고 다시 시도할 
 
   await openDeletionDialog();
   await act(async () => {
-    await dialog.press("계정 탈퇴");
+    await dialog.press("계정 삭제");
   });
 
   // The failure takes the notice's place rather than stacking under it.
   expect(await screen.findByTestId("account-deletion-error")).toHaveTextContent(
-    "계정 탈퇴를 끝내지 못했습니다. 다시 시도해 주세요."
+    "계정 삭제를 끝내지 못했습니다. 다시 시도해 주세요."
   );
   expect(screen.queryByTestId("account-deletion-notice")).toBeNull();
   expect(fake.auth.signOut).not.toHaveBeenCalled();
@@ -831,7 +851,7 @@ test("삭제가 실패하면 설명 자리에 안내가 서고 다시 시도할 
 
   await openDeletionDialog();
   await act(async () => {
-    await dialog.press("계정 탈퇴");
+    await dialog.press("계정 삭제");
   });
 
   expect(fake.functions.invoke).toHaveBeenCalledTimes(2);
