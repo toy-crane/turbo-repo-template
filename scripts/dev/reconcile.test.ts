@@ -17,7 +17,7 @@ function processRecord(pid: number, port: number): ProcessRecord {
 
 function worktree(overrides: Partial<WorktreeRecord> = {}): WorktreeRecord {
   return {
-    activePlatform: null,
+    activePlatforms: [],
     devices: {},
     environmentFingerprint: null,
     label: "main",
@@ -44,7 +44,7 @@ describe("reconcile", () => {
   test("살아 있는 worktree의 정상 세션은 그대로 둔다", () => {
     const state = stateWith({
       [MAIN]: worktree({
-        activePlatform: "ios",
+        activePlatforms: ["ios"],
         processes: {
           api: processRecord(11, 3900),
           metro: processRecord(12, 8081),
@@ -56,7 +56,7 @@ describe("reconcile", () => {
 
     expect(result.reclaimed).toEqual([]);
     expect(result.stranded).toEqual([]);
-    expect(result.next.worktrees[MAIN]?.activePlatform).toBe("ios");
+    expect(result.next.worktrees[MAIN]?.activePlatforms).toEqual(["ios"]);
     expect(result.next.worktrees[MAIN]?.processes.api?.pid).toBe(11);
   });
 
@@ -69,7 +69,7 @@ describe("reconcile", () => {
       version: 1,
       worktrees: {
         [MAIN]: worktree({
-          activePlatform: "ios",
+          activePlatforms: ["ios"],
           devices: { ios: "UDID-1" },
           environmentFingerprint: "env-fp",
           processes: {
@@ -93,7 +93,7 @@ describe("reconcile", () => {
     const record = result.next.worktrees[MAIN];
 
     expect(record?.processes).toEqual({});
-    expect(record?.activePlatform).toBeNull();
+    expect(record?.activePlatforms).toEqual([]);
     expect(record?.environmentFingerprint).toBeNull();
     expect(record?.slot).toBe(4);
     expect(record?.devices.ios).toBe("UDID-1");
@@ -119,7 +119,7 @@ describe("reconcile", () => {
       worktrees: {
         [MAIN]: worktree({ devices: { ios: "UDID-1" } }),
         [FEATURE]: worktree({
-          activePlatform: "ios",
+          activePlatforms: ["ios"],
           devices: { android: "avd-1", ios: "UDID-2" },
           label: "feature",
           processes: {

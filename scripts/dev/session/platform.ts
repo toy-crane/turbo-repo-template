@@ -13,7 +13,7 @@ import {
   missingAndroidTooling,
   openUrl as openAndroidUrl,
   resolveAndroidSdk,
-  reversePort,
+  reversePorts,
   shutdownEmulator,
   startEmulator,
 } from "../adapters/android";
@@ -73,8 +73,14 @@ export interface PlatformDriver {
   ) => Promise<void>;
   missingTooling: () => Promise<string[]>;
   nextDeviceName: (slug: string, taken: Set<string>) => string;
-  /** Anything the device needs before it can reach this worktree's Metro. */
-  prepareForMetro: (handle: DeviceHandle, metroPort: number) => Promise<void>;
+  /**
+   * Anything the device needs before `127.0.0.1:<port>` reaches the host for
+   * every port this worktree's session owns.
+   */
+  prepareHostPorts: (
+    handle: DeviceHandle,
+    ports: readonly number[]
+  ) => Promise<void>;
   /** Where the finished build sits after `expo run:<platform>`. */
   producedArtifact: (handle: DeviceHandle) => Promise<string | undefined>;
   relaunchUrl: (handle: DeviceHandle, url: string) => Promise<void>;
@@ -136,7 +142,8 @@ function createIosDriver(
       installApp(handle.target, artifactPath),
     missingTooling: missingIosTooling,
     nextDeviceName: (slug, taken) => nextName(`${slug}-dev-`, taken),
-    prepareForMetro: () => Promise.resolve(),
+    // A simulator shares the host's loopback, so its ports need no forwarding.
+    prepareHostPorts: () => Promise.resolve(),
     producedArtifact: (handle) =>
       installedAppPath(handle.target, bundleIdentifier),
     relaunchUrl: async (handle, url) => {
@@ -194,8 +201,8 @@ function createAndroidDriver(
       installApk(sdk, handle.target, artifactPath),
     missingTooling: () => Promise.resolve(missingAndroidTooling(sdk)),
     nextDeviceName: (slug, taken) => nextName(`${slug}_dev_`, taken),
-    prepareForMetro: (handle, metroPort) =>
-      reversePort(sdk, handle.target, metroPort),
+    prepareHostPorts: (handle, ports) =>
+      reversePorts(sdk, handle.target, ports),
     producedArtifact: () => {
       const apk = androidApkPath(mobileDirectory);
 

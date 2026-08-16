@@ -268,19 +268,27 @@ export async function installApk(
 }
 
 /** Makes the emulator's own loopback reach this worktree's Metro. */
-export async function reversePort(
+/**
+ * Makes the host's `127.0.0.1:<port>` answer at the same address inside the
+ * emulator. The app then uses one address on both platforms, which is what
+ * lets a single Metro serve iOS and Android from the same worktree.
+ */
+export async function reversePorts(
   sdk: AndroidSdk,
   serial: string,
-  port: number
+  ports: readonly number[]
 ): Promise<void> {
-  await runOrThrow([
-    sdk.adb,
-    "-s",
-    serial,
-    "reverse",
-    `tcp:${port}`,
-    `tcp:${port}`,
-  ]);
+  for (const port of ports) {
+    // biome-ignore lint/performance/noAwaitInLoops: adb serializes these anyway, and a parallel burst only makes a failure harder to attribute.
+    await runOrThrow([
+      sdk.adb,
+      "-s",
+      serial,
+      "reverse",
+      `tcp:${port}`,
+      `tcp:${port}`,
+    ]);
+  }
 }
 
 export async function openUrl(

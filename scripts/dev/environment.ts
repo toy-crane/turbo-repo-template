@@ -1,16 +1,14 @@
 import { createHash } from "node:crypto";
 
 import { parseMobileEnv } from "../../apps/mobile/env";
-import type { Platform } from "./options";
 
 /**
- * An Android emulator reaches the host's loopback services through this alias;
- * `127.0.0.1` there is the emulator itself.
+ * Both platforms read the same address. An Android emulator would otherwise
+ * need `10.0.2.2`, but the session forwards its ports with `adb reverse`, so
+ * the value baked into the bundle no longer depends on the platform and one
+ * Metro can serve both.
  */
-const HOSTS: Record<Platform, string> = {
-  android: "10.0.2.2",
-  ios: "127.0.0.1",
-};
+const SESSION_HOST = "127.0.0.1";
 
 const LINE_PATTERN = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/;
 
@@ -48,15 +46,12 @@ export interface SessionAddresses {
 }
 
 export function sessionAddresses(
-  platform: Platform,
   apiPort: number,
   supabasePort: number
 ): SessionAddresses {
-  const host = HOSTS[platform];
-
   return {
-    apiUrl: `http://${host}:${apiPort}`,
-    supabaseUrl: `http://${host}:${supabasePort}`,
+    apiUrl: `http://${SESSION_HOST}:${apiPort}`,
+    supabaseUrl: `http://${SESSION_HOST}:${supabasePort}`,
   };
 }
 

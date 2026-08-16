@@ -50,7 +50,12 @@ import {
 } from "./context";
 import { fitStateToReality, stopOwnProcesses } from "./maintenance";
 import { driverFor, type PlatformDriver } from "./platform";
-import { type SessionReuseReason, sessionReuseReason } from "./reuse";
+import {
+  platformsAfterStart,
+  type SessionReuseReason,
+  sessionReuseReason,
+  startPlan,
+} from "./reuse";
 
 const API_READY_TIMEOUT_MS = 60_000;
 const METRO_READY_TIMEOUT_MS = 120_000;
@@ -60,7 +65,15 @@ const APP_METRO_REQUEST_TIMEOUT_MS = 240_000;
 // come up on its own.
 const ALTERNATE_SCHEME_AFTER_MS = 180_000;
 const BUILD_LOCK_TIMEOUT_MS = 60 * 60 * 1000;
-const APP_METRO_REQUEST_PATTERN = /(ios|android)\s+bundl|index\.bundle/i;
+
+/**
+ * Metro names the platform on every bundle line. Matching that name rather
+ * than any bundle activity keeps one platform's work from standing in as
+ * proof that the other platform's app came up.
+ */
+function appRequestPattern(platform: Platform): RegExp {
+  return new RegExp(`${platform}\\s+bundl|platform=${platform}`, "i");
+}
 
 export interface StartInput {
   clear: boolean;
@@ -70,6 +83,8 @@ export interface StartInput {
 }
 
 export interface StartResult {
+  /** Every platform attached to this worktree's Metro once the command ends. */
+  activePlatforms: Platform[];
   apiPort: number;
   build: "built" | "installed" | "reused";
   deviceId: string;
@@ -121,11 +136,15 @@ async function freePorts(): Promise<Set<number>> {
 }
 
 interface Allocation {
+  /** Platforms already attached before this command, in their recorded order. */
+  attached: Platform[];
   clearMetroCache: boolean;
   deviceId: string;
+  /** Every device this worktree holds, so a restart can reach the others. */
+  devices: Partial<Record<Platform, string>>;
   /** What the leased device carries, read under the lease's own lock. */
   installedFingerprint: string | null;
-  /** The same platform is already running here; nothing needs starting. */
+  /** This worktree's API and Metro are alive and still serve this session. */
   running: boolean;
   slot: number;
 }
@@ -204,9 +223,11 @@ async function allocate(
     state = await fitStateToReality(context, state, io);
 
     const existing = state.worktrees[worktreePath];
+    // Read before the restart decision: stopping the processes clears the list,
+    // and those platforms are exactly the ones that have to be reopened.
+    const attached = existing?.activePlatforms ?? [];
     const reuseReason = sessionReuseReason(
       existing,
-      platform,
       environmentFingerprintForSlot(existing?.slot ?? 0),
       metroInputsCurrent
     );
@@ -217,23 +238,6 @@ async function allocate(
       reuseReason,
       forceClear
     );
-
-    if (existing?.activePlatform && existing.activePlatform !== platform) {
-      io.log(
-        `${existing.activePlatform} 세션을 종료하고 ${platform}으로 전환합니다.`
-      );
-
-      const otherDevice = existing.devices[existing.activePlatform];
-
-      await stopOwnProcesses(worktreePath, state);
-
-      if (otherDevice) {
-        const otherDriver = driverFor(context, existing.activePlatform);
-
-        await otherDriver.shutdown(otherDevice);
-      }
-    }
-
     const free = await freePorts();
     const ownPorts = new Set(
       running
@@ -259,7 +263,7 @@ async function allocate(
     }
 
     state.worktrees[worktreePath] = {
-      activePlatform: existing?.activePlatform ?? null,
+      activePlatforms: running ? attached : [],
       devices: existing?.devices ?? {},
       environmentFingerprint: existing?.environmentFingerprint ?? null,
       label: context.git.label,
@@ -273,8 +277,12 @@ async function allocate(
     writeState(context.paths.statePath, state);
 
     return {
+      // Kept even when the processes are restarting: these apps lost their
+      // Metro and are the ones this run has to bring back.
+      attached,
       clearMetroCache: forceClear || !metroInputsCurrent,
       deviceId,
+      devices: { ...state.worktrees[worktreePath]?.devices },
       installedFingerprint:
         state.devicePool[platform][deviceId]?.installedFingerprint ?? null,
       running,
@@ -416,12 +424,26 @@ async function resolveBuild({
   );
 }
 
+interface ReopenInput {
+  attached: Platform[];
+  context: SessionContext;
+  devices: Partial<Record<Platform, string>>;
+  hostPorts: number[];
+  io: SessionIo;
+  logs: SessionLogs;
+  metro: number;
+  opened: Platform;
+  running: () => void;
+  slot: number;
+}
+
 interface OpenAppInput {
   context: SessionContext;
   driver: PlatformDriver;
   handle: { deviceId: string; target: string };
   logs: SessionLogs;
   metro: number;
+  platform: Platform;
   running: () => void;
 }
 
@@ -436,8 +458,10 @@ async function openApp({
   handle,
   logs,
   metro,
+  platform,
   running,
 }: OpenAppInput): Promise<void> {
+  const pattern = appRequestPattern(platform);
   const since = fileSize(logs.metro);
 
   await driver.relaunchUrl(
@@ -448,7 +472,7 @@ async function openApp({
   const opened = await waitForLogMatch({
     check: running,
     logPath: logs.metro,
-    pattern: APP_METRO_REQUEST_PATTERN,
+    pattern,
     since,
     timeoutMs: ALTERNATE_SCHEME_AFTER_MS,
   });
@@ -468,16 +492,79 @@ async function openApp({
   const openedAlternate = await waitForLogMatch({
     check: running,
     logPath: logs.metro,
-    pattern: APP_METRO_REQUEST_PATTERN,
+    pattern,
     since,
     timeoutMs: APP_METRO_REQUEST_TIMEOUT_MS - ALTERNATE_SCHEME_AFTER_MS,
   });
 
   if (!openedAlternate) {
     throw new Error(
-      `앱이 Metro에 연결되지 않았습니다. ${logs.metro}와 기기 화면을 확인해 주세요.`
+      `${platform} 앱이 Metro에 연결되지 않았습니다. ${logs.metro}와 기기 화면을 확인해 주세요.`
     );
   }
+}
+
+/**
+ * Restarting API and Metro drops every app that was attached, not only the one
+ * this command names. Each of the others goes back to the new Metro so the
+ * command leaves both platforms ready to verify. Reconnecting opens the build
+ * already installed on that device; it never starts a native build for a
+ * platform the command did not ask for.
+ */
+async function reopenOtherPlatforms({
+  attached,
+  context,
+  devices,
+  hostPorts,
+  io,
+  logs,
+  metro,
+  opened,
+  running,
+  slot,
+}: ReopenInput): Promise<Platform[]> {
+  const reattached: Platform[] = [];
+
+  for (const platform of attached) {
+    const deviceId = devices[platform];
+
+    if (platform === opened || !deviceId) {
+      continue;
+    }
+
+    io.log(`${platform} 앱도 새 Metro에 다시 연결합니다.`);
+
+    const driver = driverFor(context, platform);
+
+    try {
+      // biome-ignore lint/performance/noAwaitInLoops: the device tools contend with each other when driven in parallel.
+      const handle = await driver.ensureBooted({
+        deviceId,
+        logPath: logs.device,
+        slot,
+      });
+
+      await driver.prepareHostPorts(handle, hostPorts);
+      await openApp({
+        context,
+        driver,
+        handle,
+        logs,
+        metro,
+        platform,
+        running,
+      });
+      reattached.push(platform);
+    } catch (error) {
+      // One platform that cannot come back must not undo the platform that
+      // did. The state below then records only what is really attached.
+      io.log(
+        `  ${platform} 앱을 다시 연결하지 못했습니다. bun run dev ${platform}로 다시 시도해 주세요. (${error instanceof Error ? error.message : String(error)})`
+      );
+    }
+  }
+
+  return reattached;
 }
 
 export async function startSession({
@@ -504,11 +591,7 @@ export async function startSession({
   // pass exists so a missing key fails before any device or process starts.
   const mobileEnvironmentForSlot = (slot: number) =>
     buildMobileEnvironment({
-      addresses: sessionAddresses(
-        platform,
-        apiPort(slot),
-        context.supabasePort
-      ),
+      addresses: sessionAddresses(apiPort(slot), context.supabasePort),
       fileValues,
     });
 
@@ -544,6 +627,14 @@ export async function startSession({
     ...mobileEnvironment,
   };
   const started: number[] = [];
+  // Every address the app uses is `127.0.0.1`, so an emulator needs all three
+  // forwarded before it can reach this worktree's session.
+  const hostPorts = [metro, api, context.supabasePort];
+  const plan = startPlan({
+    attached: allocation.attached,
+    platform,
+    running: allocation.running,
+  });
 
   try {
     const handle = await driver.ensureBooted({
@@ -552,19 +643,25 @@ export async function startSession({
       slot: allocation.slot,
     });
 
-    if (allocation.running) {
+    if (plan === "relaunch") {
       io.log("이미 실행 중인 세션을 그대로 두고 앱만 다시 엽니다.");
-      await driver.prepareForMetro(handle, metro);
+      await driver.prepareHostPorts(handle, hostPorts);
       await openApp({
         context,
         driver,
         handle,
         logs,
         metro,
+        platform,
         running: () => undefined,
       });
 
       return {
+        activePlatforms: platformsAfterStart(
+          plan,
+          allocation.attached,
+          platform
+        ),
         apiPort: api,
         build: "reused",
         deviceId: allocation.deviceId,
@@ -595,6 +692,41 @@ export async function startSession({
       logs,
       platform,
     });
+
+    if (plan === "join") {
+      io.log(`실행 중인 세션에 ${platform}을 더합니다.`);
+      await driver.prepareHostPorts(handle, hostPorts);
+      await openApp({
+        context,
+        driver,
+        handle,
+        logs,
+        metro,
+        platform,
+        running: () => undefined,
+      });
+
+      const joined = platformsAfterStart(plan, allocation.attached, platform);
+
+      await updateState(context, (state) => {
+        const record = state.worktrees[context.git.worktreePath];
+
+        if (record) {
+          record.activePlatforms = joined;
+        }
+      });
+
+      return {
+        activePlatforms: joined,
+        apiPort: api,
+        build,
+        deviceId: allocation.deviceId,
+        logDirectory: logs.directory,
+        metroPort: metro,
+        platform,
+        slot: allocation.slot,
+      };
+    }
 
     // Not `bun run --cwd apps/api dev`: that script pins `BUN_PORT` inline,
     // which would put every worktree's API back on the same port.
@@ -668,14 +800,38 @@ export async function startSession({
       currentMetroInputFingerprint
     );
 
-    await driver.prepareForMetro(handle, metro);
-    await openApp({ context, driver, handle, logs, metro, running });
+    await driver.prepareHostPorts(handle, hostPorts);
+    await openApp({ context, driver, handle, logs, metro, platform, running });
+
+    const reattached = await reopenOtherPlatforms({
+      attached: allocation.attached,
+      context,
+      devices: allocation.devices,
+      hostPorts,
+      io,
+      logs,
+      metro,
+      opened: platform,
+      running,
+      slot: allocation.slot,
+    });
+
+    // A reconnect that failed is reported rather than thrown, so the session's
+    // own processes are confirmed once more before this run claims success.
+    running();
+
+    const activePlatforms = platformsAfterStart(
+      plan,
+      allocation.attached,
+      platform,
+      reattached
+    );
 
     await updateState(context, (state) => {
       const record = state.worktrees[context.git.worktreePath];
 
       if (record) {
-        record.activePlatform = platform;
+        record.activePlatforms = activePlatforms;
         record.environmentFingerprint = environmentFingerprint;
         record.processes = {
           api: { logPath: logs.api, pid: apiPid, port: api },
@@ -685,6 +841,7 @@ export async function startSession({
     });
 
     return {
+      activePlatforms,
       apiPort: api,
       build,
       deviceId: allocation.deviceId,

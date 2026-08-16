@@ -194,7 +194,7 @@ export function reconcile(
     // start owns both processes, while the slot, the device and everything
     // installed on it stay exactly where they were.
     stranded.push({ processes: alive, worktreePath });
-    record.activePlatform = null;
+    record.activePlatforms = [];
     record.environmentFingerprint = null;
     record.processes = {};
   }

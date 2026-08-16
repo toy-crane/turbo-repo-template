@@ -14,7 +14,8 @@ export interface ProcessRecord {
 export type ProcessKind = "api" | "metro";
 
 export interface WorktreeRecord {
-  activePlatform: Platform | null;
+  /** Platforms whose app is currently attached to this worktree's Metro. */
+  activePlatforms: Platform[];
   devices: Partial<Record<Platform, string>>;
   environmentFingerprint: string | null;
   label: string;
@@ -61,6 +62,23 @@ function parseProcess(value: unknown): ProcessRecord | undefined {
   return { logPath: raw.logPath, pid: raw.pid, port: raw.port };
 }
 
+function isPlatform(value: unknown): value is Platform {
+  return value === "ios" || value === "android";
+}
+
+/**
+ * Anything unreadable becomes an empty list rather than a guess. A worktree
+ * that then looks like it has no attached app only loses the app relaunch;
+ * its slot, devices and installed builds are untouched.
+ */
+function parsePlatforms(value: unknown): Platform[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return [...new Set(value.filter(isPlatform))];
+}
+
 function parseWorktree(value: unknown): WorktreeRecord | undefined {
   const raw = asRecord(value);
 
@@ -72,13 +90,9 @@ function parseWorktree(value: unknown): WorktreeRecord | undefined {
   const processes = asRecord(raw.processes);
   const api = parseProcess(processes.api);
   const metro = parseProcess(processes.metro);
-  const activePlatform =
-    raw.activePlatform === "ios" || raw.activePlatform === "android"
-      ? raw.activePlatform
-      : null;
 
   return {
-    activePlatform,
+    activePlatforms: parsePlatforms(raw.activePlatforms),
     devices: {
       ...(typeof devices.android === "string"
         ? { android: devices.android }
