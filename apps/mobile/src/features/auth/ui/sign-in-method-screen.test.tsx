@@ -305,17 +305,24 @@ test("로그인이 진행 중이면 같은 버튼을 다시 실행하지 않는�
   await renderMethods();
 
   const google = screen.getByLabelText("Google로 계속하기");
+  // fireEvent starts its own async act, so use Pressable's test callback to
+  // keep all three calls inside this one render frame.
+  const pressGoogle =
+    google.props.onStartShouldSetResponder.testOnly_pressabilityConfig()
+      .onPress;
+  let firstPress: Promise<unknown> | undefined;
 
   // All three inside one act, so React never re-renders between them. That is
   // the impatient tap this guards against.
   await act(() => {
-    fireEvent.press(google);
-    fireEvent.press(google);
-    fireEvent.press(google);
+    firstPress = pressGoogle();
+    pressGoogle();
+    pressGoogle();
   });
 
-  await act(() => {
+  await act(async () => {
     release();
+    await firstPress;
   });
 
   expect(GoogleOneTapSignIn.presentExplicitSignIn).toHaveBeenCalledTimes(1);
