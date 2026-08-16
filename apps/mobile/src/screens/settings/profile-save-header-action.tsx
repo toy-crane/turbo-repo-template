@@ -1,84 +1,26 @@
-import { useCallback } from "react";
-import {
-  ActivityIndicator,
-  type ColorValue,
-  Pressable,
-  type PressableStateCallbackType,
-  Text,
-  type ViewStyle,
-} from "react-native";
+import type { ColorValue } from "react-native";
 
-import { profileLabels } from "@/features/auth/ui/profile-labels";
-
-const ACTION_HEIGHT = 48;
-const ACTION_WIDTH = 56;
-const DISABLED_OPACITY = 0.35;
-const PRESSED_OPACITY = 0.6;
-const FRAME: ViewStyle = {
-  alignItems: "center",
-  height: ACTION_HEIGHT,
-  justifyContent: "center",
-  width: ACTION_WIDTH,
-};
-
-export function ProfileSaveHeaderAction({
-  isDisabled,
-  isPending,
-  onPress,
-  tintColor,
-}: {
+export interface ProfileSaveHeaderActionProps {
+  /** No change to send yet, or a value the server would refuse. */
   isDisabled: boolean;
   isPending: boolean;
   onPress: () => void;
+  /** The header's own ink, for the indicator that replaces the control. */
   tintColor: ColorValue;
-}) {
-  const pressableStyle = useCallback(
-    ({ pressed }: PressableStateCallbackType) => {
-      let opacity = 1;
+}
 
-      if (isDisabled) {
-        opacity = DISABLED_OPACITY;
-      } else if (pressed) {
-        opacity = PRESSED_OPACITY;
-      }
-
-      return { ...FRAME, opacity };
-    },
-    [isDisabled]
-  );
-
-  if (isPending) {
-    return (
-      <ActivityIndicator
-        accessibilityLabel={profileLabels.saving}
-        accessibilityRole="progressbar"
-        accessibilityState={{ busy: true }}
-        accessible
-        color={tintColor}
-        style={FRAME}
-      />
-    );
-  }
-
-  return (
-    <Pressable
-      accessibilityLabel={profileLabels.save}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
-      disabled={isDisabled}
-      hitSlop={8}
-      onPress={onPress}
-      style={pressableStyle}
-    >
-      <Text
-        adjustsFontSizeToFit
-        maxFontSizeMultiplier={1.6}
-        minimumFontScale={0.9}
-        numberOfLines={1}
-        style={{ color: tintColor, fontSize: 16, fontWeight: "600" }}
-      >
-        {profileLabels.save}
-      </Text>
-    </Pressable>
-  );
+/**
+ * The confirmation action of the profile form, for the platforms whose header
+ * cannot draw one itself.
+ *
+ * Only Android mounts this: iOS gets the same control from
+ * `Stack.Toolbar.Button` with the `prominent` variant, which the native toolbar
+ * owns. The file is split rather than branched so an iOS bundle never loads the
+ * Compose view, the same way `ActionProgress` is split.
+ *
+ * Placement, the states it must tell apart and why it looks the way it does are
+ * in [모바일 설정 폼 저장](../../../../../docs/decisions/mobile-settings-form-save.md).
+ */
+export function ProfileSaveHeaderAction(_props: ProfileSaveHeaderActionProps) {
+  return null;
 }

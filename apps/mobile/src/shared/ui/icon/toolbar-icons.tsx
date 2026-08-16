@@ -1,6 +1,7 @@
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
 import Add from "@expo/material-symbols/add.xml";
 import ArrowBack from "@expo/material-symbols/arrow_back.xml";
+import Check from "@expo/material-symbols/check.xml";
 import Close from "@expo/material-symbols/close.xml";
 
 /**
@@ -22,6 +23,15 @@ export const toolbarIcons = {
   close: { android: Close, ios: "xmark" },
   newChat: { android: Add, ios: "plus" },
   profile: { android: AccountCircle, ios: "person.crop.circle" },
+  /**
+   * The confirmation action of a settings form.
+   *
+   * Android reads this entry from a Compose `FilledIconButton` rather than a
+   * `Stack.Toolbar.Button`, because the toolbar button cannot draw the filled
+   * circle the platform gives a confirmation action. The meaning still belongs
+   * in one table, so the drawable stays here with its iOS symbol.
+   */
+  save: { android: Check, ios: "checkmark" },
 } as const;
 
 export type ToolbarIconName = keyof typeof toolbarIcons;
