@@ -112,15 +112,23 @@ jest.mock("@expo/ui", () => {
     Column: Container,
     FieldGroup,
     Host: Container,
+    // A native list row takes a press anywhere across it and reads its own text
+    // as its accessible name, so the stand-in does the same.
     ListItem: ({
       children,
       onPress,
       testID,
-    }: PropsWithChildren<{ onPress?: () => void; testID?: string }>) =>
+      trailing,
+    }: PropsWithChildren<{
+      onPress?: () => void;
+      testID?: string;
+      trailing?: React.ReactNode;
+    }>) =>
       React.createElement(
         NativePressable,
         { accessibilityRole: "button", onPress, testID },
-        children
+        children,
+        trailing
       ),
     RNHostView: Container,
     Row: Container,
