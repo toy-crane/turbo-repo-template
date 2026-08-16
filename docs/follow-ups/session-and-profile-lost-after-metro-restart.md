@@ -8,4 +8,6 @@
 
 **What was tried**: 같은 세션의 앞부분에서 `What` / `helpme2183` 계정은 앱 재실행과 `agent-device open --relaunch`를 여러 번 거치고도 로그인 상태를 유지했다. 그래서 앱 재실행 자체가 원인은 아니다. 이번 작업은 계정 삭제와 로그아웃의 진행 표시만 바꿨고 인증이나 프로필 저장 경로는 건드리지 않았다.
 
-**Proposed next step**: 온보딩 직후 `public.profiles` 행이 실제로 생기는지 데이터베이스에서 확인한다. 행이 있으면 세션 복원이, 없으면 온보딩 저장이 원인이다. 세션 복원 쪽이면 개발 세션 재시작이 앱 저장소를 지우는지도 함께 본다.
+**프로필 저장은 아님**: 2026-08-17에 온보딩을 마친 계정 넷을 로컬 데이터베이스에서 확인했다. `otpbug-ios-01`, `otpbug-ios-02`, `otpbug-ios-03`, `otpbug-and-01` 모두 `public.profiles` 행에 `display_name`과 `username`이 들어 있었다. 온보딩을 끝내지 않은 `otpbug-ios-04`와 `otpbug-and-02`만 두 값이 비어 있었다. 저장 경로는 정상이므로 남은 원인은 세션 복원이다.
+
+**Proposed next step**: 개발 세션 재시작이 앱 저장소를 지우는지 본다. 온보딩을 마친 뒤 `expo-secure-store`에 Supabase 세션이 들어 있는지 확인하고, `bun run dev:stop` 뒤 `bun run dev ios`로 다시 띄운 다음 같은 값이 남아 있는지 비교한다. 값이 사라지면 개발 세션이, 남아 있는데도 로그인 화면이 열리면 세션 복원 코드가 원인이다.
