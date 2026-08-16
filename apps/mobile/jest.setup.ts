@@ -1,5 +1,7 @@
 import { jest } from "@jest/globals";
 
+import { applyTestTheme } from "@/shared/test/theme";
+
 /** The props the app passes to a provider's own native sign-in button. */
 interface ProviderButtonProps {
   accessibilityLabel?: string;
@@ -7,6 +9,11 @@ interface ProviderButtonProps {
   onPress?: () => void;
   testID?: string;
 }
+
+// Before any screen renders, and for every test file rather than only the ones
+// using `renderWithHeroUI`: a screen drawn by `renderRouter` reads the same
+// semantic colours and has no other place to get them.
+applyTestTheme();
 
 // Placeholder public values. Tests use the same complete contract as the app
 // without reading the developer's untracked apps/mobile/.env.local.

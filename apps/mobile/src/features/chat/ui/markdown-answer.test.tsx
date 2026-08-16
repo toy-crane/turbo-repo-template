@@ -3,6 +3,7 @@ import { screen } from "@testing-library/react-native";
 import { openURL } from "expo-linking";
 
 import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
+import { testThemeVariables } from "@/shared/test/theme";
 import { MarkdownAnswer } from "./markdown-answer";
 
 jest.mock("expo-linking", () => ({
@@ -60,8 +61,11 @@ test("열지 못한 주소가 화면을 무너뜨리지 않는다", async () => 
   ).not.toThrow();
 });
 
-// The renderer ships light-mode colours and has no colour scheme of its own,
-// so every colour it draws has to be handed to it.
+// The renderer ships light-mode colours and has no colour scheme of its own, so
+// every colour it draws has to be handed to it. These read the resolved value
+// rather than merely a truthy one: a role the theme cannot resolve arrives as
+// the string "invalid", which is truthy and would pass an emptiness check while
+// the renderer draws nothing recognisable.
 test("코드는 monospace로, 나머지는 앱의 시맨틱 색으로 그린다", async () => {
   const { markdownStyle } = (await renderAnswer()).props;
 
@@ -69,7 +73,11 @@ test("코드는 monospace로, 나머지는 앱의 시맨틱 색으로 그린다"
   expect(markdownStyle.codeBlock.fontFamily).toBe(
     markdownStyle.code.fontFamily
   );
-  expect(markdownStyle.paragraph.color).toBeTruthy();
-  expect(markdownStyle.link.color).toBeTruthy();
-  expect(markdownStyle.table.borderColor).toBeTruthy();
+  expect(markdownStyle.paragraph.color).toBe(
+    testThemeVariables["--color-foreground"]
+  );
+  expect(markdownStyle.link.color).toBe(testThemeVariables["--color-link"]);
+  expect(markdownStyle.table.borderColor).toBe(
+    testThemeVariables["--color-border"]
+  );
 });
