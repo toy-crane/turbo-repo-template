@@ -14,9 +14,11 @@ import {
 } from "expo-image-picker";
 import type { PropsWithChildren, ReactNode } from "react";
 import {
+  AccessibilityInfo,
   ActionSheetIOS,
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
 } from "react-native";
 
@@ -831,6 +833,86 @@ test("확인 뒤 한 번만 삭제하고 기기 로그인과 사용자 캐시를
   });
   expect(fake.functions.invoke).toHaveBeenCalledTimes(1);
   expect(queryClient.getQueryData(["notes"])).toBeUndefined();
+});
+
+test("Android는 삭제가 시작되면 진행 중임을 화면 읽기에 알린다", async () => {
+  const fake = resetFakeSupabase({
+    profile: createProfileRow(SAVED),
+    session: createFakeSession(),
+  });
+  const dialog = captureDeletionDialog();
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  const platform = jest.replaceProperty(Platform, "OS", "android");
+  let finishDeletion = () => {
+    // Replaced by the pending call below.
+  };
+
+  fake.functions.invoke.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishDeletion = () =>
+          resolve({ data: { deleted: true }, error: null });
+      })
+  );
+
+  try {
+    await renderEditor();
+
+    expect(announce).not.toHaveBeenCalled();
+
+    await openDeletionDialog();
+    await act(() => {
+      dialog.press("계정 삭제");
+    });
+
+    // The row cannot hold the state on Android, so the announcement carries the
+    // action's own name rather than 진행 중 alone.
+    expect(announce).toHaveBeenCalledWith("계정 삭제 진행 중");
+
+    await act(async () => {
+      finishDeletion();
+      await Promise.resolve();
+    });
+  } finally {
+    platform.restore();
+  }
+});
+
+test("iOS는 행이 값을 지니므로 따로 알리지 않는다", async () => {
+  const fake = resetFakeSupabase({
+    profile: createProfileRow(SAVED),
+    session: createFakeSession(),
+  });
+  const dialog = captureDeletionDialog();
+  const announce = jest.spyOn(AccessibilityInfo, "announceForAccessibility");
+  let finishDeletion = () => {
+    // Replaced by the pending call below.
+  };
+
+  fake.functions.invoke.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishDeletion = () =>
+          resolve({ data: { deleted: true }, error: null });
+      })
+  );
+
+  await renderEditor();
+
+  await openDeletionDialog();
+  await act(() => {
+    dialog.press("계정 삭제");
+  });
+
+  expect(
+    await screen.findByTestId("delete-account-progress")
+  ).toBeOnTheScreen();
+  expect(announce).not.toHaveBeenCalled();
+
+  await act(async () => {
+    finishDeletion();
+    await Promise.resolve();
+  });
 });
 
 test("삭제가 실패하면 설명 자리에 안내가 서고 다시 시도할 수 있다", async () => {

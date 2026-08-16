@@ -1,5 +1,6 @@
 import { accessibilityValue } from "@expo/ui/swift-ui/modifiers";
-import { Platform } from "react-native";
+import { useEffect } from "react";
+import { AccessibilityInfo, Platform } from "react-native";
 
 /**
  * What a screen reader adds to the button's own name while the action runs.
@@ -26,4 +27,36 @@ export function destructiveActionModifiers(isRunning: boolean) {
   }
 
   return [accessibilityValue(ACTION_IN_PROGRESS)];
+}
+
+/**
+ * How Android says the same thing, since it cannot say it on the row.
+ *
+ * `@expo/ui 57.0.11` exposes one Compose semantics modifier and it only carries
+ * `contentType`, so nothing reaches the row's accessibility node from here — the
+ * row reads the same busy as idle. An announcement is what is left, and it is
+ * also what this app already does for the chat error.
+ *
+ * It carries the action's own name because it arrives on its own: iOS reads
+ * 계정 삭제 then 진행 중 because the row supplies the first half, and an
+ * announcement has no row in front of it.
+ *
+ * Fires once when the action starts rather than for as long as it runs. Android
+ * has no way to hold the state on the row, so a person who moves away and comes
+ * back hears nothing. The deletion takes well under a second, so there is little
+ * to come back to.
+ */
+export function useDestructiveActionAnnouncement(
+  actionName: string,
+  isRunning: boolean
+) {
+  useEffect(() => {
+    if (Platform.OS === "ios" || !isRunning) {
+      return;
+    }
+
+    AccessibilityInfo.announceForAccessibility(
+      `${actionName} ${ACTION_IN_PROGRESS}`
+    );
+  }, [actionName, isRunning]);
 }
