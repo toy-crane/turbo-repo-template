@@ -3,6 +3,7 @@ import { argv, cwd, exit, stderr, stdout } from "node:process";
 import { parseDevCommand } from "./options";
 import type { SessionIo } from "./session/context";
 import { startSession } from "./session/start";
+import { showStatus } from "./session/status";
 import { removeSession, stopSession } from "./session/stop";
 
 const io: SessionIo = {
@@ -23,6 +24,12 @@ async function main(): Promise<void> {
 
   if (command.kind === "remove") {
     await removeSession({ cwd: directory, io });
+
+    return;
+  }
+
+  if (command.kind === "status") {
+    await showStatus({ cwd: directory, io });
 
     return;
   }

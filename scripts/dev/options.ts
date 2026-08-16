@@ -3,6 +3,7 @@ export type Platform = "android" | "ios";
 export type DevCommand =
   | { kind: "remove" }
   | { clear: boolean; kind: "start"; platform: Platform }
+  | { kind: "status" }
   | { kind: "stop" };
 
 export const USAGE = [
@@ -11,6 +12,7 @@ export const USAGE = [
   "  bun run dev ios             iOS 개발 세션을 시작합니다.",
   "  bun run dev android         Android 개발 세션을 시작합니다.",
   "  bun run dev ios --clear     이 worktree의 Metro 캐시를 비우고 시작합니다.",
+  "  bun run dev:status          모든 worktree의 세션, 포트, 기기 배정을 보여 줍니다.",
   "  bun run dev:stop            현재 worktree의 개발 세션을 종료합니다.",
   "  bun run dev:remove          현재 worktree의 개발 자원을 정리하고 기기를 풀로 돌려놓습니다.",
 ].join("\n");
@@ -35,6 +37,10 @@ export function parseDevCommand(argv: string[]): DevCommand {
 
   if (args[0] === "remove" && args.length === 1) {
     return { kind: "remove" };
+  }
+
+  if (args[0] === "status" && args.length === 1) {
+    return { kind: "status" };
   }
 
   const [platform, ...rest] = args;

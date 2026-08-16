@@ -23,6 +23,7 @@
     "db:types": "supabase gen types typescript --local > \"${TMPDIR:-/tmp}/database.types.ts\" && mv \"${TMPDIR:-/tmp}/database.types.ts\" packages/supabase/src/database.types.ts",
     "dev": "bun scripts/dev/cli.ts",
     "dev:remove": "bun scripts/dev/cli.ts remove",
+    "dev:status": "bun scripts/dev/cli.ts status",
     "dev:stop": "bun scripts/dev/cli.ts stop",
     "fix": "turbo run fix",
     "postinstall": "bun scripts/setup/vendor-markdown-assets.ts",
