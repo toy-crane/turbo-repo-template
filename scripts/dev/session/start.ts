@@ -780,24 +780,26 @@ async function startOnRunningSession(setup: SessionSetup): Promise<{
     });
 
     try {
-      // biome-ignore lint/performance/noAwaitInLoops: platforms start in the order the command names them.
-      const handle = await driver.ensureBooted({
+      const boot = driver.ensureBooted({
         deviceId,
         leasedElsewhere: allocation.leasedElsewhere[platform],
         logPath: logs.device,
         slot: allocation.slot,
       });
       let build: BuildOutcome = "reused";
+      let handle: { deviceId: string; target: string };
 
       if (plan === "join") {
         io.log(`실행 중인 세션에 ${platform}를 더합니다.`);
 
-        const fingerprint = await generateFingerprint(
-          context.mobileDirectory,
-          platform,
-          env
-        );
+        // The fingerprint reads no device, so it need not wait for the boot.
+        // biome-ignore lint/performance/noAwaitInLoops: platforms start in the order the command names them.
+        const [bootedHandle, fingerprint] = await Promise.all([
+          boot,
+          generateFingerprint(context.mobileDirectory, platform, env),
+        ]);
 
+        handle = bootedHandle;
         io.log(`${platform} native fingerprint: ${fingerprint}`);
         build = await resolveBuild({
           context,
@@ -816,6 +818,7 @@ async function startOnRunningSession(setup: SessionSetup): Promise<{
         io.log(
           `이미 실행 중인 세션을 그대로 두고 ${platform} 앱만 다시 엽니다.`
         );
+        handle = await boot;
       }
 
       await driver.prepareForMetro(handle, metro);
@@ -856,60 +859,98 @@ interface PreparedPlatform {
   platform: Platform;
 }
 
+interface BootedPlatform {
+  deviceId: string;
+  driver: PlatformDriver;
+  fingerprint: string;
+  handle: { deviceId: string; target: string };
+  platform: Platform;
+}
+
 /**
- * Everything native happens here, before any session process exists: devices
- * boot and builds resolve while no Metro of this worktree is alive to watch
- * the project churn underneath it.
+ * Boots the device and computes the native fingerprint for one platform. Both
+ * are independent of the other platform: a Simulator and an Emulator answer
+ * to different daemons, and the fingerprint reads only this platform's inputs.
  */
-async function prepareFreshPlatforms(
-  setup: SessionSetup
-): Promise<PreparedPlatform[]> {
-  const { allocation, context, drivers, env, failures, io, logs, startable } =
-    setup;
-  const prepared: PreparedPlatform[] = [];
+async function bootAndFingerprint(
+  setup: SessionSetup,
+  platform: Platform
+): Promise<BootedPlatform | undefined> {
+  const { allocation, context, drivers, env, failures, io, logs } = setup;
+  const driver = drivers.get(platform);
+  const deviceId = allocation.devices[platform];
 
-  for (const platform of startable) {
-    const driver = drivers.get(platform);
-    const deviceId = allocation.devices[platform];
+  if (!(driver && deviceId)) {
+    return;
+  }
 
-    if (!(driver && deviceId)) {
-      continue;
-    }
-
-    try {
-      // biome-ignore lint/performance/noAwaitInLoops: device tools contend when driven in parallel, and builds must finish before Metro starts.
-      const handle = await driver.ensureBooted({
+  try {
+    const [handle, fingerprint] = await Promise.all([
+      driver.ensureBooted({
         deviceId,
         leasedElsewhere: allocation.leasedElsewhere[platform],
         logPath: logs.device,
         slot: allocation.slot,
-      });
-      const fingerprint = await generateFingerprint(
-        context.mobileDirectory,
-        platform,
-        env
-      );
+      }),
+      generateFingerprint(context.mobileDirectory, platform, env),
+    ]);
 
-      io.log(`${platform} native fingerprint: ${fingerprint}`);
+    io.log(`${platform} native fingerprint: ${fingerprint}`);
 
+    return { deviceId, driver, fingerprint, handle, platform };
+  } catch (error) {
+    // The other requested platform still gets its session.
+    failures.push({ message: failureMessage(error), platform });
+  }
+}
+
+/**
+ * Everything native happens here, before any session process exists: devices
+ * boot and builds resolve while no Metro of this worktree is alive to watch
+ * the project churn underneath it. Boots and fingerprints run for every
+ * platform at once so an emulator's cold boot overlaps the other platform's
+ * work; the builds stay one at a time because both write into `apps/mobile`.
+ */
+async function prepareFreshPlatforms(
+  setup: SessionSetup
+): Promise<PreparedPlatform[]> {
+  const { allocation, context, env, failures, io, logs, startable } = setup;
+  const booted = (
+    await Promise.all(
+      startable.map((platform) => bootAndFingerprint(setup, platform))
+    )
+  ).filter((entry): entry is BootedPlatform => entry !== undefined);
+  const prepared: PreparedPlatform[] = [];
+
+  for (const entry of booted) {
+    try {
+      // biome-ignore lint/performance/noAwaitInLoops: both platforms' builds write into the same native project folder.
       const build = await resolveBuild({
         context,
-        deviceTarget: driver.buildTarget(handle),
-        driver,
+        deviceTarget: entry.driver.buildTarget(entry.handle),
+        driver: entry.driver,
         env,
-        fingerprint,
-        handle,
+        fingerprint: entry.fingerprint,
+        handle: entry.handle,
         installedFingerprint:
-          allocation.installedFingerprints[platform] ?? null,
+          allocation.installedFingerprints[entry.platform] ?? null,
         io,
         logs,
-        platform,
+        platform: entry.platform,
       });
 
-      prepared.push({ build, deviceId, driver, handle, platform });
+      prepared.push({
+        build,
+        deviceId: entry.deviceId,
+        driver: entry.driver,
+        handle: entry.handle,
+        platform: entry.platform,
+      });
     } catch (error) {
-      // The other requested platform still gets its session.
-      failures.push({ message: failureMessage(error), platform });
+      failures.push({
+        message: failureMessage(error),
+        platform: entry.platform,
+      });
     }
   }
 
