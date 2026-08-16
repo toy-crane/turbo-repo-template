@@ -97,6 +97,12 @@ function pruneMissingDevices(
       for (const record of Object.values(state.worktrees)) {
         if (record.devices[platform] === deviceId) {
           delete record.devices[platform];
+          // The app went with the device, so the platform is no longer
+          // attached either. Left in, it would be reported as running and
+          // looked for on the next stop.
+          record.activePlatforms = record.activePlatforms.filter(
+            (entry) => entry !== platform
+          );
         }
       }
     }
@@ -194,7 +200,7 @@ export function reconcile(
     // start owns both processes, while the slot, the device and everything
     // installed on it stay exactly where they were.
     stranded.push({ processes: alive, worktreePath });
-    record.activePlatform = null;
+    record.activePlatforms = [];
     record.environmentFingerprint = null;
     record.processes = {};
   }

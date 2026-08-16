@@ -7,7 +7,7 @@
 - 모바일 앱은 `createClient<Database>`로 싱글턴 클라이언트를 직접 만든다.
 - 이 클라이언트는 `@supabase/supabase-js`, React Native URL polyfill과 Expo SQLite 기반 `localStorage`를 사용한다.
 - 모바일 앱은 `EXPO_PUBLIC_SUPABASE_URL`과 `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`를 읽는다.
-- 루트 개발 세션에서는 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL`이 `EXPO_PUBLIC_SUPABASE_URL`보다 우선한다. 개발 세션 밖에서는 기존 URL을 그대로 사용한다.
+- 루트 개발 세션에서는 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_PORT`로 만든 주소가 `EXPO_PUBLIC_SUPABASE_URL`보다 우선한다. 개발 세션 밖에서는 기존 URL을 그대로 사용한다.
 - 템플릿 사용자는 README의 절차에 따라 로컬 스택의 출력 또는 원격 프로젝트 설정에서 공개 URL과 publishable key를 확인한다. 확인한 값은 `apps/mobile/.env.local`에 직접 설정한다.
 - 초기 설정, 로컬 스택 시작과 모바일 실행 명령은 `apps/mobile/.env.local`을 생성하거나 덮어쓰지 않는다.
 - 향후 서버는 같은 스키마 타입을 사용하되, 서버 런타임의 환경 변수와 권한에 맞는 별도 클라이언트를 초기화한다.

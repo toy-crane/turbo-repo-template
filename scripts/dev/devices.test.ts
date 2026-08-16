@@ -16,7 +16,7 @@ function stateWithWorktrees(paths: string[]): RepositoryState {
 
   for (const [index, path] of paths.entries()) {
     state.worktrees[path] = {
-      activePlatform: null,
+      activePlatforms: [],
       devices: {},
       environmentFingerprint: null,
       label: `w${index}`,
@@ -100,7 +100,7 @@ describe("기기 수명", () => {
 
     // 다음 worktree가 같은 플랫폼을 요청한다.
     state.worktrees[FEATURE] = {
-      activePlatform: null,
+      activePlatforms: [],
       devices: {},
       environmentFingerprint: null,
       label: "feature",

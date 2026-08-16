@@ -17,7 +17,7 @@ function processRecord(pid: number, port: number): ProcessRecord {
 
 function worktree(overrides: Partial<WorktreeRecord> = {}): WorktreeRecord {
   return {
-    activePlatform: null,
+    activePlatforms: [],
     devices: {},
     environmentFingerprint: null,
     label: "main",
@@ -44,7 +44,7 @@ describe("reconcile", () => {
   test("살아 있는 worktree의 정상 세션은 그대로 둔다", () => {
     const state = stateWith({
       [MAIN]: worktree({
-        activePlatform: "ios",
+        activePlatforms: ["ios"],
         processes: {
           api: processRecord(11, 3900),
           metro: processRecord(12, 8081),
@@ -56,7 +56,7 @@ describe("reconcile", () => {
 
     expect(result.reclaimed).toEqual([]);
     expect(result.stranded).toEqual([]);
-    expect(result.next.worktrees[MAIN]?.activePlatform).toBe("ios");
+    expect(result.next.worktrees[MAIN]?.activePlatforms).toEqual(["ios"]);
     expect(result.next.worktrees[MAIN]?.processes.api?.pid).toBe(11);
   });
 
@@ -69,7 +69,7 @@ describe("reconcile", () => {
       version: 1,
       worktrees: {
         [MAIN]: worktree({
-          activePlatform: "ios",
+          activePlatforms: ["ios"],
           devices: { ios: "UDID-1" },
           environmentFingerprint: "env-fp",
           processes: {
@@ -93,7 +93,7 @@ describe("reconcile", () => {
     const record = result.next.worktrees[MAIN];
 
     expect(record?.processes).toEqual({});
-    expect(record?.activePlatform).toBeNull();
+    expect(record?.activePlatforms).toEqual([]);
     expect(record?.environmentFingerprint).toBeNull();
     expect(record?.slot).toBe(4);
     expect(record?.devices.ios).toBe("UDID-1");
@@ -119,7 +119,7 @@ describe("reconcile", () => {
       worktrees: {
         [MAIN]: worktree({ devices: { ios: "UDID-1" } }),
         [FEATURE]: worktree({
-          activePlatform: "ios",
+          activePlatforms: ["ios"],
           devices: { android: "avd-1", ios: "UDID-2" },
           label: "feature",
           processes: {
@@ -186,8 +186,15 @@ describe("reconcile", () => {
       },
       version: 1,
       worktrees: {
-        [MAIN]: worktree({ devices: { ios: "UDID-1" } }),
-        [FEATURE]: worktree({ devices: { ios: "UDID-GONE" }, slot: 1 }),
+        [MAIN]: worktree({
+          activePlatforms: ["ios"],
+          devices: { ios: "UDID-1" },
+        }),
+        [FEATURE]: worktree({
+          activePlatforms: ["android", "ios"],
+          devices: { android: "avd-1", ios: "UDID-GONE" },
+          slot: 1,
+        }),
       },
     };
 
@@ -198,6 +205,11 @@ describe("reconcile", () => {
 
     expect(result.next.devicePool.ios["UDID-GONE"]).toBeUndefined();
     expect(result.next.worktrees[FEATURE]?.devices.ios).toBeUndefined();
+    // 앱은 기기와 함께 사라졌으므로 붙어 있는 플랫폼에서도 빠진다.
+    expect(result.next.worktrees[FEATURE]?.activePlatforms).toEqual([
+      "android",
+    ]);
+    expect(result.next.worktrees[MAIN]?.activePlatforms).toEqual(["ios"]);
     // 살아 있는 배정은 그대로 두고, 없어진 기기를 종료·초기화하러 가지 않는다.
     expect(result.next.devicePool.ios["UDID-1"]?.leasedTo).toBe(MAIN);
     expect(result.releasedDevices).toEqual([]);

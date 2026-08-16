@@ -30,7 +30,7 @@ function fullState(): RepositoryState {
     version: 1,
     worktrees: {
       "/repo": {
-        activePlatform: "ios",
+        activePlatforms: ["ios"],
         devices: { android: "avd-1" },
         environmentFingerprint: "env-fp",
         label: "main",
@@ -89,7 +89,7 @@ describe("parseState", () => {
       worktrees: {
         "/broken": { slot: "일" },
         "/repo": {
-          activePlatform: "web",
+          activePlatforms: ["web", "ios"],
           devices: { ios: 7 },
           processes: { api: { logPath: "/a.log", pid: 11 } },
           slot: 2,
@@ -99,7 +99,7 @@ describe("parseState", () => {
 
     expect(parsed.worktrees["/broken"]).toBeUndefined();
     expect(parsed.worktrees["/repo"]).toEqual({
-      activePlatform: null,
+      activePlatforms: ["ios"],
       devices: {},
       environmentFingerprint: null,
       label: "",

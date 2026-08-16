@@ -3,7 +3,9 @@
 ## 결정
 
 - 루트의 `bun run dev <ios|android>`를 저장소 전체 로컬 개발 세션의 기본 실행 명령으로 사용한다. 이 명령은 API, Metro와 대상 Simulator 또는 Emulator를 함께 시작한다.
-- 플랫폼 인수는 필수다. `bun run dev`만 실행하면 아무것도 시작하지 않고 사용법을 보여 준다. 한 Git worktree에서는 한 번에 한 플랫폼만 실행한다.
+- 플랫폼 인수는 필수다. `bun run dev`만 실행하면 아무것도 시작하지 않고 사용법을 보여 준다.
+- 한 Git worktree에서 iOS와 Android를 함께 실행한다. 플랫폼 시작 명령은 누적된다. 이미 실행 중인 플랫폼은 다른 플랫폼을 시작해도 내려가지 않는다.
+- worktree 하나는 slot 하나만 쓴다. Metro 프로세스 하나가 두 플랫폼의 번들을 함께 내보내고 API 프로세스도 하나만 둔다.
 - 기본 저장소 폴더와 추가 Git worktree를 같은 실행 단위로 취급한다. 실행 단위는 브랜치 이름이 아니라 정규화된 worktree 절대 경로로 식별한다.
 - worktree마다 고정 slot과 API·Metro 포트를 배정한다. 플랫폼별 기기는 저장소 공용 풀에서 하나씩 독점 배정하고, 일반 종료 뒤에도 이 상태를 유지해 다음 실행에서 재사용한다.
 - 네이티브 Development Build는 저장소 단위로 공유한다. 플랫폼과 Expo native fingerprint가 같은 worktree는 공용 빌드 결과를 설치해 재사용한다.
@@ -11,9 +13,11 @@
 - 앱 데이터와 로그인 상태는 공용 빌드에 포함하지 않는다. 각 worktree에 배정한 Simulator 또는 AVD가 독립적으로 소유한다.
 - 로컬 Supabase 스택은 모든 worktree가 공유한다. 개발 세션 명령은 Supabase를 시작하거나 중지하거나 초기화하지 않는다.
 - Portless를 기본 개발 경로에 넣지 않는다. slot에서 실제 포트를 계산하고 개발 세션이 직접 소유한다.
-- 개발 세션이 정한 모바일 API와 Supabase 주소는 `EXPO_PUBLIC_DEV_SESSION_API_URL`과 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL`로 Metro에 전달한다. 앱은 이 값이 있으면 일반 모바일 URL보다 우선한다.
-- iOS Simulator에는 `127.0.0.1`을, Android Emulator에는 `10.0.2.2`를 호스트로 전달한다. API는 worktree slot의 포트를 사용하고 Supabase는 공유 로컬 포트 `54321`을 사용한다.
-- 실행 중인 세션은 공개 모바일 환경과 Metro 입력의 fingerprint가 모두 같을 때만 API와 Metro를 재사용한다. 하나라도 바뀌면 해당 worktree의 두 프로세스만 다시 시작하고 slot, 기기, 설치된 앱과 앱 데이터는 유지한다.
+- 개발 세션이 정한 모바일 API와 Supabase 포트는 `EXPO_PUBLIC_DEV_SESSION_API_PORT`와 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_PORT`로 Metro에 전달한다. 앱은 이 값이 있으면 일반 모바일 URL보다 우선한다. 세션은 포트만 정하고 호스트는 앱이 정한다.
+- 앱은 `process.env.EXPO_OS`로 자기 번들의 플랫폼을 보고 호스트를 정한다. Android는 `10.0.2.2`, 나머지는 `127.0.0.1`이다. API는 worktree slot의 포트를 사용하고 Supabase는 공유 로컬 포트 `54321`을 사용한다.
+- Android Emulator에는 Metro 포트만 `adb reverse`로 넘긴다. 개발 클라이언트 딥링크가 `127.0.0.1`을 담기 때문이다.
+- 실행 중인 세션은 공개 모바일 환경과 Metro 입력의 fingerprint가 모두 같을 때만 API와 Metro를 재사용한다. 하나라도 바뀌면 해당 worktree의 두 프로세스만 다시 시작하고 slot, 기기, 설치된 앱과 앱 데이터는 유지한다. 재사용 판단은 플랫폼과 무관하다.
+- API와 Metro를 다시 시작하면 그 worktree에 붙어 있던 모든 플랫폼의 앱을 다시 연결한다. 명령에 적지 않은 플랫폼도 함께 다시 연다.
 - Metro 자식 프로세스에만 worktree별 `TMPDIR`를 전달한다. 이 경로 아래의 변환 캐시와 파일 목록 캐시는 다른 worktree와 섞이지 않는다. API와 네이티브 빌드는 이 경로를 사용하지 않는다.
 - 개발 세션을 시작할 때 `bun.lock`, 루트와 모바일 `package.json`, Expo·Metro·Babel·앱·TypeScript 설정, Expo 앱 설정이 가져오는 파일, Metro patch와 설치된 주요 모바일 패키지 정보를 묶어 Metro 입력 fingerprint를 계산한다. 이전 시작과 다르면 해당 worktree의 Metro에만 `expo start --clear`를 적용한다.
 - Metro가 `/status`에서 준비됐다고 응답하면 현재 입력 fingerprint를 기록한다. 이 값은 해당 입력으로 캐시 초기화를 적용한 Metro가 준비됐다는 뜻이며 앱의 bundle 성공 여부를 뜻하지 않는다.
@@ -24,8 +28,8 @@
 
 - 이 결정은 로컬 iOS Simulator와 Android Emulator 개발에 적용한다. 실제 기기, Expo Web, 원격 기기와 CI 기기 실행은 포함하지 않는다.
 - `apps/mobile`과 `apps/api`의 개별 `dev`, `ios`, `android`, `start` 명령은 수동 진단에 사용할 수 있지만 worktree 간 포트와 기기 격리를 보장하지 않는다.
-- `bun run dev:stop`은 실행 프로세스와 기기만 중단한다. slot, 기기, 앱 데이터와 공용 빌드는 유지한다.
-- `bun run dev:remove`는 현재 worktree에 배정된 기기를 초기화해 풀로 돌려놓고 slot을 반납한다. Git worktree, 풀의 기기와 저장소 공용 빌드는 삭제하지 않는다.
+- `bun run dev:stop`은 실행 프로세스와 이 worktree에 배정된 두 플랫폼의 기기를 함께 중단한다. slot, 기기, 앱 데이터와 공용 빌드는 유지한다.
+- `bun run dev:remove`는 현재 worktree에 배정된 두 플랫폼의 기기를 초기화해 풀로 돌려놓고 slot을 반납한다. Git worktree, 풀의 기기와 저장소 공용 빌드는 삭제하지 않는다.
 - Git worktree를 외부에서 먼저 삭제하면 다음 `bun run dev <ios|android>`가 남은 프로세스, slot과 기기 배정을 회수한다. Codex나 Claude Code 전용 삭제 hook과 상시 실행 daemon은 사용하지 않는다.
 - Metro 입력 변경은 다음 `bun run dev <ios|android>`에서 확인한다. 실행 중인 세션이 `bun.lock`이나 설정 파일을 계속 지켜보다가 스스로 다시 시작하지는 않는다.
 - 자동 초기화는 Metro 캐시에만 적용한다. 네이티브 모듈, config plugin, Expo SDK 또는 React Native 변경으로 Development Build가 달라지는지는 별도의 native fingerprint가 판단한다.
@@ -44,7 +48,13 @@ Gradle의 기본 사용자 홈은 모든 checkout이 함께 쓴다. Gradle 빌�
 
 Portless는 고정 hostname과 빈 포트 선택에는 유용하지만 Simulator·Emulator 소유권, Development Build 호환성, 정확한 Metro 연결을 관리하지 않는다. 현재 범위에서는 별도 프록시 계층 없이 하나의 개발 세션이 포트와 기기를 함께 관리하는 편이 단순하다.
 
-Expo SDK 57의 개발 번들은 셸에서 받은 `EXPO_PUBLIC_` 값 뒤에 `.env.local` 값을 다시 합친다. 개발 세션과 일반 설정이 같은 변수 이름을 쓰면 Android용 `10.0.2.2`가 `.env.local`의 `127.0.0.1`로 바뀐다. 개발 세션 전용 이름을 사용하면 `.env.local`을 수정하지 않고도 세션 주소의 소유권을 지킬 수 있다.
+`EXPO_PUBLIC_` 값은 Metro 프로세스의 환경에서 읽어 번들에 박힌다. 완성된 주소를 넘기면 호스트가 플랫폼마다 달라 Metro 하나가 한 플랫폼의 주소만 담을 수 있고, 그래서 worktree 하나가 한 번에 한 플랫폼만 실행할 수 있었다. 포트만 넘기면 값이 플랫폼과 무관해져 Metro 하나가 두 플랫폼의 번들을 함께 내보낸다.
+
+호스트는 앱이 정한다. `babel-preset-expo`가 `process.env.EXPO_OS`를 번들의 플랫폼 이름으로 치환하므로, 같은 Metro가 만든 iOS 번들과 Android 번들이 서로 다른 호스트를 담는다. `react-native`를 import하지 않으므로 이 판단이 `apps/mobile/env.ts` 안에 남고, 같은 파일을 쓰는 개발 세션 스크립트도 그대로 검증에 사용한다.
+
+`adb reverse`로 API와 Supabase 포트까지 넘기면 두 플랫폼이 같은 주소를 쓰게 만들 수도 있다. 그렇게 하지 않는 이유는 유지보수다. `10.0.2.2`는 Android 개발자가 바로 아는 상수이고 잘못되면 주소에 그대로 보이지만, 넘기지 못한 `adb reverse`는 주소가 멀쩡해 보이는 채로 실패해서 `adb reverse --list`를 아는 사람만 진단할 수 있다.
+
+Expo SDK 57의 개발 번들은 셸에서 받은 `EXPO_PUBLIC_` 값 뒤에 `.env.local` 값을 다시 합친다. 개발 세션과 일반 설정이 같은 변수 이름을 쓰면 세션이 정한 값이 `.env.local` 값으로 바뀐다. 개발 세션 전용 이름을 사용하면 `.env.local`을 수정하지 않고도 세션 값의 소유권을 지킬 수 있다.
 
 Metro의 기본 변환 캐시는 OS 임시 폴더에 있어 여러 프로젝트와 worktree가 함께 쓴다. Expo는 올바른 캐시 키를 만들어 이 결과를 안전하게 공유하는 방향을 택하지만, 플러그인이나 설정이 빠뜨린 입력이 있으면 다른 checkout의 결과가 남을 수 있다. worktree별 임시 폴더는 이 저장소의 병렬 세션을 서로 격리하고, 입력이 바뀔 때만 `--clear`를 쓰면 평소의 빠른 재시작도 유지한다.
 
@@ -54,7 +64,10 @@ fingerprint마다 새 캐시 폴더를 만드는 대신 worktree마다 하나의
 
 - Expo Web이나 브라우저 자동화에 worktree별 고정 hostname이 필요할 때
 - OAuth callback, CORS, 쿠키 또는 localStorage를 worktree별 hostname으로 분리해야 할 때
-- 같은 worktree에서 iOS와 Android를 동시에 실행해야 할 때
+- 한 플랫폼에 기기를 여러 대 붙이거나 세 대 이상을 동시에 실행해야 할 때
+- 두 기기를 함께 띄우는 자원 사용이 일상 개발을 방해할 때
+- `10.0.2.2`가 닿지 않는 Android 실행 환경을 기본으로 지원해야 할 때
+- Expo가 `process.env.EXPO_OS` 치환을 바꾸거나 그만둘 때
 - 실제 기기나 원격 기기를 기본 개발 대상으로 지원할 때
 - 공유 Supabase 때문에 서로 다른 스키마 변경을 동시에 검증하지 못하는 일이 반복될 때
 - 공용 네이티브 빌드가 쌓여 저장 공간 관리가 필요할 때
@@ -75,8 +88,12 @@ fingerprint마다 새 캐시 폴더를 만드는 대신 worktree마다 하나의
 - 준비된 기준 Simulator 복제: iOS와 Android에 같은 방식으로 적용할 수 없고 기준 기기의 빌드 갱신과 오염을 별도로 관리해야 한다.
 - worktree마다 Supabase 실행: DB 포트, Docker 자원, seed와 schema drift 관리가 일상 개발 과정에 추가된다.
 - 같은 AVD의 읽기 전용 다중 실행: worktree별 앱 데이터와 로그인 상태를 지속해서 보존하지 못한다.
+- 플랫폼마다 Metro를 따로 띄우기: 주소가 갈린 채로도 동시 실행을 얻지만 Metro 프로세스와 변환 캐시가 두 배가 되고 포트와 상태 관리가 늘어난다.
+- 세션이 완성된 주소를 넘기기: 번들에 박히는 값이 플랫폼마다 갈려 Metro 하나가 두 플랫폼을 서빙하지 못한다.
+- `adb reverse`로 API와 Supabase 포트까지 넘겨 주소를 통일하기: 동작하지만 Expo 생태계에서 덜 흔한 조합이고, 넘기지 못했을 때 주소가 멀쩡해 보이는 채로 실패해 진단이 어렵다.
+- 앱에서 `Platform.OS`로 호스트 계산: `apps/mobile/env.ts`가 `react-native`를 import하게 되어 이 파일을 그대로 쓰는 개발 세션 스크립트가 깨진다. `process.env.EXPO_OS`는 같은 판단을 순수 JavaScript로 한다.
+- 플랫폼을 바꿀 때 이전 플랫폼을 내리기: 명령의 소유 범위는 분명하지만 두 플랫폼을 나란히 비교할 수 없고 전환마다 API와 Metro 재시작을 감수해야 한다.
 - 일반 모바일 URL을 개발 세션에서 덮어쓰기: Expo SDK 57 개발 번들이 `.env.local` 값을 다시 우선하므로 최종 앱 주소를 보장하지 못한다.
-- 앱에서 `Platform.OS`로 개발 주소 계산: 플랫폼과 slot을 이미 아는 개발 세션의 계산을 앱에 중복하고 일반 개발 빌드와 관리 세션을 구분하지 못한다.
 - 모든 시작에 `expo start --clear` 사용: 단순하지만 입력이 그대로인 실행에서도 따뜻한 캐시를 버린다.
 - Metro 캐시를 모든 worktree가 그대로 공유: Expo가 의도한 빠른 경로지만, 이 저장소에서는 새 Metro 프로세스가 이전 `expo-router` 결과를 읽은 일이 실제로 있었다.
 - fingerprint를 Metro 변환 키에 절대 경로로 넣기: 위치에 따라 달라지는 변환 결과를 숨기고 worktree 간 안전한 캐시 공유를 막는다.
@@ -86,7 +103,7 @@ fingerprint마다 새 캐시 폴더를 만드는 대신 worktree마다 하나의
 ## 보존할 근거
 
 - 현재 API 개발 명령은 `3900`을 사용하고 Metro 기본 포트는 `8081`이다.
-- Android Emulator에서 호스트의 loopback 서비스는 `10.0.2.2`로 접근해야 한다. iOS Simulator는 `127.0.0.1`을 사용한다.
+- Android Emulator에서 호스트의 loopback 서비스는 `10.0.2.2`로 접근하거나, `adb reverse tcp:<포트> tcp:<포트>`로 기기의 `127.0.0.1:<포트>`를 호스트로 넘겨야 한다. iOS Simulator는 `127.0.0.1`을 그대로 사용한다.
 - Expo SDK 57의 `expo/virtual/env` 개발 변환은 `.env` 파일 값을 `process.env` 뒤에 합친다. Expo 이슈 `#41981`과 열린 PR `#41999`도 셸 값이 `.env` 값에 덮이는 같은 동작을 다룬다.
 - Expo SDK 57의 플랫폼별 native fingerprint는 서로 다르므로 공용 빌드는 플랫폼별로 구분해야 한다.
 - 현재 앱에서 `EXPO_PUBLIC_API_URL`만 `http://127.0.0.1:3900`과 `http://127.0.0.1:3910`으로 바꿔 만든 iOS native fingerprint는 모두 `4a36fb8683f551d9b9cf800effec1f673b736511`이었다. slot별 API 포트는 공용 네이티브 빌드 재사용을 막지 않는다.

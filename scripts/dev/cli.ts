@@ -39,8 +39,17 @@ async function main(): Promise<void> {
     reused: "기기에 있던 빌드를 그대로 사용",
   }[result.build];
 
+  const others = result.activePlatforms.filter(
+    (platform) => platform !== result.platform
+  );
+
   io.log("");
   io.log(`${result.platform} 개발 세션이 준비됐습니다.`);
+
+  if (others.length > 0) {
+    io.log(`  함께 실행 ${others.join(", ")}`);
+  }
+
   io.log(`  기기      ${result.deviceId}`);
   io.log(`  slot      ${result.slot}`);
   io.log(`  API       http://127.0.0.1:${result.apiPort}`);

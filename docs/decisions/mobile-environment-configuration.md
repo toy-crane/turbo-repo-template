@@ -13,7 +13,7 @@
 
 - 이 계약은 앱 번들에 포함해도 되는 `EXPO_PUBLIC_` 값만 다룬다. 서버 비밀값, 빌드 작업 전용 토큰과 Provider secret은 모바일 환경 설정에 포함하지 않는다.
 - `apps/mobile/.env.local`은 Git에서 제외하고 실제 값을 저장한다. `apps/mobile/.env.example`은 필수 이름과 설명만 공개한다.
-- `EXPO_PUBLIC_DEV_SESSION_API_URL`과 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_URL`은 루트 개발 세션이 넣는 선택 설정이므로 `.env.example`의 사용자 필수 설정에 포함하지 않는다.
+- `EXPO_PUBLIC_DEV_SESSION_API_PORT`와 `EXPO_PUBLIC_DEV_SESSION_SUPABASE_PORT`는 루트 개발 세션이 넣는 선택 설정이므로 `.env.example`의 사용자 필수 설정에 포함하지 않는다. 이 값은 포트만 담고 호스트는 앱이 자기 플랫폼에 맞게 정한다.
 - 테스트는 개발자의 `.env.local`에 기대지 않고 명시적인 테스트 값을 사용한다. 테스트 편의를 위해 실제 앱과 빌드의 검증을 약하게 만들지 않는다.
 - EAS 환경별 값 저장과 동기화 방식은 EAS Build나 EAS Update를 도입할 때 별도로 결정한다.
 

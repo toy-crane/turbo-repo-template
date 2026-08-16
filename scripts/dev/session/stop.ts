@@ -63,19 +63,19 @@ export async function stopSession({ cwd, io }: StopInput): Promise<StopResult> {
       return { hadSession: false };
     }
 
-    const platform = record.activePlatform;
+    const platforms = [...record.activePlatforms];
 
     await stopOwnProcesses(worktreePath, state);
     await shutdownOwnDevices(context, record);
     writeState(context.paths.statePath, state);
 
     io.log(
-      platform
-        ? `${platform} 개발 세션을 종료했습니다. slot ${record.slot}, 기기 배정과 앱 데이터는 그대로 둡니다.`
+      platforms.length > 0
+        ? `${platforms.join(", ")} 개발 세션을 종료했습니다. slot ${record.slot}, 기기 배정과 앱 데이터는 그대로 둡니다.`
         : "실행 중인 프로세스가 없어 상태만 정리했습니다."
     );
 
-    return { hadSession: Boolean(platform) };
+    return { hadSession: platforms.length > 0 };
   });
 }
 

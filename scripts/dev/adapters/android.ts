@@ -267,7 +267,11 @@ export async function installApk(
   await runOrThrow([sdk.adb, "-s", serial, "install", "-r", "-d", apkPath]);
 }
 
-/** Makes the emulator's own loopback reach this worktree's Metro. */
+/**
+ * Makes the emulator's own loopback reach this worktree's Metro. The
+ * development client deep link carries `127.0.0.1`, so this forwarding is the
+ * only way that address means the host machine inside the emulator.
+ */
 export async function reversePort(
   sdk: AndroidSdk,
   serial: string,
