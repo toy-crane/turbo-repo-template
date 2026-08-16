@@ -2,15 +2,16 @@ export type Platform = "android" | "ios";
 
 export type DevCommand =
   | { kind: "remove" }
-  | { clear: boolean; kind: "start"; platform: Platform }
+  | { clear: boolean; kind: "start"; platforms: Platform[] }
   | { kind: "status" }
   | { kind: "stop" };
 
 export const USAGE = [
-  "사용법: bun run dev <ios|android> [--clear]",
+  "사용법: bun run dev <ios|android>... [--clear]",
   "",
   "  bun run dev ios             iOS 개발 세션을 시작합니다.",
   "  bun run dev android         Android 개발 세션을 시작합니다.",
+  "  bun run dev ios android     두 플랫폼을 한 세션에서 함께 시작합니다.",
   "  bun run dev ios --clear     이 worktree의 Metro 캐시를 비우고 시작합니다.",
   "  bun run dev:status          모든 worktree의 세션, 포트, 기기 배정을 보여 줍니다.",
   "  bun run dev:stop            현재 worktree의 개발 세션을 종료합니다.",
@@ -43,21 +44,27 @@ export function parseDevCommand(argv: string[]): DevCommand {
     return { kind: "status" };
   }
 
-  const [platform, ...rest] = args;
+  const platforms: Platform[] = [];
+  let clear = false;
 
-  if (!platform) {
+  for (const argument of args) {
+    if (argument === "--clear") {
+      clear = true;
+      continue;
+    }
+
+    if (!isPlatform(argument)) {
+      throw new Error(`알 수 없는 인수입니다: ${argument}.\n\n${USAGE}`);
+    }
+
+    if (!platforms.includes(argument)) {
+      platforms.push(argument);
+    }
+  }
+
+  if (platforms.length === 0) {
     throw new Error(`실행할 플랫폼을 지정해 주세요.\n\n${USAGE}`);
   }
 
-  const clear = rest.length === 1 && rest[0] === "--clear";
-
-  if (rest.length > 0 && !clear) {
-    throw new Error(`인수가 너무 많습니다: ${args.join(" ")}.\n\n${USAGE}`);
-  }
-
-  if (!isPlatform(platform)) {
-    throw new Error(`알 수 없는 플랫폼입니다: ${platform}.\n\n${USAGE}`);
-  }
-
-  return { clear, kind: "start", platform };
+  return { clear, kind: "start", platforms };
 }
