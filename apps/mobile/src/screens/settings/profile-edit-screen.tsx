@@ -9,8 +9,9 @@ import {
   TextInput,
   useNativeState,
 } from "@expo/ui";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { useCallback } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 
 import { useAccountDeletion } from "@/features/account-deletion/state/use-account-deletion";
 import { accountDeletionLabels } from "@/features/account-deletion/ui/account-deletion-labels";
@@ -30,7 +31,6 @@ import {
 import { ActionProgress } from "@/shared/ui/action-progress";
 import { destructiveActionModifiers } from "./destructive-action";
 import { EditableProfileHero } from "./editable-profile-hero";
-import { heroRowModifiers } from "./hero-row";
 import {
   type PhotoSourceActions,
   PhotoSourceSheet,
@@ -119,6 +119,9 @@ export function ProfileEditScreen({
   flow: ProfileEditFlow;
 }) {
   const { cameraDeniedMessage, edit, menu, menuActions } = flow;
+  // Android draws the form under its own app bar, so the screen has to leave
+  // room for it. iOS insets a form for the navigation bar already.
+  const headerHeight = useHeaderHeight();
   // Not part of the draft: deleting the account ends the thing being edited, so
   // it neither waits for 저장 nor blocks it.
   const deletion = useAccountDeletion();
@@ -160,15 +163,28 @@ export function ProfileEditScreen({
 
   return (
     <Host style={{ flex: 1 }} useViewportSizeMeasurement>
-      <FieldGroup testID="profile-edit-field-group">
-        <FieldGroup.Section modifiers={heroRowModifiers}>
-          <RNHostView matchContents>
-            <EditableProfileHero
-              avatarUrl={edit.avatarUrl}
-              displayName={edit.nickname}
-              onEditPhoto={menu.open}
-            />
-          </RNHostView>
+      <FieldGroup
+        style={
+          Platform.OS === "android" ? { paddingTop: headerHeight } : undefined
+        }
+        testID="profile-edit-field-group"
+      >
+        {/*
+          A section header, not a section child, the same way Settings carries
+          its own hero. A plain child is a row of the form: iOS gives it the
+          inset background and separators, and Android wraps it in a Material
+          row that draws a card behind the picture.
+        */}
+        <FieldGroup.Section>
+          <FieldGroup.SectionHeader>
+            <RNHostView matchContents>
+              <EditableProfileHero
+                avatarUrl={edit.avatarUrl}
+                displayName={edit.nickname}
+                onEditPhoto={menu.open}
+              />
+            </RNHostView>
+          </FieldGroup.SectionHeader>
         </FieldGroup.Section>
 
         {/*

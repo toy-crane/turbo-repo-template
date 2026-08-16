@@ -57,6 +57,11 @@ jest.mock("expo-image-picker", () => ({
  * screen — a suggestion being chosen, a capital being corrected — shows up here
  * exactly as it would on a device.
  */
+jest.mock("expo-router/react-navigation", () => ({
+  // Android leaves room for its own app bar, so the screen asks how tall it is.
+  useHeaderHeight: () => 0,
+}));
+
 jest.mock("@/shared/ui/action-progress", () => {
   const React = require("react") as typeof import("react");
   const { View } = require("react-native") as typeof import("react-native");
