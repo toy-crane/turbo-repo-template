@@ -36,6 +36,7 @@ import {
   PhotoSourceSheet,
   usePhotoSourceMenu,
 } from "./photo-source-menu";
+import { SettingsActionRow } from "./settings-action-row";
 
 /**
  * Everything 프로필 수정 does, assembled from the draft, the pickers and the
@@ -285,8 +286,10 @@ export function ProfileEditScreen({
           Last, alone and unnamed, the same shape Settings gives 로그아웃. A title
           would have to say what this one group is a group of.
 
-          A `ListItem`, which on iOS is a SwiftUI `Button` that takes the press
-          anywhere across the row. The universal `Button` only answers on the
+          `SettingsActionRow`, which on iOS is a `ListItem` — a SwiftUI `Button`
+          that takes the press anywhere across the row — and on Android a plain
+          `Row`, because the section there already wraps each child in a Material
+          row. The universal `Button` only answers on the
           text it draws, and neither `contentShape` on the button nor on its
           content extends that, so the right of the row would look pressable and
           do nothing. No icon and no chevron: it does not go anywhere. It raises
@@ -302,7 +305,7 @@ export function ProfileEditScreen({
           request before the dialog.
         */}
         <FieldGroup.Section testID="account-deletion-section">
-          <ListItem
+          <SettingsActionRow
             modifiers={destructiveActionModifiers(deletion.isDeleting)}
             onPress={deletion.confirmDeletion}
             testID="delete-account-row"
@@ -315,7 +318,7 @@ export function ProfileEditScreen({
             <Text textStyle={problemStyle}>
               {accountDeletionLabels.deleteAccount}
             </Text>
-          </ListItem>
+          </SettingsActionRow>
           <FieldGroup.SectionFooter>
             {/*
               The failure takes the notice's place rather than stacking under it.
