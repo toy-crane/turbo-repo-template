@@ -1,5 +1,11 @@
-import { describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { afterEach, describe, expect, test } from "bun:test";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -9,8 +15,24 @@ import {
   writeAvdDisplayName,
 } from "./android";
 
-function homeWithAvd(avdName: string, config: string): string {
+const homes: string[] = [];
+
+afterEach(() => {
+  for (const home of homes.splice(0)) {
+    rmSync(home, { force: true, recursive: true });
+  }
+});
+
+function temporaryHome(): string {
   const home = mkdtempSync(join(tmpdir(), "android-test-"));
+
+  homes.push(home);
+
+  return home;
+}
+
+function homeWithAvd(avdName: string, config: string): string {
+  const home = temporaryHome();
 
   mkdirSync(avdDirectory(avdName, home), { recursive: true });
   writeFileSync(join(avdDirectory(avdName, home), "config.ini"), config);
@@ -68,7 +90,7 @@ describe("AVD 표시 이름", () => {
   });
 
   test("config.ini가 없으면 조용히 지나간다", () => {
-    const home = mkdtempSync(join(tmpdir(), "android-test-"));
+    const home = temporaryHome();
 
     expect(() =>
       writeAvdDisplayName("missing_avd", "example slot 1", home)

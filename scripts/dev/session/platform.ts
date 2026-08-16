@@ -58,6 +58,8 @@ export interface DeviceHandle {
 
 export interface BootInput {
   deviceId: string;
+  /** Devices of this platform that other worktrees hold; their names stay. */
+  leasedElsewhere?: ReadonlySet<string>;
   logPath: string;
   slot: number;
 }
@@ -102,22 +104,49 @@ export interface DriverInput {
   slug: string;
 }
 
-/** The leased device shows its slot by name; a name collision is freed first. */
+/**
+ * The leased device shows its slot by name; a name collision is freed first.
+ * The name is a label, not a dependency: a rename that fails must never keep
+ * a simulator that can boot from booting.
+ */
 async function applySimulatorSlotName(
   deviceId: string,
   slug: string,
-  slot: number
+  slot: number,
+  leasedElsewhere: ReadonlySet<string>
 ): Promise<void> {
-  const steps = planSimulatorRename(
-    await listSimulators(),
-    deviceId,
-    simulatorSlotName(slug, slot),
-    poolNamePrefix(slug)
-  );
+  try {
+    const steps = planSimulatorRename(
+      await listSimulators(),
+      deviceId,
+      simulatorSlotName(slug, slot),
+      poolNamePrefix(slug),
+      leasedElsewhere
+    );
 
-  for (const step of steps) {
-    // biome-ignore lint/performance/noAwaitInLoops: the collision holder must be renamed before its name is reused.
-    await renameSimulator(step.udid, step.name);
+    for (const step of steps) {
+      // biome-ignore lint/performance/noAwaitInLoops: the collision holder must be renamed before its name is reused.
+      await renameSimulator(step.udid, step.name);
+    }
+  } catch {
+    // Left as is: `dev:status` still shows the UDID and slot mapping.
+  }
+}
+
+/** Same rule on the way back: the pool name is best effort after the erase. */
+async function restorePoolName(deviceId: string, slug: string): Promise<void> {
+  try {
+    const step = planPoolRename(
+      await listSimulators(),
+      deviceId,
+      poolNamePrefix(slug)
+    );
+
+    if (step) {
+      await renameSimulator(step.udid, step.name);
+    }
+  } catch {
+    // The next lease renames it again; nothing depends on the pool name.
   }
 }
 
@@ -130,8 +159,13 @@ function createIosDriver(
     buildEnv: (base) => base,
     buildTarget: (handle) => handle.target,
     createDevice: createSimulator,
-    ensureBooted: async ({ deviceId, slot }) => {
-      await applySimulatorSlotName(deviceId, slug, slot);
+    ensureBooted: async ({ deviceId, leasedElsewhere, slot }) => {
+      await applySimulatorSlotName(
+        deviceId,
+        slug,
+        slot,
+        leasedElsewhere ?? new Set()
+      );
 
       // The device reads its scheme approvals when it boots, so a device that
       // is already up has to come down for a new approval to take effect.
@@ -152,17 +186,8 @@ function createIosDriver(
     },
     eraseToPool: async (deviceId) => {
       await eraseSimulator(deviceId);
-
       // The slot name goes with the lease; a pool device is anonymous again.
-      const step = planPoolRename(
-        await listSimulators(),
-        deviceId,
-        poolNamePrefix(slug)
-      );
-
-      if (step) {
-        await renameSimulator(step.udid, step.name);
-      }
+      await restorePoolName(deviceId, slug);
     },
     existingDeviceIds: async () =>
       new Set((await listSimulators()).map((device) => device.udid)),
@@ -207,18 +232,13 @@ function createAndroidDriver(
     buildTarget: (handle) => handle.deviceId,
     createDevice: (name) => createAvd(sdk, name),
     ensureBooted: async ({ deviceId, logPath, slot }) => {
-      const running = await findSerialForAvd(sdk, deviceId);
-
-      if (running) {
-        return { deviceId, target: running };
-      }
-
-      // The emulator reads its config at boot and may rewrite it on exit, so
-      // the label only goes in while the device is down.
-      writeAvdDisplayName(deviceId, androidDisplayName(slug, slot));
-
       const target = await startEmulator({
         avdName: deviceId,
+        // The emulator reads its config at boot and may rewrite it on exit,
+        // so the label goes in only when a new instance is about to start.
+        beforeSpawn: () => {
+          writeAvdDisplayName(deviceId, androidDisplayName(slug, slot));
+        },
         logPath,
         port: emulatorPort(slot),
         sdk,

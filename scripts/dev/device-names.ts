@@ -37,13 +37,16 @@ export interface SimulatorRename {
  * Renames the leased device to its slot name. A different device still holding
  * that name goes back to a free pool name first: two simulators with the same
  * name would make every name-based tool ambiguous, which is the exact mistake
- * this naming exists to prevent.
+ * this naming exists to prevent. A holder that another worktree still leases
+ * is not touched; that worktree's own next start renames it, and until then
+ * this device keeps its old name rather than creating the duplicate.
  */
 export function planSimulatorRename(
   devices: readonly SimulatorDevice[],
   udid: string,
   desired: string,
-  poolPrefix: string
+  poolPrefix: string,
+  leasedElsewhere: ReadonlySet<string> = new Set()
 ): SimulatorRename[] {
   const current = devices.find((entry) => entry.udid === udid);
 
@@ -55,12 +58,18 @@ export function planSimulatorRename(
   const taken = new Set(devices.map((entry) => entry.name));
 
   for (const other of devices) {
-    if (other.udid !== udid && other.name === desired) {
-      const free = nextName(poolPrefix, taken);
-
-      taken.add(free);
-      steps.push({ name: free, udid: other.udid });
+    if (other.udid === udid || other.name !== desired) {
+      continue;
     }
+
+    if (leasedElsewhere.has(other.udid)) {
+      return [];
+    }
+
+    const free = nextName(poolPrefix, taken);
+
+    taken.add(free);
+    steps.push({ name: free, udid: other.udid });
   }
 
   steps.push({ name: desired, udid });

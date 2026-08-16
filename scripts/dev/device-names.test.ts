@@ -51,7 +51,7 @@ describe("planSimulatorRename", () => {
     ).toEqual([{ name: "example-slot-1", udid: "A" }]);
   });
 
-  test("같은 이름을 쥔 다른 기기를 먼저 풀 이름으로 비운다", () => {
+  test("같은 이름을 가진 다른 기기를 먼저 풀 이름으로 비운다", () => {
     expect(
       planSimulatorRename(
         [
@@ -76,6 +76,18 @@ describe("planSimulatorRename", () => {
         "A",
         "example-slot-1",
         poolNamePrefix("example")
+      )
+    ).toEqual([]);
+  });
+
+  test("다른 worktree가 빌린 기기가 그 이름을 쓰면 아무것도 바꾸지 않는다", () => {
+    expect(
+      planSimulatorRename(
+        [device("A", "example-dev-1"), device("B", "example-slot-1")],
+        "A",
+        "example-slot-1",
+        poolNamePrefix("example"),
+        new Set(["B"])
       )
     ).toEqual([]);
   });
