@@ -1,5 +1,5 @@
 import { beforeEach, expect, jest, test } from "@jest/globals";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
   fireEvent,
@@ -18,7 +18,10 @@ import {
   createProfileRow,
   resetFakeSupabase,
 } from "@/shared/test/fake-supabase";
-import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
+import {
+  createTestQueryClient,
+  renderWithHeroUI,
+} from "@/shared/test/render-with-heroui";
 import { SettingsScreen } from "./settings-screen";
 
 /** The colours the root layout would hand this screen. */
@@ -177,7 +180,7 @@ function renderSettings({
   onOpenProfile = () => {
     // Most tests are about something else on this screen.
   },
-  queryClient = new QueryClient(),
+  queryClient = createTestQueryClient(),
 }: {
   onOpenProfile?: () => void;
   queryClient?: QueryClient;
@@ -278,7 +281,7 @@ test("Android는 로그아웃이 시작되면 진행 중임을 화면 읽기에 
 
 test("로그아웃이 실패해도 이전 사용자의 캐시는 남기지 않는다", async () => {
   const fake = resetFakeSupabase({ session: createFakeSession() });
-  const queryClient = new QueryClient();
+  const queryClient = createTestQueryClient();
 
   fake.auth.signOut.mockResolvedValueOnce({
     error: new Error("Network request failed"),

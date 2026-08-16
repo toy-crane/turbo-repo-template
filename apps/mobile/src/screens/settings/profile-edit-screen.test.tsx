@@ -1,5 +1,5 @@
 import { beforeEach, expect, jest, test } from "@jest/globals";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
   fireEvent,
@@ -30,7 +30,10 @@ import {
   type FakeSupabase,
   resetFakeSupabase,
 } from "@/shared/test/fake-supabase";
-import { renderWithHeroUI } from "@/shared/test/render-with-heroui";
+import {
+  createTestQueryClient,
+  renderWithHeroUI,
+} from "@/shared/test/render-with-heroui";
 import { ProfileEditScreen, useProfileEditFlow } from "./profile-edit-screen";
 
 jest.mock("@/features/auth/state/auth-session", () => ({
@@ -259,7 +262,7 @@ function ProfileEditHarness({ onSaved }: { onSaved?: () => void }) {
 
 async function renderEditor({
   onSaved,
-  queryClient = new QueryClient(),
+  queryClient = createTestQueryClient(),
 }: {
   onSaved?: () => void;
   queryClient?: QueryClient;
@@ -789,7 +792,7 @@ test("확인 뒤 한 번만 삭제하고 기기 로그인과 사용자 캐시를
     profile: createProfileRow(SAVED),
     session: createFakeSession(),
   });
-  const queryClient = new QueryClient();
+  const queryClient = createTestQueryClient();
   const dialog = captureDeletionDialog();
   let finishDeletion = () => {
     // Replaced by the pending call below.
@@ -920,7 +923,7 @@ test("삭제가 실패하면 설명 자리에 안내가 서고 다시 시도할 
     profile: createProfileRow(SAVED),
     session: createFakeSession(),
   });
-  const queryClient = new QueryClient();
+  const queryClient = createTestQueryClient();
   const dialog = captureDeletionDialog();
 
   fake.functions.invoke.mockResolvedValueOnce({

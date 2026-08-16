@@ -3,6 +3,7 @@ import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
 
+import { createTestQueryClient } from "@/shared/test/render-with-heroui";
 import { QueryProvider, queryClient } from "./query-provider";
 
 afterEach(() => {
@@ -31,6 +32,17 @@ async function mountProbe(onClient: (client: QueryClient) => void) {
 }
 
 describe("QueryProvider", () => {
+  test("테스트 캐시는 자동 정리 timer를 만들지 않는다", () => {
+    const client = createTestQueryClient();
+
+    expect(client.getDefaultOptions().queries?.gcTime).toBe(
+      Number.POSITIVE_INFINITY
+    );
+    expect(client.getDefaultOptions().mutations?.gcTime).toBe(
+      Number.POSITIVE_INFINITY
+    );
+  });
+
   test("일반 쿼리는 1분 동안 최신 상태를 유지한다", () => {
     expect(queryClient.getDefaultOptions().queries?.staleTime).toBe(60_000);
   });
