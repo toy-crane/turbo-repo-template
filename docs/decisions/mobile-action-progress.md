@@ -54,7 +54,7 @@
 - [Apple 진행 표시 지침](https://developer.apple.com/design/human-interface-guidelines/progress-indicators)은 진행 표시를 일관된 자리에 두라고 안내한다. 컨트롤 바로 옆에 두라는 문장은 macOS 절에 있으므로 iOS 규칙으로 인용하지 않는다.
 - `@expo/ui 57.0.11`은 접근성을 props가 아니라 modifier로 제공한다. `@expo/ui/swift-ui/modifiers`의 `accessibilityLabel`, `accessibilityValue`, `accessibilityHint`, `accessibilityAddTraits`, `accessibilityHidden`과 `disabled`를 `modifiers` 배열로 넘긴다. `ListItem`과 범용 `Button` 모두 `modifiers`를 받는다.
 - `@expo/ui`의 `ProgressView`는 SwiftUI `ProgressView`에 자식을 라벨로 넘긴다. 자식을 주면 화면에도 보이므로 진행 표시만 필요할 때는 자식 없이 사용한다.
-- `@expo/ui 57.0.11`의 범용 `Button`은 자기가 그린 글자에서만 press를 받는다. iOS Simulator에서 행의 가로 위치를 옮겨 가며 확인했고, 글자 폭을 벗어난 지점은 눌리지 않았다. `contentShape(shapes.rectangle())`를 버튼과 안쪽 `Row` 어느 쪽에 걸어도 넓어지지 않았고 `frame`에는 maxWidth를 무한으로 두는 값이 없다. 같은 버전의 `ListItem`은 iOS에서 SwiftUI `Button`을 감싸며 `contentShape(.rectangle())`를 적용해 행 전체를 누를 수 있게 해 준다.
+- `@expo/ui 57.0.11`의 범용 `Button`은 자기가 그린 글자에서만 press를 받는다. iOS Simulator에서 행의 가로 위치를 옮겨 가며 확인했고, 글자 폭을 벗어난 지점은 눌리지 않았다. 버튼에 `contentShape(shapes.rectangle())`를 걸어도 넓어지지 않았고 `frame`에는 maxWidth를 무한으로 두는 값이 없다. 같은 버전의 `ListItem`은 iOS에서 SwiftUI `Button`을 감싸며 `contentShape(.rectangle())`를 적용해 행 전체를 누를 수 있게 해 준다.
 - 진행 표시만으로는 접근성 트리에 아무것도 남지 않는다. `accessibilityValue`를 붙이면 iOS Simulator에서 행이 label `계정 삭제`에 value `진행 중`을 함께 보고했다. Apple 설정 앱이 `Voice, American (Voice 4)`로 읽히는 것과 같은 구조다.
 - Apple 설정 앱의 접근성 트리에서 행의 상태는 이름을 고정한 채 전달된다. 사전 선택은 셀 `Catalan` 옆의 `selected` 요소로, Siri 음성은 셀의 `selected` 트레잇과 별도 `Checkmark` 요소로, 값이 있는 행은 `Voice, American (Voice 4)`처럼 이름과 값으로 읽힌다.
 - [App Store 심사 지침 5.1.1(v)](https://developer.apple.com/support/offering-account-deletion-in-your-app/)은 계정 삭제를 앱에서 찾기 쉬운 곳에 두고 오래 걸리면 알리라고 요구하지만 버튼 문구는 정하지 않는다.
