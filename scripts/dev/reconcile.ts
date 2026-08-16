@@ -97,6 +97,12 @@ function pruneMissingDevices(
       for (const record of Object.values(state.worktrees)) {
         if (record.devices[platform] === deviceId) {
           delete record.devices[platform];
+          // The app went with the device, so the platform is no longer
+          // attached either. Left in, it would be reported as running and
+          // looked for on the next stop.
+          record.activePlatforms = record.activePlatforms.filter(
+            (entry) => entry !== platform
+          );
         }
       }
     }

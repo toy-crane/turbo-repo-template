@@ -186,8 +186,15 @@ describe("reconcile", () => {
       },
       version: 1,
       worktrees: {
-        [MAIN]: worktree({ devices: { ios: "UDID-1" } }),
-        [FEATURE]: worktree({ devices: { ios: "UDID-GONE" }, slot: 1 }),
+        [MAIN]: worktree({
+          activePlatforms: ["ios"],
+          devices: { ios: "UDID-1" },
+        }),
+        [FEATURE]: worktree({
+          activePlatforms: ["android", "ios"],
+          devices: { android: "avd-1", ios: "UDID-GONE" },
+          slot: 1,
+        }),
       },
     };
 
@@ -198,6 +205,11 @@ describe("reconcile", () => {
 
     expect(result.next.devicePool.ios["UDID-GONE"]).toBeUndefined();
     expect(result.next.worktrees[FEATURE]?.devices.ios).toBeUndefined();
+    // 앱은 기기와 함께 사라졌으므로 붙어 있는 플랫폼에서도 빠진다.
+    expect(result.next.worktrees[FEATURE]?.activePlatforms).toEqual([
+      "android",
+    ]);
+    expect(result.next.worktrees[MAIN]?.activePlatforms).toEqual(["ios"]);
     // 살아 있는 배정은 그대로 두고, 없어진 기기를 종료·초기화하러 가지 않는다.
     expect(result.next.devicePool.ios["UDID-1"]?.leasedTo).toBe(MAIN);
     expect(result.releasedDevices).toEqual([]);

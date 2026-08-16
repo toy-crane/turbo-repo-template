@@ -40,7 +40,12 @@ import {
   worktreeMetroPaths,
 } from "../paths";
 import { allocateSlot, apiPort, MAX_SLOT, metroPort } from "../slots";
-import { type RepositoryState, readState, writeState } from "../state";
+import {
+  type RepositoryState,
+  readState,
+  type WorktreeRecord,
+  writeState,
+} from "../state";
 import {
   createSessionContext,
   readMobileEnvFile,
@@ -65,6 +70,7 @@ const APP_METRO_REQUEST_TIMEOUT_MS = 240_000;
 // come up on its own.
 const ALTERNATE_SCHEME_AFTER_MS = 180_000;
 const BUILD_LOCK_TIMEOUT_MS = 60 * 60 * 1000;
+const PLATFORMS: Platform[] = ["android", "ios"];
 
 /**
  * Metro names the platform on every bundle line. Matching that name rather
@@ -142,11 +148,38 @@ interface Allocation {
   deviceId: string;
   /** Every device this worktree holds, so a restart can reach the others. */
   devices: Partial<Record<Platform, string>>;
-  /** What the leased device carries, read under the lease's own lock. */
-  installedFingerprint: string | null;
+  /** What each held device carries, read under the lease's own lock. */
+  installedFingerprints: Partial<Record<Platform, string | null>>;
+  /** Pids of the reused API and Metro, empty when this run starts its own. */
+  reusedPids: number[];
   /** This worktree's API and Metro are alive and still serve this session. */
   running: boolean;
   slot: number;
+}
+
+function sessionPids(record: WorktreeRecord): number[] {
+  return [record.processes.api?.pid, record.processes.metro?.pid].filter(
+    (pid): pid is number => pid !== undefined
+  );
+}
+
+/** What every device this worktree holds currently carries, per platform. */
+function installedFingerprints(
+  state: RepositoryState,
+  devices: Partial<Record<Platform, string>>
+): Partial<Record<Platform, string | null>> {
+  const found: Partial<Record<Platform, string | null>> = {};
+
+  for (const platform of PLATFORMS) {
+    const deviceId = devices[platform];
+
+    if (deviceId) {
+      found[platform] =
+        state.devicePool[platform][deviceId]?.installedFingerprint ?? null;
+    }
+  }
+
+  return found;
 }
 
 async function ensureDevice(
@@ -262,7 +295,7 @@ async function allocate(
       io.log(`저장된 slot의 포트가 사용 중이라 slot ${slot}으로 옮깁니다.`);
     }
 
-    state.worktrees[worktreePath] = {
+    const worktree: WorktreeRecord = {
       activePlatforms: running ? attached : [],
       devices: existing?.devices ?? {},
       environmentFingerprint: existing?.environmentFingerprint ?? null,
@@ -271,10 +304,14 @@ async function allocate(
       slot,
     };
 
+    state.worktrees[worktreePath] = worktree;
+
     const deviceId = await ensureDevice(driver, state, platform, context);
 
     leaseDevice(state, platform, deviceId, worktreePath);
     writeState(context.paths.statePath, state);
+
+    const devices = { ...worktree.devices };
 
     return {
       // Kept even when the processes are restarting: these apps lost their
@@ -282,9 +319,9 @@ async function allocate(
       attached,
       clearMetroCache: forceClear || !metroInputsCurrent,
       deviceId,
-      devices: { ...state.worktrees[worktreePath]?.devices },
-      installedFingerprint:
-        state.devicePool[platform][deviceId]?.installedFingerprint ?? null,
+      devices,
+      installedFingerprints: installedFingerprints(state, devices),
+      reusedPids: running ? sessionPids(worktree) : [],
       running,
       slot,
     };
@@ -428,7 +465,9 @@ interface ReopenInput {
   attached: Platform[];
   context: SessionContext;
   devices: Partial<Record<Platform, string>>;
+  env: Record<string, string>;
   hostPorts: number[];
+  installedFingerprints: Partial<Record<Platform, string | null>>;
   io: SessionIo;
   logs: SessionLogs;
   metro: number;
@@ -515,7 +554,9 @@ async function reopenOtherPlatforms({
   attached,
   context,
   devices,
+  env,
   hostPorts,
+  installedFingerprints: installed,
   io,
   logs,
   metro,
@@ -532,12 +573,28 @@ async function reopenOtherPlatforms({
       continue;
     }
 
+    // biome-ignore lint/performance/noAwaitInLoops: each platform's fingerprint reads its own native inputs.
+    const current = await generateFingerprint(
+      context.mobileDirectory,
+      platform,
+      env
+    );
+
+    // Reconnecting opens whatever that device already carries. When the native
+    // inputs moved past it, saying so beats handing back an app that will fail
+    // at runtime under a session this command reported as ready.
+    if (installed[platform] !== current) {
+      io.log(
+        `${platform} 앱은 네이티브 입력이 달라져 다시 연결하지 않습니다. bun run dev ${platform}로 새 빌드를 만들어 주세요.`
+      );
+      continue;
+    }
+
     io.log(`${platform} 앱도 새 Metro에 다시 연결합니다.`);
 
     const driver = driverFor(context, platform);
 
     try {
-      // biome-ignore lint/performance/noAwaitInLoops: the device tools contend with each other when driven in parallel.
       const handle = await driver.ensureBooted({
         deviceId,
         logPath: logs.device,
@@ -630,6 +687,18 @@ export async function startSession({
   // Every address the app uses is `127.0.0.1`, so an emulator needs all three
   // forwarded before it can reach this worktree's session.
   const hostPorts = [metro, api, context.supabasePort];
+  // A build or a first bundle can run for many minutes; whichever processes
+  // this run depends on are checked throughout rather than at the end, so a
+  // session that died is reported as that instead of as an unresponsive app.
+  const watch = (pids: readonly number[]) => () => {
+    for (const pid of pids) {
+      if (!isProcessAlive(pid)) {
+        throw new Error(
+          `개발 세션 프로세스가 종료됐습니다. ${logs.api}와 ${logs.metro}를 확인해 주세요.`
+        );
+      }
+    }
+  };
   const plan = startPlan({
     attached: allocation.attached,
     platform,
@@ -653,7 +722,7 @@ export async function startSession({
         logs,
         metro,
         platform,
-        running: () => undefined,
+        running: watch(allocation.reusedPids),
       });
 
       return {
@@ -687,14 +756,14 @@ export async function startSession({
       env,
       fingerprint,
       handle,
-      installedFingerprint: allocation.installedFingerprint,
+      installedFingerprint: allocation.installedFingerprints[platform] ?? null,
       io,
       logs,
       platform,
     });
 
     if (plan === "join") {
-      io.log(`실행 중인 세션에 ${platform}을 더합니다.`);
+      io.log(`실행 중인 세션에 ${platform}를 더합니다.`);
       await driver.prepareHostPorts(handle, hostPorts);
       await openApp({
         context,
@@ -703,7 +772,7 @@ export async function startSession({
         logs,
         metro,
         platform,
-        running: () => undefined,
+        running: watch(allocation.reusedPids),
       });
 
       const joined = platformsAfterStart(plan, allocation.attached, platform);
@@ -767,15 +836,7 @@ export async function startSession({
 
     started.push(metroPid);
 
-    const running = () => {
-      for (const pid of started) {
-        if (!isProcessAlive(pid)) {
-          throw new Error(
-            `개발 세션 프로세스가 종료됐습니다. ${logs.api}와 ${logs.metro}를 확인해 주세요.`
-          );
-        }
-      }
-    };
+    const running = watch(started);
 
     await waitForHttp({
       accepts: (body) => body.includes('"ok"'),
@@ -807,7 +868,9 @@ export async function startSession({
       attached: allocation.attached,
       context,
       devices: allocation.devices,
+      env,
       hostPorts,
+      installedFingerprints: allocation.installedFingerprints,
       io,
       logs,
       metro,

@@ -267,11 +267,10 @@ export async function installApk(
   await runOrThrow([sdk.adb, "-s", serial, "install", "-r", "-d", apkPath]);
 }
 
-/** Makes the emulator's own loopback reach this worktree's Metro. */
 /**
- * Makes the host's `127.0.0.1:<port>` answer at the same address inside the
- * emulator. The app then uses one address on both platforms, which is what
- * lets a single Metro serve iOS and Android from the same worktree.
+ * Makes the emulator's own `127.0.0.1:<port>` reach the host at the same port.
+ * The app then uses one address on both platforms, which is what lets a single
+ * Metro serve iOS and Android from the same worktree.
  */
 export async function reversePorts(
   sdk: AndroidSdk,
