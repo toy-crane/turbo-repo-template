@@ -56,17 +56,17 @@
 
 ## 확인한 것
 
-iOS Simulator의 Development Build에서 확인했다.
+iOS Simulator와 Android Emulator의 Development Build에서 각각 확인했다.
 
 - 두 동작 모두 기존 행과 같은 모양으로 그려지고 행 전체가 눌린다.
-- 진행 중에는 문구가 그대로이고 trailing 자리에 시스템 진행 표시가 돈다.
-- 접근성 트리가 label `계정 삭제`와 `로그아웃`에 value `진행 중`을 함께 보고한다.
-- 삭제가 끝나면 로그인 화면으로 돌아간다.
+- 진행 중에는 문구가 그대로이고 trailing 자리에 플랫폼 진행 표시가 돈다. iOS는 SwiftUI 활동 표시, Android는 Material 3 Expressive `LoadingIndicator`다.
+- 삭제와 로그아웃 모두 끝나면 로그인 화면으로 돌아간다.
+- iOS 접근성 트리가 label `계정 삭제`와 `로그아웃`에 value `진행 중`을 함께 보고한다.
 
 ## 남은 위험
 
-- Android에서 확인하지 않았다. `FieldGroup.Section`이 자식을 Material `ListItem`으로 감싸므로 이중으로 감싸질 수 있고, `LoadingIndicator`의 크기가 행에 맞는지도 보지 않았다.
-- 실패 상태는 시뮬레이터에서 재현하지 않았다. 단위 테스트로만 확인했다.
+- **Android는 진행 중임을 화면 읽기에 알리지 못한다.** `accessibilityValue`는 SwiftUI modifier이고 `@expo/ui 57.0.11`의 Compose 쪽에는 대응하는 modifier가 없다. 접근성 트리에도 진행 표시가 남지 않는다. React Native의 `AccessibilityInfo.announceForAccessibility`가 대안이지만 아직 넣지 않았고, 넣어도 화면 읽기로 직접 확인하기 어렵다.
+- 실패 상태는 기기에서 재현하지 않았다. 단위 테스트로만 확인했다.
 
 ## 승인한 화면
 
