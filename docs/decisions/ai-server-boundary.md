@@ -14,15 +14,15 @@
 
 - 상태 확인처럼 모델을 호출하지 않고 설정값을 노출하지 않는 경로는 로그인 없이 제공할 수 있다.
 - 모델 제공자와 Vercel AI Gateway의 비밀 값은 서버만 소유한다.
-- AI 요청은 `supabaseAdmin`을 사용하지 않고 로그인 사용자의 RLS가 적용되는 `supabase` 클라이언트를 사용한다. 이 클라이언트를 만드는 데 필요한 `SUPABASE_PUBLISHABLE_KEY`는 공개 값이므로 서버 환경에 둔다. 계정 탈퇴 뒤 남은 access token이 비용이 드는 AI 요청을 보내지 못하도록 Supabase Auth에 현재 사용자 계정이 남아 있는지도 확인한다.
-- 자리표시자는 자격 증명이 아니라 권한을 없애는 값이다. `sb_secret_` 형태를 쓰지 않으며, 나중에 누군가 `supabaseAdmin`을 호출하면 조용히 통과하지 않고 이 값으로 실패한다. 실제 secret key가 필요한 계정 탈퇴는 [계정 탈퇴 서버 경계](account-deletion-server-boundary.md)에 따라 Supabase Edge Function으로 분리한다.
+- AI 요청은 `supabaseAdmin`을 사용하지 않고 로그인 사용자의 RLS가 적용되는 `supabase` 클라이언트를 사용한다. 이 클라이언트를 만드는 데 필요한 `SUPABASE_PUBLISHABLE_KEY`는 공개 값이므로 서버 환경에 둔다. 계정 삭제 뒤 남은 access token이 비용이 드는 AI 요청을 보내지 못하도록 Supabase Auth에 현재 사용자 계정이 남아 있는지도 확인한다.
+- 자리표시자는 자격 증명이 아니라 권한을 없애는 값이다. `sb_secret_` 형태를 쓰지 않으며, 나중에 누군가 `supabaseAdmin`을 호출하면 조용히 통과하지 않고 이 값으로 실패한다. 실제 secret key가 필요한 계정 삭제는 [계정 삭제 서버 경계](account-deletion-server-boundary.md)에 따라 Supabase Edge Function으로 분리한다.
 - 이 결정은 모델 제공자와 모델, 대화 저장 방식, 사용량 제한 수치, AI와 무관한 서버 API의 소유권을 정하지 않는다.
 
 ## 이유
 
 별도 서버 경계는 모델 비밀 값과 비용이 드는 호출을 모바일 번들에서 분리한다. Hono가 인증, 사용량 제한과 서버 도구 실행을 한곳에서 처리하면 AI 기능마다 같은 보호 장치를 반복하지 않아도 된다. `@supabase/server`의 Hono 어댑터를 사용하면 access token 검증, 사용자 정보와 RLS 클라이언트 생성을 직접 구현하지 않아도 된다. 익명 로그인을 끄면 별도 익명 사용자 검사 없이 `auth: 'user'`를 로그인 사용자 경계로 사용할 수 있다. `apps/api`를 별도 Vercel 프로젝트로 배포하면 모바일 앱의 빌드와 배포 주기에 묶이지 않으면서 Vercel Functions의 Hono 및 응답 스트리밍 지원을 사용할 수 있다.
 
-계정 탈퇴를 Supabase Edge Function으로 분리하면 `apps/api`는 실제 Supabase secret key를 받지 않는다. 설치된 `@supabase/server`가 관리자 클라이언트를 항상 만들기 때문에 AI 경로에는 자리표시자가 계속 필요하다. 서명만 확인한 JWT는 계정 삭제 뒤에도 만료 전까지 남을 수 있으므로, 비용 보호에는 현재 사용자 확인도 필요하다.
+계정 삭제를 Supabase Edge Function으로 분리하면 `apps/api`는 실제 Supabase secret key를 받지 않는다. 설치된 `@supabase/server`가 관리자 클라이언트를 항상 만들기 때문에 AI 경로에는 자리표시자가 계속 필요하다. 서명만 확인한 JWT는 계정 삭제 뒤에도 만료 전까지 남을 수 있으므로, 비용 보호에는 현재 사용자 확인도 필요하다.
 
 ## 재검토 조건
 

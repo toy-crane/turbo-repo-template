@@ -27,12 +27,13 @@
 - Google 로그인은 기본 신원 정보와 ID Token만 요청한다. Google API 추가 권한, access token, offline access와 `serverAuthCode`를 사용하지 않는다.
 - 직접 그린 버튼은 각 제공자가 허용한 문구, 로고 자산, 색상 조합만 쓴다. Google은 "Continue with Google"의 현지화와 지정 색을, Apple은 허용된 세 문구와 검정 또는 흰색 배경을 지킨다. 로고를 다시 그리거나 색을 바꾸지 않는다.
 - 일반 로그아웃은 `supabase.auth.signOut({ scope: "local" })`을 사용한다. 전체 기기 로그아웃과 다른 기기만 로그아웃하는 기능은 별도 제품 기능이다.
+- 설정 화면 로그아웃 버튼의 진행 표시는 [모바일 작업 진행 표시](mobile-action-progress.md)를 따른다. 진행 중에도 문구는 `로그아웃` 그대로 둔다.
 - Google 로그아웃에는 로컬 `signOut`을 사용한다. `revokeAccess`는 계정 연결 해제 기능을 따로 만들 때만 사용한다.
 - Apple은 별도 제공자 로그아웃을 호출하지 않는다. 앱 세션과 Supabase 세션만 지운다.
 - 로컬 이메일 도구는 로컬 Supabase와 Mailpit에서만 동작해야 한다. 원격 URL, 관리자 API, `service_role`, 고정 세션과 토큰 출력을 허용하지 않는다.
-- 계정 탈퇴의 사용자 흐름과 삭제 범위는 [모바일 계정 탈퇴](mobile-account-deletion.md)를
+- 계정 삭제의 사용자 흐름과 삭제 범위는 [모바일 계정 삭제](mobile-account-deletion.md)를
   따르고, 서버 권한과 삭제 순서는
-  [계정 탈퇴 서버 경계](account-deletion-server-boundary.md)를 따른다.
+  [계정 삭제 서버 경계](account-deletion-server-boundary.md)를 따른다.
 
 ## 이유
 
