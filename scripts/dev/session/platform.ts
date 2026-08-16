@@ -243,7 +243,8 @@ function createAndroidDriver(
     installArtifact: (handle, artifactPath) =>
       installApk(sdk, handle.target, artifactPath),
     missingTooling: () => Promise.resolve(missingAndroidTooling(sdk)),
-    nextDeviceName: (projectSlug, taken) => nextName(`${projectSlug}_dev_`, taken),
+    nextDeviceName: (projectSlug, taken) =>
+      nextName(`${projectSlug}_dev_`, taken),
     prepareForMetro: (handle, metroPort) =>
       reversePort(sdk, handle.target, metroPort),
     producedArtifact: () => {
@@ -278,7 +279,12 @@ export function createPlatformDriver({
 }: DriverInput): PlatformDriver {
   return platform === "ios"
     ? createIosDriver(bundleIdentifier, schemes, slug)
-    : createAndroidDriver(mobileDirectory, androidPackage, gradleUserHome, slug);
+    : createAndroidDriver(
+        mobileDirectory,
+        androidPackage,
+        gradleUserHome,
+        slug
+      );
 }
 
 /** The driver every command wants: this project, that platform. */

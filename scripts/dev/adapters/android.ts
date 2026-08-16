@@ -424,15 +424,13 @@ export function writeAvdDisplayName(
     return;
   }
 
-  const lines = contents
-    .split("\n")
-    .filter((line) => {
-      const separator = line.indexOf("=");
+  const lines = contents.split("\n").filter((line) => {
+    const separator = line.indexOf("=");
 
-      return !(
-        separator > 0 && line.slice(0, separator).trim() === DISPLAY_NAME_KEY
-      );
-    });
+    return !(
+      separator > 0 && line.slice(0, separator).trim() === DISPLAY_NAME_KEY
+    );
+  });
 
   while (lines.at(-1) === "") {
     lines.pop();
