@@ -161,21 +161,29 @@ test("코드를 보내는 동안 같은 버튼을 다시 실행하지 않는다"
   await type("이메일", EMAIL);
 
   const submit = screen.getByLabelText("인증 코드 받기");
+  // fireEvent starts its own async act, so use Pressable's test callback to
+  // keep all three calls inside this one render frame.
+  const pressSubmit =
+    submit.props.onStartShouldSetResponder.testOnly_pressabilityConfig()
+      .onPress;
 
   await act(() => {
-    fireEvent.press(submit);
-    fireEvent.press(submit);
-    fireEvent.press(submit);
+    pressSubmit();
+    pressSubmit();
+    pressSubmit();
   });
 
-  await act(() => {
+  await act(async () => {
     release();
+    await Promise.resolve();
   });
 
   expect(fake.auth.signInWithOtp).toHaveBeenCalledTimes(1);
   // The swallowed presses must not advance either: each one that slipped
   // through would push another code screen for a code that was never sent.
-  expect(onSent).toHaveBeenCalledTimes(1);
+  await waitFor(() => {
+    expect(onSent).toHaveBeenCalledTimes(1);
+  });
 });
 
 test("전송 한도가 아닌 429는 넘어가지 않는다", async () => {
