@@ -101,7 +101,26 @@ describe("buildStatusReport", () => {
     ]);
   });
 
-  test("사라진 worktree 폴더와 사라진 기기를 표시한다", () => {
+  test("세션이 멈춘 worktree도 slot의 포트를 보여 준다", () => {
+    const state = stateWithSession();
+
+    state.worktrees[MAIN] = {
+      ...(state.worktrees[MAIN] as (typeof state.worktrees)[string]),
+      processes: {},
+      slot: 2,
+    };
+
+    const [worktree] = buildStatusReport(state, factsWith()).worktrees;
+
+    expect(worktree?.api).toEqual({ alive: false, pid: undefined, port: 3920 });
+    expect(worktree?.metro).toEqual({
+      alive: false,
+      pid: undefined,
+      port: 8101,
+    });
+  });
+
+  test("Git 목록에서 사라진 worktree와 사라진 기기를 표시한다", () => {
     const state = stateWithSession();
     const report = buildStatusReport(
       state,

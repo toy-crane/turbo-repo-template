@@ -11,7 +11,7 @@ import { driverFor } from "./platform";
 
 const PROCESS_KINDS: ProcessKind[] = ["api", "metro"];
 
-function processKey(
+export function processKey(
   worktreePath: string,
   kind: ProcessKind,
   record: ProcessRecord
@@ -21,9 +21,12 @@ function processKey(
 
 /**
  * Ownership needs `ps` and `lsof`, so the answers are collected before the
- * pure reconciliation, which then only reads them.
+ * pure reconciliation, which then only reads them. `dev:status` reads the same
+ * answers so it agrees with what the next start would reclaim.
  */
-async function liveProcessKeys(state: RepositoryState): Promise<Set<string>> {
+export async function liveProcessKeys(
+  state: RepositoryState
+): Promise<Set<string>> {
   const checks: Promise<string | undefined>[] = [];
 
   for (const [worktreePath, record] of Object.entries(state.worktrees)) {

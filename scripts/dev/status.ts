@@ -1,4 +1,5 @@
-import type { Platform } from "./options";
+import { PLATFORMS, type Platform } from "./options";
+import { apiPort, metroPort } from "./slots";
 import type {
   ProcessKind,
   ProcessRecord,
@@ -6,11 +7,11 @@ import type {
   WorktreeRecord,
 } from "./state";
 
-const PLATFORMS: Platform[] = ["android", "ios"];
-
 export interface StatusProcess {
   alive: boolean;
-  pid: number;
+  /** Recorded pid; absent when the session is stopped. */
+  pid: number | undefined;
+  /** The slot's port, shown even while nothing listens on it. */
   port: number;
 }
 
@@ -28,12 +29,12 @@ export interface StatusDevice {
 
 export interface WorktreeStatus {
   activePlatforms: Platform[];
-  api: StatusProcess | undefined;
+  api: StatusProcess;
   devices: StatusDevice[];
-  /** The checkout folder itself is gone; the next start reclaims it. */
+  /** Git no longer lists this worktree; the next start reclaims it. */
   gone: boolean;
   label: string;
-  metro: StatusProcess | undefined;
+  metro: StatusProcess;
   path: string;
   slot: number;
 }
@@ -84,10 +85,11 @@ function statusProcess(
   worktreePath: string,
   kind: ProcessKind,
   record: ProcessRecord | undefined,
+  slotPort: number,
   facts: StatusFacts
-): StatusProcess | undefined {
+): StatusProcess {
   if (!record) {
-    return;
+    return { alive: false, pid: undefined, port: slotPort };
   }
 
   return {
@@ -114,11 +116,23 @@ function worktreeStatus(
 
   return {
     activePlatforms: [...record.activePlatforms],
-    api: statusProcess(path, "api", record.processes.api, facts),
+    api: statusProcess(
+      path,
+      "api",
+      record.processes.api,
+      apiPort(record.slot),
+      facts
+    ),
     devices,
     gone: !facts.worktreeExists(path),
     label: record.label,
-    metro: statusProcess(path, "metro", record.processes.metro, facts),
+    metro: statusProcess(
+      path,
+      "metro",
+      record.processes.metro,
+      metroPort(record.slot),
+      facts
+    ),
     path,
     slot: record.slot,
   };
@@ -151,11 +165,7 @@ export function buildStatusReport(
   return { idle, worktrees };
 }
 
-function processLine(kind: string, entry: StatusProcess | undefined): string {
-  if (!entry) {
-    return `  ${kind.padEnd(9)}중지됨`;
-  }
-
+function processLine(kind: string, entry: StatusProcess): string {
   const life = entry.alive ? `실행 중 (pid ${entry.pid})` : "중지됨";
 
   return `  ${kind.padEnd(9)}${String(entry.port).padEnd(6)}${life}`;
@@ -191,12 +201,12 @@ export function renderStatusReport(report: StatusReport): string[] {
       lines.push("");
     }
 
-    lines.push(`${worktree.label || worktree.path} — slot ${worktree.slot}`);
+    lines.push(`${worktree.label || worktree.path} (slot ${worktree.slot})`);
     lines.push(`  경로     ${worktree.path}`);
 
     if (worktree.gone) {
       lines.push(
-        "  이 worktree 폴더는 사라졌습니다. 다음 시작 명령이 회수합니다."
+        "  Git worktree 목록에서 사라졌습니다. 다음 시작 명령이 회수합니다."
       );
     }
 

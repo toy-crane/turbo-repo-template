@@ -1,4 +1,10 @@
-import { existsSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -143,25 +149,38 @@ async function runningSerials(sdk: AndroidSdk): Promise<string[]> {
     .map((parts) => parts[0] as string);
 }
 
-/** Serial per running AVD, for read-only display. Asks each emulator once. */
+/** The AVD an emulator console reports for a serial, or nothing on error. */
+async function avdNameForSerial(
+  sdk: AndroidSdk,
+  serial: string
+): Promise<string | undefined> {
+  const { code, stdout } = await run([
+    sdk.adb,
+    "-s",
+    serial,
+    "emu",
+    "avd",
+    "name",
+  ]);
+  const name = stdout.split("\n")[0]?.trim();
+
+  return code === 0 && name ? name : undefined;
+}
+
+/** Serial per running AVD, for read-only display. */
 export async function listRunningAvds(
   sdk: AndroidSdk
 ): Promise<Map<string, string>> {
+  const serials = await runningSerials(sdk);
+  const names = await Promise.all(
+    serials.map((serial) => avdNameForSerial(sdk, serial))
+  );
   const found = new Map<string, string>();
 
-  for (const serial of await runningSerials(sdk)) {
-    // biome-ignore lint/performance/noAwaitInLoops: each emulator console answers one query at a time.
-    const { code, stdout } = await run([
-      sdk.adb,
-      "-s",
-      serial,
-      "emu",
-      "avd",
-      "name",
-    ]);
-    const name = stdout.split("\n")[0]?.trim();
+  for (const [index, serial] of serials.entries()) {
+    const name = names[index];
 
-    if (code === 0 && name) {
+    if (name) {
       found.set(name, serial);
     }
   }
@@ -179,16 +198,7 @@ export async function findSerialForAvd(
 ): Promise<string | undefined> {
   for (const serial of await runningSerials(sdk)) {
     // biome-ignore lint/performance/noAwaitInLoops: the match ends the search, so asking every emulator up front would be wasted work.
-    const { code, stdout } = await run([
-      sdk.adb,
-      "-s",
-      serial,
-      "emu",
-      "avd",
-      "name",
-    ]);
-
-    if (code === 0 && stdout.split("\n")[0]?.trim() === avdName) {
+    if ((await avdNameForSerial(sdk, serial)) === avdName) {
       return serial;
     }
   }
@@ -202,6 +212,12 @@ function sleep(ms: number): Promise<void> {
 
 export interface StartEmulatorInput {
   avdName: string;
+  /**
+   * Runs only when a new emulator process is about to start, after the
+   * running-instance and console-port checks. This is the one moment the AVD
+   * is known to be down, so it is where an edit to its files belongs.
+   */
+  beforeSpawn?: () => void;
   logPath: string;
   port: number;
   sdk: AndroidSdk;
@@ -213,6 +229,7 @@ export interface StartEmulatorInput {
  */
 export async function startEmulator({
   avdName,
+  beforeSpawn,
   logPath,
   port,
   sdk,
@@ -225,11 +242,16 @@ export async function startEmulator({
 
   // An emulator started on a taken console port fails quietly, so the wait
   // below would end in a boot timeout that says nothing about the real cause.
+  // This also catches an instance of this AVD that is still booting: adb lists
+  // it as `offline`, which the running check above does not see, but its
+  // console port is already taken.
   if (!(await isPortFree(port))) {
     throw new Error(
       `Emulator 콘솔 포트 ${port}을(를) 다른 프로그램이 쓰고 있습니다. 이 저장소가 관리하지 않는 Emulator를 종료한 뒤 다시 실행해 주세요.`
     );
   }
+
+  beforeSpawn?.();
 
   spawnSession({
     argv: [
@@ -374,6 +396,78 @@ export function avdDirectory(
   home: string = homedir()
 ): string {
   return join(home, ".android", "avd", `${avdName}.avd`);
+}
+
+const DISPLAY_NAME_KEY = "avd.ini.displayname";
+
+function avdConfigPath(avdName: string, home: string): string {
+  return join(avdDirectory(avdName, home), "config.ini");
+}
+
+/** The display name Android Studio and the emulator window show for an AVD. */
+export function readAvdDisplayName(
+  avdName: string,
+  home: string = homedir()
+): string | undefined {
+  let contents: string;
+
+  try {
+    contents = readFileSync(avdConfigPath(avdName, home), "utf8");
+  } catch {
+    return;
+  }
+
+  for (const line of contents.split("\n")) {
+    const separator = line.indexOf("=");
+
+    if (separator > 0 && line.slice(0, separator).trim() === DISPLAY_NAME_KEY) {
+      return line.slice(separator + 1).trim() || undefined;
+    }
+  }
+}
+
+/**
+ * Only safe while the emulator is down: the emulator reads the config at boot
+ * and may rewrite it on exit. `undefined` removes the key, so a released AVD
+ * stops carrying the previous worktree's label.
+ */
+export function writeAvdDisplayName(
+  avdName: string,
+  displayName: string | undefined,
+  home: string = homedir()
+): void {
+  const path = avdConfigPath(avdName, home);
+  let contents: string;
+
+  try {
+    contents = readFileSync(path, "utf8");
+  } catch {
+    // An AVD without a config cannot be labeled; the id keeps identifying it.
+    return;
+  }
+
+  const lines = contents.split("\n").filter((line) => {
+    const separator = line.indexOf("=");
+
+    return !(
+      separator > 0 && line.slice(0, separator).trim() === DISPLAY_NAME_KEY
+    );
+  });
+
+  while (lines.at(-1) === "") {
+    lines.pop();
+  }
+
+  if (displayName !== undefined) {
+    lines.push(`${DISPLAY_NAME_KEY}=${displayName}`);
+  }
+
+  // Write beside and rename: a config.ini cut short would stop the AVD from
+  // booting at all, which is far worse than a missing label.
+  const temporaryPath = `${path}.${process.pid}.tmp`;
+
+  writeFileSync(temporaryPath, `${lines.join("\n")}\n`);
+  renameSync(temporaryPath, path);
 }
 
 /**

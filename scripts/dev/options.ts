@@ -18,7 +18,7 @@ export const USAGE = [
   "  bun run dev:remove          현재 worktree의 개발 자원을 정리하고 기기를 풀로 돌려놓습니다.",
 ].join("\n");
 
-const PLATFORMS: Platform[] = ["android", "ios"];
+export const PLATFORMS: Platform[] = ["android", "ios"];
 
 function isPlatform(value: string): value is Platform {
   return (PLATFORMS as string[]).includes(value);

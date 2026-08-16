@@ -68,6 +68,12 @@ export interface MultiStartOutcome {
   attached: readonly Platform[];
   /** Requested platforms whose app attached this run, in start order. */
   attachedNow: readonly Platform[];
+  /**
+   * Requested platforms whose app did not attach this run. A relaunch quits
+   * the app before reopening it, so a failed one is detached even if it was
+   * attached before.
+   */
+  failedNow?: readonly Platform[];
   /** Restart only: platforms outside the request that were reopened. */
   reattached?: readonly Platform[];
   /** The session's API and Metro were reused rather than restarted. */
@@ -78,12 +84,13 @@ export interface MultiStartOutcome {
 export function platformsAfterMultiStart({
   attached,
   attachedNow,
+  failedNow = [],
   reattached = [],
   running,
 }: MultiStartOutcome): Platform[] {
   if (running) {
     return [
-      ...attached,
+      ...attached.filter((platform) => !failedNow.includes(platform)),
       ...attachedNow.filter((platform) => !attached.includes(platform)),
     ];
   }

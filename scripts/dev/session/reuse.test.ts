@@ -143,14 +143,26 @@ describe("platformsAfterMultiStart", () => {
     ).toEqual(["ios", "android"]);
   });
 
-  test("실행 중인 세션에서 붙이지 못한 플랫폼은 더하지 않는다", () => {
+  test("실행 중인 세션에서 붙이지 못한 새 플랫폼은 더하지 않는다", () => {
     expect(
       platformsAfterMultiStart({
         attached: ["ios"],
         attachedNow: [],
+        failedNow: ["android"],
         running: true,
       })
     ).toEqual(["ios"]);
+  });
+
+  test("실행 중인 세션에서 다시 열지 못한 플랫폼은 목록에서 뺀다", () => {
+    expect(
+      platformsAfterMultiStart({
+        attached: ["ios", "android"],
+        attachedNow: ["android"],
+        failedNow: ["ios"],
+        running: true,
+      })
+    ).toEqual(["android"]);
   });
 
   test("다시 시작하면 이번에 붙인 플랫폼과 다시 연결한 플랫폼만 남는다", () => {

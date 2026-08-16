@@ -53,7 +53,7 @@ import {
   type SessionIo,
 } from "./context";
 import { fitStateToReality, stopOwnProcesses } from "./maintenance";
-import { driverFor, type PlatformDriver } from "./platform";
+import { type DeviceHandle, driverFor, type PlatformDriver } from "./platform";
 import {
   platformsAfterMultiStart,
   type SessionReuseReason,
@@ -83,6 +83,13 @@ function appRequestPattern(platform: Platform): RegExp {
 function failureMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
+
+/**
+ * The session's own API or Metro died. This is never one platform's failure:
+ * every platform loses its server, so it has to escape the per-platform
+ * catches and fail the run.
+ */
+class SessionDiedError extends Error {}
 
 export interface StartInput {
   clear: boolean;
@@ -169,6 +176,8 @@ interface Allocation {
   devices: Partial<Record<Platform, string>>;
   /** What each held device carries, read under the lease's own lock. */
   installedFingerprints: Partial<Record<Platform, string | null>>;
+  /** Devices other worktrees hold, per platform, so their names are left alone. */
+  leasedElsewhere: Record<Platform, ReadonlySet<string>>;
   /** Pids of the reused API and Metro, empty when this run starts its own. */
   reusedPids: number[];
   /** This worktree's API and Metro are alive and still serve this session. */
@@ -180,6 +189,29 @@ function sessionPids(record: WorktreeRecord): number[] {
   return [record.processes.api?.pid, record.processes.metro?.pid].filter(
     (pid): pid is number => pid !== undefined
   );
+}
+
+/** Devices leased to any other worktree, read under the same lock. */
+function devicesLeasedElsewhere(
+  state: RepositoryState,
+  worktreePath: string
+): Record<Platform, ReadonlySet<string>> {
+  const found: Record<Platform, Set<string>> = {
+    android: new Set(),
+    ios: new Set(),
+  };
+
+  for (const platform of PLATFORMS) {
+    for (const [deviceId, device] of Object.entries(
+      state.devicePool[platform]
+    )) {
+      if (device.leasedTo && device.leasedTo !== worktreePath) {
+        found[platform].add(deviceId);
+      }
+    }
+  }
+
+  return found;
 }
 
 /** What every device this worktree holds currently carries, per platform. */
@@ -362,6 +394,13 @@ async function allocate(
       platforms
     );
 
+    // A worktree that never had a record and could not lease a single device
+    // does not get one now: a slot held by an empty record would show up in
+    // `dev:status` and block other worktrees for nothing.
+    if (!existing && Object.keys(worktree.devices).length === 0) {
+      delete state.worktrees[worktreePath];
+    }
+
     writeState(context.paths.statePath, state);
 
     const devices = { ...worktree.devices };
@@ -374,6 +413,7 @@ async function allocate(
       deviceFailures,
       devices,
       installedFingerprints: installedFingerprints(state, devices),
+      leasedElsewhere: devicesLeasedElsewhere(state, worktreePath),
       reusedPids: running ? sessionPids(worktree) : [],
       running,
       slot,
@@ -399,7 +439,7 @@ interface BuildStepInput {
   driver: PlatformDriver;
   env: Record<string, string>;
   fingerprint: string;
-  handle: { deviceId: string; target: string };
+  handle: DeviceHandle;
   installedFingerprint: string | null;
   io: SessionIo;
   logs: SessionLogs;
@@ -408,7 +448,7 @@ interface BuildStepInput {
 
 async function installShared(
   driver: PlatformDriver,
-  handle: { deviceId: string; target: string },
+  handle: DeviceHandle,
   artifactPath: string,
   io: SessionIo
 ): Promise<void> {
@@ -517,7 +557,7 @@ async function resolveBuild({
 interface OpenAppInput {
   context: SessionContext;
   driver: PlatformDriver;
-  handle: { deviceId: string; target: string };
+  handle: DeviceHandle;
   logs: SessionLogs;
   metro: number;
   platform: Platform;
@@ -588,6 +628,7 @@ interface ReopenInput {
   env: Record<string, string>;
   installedFingerprints: Partial<Record<Platform, string | null>>;
   io: SessionIo;
+  leasedElsewhere: Record<Platform, ReadonlySet<string>>;
   logs: SessionLogs;
   metro: number;
   /** Platforms this command already opened or reported on its own. */
@@ -610,6 +651,7 @@ async function reopenOtherPlatforms({
   env,
   installedFingerprints: installed,
   io,
+  leasedElsewhere,
   logs,
   metro,
   requested,
@@ -649,6 +691,7 @@ async function reopenOtherPlatforms({
     try {
       const handle = await driver.ensureBooted({
         deviceId,
+        leasedElsewhere: leasedElsewhere[platform],
         logPath: logs.device,
         slot,
       });
@@ -665,6 +708,10 @@ async function reopenOtherPlatforms({
       });
       reattached.push(platform);
     } catch (error) {
+      if (error instanceof SessionDiedError) {
+        throw error;
+      }
+
       // One platform that cannot come back must not undo the platform that
       // did. The state below then records only what is really attached.
       io.log(
@@ -696,9 +743,11 @@ interface SessionSetup {
  * one resolves its build first and joins. A build here runs under the live
  * Metro; the open follow-up on that path applies to joins, not fresh starts.
  */
-async function startOnRunningSession(
-  setup: SessionSetup
-): Promise<{ attachedNow: Platform[]; successes: PlatformSuccess[] }> {
+async function startOnRunningSession(setup: SessionSetup): Promise<{
+  attachedNow: Platform[];
+  failedNow: Platform[];
+  successes: PlatformSuccess[];
+}> {
   const {
     allocation,
     context,
@@ -713,6 +762,7 @@ async function startOnRunningSession(
   } = setup;
   const running = watch(allocation.reusedPids);
   const attachedNow: Platform[] = [];
+  const failedNow: Platform[] = [];
   const successes: PlatformSuccess[] = [];
 
   for (const platform of startable) {
@@ -730,30 +780,27 @@ async function startOnRunningSession(
     });
 
     try {
-      // biome-ignore lint/performance/noAwaitInLoops: platforms start in the order the command names them.
-      const handle = await driver.ensureBooted({
-        deviceId,
-        logPath: logs.device,
-        slot: allocation.slot,
-      });
       let build: BuildOutcome = "reused";
+      let handle: DeviceHandle;
 
       if (plan === "join") {
         io.log(`실행 중인 세션에 ${platform}를 더합니다.`);
 
-        const fingerprint = await generateFingerprint(
-          context.mobileDirectory,
+        // biome-ignore lint/performance/noAwaitInLoops: platforms start in the order the command names them.
+        const booted = await bootWithFingerprint(
+          setup,
           platform,
-          env
+          driver,
+          deviceId
         );
 
-        io.log(`${platform} native fingerprint: ${fingerprint}`);
+        ({ handle } = booted);
         build = await resolveBuild({
           context,
           deviceTarget: driver.buildTarget(handle),
           driver,
           env,
-          fingerprint,
+          fingerprint: booted.fingerprint,
           handle,
           installedFingerprint:
             allocation.installedFingerprints[platform] ?? null,
@@ -765,6 +812,12 @@ async function startOnRunningSession(
         io.log(
           `이미 실행 중인 세션을 그대로 두고 ${platform} 앱만 다시 엽니다.`
         );
+        handle = await driver.ensureBooted({
+          deviceId,
+          leasedElsewhere: allocation.leasedElsewhere[platform],
+          logPath: logs.device,
+          slot: allocation.slot,
+        });
       }
 
       await driver.prepareForMetro(handle, metro);
@@ -780,63 +833,126 @@ async function startOnRunningSession(
       attachedNow.push(platform);
       successes.push({ build, deviceId, platform });
     } catch (error) {
+      if (error instanceof SessionDiedError) {
+        throw error;
+      }
+
       // The session and any platform that already attached stay up.
       failures.push({ message: failureMessage(error), platform });
+      failedNow.push(platform);
     }
   }
 
-  return { attachedNow, successes };
+  // A death between the last open and here would otherwise be reported as a
+  // ready session.
+  running();
+
+  return { attachedNow, failedNow, successes };
 }
 
-interface PreparedPlatform {
-  build: BuildOutcome;
+interface BootedPlatform {
   deviceId: string;
   driver: PlatformDriver;
-  handle: { deviceId: string; target: string };
+  fingerprint: string;
+  handle: DeviceHandle;
   platform: Platform;
+}
+
+interface PreparedPlatform extends Omit<BootedPlatform, "fingerprint"> {
+  build: BuildOutcome;
+}
+
+/**
+ * Boots the device and computes the native fingerprint for one platform at
+ * the same time; the fingerprint reads no device, so neither waits for the
+ * other. Both outcomes are always observed: a fingerprint that fails fast must
+ * not leave a boot in flight with nobody to report it, and when both fail the
+ * boot's own error is reported alongside rather than hidden.
+ */
+async function bootWithFingerprint(
+  setup: SessionSetup,
+  platform: Platform,
+  driver: PlatformDriver,
+  deviceId: string
+): Promise<BootedPlatform> {
+  const { allocation, context, env, io, logs } = setup;
+  const [boot, fingerprint] = await Promise.allSettled([
+    driver.ensureBooted({
+      deviceId,
+      leasedElsewhere: allocation.leasedElsewhere[platform],
+      logPath: logs.device,
+      slot: allocation.slot,
+    }),
+    generateFingerprint(context.mobileDirectory, platform, env),
+  ]);
+  const problems = [boot, fingerprint]
+    .filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    )
+    .map((result) => failureMessage(result.reason));
+
+  if (boot.status === "rejected" || fingerprint.status === "rejected") {
+    throw new Error(problems.join("\n"));
+  }
+
+  io.log(`${platform} native fingerprint: ${fingerprint.value}`);
+
+  return {
+    deviceId,
+    driver,
+    fingerprint: fingerprint.value,
+    handle: boot.value,
+    platform,
+  };
 }
 
 /**
  * Everything native happens here, before any session process exists: devices
  * boot and builds resolve while no Metro of this worktree is alive to watch
- * the project churn underneath it.
+ * the project churn underneath it. Every platform's boot and fingerprint start
+ * at once, so an emulator's cold boot overlaps the other platform's work; each
+ * platform then builds as soon as its own preparation is done, in the order
+ * the command named them, because both builds write into `apps/mobile`.
  */
 async function prepareFreshPlatforms(
   setup: SessionSetup
 ): Promise<PreparedPlatform[]> {
   const { allocation, context, drivers, env, failures, io, logs, startable } =
     setup;
-  const prepared: PreparedPlatform[] = [];
-
-  for (const platform of startable) {
+  const preparations = startable.map((platform) => {
     const driver = drivers.get(platform);
     const deviceId = allocation.devices[platform];
 
-    if (!(driver && deviceId)) {
-      continue;
-    }
+    return {
+      platform,
+      // Started here so every boot is already under way before the first
+      // build; the rejection is consumed in order below, never left dangling.
+      ready:
+        driver && deviceId
+          ? bootWithFingerprint(setup, platform, driver, deviceId)
+          : Promise.reject(new Error("배정된 기기가 없습니다.")),
+    };
+  });
+  const prepared: PreparedPlatform[] = [];
 
+  for (const { platform, ready } of preparations) {
     try {
-      // biome-ignore lint/performance/noAwaitInLoops: device tools contend when driven in parallel, and builds must finish before Metro starts.
-      const handle = await driver.ensureBooted({
-        deviceId,
+      // biome-ignore lint/performance/noAwaitInLoops: platforms build one at a time, in the order the command names them.
+      const entry = await ready;
+      // The device may have gone away while another platform was building;
+      // Android in particular is addressed by a serial that a relaunch changes.
+      const handle = await entry.driver.ensureBooted({
+        deviceId: entry.deviceId,
+        leasedElsewhere: allocation.leasedElsewhere[platform],
         logPath: logs.device,
         slot: allocation.slot,
       });
-      const fingerprint = await generateFingerprint(
-        context.mobileDirectory,
-        platform,
-        env
-      );
-
-      io.log(`${platform} native fingerprint: ${fingerprint}`);
-
       const build = await resolveBuild({
         context,
-        deviceTarget: driver.buildTarget(handle),
-        driver,
+        deviceTarget: entry.driver.buildTarget(handle),
+        driver: entry.driver,
         env,
-        fingerprint,
+        fingerprint: entry.fingerprint,
         handle,
         installedFingerprint:
           allocation.installedFingerprints[platform] ?? null,
@@ -845,7 +961,13 @@ async function prepareFreshPlatforms(
         platform,
       });
 
-      prepared.push({ build, deviceId, driver, handle, platform });
+      prepared.push({
+        build,
+        deviceId: entry.deviceId,
+        driver: entry.driver,
+        handle,
+        platform,
+      });
     } catch (error) {
       // The other requested platform still gets its session.
       failures.push({ message: failureMessage(error), platform });
@@ -882,7 +1004,17 @@ export async function startSession({
     platforms.map(async (platform) => {
       const driver = driverFor(context, platform);
 
-      return { driver, missing: await driver.missingTooling(), platform };
+      try {
+        return { driver, missing: await driver.missingTooling(), platform };
+      } catch (error) {
+        // A tooling probe that itself fails is that platform's problem, not
+        // a reason to abandon the other platform.
+        return {
+          driver,
+          missing: [`도구 확인에 실패했습니다: ${failureMessage(error)}`],
+          platform,
+        };
+      }
     })
   );
 
@@ -965,7 +1097,7 @@ export async function startSession({
   const watch = (pids: readonly number[]) => () => {
     for (const pid of pids) {
       if (!isProcessAlive(pid)) {
-        throw new Error(
+        throw new SessionDiedError(
           `개발 세션 프로세스가 종료됐습니다. ${logs.api}와 ${logs.metro}를 확인해 주세요.`
         );
       }
@@ -985,21 +1117,17 @@ export async function startSession({
   };
 
   if (allocation.running) {
-    const { attachedNow, successes } = await startOnRunningSession(setup);
-
-    if (attachedNow.length === 0) {
-      throw aggregateFailure(
-        "요청한 플랫폼의 앱을 하나도 열지 못했습니다. 실행 중이던 세션은 그대로 둡니다.",
-        failures
-      );
-    }
-
+    const { attachedNow, failedNow, successes } =
+      await startOnRunningSession(setup);
     const activePlatforms = platformsAfterMultiStart({
       attached: allocation.attached,
       attachedNow,
+      failedNow,
       running: true,
     });
 
+    // Written even when nothing attached: a relaunch that failed quit its app
+    // first, so the record must stop calling that platform attached.
     await updateState(context, (state) => {
       const record = state.worktrees[context.git.worktreePath];
 
@@ -1007,6 +1135,13 @@ export async function startSession({
         record.activePlatforms = activePlatforms;
       }
     });
+
+    if (attachedNow.length === 0) {
+      throw aggregateFailure(
+        "요청한 플랫폼의 앱을 하나도 열지 못했습니다. 실행 중이던 세션은 그대로 둡니다.",
+        failures
+      );
+    }
 
     return {
       activePlatforms,
@@ -1120,6 +1255,10 @@ export async function startSession({
           platform: entry.platform,
         });
       } catch (error) {
+        if (error instanceof SessionDiedError) {
+          throw error;
+        }
+
         // A platform that fails to open must not take down the session the
         // other platform is already attached to.
         failures.push({
@@ -1143,6 +1282,7 @@ export async function startSession({
       env,
       installedFingerprints: allocation.installedFingerprints,
       io,
+      leasedElsewhere: allocation.leasedElsewhere,
       logs,
       metro,
       requested: new Set(platforms),

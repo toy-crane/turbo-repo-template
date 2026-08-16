@@ -25,8 +25,9 @@
 
 # 앱 실행
 
-- 앱은 저장소 루트의 `bun run dev <ios|android>`로 실행한다. 이 명령이 이 폴더 전용 포트로 API와 Metro를 띄우고 이 폴더에 배정한 기기에서 앱을 연다.
+- 앱은 저장소 루트의 `bun run dev <ios|android>`로 실행한다. 이 명령이 이 폴더 전용 포트로 API와 Metro를 띄우고 이 폴더에 배정한 기기에서 앱을 연다. 두 플랫폼이 필요하면 `bun run dev ios android`처럼 나열한다.
 - `apps/mobile`의 `ios`, `android`, `start` 명령을 직접 쓰지 않는다. 포트와 기기를 관리하지 않아 다른 worktree의 Metro에 붙은 화면을 검증하게 된다.
+- 어느 worktree가 어떤 slot, 포트, 기기를 쓰는지는 `bun run dev:status`로 확인한다. 읽기 전용이라 언제 실행해도 안전하다.
 - 세션을 멈출 때는 `bun run dev:stop`, 이 폴더의 개발 자원을 반납할 때는 `bun run dev:remove`를 쓴다.
 - 자세한 규칙은 [Worktree 개발 세션](docs/decisions/worktree-development-sessions.md)을 따른다.
 

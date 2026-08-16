@@ -443,6 +443,7 @@ bun run test:integration
 
 ```bash
 bun run dev ios
+bun run dev:status
 bun run dev:stop
 bun run build
 bun run check
@@ -464,15 +465,22 @@ iOS와 Android 모두 앱 전용 Development Build를 사용합니다.
 ```bash
 bun run dev ios
 bun run dev android
+bun run dev ios android
+bun run dev:status
 bun run dev:stop
 bun run dev:remove
 ```
 
 플랫폼 인수는 필수입니다.
 한 폴더에서 두 플랫폼을 함께 띄울 수 있습니다.
-`bun run dev ios`를 실행한 뒤 `bun run dev android`를 실행하면 iOS 세션이 살아 있는 채로 Android가 더해지고, 두 기기가 같은 API와 Metro에 붙습니다.
+`bun run dev ios android`는 두 플랫폼을 한 줄로 함께 시작합니다. 기기 부팅과 fingerprint 계산은 두 플랫폼이 함께 진행하고, 빌드와 앱 열기는 적은 순서대로 합니다. 아무것도 실행 중이지 않으면 필요한 네이티브 준비를 모두 마친 뒤에 API와 Metro를 띄웁니다. 한 플랫폼이 실패해도 나머지는 계속 시작하고, 실패가 있으면 명령은 실패로 끝납니다.
+이미 실행 중인 세션에 `bun run dev android`를 실행하면 iOS 세션이 살아 있는 채로 Android가 더해지고, 두 기기가 같은 API와 Metro에 붙습니다.
 세션은 포트만 정하고 호스트는 앱이 정합니다. iOS는 `127.0.0.1`, Android Emulator는 `10.0.2.2`로 개발 컴퓨터에 닿습니다.
 Metro 입력이나 환경이 바뀌어 API와 Metro를 다시 시작할 때는 붙어 있던 두 기기의 앱을 모두 다시 엽니다.
+
+`bun run dev:status`는 모든 worktree의 slot, 포트, 프로세스, 붙은 플랫폼과 기기 배정을 보여 줍니다.
+아무것도 바꾸지 않으므로 언제 실행해도 안전합니다.
+배정된 기기는 이름으로 알아볼 수 있습니다. iOS Simulator는 배정하는 동안 `<slug>-slot-<번호>`라는 이름을 쓰고, Android Emulator는 표시 이름에 같은 표시가 들어갑니다. 풀로 돌아간 기기는 다시 풀 이름(`<slug>-dev-<번호>`)을 씁니다.
 
 `bun run dev:stop`은 프로세스와 기기만 멈춥니다.
 포트, 기기 배정, 설치한 앱과 로그인 상태는 그대로 두므로 다음 실행에서 이어집니다.

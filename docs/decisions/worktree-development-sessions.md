@@ -3,8 +3,11 @@
 ## 결정
 
 - 루트의 `bun run dev <ios|android>`를 저장소 전체 로컬 개발 세션의 기본 실행 명령으로 사용한다. 이 명령은 API, Metro와 대상 Simulator 또는 Emulator를 함께 시작한다.
-- 플랫폼 인수는 필수다. `bun run dev`만 실행하면 아무것도 시작하지 않고 사용법을 보여 준다.
+- 플랫폼 인수는 필수다. `bun run dev`만 실행하면 아무것도 시작하지 않고 사용법을 보여 준다. 플랫폼은 여러 개를 나열할 수 있고(`bun run dev ios android`) 적은 순서가 시작 순서다. 기기 부팅과 fingerprint 계산은 모든 플랫폼이 함께 진행하고, 빌드와 앱 열기는 적은 순서대로 한다.
 - 한 Git worktree에서 iOS와 Android를 함께 실행한다. 플랫폼 시작 명령은 누적된다. 이미 실행 중인 플랫폼은 다른 플랫폼을 시작해도 내려가지 않는다.
+- 여러 플랫폼을 적은 명령은 한 플랫폼이 실패해도 나머지를 계속 시작한다. 결과를 플랫폼별로 보고하고 실패가 하나라도 있으면 명령은 실패로 끝난다. 아무것도 실행 중이지 않으면 요청한 모든 플랫폼의 네이티브 준비를 마친 뒤에 API와 Metro를 띄운다.
+- `bun run dev:status`는 모든 worktree의 slot, 포트, 프로세스 생존, 붙은 플랫폼과 기기 배정(iOS 이름과 UDID, Android AVD 이름과 실행 중 serial), 풀의 대기 기기를 보여 준다.
+- 배정된 기기는 이름에 slot을 표시한다. iOS Simulator는 배정하는 동안 `<slug>-slot-<번호>`라는 이름을 쓰고 풀로 돌아갈 때 풀 이름(`<slug>-dev-<번호>`)으로 되돌린다. Android는 AVD 이름을 바꿀 수 없으므로 에뮬레이터가 꺼져 있을 때 표시 이름에 같은 표시를 쓰고 반납할 때 지운다. 기기 식별자, 설치된 앱과 앱 데이터는 바뀌지 않는다.
 - worktree 하나는 slot 하나만 쓴다. Metro 프로세스 하나가 두 플랫폼의 번들을 함께 내보내고 API 프로세스도 하나만 둔다.
 - 기본 저장소 폴더와 추가 Git worktree를 같은 실행 단위로 취급한다. 실행 단위는 브랜치 이름이 아니라 정규화된 worktree 절대 경로로 식별한다.
 - worktree마다 고정 slot과 API·Metro 포트를 배정한다. 플랫폼별 기기는 저장소 공용 풀에서 하나씩 독점 배정하고, 일반 종료 뒤에도 이 상태를 유지해 다음 실행에서 재사용한다.
@@ -28,6 +31,7 @@
 
 - 이 결정은 로컬 iOS Simulator와 Android Emulator 개발에 적용한다. 실제 기기, Expo Web, 원격 기기와 CI 기기 실행은 포함하지 않는다.
 - `apps/mobile`과 `apps/api`의 개별 `dev`, `ios`, `android`, `start` 명령은 수동 진단에 사용할 수 있지만 worktree 간 포트와 기기 격리를 보장하지 않는다.
+- `bun run dev:status`는 아무것도 바꾸지 않는다. 죽은 프로세스와 사라진 기기는 표시만 하고, 회수는 다음 시작 명령의 몫이다.
 - `bun run dev:stop`은 실행 프로세스와 이 worktree에 배정된 두 플랫폼의 기기를 함께 중단한다. slot, 기기, 앱 데이터와 공용 빌드는 유지한다.
 - `bun run dev:remove`는 현재 worktree에 배정된 두 플랫폼의 기기를 초기화해 풀로 돌려놓고 slot을 반납한다. Git worktree, 풀의 기기와 저장소 공용 빌드는 삭제하지 않는다.
 - Git worktree를 외부에서 먼저 삭제하면 다음 `bun run dev <ios|android>`가 남은 프로세스, slot과 기기 배정을 회수한다. Codex나 Claude Code 전용 삭제 hook과 상시 실행 daemon은 사용하지 않는다.
@@ -51,6 +55,10 @@ Portless는 고정 hostname과 빈 포트 선택에는 유용하지만 Simulator
 `EXPO_PUBLIC_` 값은 Metro 프로세스의 환경에서 읽어 번들에 박힌다. 완성된 주소를 넘기면 호스트가 플랫폼마다 달라 Metro 하나가 한 플랫폼의 주소만 담을 수 있고, 그래서 worktree 하나가 한 번에 한 플랫폼만 실행할 수 있었다. 포트만 넘기면 값이 플랫폼과 무관해져 Metro 하나가 두 플랫폼의 번들을 함께 내보낸다.
 
 호스트는 앱이 정한다. `babel-preset-expo`가 `process.env.EXPO_OS`를 번들의 플랫폼 이름으로 치환하므로, 같은 Metro가 만든 iOS 번들과 Android 번들이 서로 다른 호스트를 담는다. `react-native`를 import하지 않으므로 이 판단이 `apps/mobile/env.ts` 안에 남고, 같은 파일을 쓰는 개발 세션 스크립트도 그대로 검증에 사용한다.
+
+빈 명령으로 기기를 켜는 주요 모바일 CLI는 없다. Expo `expo start`는 서버만 띄우고 키 입력을 기다리고, Flutter는 기기 선택지를 보여 주며, Capacitor는 플랫폼이 필수 인수다. 기기 부팅과 네이티브 빌드가 비싸므로 이 계열은 명시를 강제한다. 여러 대상을 위치 인수로 나열하는 형태는 `docker compose up [SERVICE...]`, GNU Make의 다중 goal, `gradle clean build`와 같은 가장 넓은 선례를 따른다.
+
+기기 이름이 slot과 달라서 다른 worktree의 시뮬레이터를 한참 조작한 실제 사고가 slot 표시의 근거다. 같은 slot 이름을 가진 기기가 둘이면 이름으로 기기를 고르는 도구가 모호해지므로, 배정 이름을 주기 전에 그 이름을 가진 다른 기기를 먼저 풀 이름으로 비운다. 다른 worktree가 빌리고 있는 기기는 건드리지 않고 이번 이름 변경을 미룬다. 이름은 표시일 뿐이므로 이름 변경이 실패해도 기기 부팅과 세션 시작을 막지 않는다.
 
 `adb reverse`로 API와 Supabase 포트까지 넘기면 두 플랫폼이 같은 주소를 쓰게 만들 수도 있다. 그렇게 하지 않는 이유는 유지보수다. `10.0.2.2`는 Android 개발자가 바로 아는 상수이고 잘못되면 주소에 그대로 보이지만, 넘기지 못한 `adb reverse`는 주소가 멀쩡해 보이는 채로 실패해서 `adb reverse --list`를 아는 사람만 진단할 수 있다.
 
@@ -93,6 +101,9 @@ fingerprint마다 새 캐시 폴더를 만드는 대신 worktree마다 하나의
 - `adb reverse`로 API와 Supabase 포트까지 넘겨 주소를 통일하기: 동작하지만 Expo 생태계에서 덜 흔한 조합이고, 넘기지 못했을 때 주소가 멀쩡해 보이는 채로 실패해 진단이 어렵다.
 - 앱에서 `Platform.OS`로 호스트 계산: `apps/mobile/env.ts`가 `react-native`를 import하게 되어 이 파일을 그대로 쓰는 개발 세션 스크립트가 깨진다. `process.env.EXPO_OS`는 같은 판단을 순수 JavaScript로 한다.
 - 플랫폼을 바꿀 때 이전 플랫폼을 내리기: 명령의 소유 범위는 분명하지만 두 플랫폼을 나란히 비교할 수 없고 전환마다 API와 Metro 재시작을 감수해야 한다.
+- 빈 `bun run dev`로 두 플랫폼 시작: 가장 치기 쉬운 명령이 가장 비싼 실행이 되고, Android 도구가 없는 컴퓨터에서 항상 절반만 성공하는 명령이 된다. 모바일 CLI 계열에 선례가 없다.
+- `dev all` 키워드: 모바일 쪽 선례가 Flutter의 문서화되지 않은 `-d all`뿐이다. 필요가 확인되면 나열 형태 위에 별칭으로 얹는다.
+- worktree마다 앱 이름이나 slug를 바꿔 dev launcher 목록에서 구분: 앱 정체성이 native fingerprint에 들어가 공용 빌드 공유가 깨진다. 구분은 기기 이름과 `dev:status`의 매핑으로 한다.
 - 일반 모바일 URL을 개발 세션에서 덮어쓰기: Expo SDK 57 개발 번들이 `.env.local` 값을 다시 우선하므로 최종 앱 주소를 보장하지 못한다.
 - 모든 시작에 `expo start --clear` 사용: 단순하지만 입력이 그대로인 실행에서도 따뜻한 캐시를 버린다.
 - Metro 캐시를 모든 worktree가 그대로 공유: Expo가 의도한 빠른 경로지만, 이 저장소에서는 새 Metro 프로세스가 이전 `expo-router` 결과를 읽은 일이 실제로 있었다.
