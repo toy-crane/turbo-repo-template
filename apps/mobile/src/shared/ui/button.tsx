@@ -5,10 +5,10 @@ import {
   Button as HeroButton,
 } from "heroui-native/button";
 import { type ThemeColor, useThemeColor } from "heroui-native/hooks";
-import { Spinner } from "heroui-native/spinner";
 import { cn } from "heroui-native/utils";
 import { type ReactNode, useCallback, useRef } from "react";
 import {
+  ActivityIndicator,
   type LayoutChangeEvent,
   type PressableStateCallbackType,
   View,
@@ -136,13 +136,7 @@ export function Button({
           testID="button-leading-content"
         >
           {isPending ? (
-            <Spinner
-              accessibilityRole={undefined}
-              accessibilityState={undefined}
-              accessible={false}
-              color={spinnerColor}
-              size="sm"
-            />
+            <ActivityIndicator color={spinnerColor} size="small" />
           ) : (
             startContent
           )}
