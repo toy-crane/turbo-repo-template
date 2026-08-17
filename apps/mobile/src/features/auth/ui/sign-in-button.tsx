@@ -38,14 +38,14 @@ const COLORS = {
   },
 } as const;
 
-export type LoginProvider = "apple" | "email" | "google";
+export type SignInMethod = "apple" | "email" | "google";
 
-export function LoginButton({
+export function SignInButton({
   isBusy,
   isDisabled,
   label,
   onPress,
-  provider,
+  method,
   testID,
 }: {
   /** True while THIS button's sign-in is running, not any sibling's. */
@@ -53,12 +53,12 @@ export function LoginButton({
   isDisabled?: boolean;
   label: string;
   onPress: () => void;
-  provider: LoginProvider;
+  method: SignInMethod;
   testID?: string;
 }) {
   const scheme = useColorScheme() === "dark" ? "dark" : "light";
   const colors = COLORS[scheme];
-  const backgroundColor = provider === "apple" ? colors.appleFill : colors.fill;
+  const backgroundColor = method === "apple" ? colors.appleFill : colors.fill;
   const style = useCallback(
     ({ pressed }: { pressed: boolean }) => ({
       alignItems: "center" as const,
@@ -87,8 +87,8 @@ export function LoginButton({
       testID={testID}
     >
       {isBusy ? <ActivityIndicator color={colors.text} size="small" /> : null}
-      {provider === "google" && !isBusy ? <GoogleMark /> : null}
-      {provider === "apple" && !isBusy ? (
+      {method === "google" && !isBusy ? <GoogleMark /> : null}
+      {method === "apple" && !isBusy ? (
         <AppleMark tone={scheme === "dark" ? "white" : "black"} />
       ) : null}
       {/*

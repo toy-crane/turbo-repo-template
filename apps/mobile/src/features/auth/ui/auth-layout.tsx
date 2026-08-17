@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const BOTTOM_PADDING = 12;
 const TOP_PADDING = 16;
 
-export function AuthScreen({
+export function AuthLayout({
   children,
   footer,
   isRoot,

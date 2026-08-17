@@ -2,7 +2,7 @@ import { Redirect } from "expo-router";
 
 import { checkNickname } from "@/features/auth/state/profile-identity";
 import { useProfileOnboarding } from "@/features/auth/state/profile-onboarding";
-import { UsernameScreen } from "@/features/auth/ui/username-screen";
+import { UsernameScreen } from "@/screens/onboarding/username-screen";
 
 export default function UsernameRoute() {
   const { nickname } = useProfileOnboarding();

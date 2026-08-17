@@ -7,10 +7,10 @@ import type { TextInput } from "react-native";
 import { Pressable, Text, View } from "react-native";
 
 import { useUsernameStep } from "@/features/auth/state/use-username-step";
+import { AuthError, AuthLayout } from "@/features/auth/ui/auth-layout";
+import { onboardingLabels } from "@/features/auth/ui/onboarding-labels";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 import { Button } from "@/shared/ui/button";
-import { AuthError, AuthScreen } from "./auth-screen";
-import { onboardingLabels } from "./onboarding-labels";
 
 /**
  * The second onboarding screen, and the one that saves.
@@ -28,7 +28,7 @@ export function UsernameScreen() {
   const inputRef = useFocusOnArrival<TextInput>();
 
   return (
-    <AuthScreen
+    <AuthLayout
       footer={
         <Button
           accessibilityLabel={onboardingLabels.start}
@@ -83,7 +83,7 @@ export function UsernameScreen() {
           suggestions={form.suggestions}
         />
       ) : null}
-    </AuthScreen>
+    </AuthLayout>
   );
 }
 

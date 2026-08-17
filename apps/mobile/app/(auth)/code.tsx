@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams } from "expo-router";
 
-import { SignInCodeScreen } from "@/features/auth/ui/sign-in-code-screen";
+import { SignInCodeScreen } from "@/screens/auth/sign-in-code-screen";
 
 /**
  * Expo Router hands back an array when a query key appears more than once, and

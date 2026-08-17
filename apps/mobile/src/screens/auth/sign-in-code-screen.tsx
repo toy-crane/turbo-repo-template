@@ -10,10 +10,14 @@ import {
   toCodeDigits,
 } from "@/features/auth/state/email-code";
 import { useCodeVerify } from "@/features/auth/state/use-code-verify";
+import {
+  AuthError,
+  AuthLayout,
+  AuthSubtitle,
+} from "@/features/auth/ui/auth-layout";
+import { signInLabels } from "@/features/auth/ui/sign-in-labels";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 import { Button } from "@/shared/ui/button";
-import { AuthError, AuthScreen, AuthSubtitle } from "./auth-screen";
-import { signInLabels } from "./sign-in-labels";
 
 const VERIFY_PROGRESS_DELAY_MS = 1000;
 
@@ -114,7 +118,7 @@ export function SignInCodeScreen({ email }: { email: string }) {
   const codeRef = useFocusOnArrival<ComponentRef<typeof InputOTP>>();
 
   return (
-    <AuthScreen
+    <AuthLayout
       footer={
         <Button
           // The countdown is the whole message, so the accessible name has to
@@ -163,6 +167,6 @@ export function SignInCodeScreen({ email }: { email: string }) {
           </AuthError>
         ) : null}
       </View>
-    </AuthScreen>
+    </AuthLayout>
   );
 }
