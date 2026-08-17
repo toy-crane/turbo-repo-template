@@ -12,12 +12,16 @@
 
 ```text
 10-extensions.sql
-20-types.sql
+20-username-rules.sql
 30-tables.sql
-40-views.sql
 50-functions.sql
 60-policies.sql
 ```
+
+번호는 자리를 나눌 뿐이고 빈 번호를 채우지 않습니다. 새 파일은 자기가 만드는
+객체가 무엇에 기대는지를 보고 번호를 고릅니다. `20-username-rules.sql`이 함수인데도
+30번대 앞에 있는 이유가 이것입니다. `public.profiles`의 check 제약이 이 함수를
+부르므로 테이블보다 먼저 있어야 합니다.
 
 사전순 위치보다 먼저 실행해야 하는 파일이 생기면 `schema_paths`의 glob 위에 그
 파일 경로를 명시적으로 추가하세요.
