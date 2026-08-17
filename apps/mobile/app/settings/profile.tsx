@@ -9,7 +9,7 @@ import {
   useProfileEditFlow,
 } from "@/screens/settings/profile-edit-screen";
 import { ProfileSaveHeaderAction } from "@/screens/settings/profile-save-header-action";
-import { toolbarIcon } from "@/shared/ui/icon/toolbar-icons";
+import { toolbarIcon } from "@/shared/ui/toolbar-icons";
 
 export default function ProfileEditRoute() {
   // A finished save is the one exit that keeps the draft. Going back any other

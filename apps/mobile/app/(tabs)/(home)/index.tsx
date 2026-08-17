@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 import { chatLabels } from "@/features/chat/ui/chat-labels";
 import { HomeScreen } from "@/screens/home/home-screen";
 import { ProfileAvatarButton } from "@/screens/home/profile-avatar-button";
-import { toolbarIcon } from "@/shared/ui/icon/toolbar-icons";
+import { toolbarIcon } from "@/shared/ui/toolbar-icons";
 
 function openChat() {
   router.push("/chat");

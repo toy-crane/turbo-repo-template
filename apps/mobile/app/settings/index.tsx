@@ -3,7 +3,7 @@ import { router, Stack } from "expo-router";
 import { useAppTheme } from "@/core/theme/app-theme-bridge";
 import { CLOSE_SETTINGS_LABEL } from "@/features/auth/ui/profile-labels";
 import { SettingsScreen } from "@/screens/settings/settings-screen";
-import { toolbarIcon } from "@/shared/ui/icon/toolbar-icons";
+import { toolbarIcon } from "@/shared/ui/toolbar-icons";
 
 function dismissSettings() {
   router.dismiss();

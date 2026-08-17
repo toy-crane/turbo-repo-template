@@ -2,7 +2,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 
 import { chatLabels } from "@/features/chat/ui/chat-labels";
 import { SideChatScreen } from "@/screens/chat/side-chat-screen";
-import { toolbarIcon } from "@/shared/ui/icon/toolbar-icons";
+import { toolbarIcon } from "@/shared/ui/toolbar-icons";
 
 /**
  * Closing is a dismissal rather than a step back: the conversation underneath
