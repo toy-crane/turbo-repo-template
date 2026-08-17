@@ -31,17 +31,11 @@
       "skillPath": "skills/git/commit/SKILL.md",
       "computedHash": "f75ca87a7d4838eea1e649180ea9b275ba4e8d31df4e6ff33558e5b426eae67a"
     },
-    "compact-decisions": {
+    "define-product": {
       "source": "toy-crane/skills",
       "sourceType": "github",
-      "skillPath": "skills/workflow/compact-decisions/SKILL.md",
-      "computedHash": "9bc10b8a3a9c5b7bbb939e11e4c3a12fe9ffd0c91b5df0f51443216102e5e8af"
-    },
-    "discover-opportunity": {
-      "source": "toy-crane/skills",
-      "sourceType": "github",
-      "skillPath": "skills/workflow/discover-opportunity/SKILL.md",
-      "computedHash": "19b67d15e31519001e65f21066680f27641fb1f466b14a8ae3047b59618354cb"
+      "skillPath": "skills/workflow/define-product/SKILL.md",
+      "computedHash": "a7fba03cb0068fc814f5b051e421d31d3422c5d37ee7c44a8b10e1c83cdf1344"
     },
     "eas-app-stores": {
       "source": "expo/skills",
@@ -199,6 +193,12 @@
       "skillPath": "skills/workflow/implement/SKILL.md",
       "computedHash": "e23826e2bd89d7e33bd56bc9a7da0c029600f41119253f7984eebd9514d88a2f"
     },
+    "maintain-project-context": {
+      "source": "toy-crane/skills",
+      "sourceType": "github",
+      "skillPath": "skills/workflow/maintain-project-context/SKILL.md",
+      "computedHash": "7653068ab75452c3699f5c347a3816eec55f46bc7105fc9388fe7ce88af2939a"
+    },
     "merge": {
       "source": "toy-crane/skills",
       "sourceType": "github",
@@ -241,11 +241,17 @@
       "skillPath": "skills/react-native-testing/SKILL.md",
       "computedHash": "bb30ad4660a42c71178c91d7a3f2e88556add9dba2213ee26f099dbe352fd649"
     },
+    "resolve-follow-ups": {
+      "source": "toy-crane/skills",
+      "sourceType": "github",
+      "skillPath": "skills/workflow/resolve-follow-ups/SKILL.md",
+      "computedHash": "45b768dd4b7ace140c6df65e0e1986a6c7acba113900dd6e5881682f0774ab3b"
+    },
     "shape-idea": {
       "source": "toy-crane/skills",
       "sourceType": "github",
       "skillPath": "skills/workflow/shape-idea/SKILL.md",
-      "computedHash": "e37f3c3182b31b4dc0ea9d6581cfc53966d8e8c21a7db986f9c23864abdac970"
+      "computedHash": "d04a9c3fbf5dbd46154e8a6bbc09f72528259b54f030067bbd1a999585609618"
     },
     "split-into-tasks": {
       "source": "toy-crane/skills",
