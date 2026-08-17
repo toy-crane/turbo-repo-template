@@ -30,6 +30,7 @@
 ## 경계
 
 - 이 결정은 로컬 iOS Simulator와 Android Emulator 개발에 적용한다. 실제 기기, Expo Web, 원격 기기와 CI 기기 실행은 포함하지 않는다.
+- worktree 격리는 한 저장소 clone 안에서만 보장한다. 같은 컴퓨터에서 같은 slug를 쓰는 clone을 둘 이상 실행하면 상태 파일은 따로지만 기기 이름은 모두 `<slug>-slot-<번호>` 형식이라 같은 slot끼리 충돌할 수 있다.
 - `apps/mobile`과 `apps/api`의 개별 `dev`, `ios`, `android`, `start` 명령은 수동 진단에 사용할 수 있지만 worktree 간 포트와 기기 격리를 보장하지 않는다.
 - `bun run dev:status`는 아무것도 바꾸지 않는다. 죽은 프로세스와 사라진 기기는 표시만 하고, 회수는 다음 시작 명령의 몫이다.
 - `bun run dev:stop`은 실행 프로세스와 이 worktree에 배정된 두 플랫폼의 기기를 함께 중단한다. slot, 기기, 앱 데이터와 공용 빌드는 유지한다.
@@ -70,6 +71,7 @@ fingerprint마다 새 캐시 폴더를 만드는 대신 worktree마다 하나의
 
 ## 재검토 조건
 
+- 같은 컴퓨터에서 같은 slug의 저장소 clone을 둘 이상 동시에 실행해야 할 때
 - Expo Web이나 브라우저 자동화에 worktree별 고정 hostname이 필요할 때
 - OAuth callback, CORS, 쿠키 또는 localStorage를 worktree별 hostname으로 분리해야 할 때
 - 한 플랫폼에 기기를 여러 대 붙이거나 세 대 이상을 동시에 실행해야 할 때

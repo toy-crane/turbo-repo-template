@@ -71,4 +71,5 @@ Android에서 Material 3 Expressive의 `LoadingIndicator`를 쓰지 않는 이�
 - `@expo/ui 57.0.11`의 Compose modifier 42개 중 접근성에 닿는 것은 `semantics` 하나뿐이고, 이 modifier는 자동 완성용 `contentType`만 받는다. `ModifierRegistry.kt`가 `Modifier.semantics { contentType = ct }`로만 옮긴다. `contentDescription`, `stateDescription`, `liveRegion`에 해당하는 modifier는 없다. 그래서 Compose 쪽 행에는 진행 중 상태를 걸 자리가 없다.
 - [Android 16 동작 변경](https://developer.android.com/about/versions/16/behavior-changes-all)은 `announceForAccessibility`와 `TYPE_ANNOUNCEMENT` 이벤트를 deprecated로 표시했다. 동작하지 않게 만들지는 않았고, 권장 대안은 `setAccessibilityLiveRegion`과 Compose의 `Modifier.semantics { liveRegion = ... }`이다. React Native는 [무엇으로 대체할지 아직 논의 중](https://github.com/react-native-community/discussions-and-proposals/discussions/848)이다.
 - React Native 0.86.2의 `AccessibilityInfo.announceForAccessibility`는 화면 읽기가 꺼져 있으면 아무것도 보내지 않고 바로 돌아온다(`AccessibilityInfoModule.kt`). 켜져 있을 때만 `TYPE_ANNOUNCEMENT` 이벤트를 보낸다.
+- Android Emulator에서 TalkBack을 켜고 계정 삭제를 시작해 음성 알림이 나오는 것까지 확인했다. 프로덕션 이미지에서는 TalkBack 로그 수준을 올릴 수 없어 실제 발화 문장은 확인하지 못했다.
 - 이 앱은 채팅 오류 안내에서 이미 같은 방법을 쓴다(`chat-panel.tsx`).
