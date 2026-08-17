@@ -9,10 +9,7 @@ import {
 } from "ai";
 import { Hono, type MiddlewareHandler } from "hono";
 
-import {
-  logRequestAbort,
-  logRequestFailure,
-} from "../../shared/safe-error-log";
+import { logRequestAbort, logRequestFailure } from "../../shared/request-log";
 import { resolveModelId } from "./config";
 
 export interface AiChatDependencies {

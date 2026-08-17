@@ -7,7 +7,7 @@ import {
   createAiChatRoutes,
 } from "./features/ai-chat/route";
 import { healthRoutes } from "./features/health/route";
-import { logRequestFailure } from "./shared/safe-error-log";
+import { logRequestFailure } from "./shared/request-log";
 
 export type AppDependencies = AiChatDependencies;
 

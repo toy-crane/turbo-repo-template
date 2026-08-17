@@ -33,12 +33,12 @@ import {
   destructiveActionModifiers,
   useDestructiveActionAnnouncement,
 } from "./destructive-action";
-import { EditableProfileHero } from "./editable-profile-hero";
 import {
   type PhotoSourceActions,
   PhotoSourceSheet,
   usePhotoSourceMenu,
 } from "./photo-source-menu";
+import { ProfileEditHero } from "./profile-edit-hero";
 import { SettingsActionRow } from "./settings-action-row";
 
 /**
@@ -185,7 +185,7 @@ export function ProfileEditScreen({
         <FieldGroup.Section>
           <FieldGroup.SectionHeader>
             <RNHostView matchContents>
-              <EditableProfileHero
+              <ProfileEditHero
                 avatarUrl={edit.avatarUrl}
                 displayName={edit.nickname}
                 onEditPhoto={menu.open}

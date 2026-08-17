@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { profileLabels } from "@/features/auth/ui/profile-labels";
 import { UserAvatar } from "@/shared/ui/user-avatar";
 
-export interface EditableProfileHeroProps {
+export interface ProfileEditHeroProps {
   avatarUrl: string | null;
   displayName: string | null;
   onEditPhoto: () => void;
@@ -19,11 +19,11 @@ export interface EditableProfileHeroProps {
  * would put a second target over the first and cover part of what it offers to
  * change.
  */
-export function EditableProfileHero({
+export function ProfileEditHero({
   avatarUrl,
   displayName,
   onEditPhoto,
-}: EditableProfileHeroProps) {
+}: ProfileEditHeroProps) {
   return (
     <View className="items-center gap-2 px-4 pt-2 pb-6">
       <Pressable
