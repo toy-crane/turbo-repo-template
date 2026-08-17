@@ -81,7 +81,3 @@ iOS Simulator와 Android Emulator의 Development Build에서 네 가지 상태�
 - **어두운 모드는 기기로 확인하지 않았다.** 승인한 화면의 어두운 모드 색은 Apple과 Material이 문서로 밝힌 값에서 가져온 것이며 실제 기기 캡처가 아니다. 구현할 때 두 플랫폼의 어두운 모드를 눈으로 확인한다.
 - **Android의 색이 앱 색과 무관하다.** Material 기본 팔레트를 그대로 쓰므로 iOS의 파랑과 다른 색이 나온다. 두 플랫폼의 강조색을 맞춰야 한다는 요구가 생기면 다시 본다.
 - iOS 26.1에서 도구막대의 prominent 버튼 tint가 늦게 칠해진다는 보고가 Apple 개발자 포럼에 있다. 이번 확인에서는 재현되지 않았다.
-
-## 승인한 화면
-
-[prototype.html](prototype.html)
