@@ -9,6 +9,7 @@ import {
   useProfileEditFlow,
 } from "@/screens/settings/profile-edit-screen";
 import { ProfileSaveHeaderAction } from "@/screens/settings/profile-save-header-action";
+import { toolbarIcon } from "@/shared/ui/icon/toolbar-icons";
 
 export default function ProfileEditRoute() {
   // A finished save is the one exit that keeps the draft. Going back any other
@@ -75,6 +76,10 @@ export default function ProfileEditRoute() {
             A check rather than the word 저장. The accessible name still says 저장,
             because a screen reader gets no help from the shape.
 
+            `prominent` is what fills the circle with the system tint, and what
+            drains it to grey once the button is disabled. Plain, the two states
+            differ only in the colour of the check itself, which nobody spots.
+
             Disabled until something has actually changed and every value is
             usable, so pressing it always saves rather than sometimes explaining
             why it cannot.
@@ -82,8 +87,9 @@ export default function ProfileEditRoute() {
           <Stack.Toolbar.Button
             accessibilityLabel={profileLabels.save}
             disabled={!flow.edit.canSave}
-            icon="checkmark"
+            icon={toolbarIcon("save")}
             onPress={flow.save}
+            variant="prominent"
           />
         )}
       </Stack.Toolbar>

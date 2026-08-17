@@ -1,0 +1,650 @@
+<!--
+  prototype shell: the review chrome every prototype starts from.
+
+  Keep this comment in the prototype you grow from here: it is the contract,
+  and later turns work from that file rather than from this one.
+
+  Contract (extend product screens; keep the review shell):
+  - Product:  .sh-stage contains only end-user product UI. Keep review notes,
+               rationale, instructions, and approval controls in conversation.
+  - Screens:  <section data-screen="slug" data-title="Label"> inside .sh-stage.
+               The selector, arrow keys, and #hash routing build themselves.
+               Use one option per product destination or distinct surface,
+               named by its product role. Keep baselines, variants, comparison
+               labels, steps, indexes, and progress out of names and states.
+               Links may use href="#slug".
+  - States:   "Default" is automatic. A screen declares only representative
+               presets in data-states="Empty,Error". Use natural, screen-specific
+               names. Reserve presets for important multi-step results, forced
+               data or errors, or materially different structure; keep one-click
+               and transient states as interactions. Use data-when="Empty" on
+               preset-only elements. Call prototypeShell.setState("Name") on
+               entry and setState("Default") on exit, including when repeated
+               actions cross a preset condition.
+  - Viewport: "vp (m)" cycles full / 390 / 768. The 390 preset is a
+               fixed-height, internally scrolling phone frame. Start a
+               mobile-first prototype by adding class="sh-vp-390" to <body>
+               (or a bootstrap classList.add before the chrome script runs).
+  - Pinning:  keep in-frame bars (tab bars, CTAs) inside the phone with
+               position: sticky; position: fixed pins to the browser window.
+  - Tokens:   replace the project-tokens block with project tokens copied
+               verbatim. Map differing names to --background, --foreground, and
+               --font afterwards; replace network fonts with a system stack and
+               note that substitution. Without a design system, keep this
+               palette as the finished style.
+  - Placeholders: .wf-pic stands in for pictures the prototype has no real
+               files for. Use real text everywhere text belongs.
+
+  - Chrome:   Keep exactly the screen selector, selected-screen state selector,
+               and viewport cycle. Chrome that needs explaining has failed.
+
+  Self-contained by design: no build, no framework, no network.
+-->
+<meta charset="utf-8">
+<title>프로필 저장 버튼 상태</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* ── project tokens: apps/mobile/global.css + heroui-native variables.css ── */
+  :root {
+    --background: #f4f4f6;
+    --foreground: #111114;
+    --surface: #ffffff;
+    --surface-foreground: var(--foreground);
+    --muted: oklch(0.5517 0.0138 285.94);
+    --danger: oklch(0.6532 0.2328 25.74);
+    --border: oklch(90% 0.004 286.32);
+    --separator: oklch(74% 0.004 286.32);
+    --radius: 10px;
+    /* system font stack stands in for the platform faces (SF Pro / Roboto) */
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+
+  /* ── review chrome (sh-*): keep; extend product styles elsewhere ── */
+  * { box-sizing: border-box }
+  body {
+    margin: 0; padding: 0 0 40px;
+    background: #e9e9ee; color: var(--foreground, #3a3a3a);
+    font-family: var(--font, system-ui, sans-serif);
+  }
+  .sh-bar {
+    position: sticky; top: 0; z-index: 999;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 8px 12px; background: #191a1c; color: #d7d7d7;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .sh-bar b, .sh-control-label { color: #8a8f98; font-weight: 500 }
+  .sh-control { display: inline-flex; gap: 5px; align-items: center }
+  .sh-bar button {
+    border: 1px solid #3a3d42; background: none; color: inherit;
+    font: inherit; padding: 2px 9px; border-radius: 99px; cursor: pointer;
+  }
+  .sh-bar select {
+    width: 170px; border: 1px solid #3a3d42; background: #232428; color: inherit;
+    font: inherit; padding: 3px 28px 3px 9px; border-radius: 7px; cursor: pointer;
+    color-scheme: dark;
+  }
+  #sh-screen { width: 210px }
+  .sh-bar button.on { background: #d7d7d7; color: #191a1c; border-color: #d7d7d7 }
+  .sh-spacer { flex: 1 }
+  .sh-stage { max-width: 960px; margin: 0 auto; padding: 12px 16px 0 }
+  [hidden] { display: none !important }
+
+  /* viewport presets */
+  .sh-vp-390 .sh-stage {
+    max-width: 390px; background: var(--background, #f6f6f6);
+    border: 10px solid #191a1c; border-radius: 28px;
+    padding: 16px 12px; height: min(844px, calc(100dvh - 52px));
+    overflow-y: auto; margin-top: 12px;
+  }
+  .sh-vp-768 .sh-stage {
+    max-width: 768px; border: 1px solid #c4c4c4; border-radius: 12px;
+    padding: 16px; margin-top: 12px;
+  }
+
+  /* placeholders */
+  .wf-pic  { border-radius: 4px; background:
+             repeating-linear-gradient(45deg, #e9e9e9, #e9e9e9 6px, #f2f2f2 6px, #f2f2f2 12px) }
+
+  /* ══ product ══════════════════════════════════════════════════════════ */
+  /* A native screen fills its device, so the stage gives its padding to the
+     screen instead of keeping it as a margin around the app. */
+  .sh-stage { padding: 0 }
+  .sh-vp-390 .sh-stage { padding: 0; overflow: hidden }
+  .sh-vp-768 .sh-stage { padding: 0 }
+
+  .dev {
+    display: flex; flex-direction: column;
+    min-height: min(844px, calc(100dvh - 52px));
+    background: var(--background); color: var(--foreground);
+    border-radius: 18px; overflow: hidden;
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  .sh-vp-390 .dev { border-radius: 0; height: 100%; min-height: 0 }
+
+  .dev.dark {
+    --background: #0b0b0d;
+    --foreground: #ffffff;
+    --surface: #1a1a1e;
+    --surface-foreground: var(--foreground);
+    --muted: oklch(70.5% 0.015 286.067);
+    --danger: oklch(0.594 0.1967 24.63);
+    --border: oklch(28% 0.006 286.033);
+    --separator: oklch(40% 0.006 286.033);
+  }
+
+  /* platform-owned control colours. Not app tokens: each platform draws its
+     own confirmation action, which is what the decision relies on. */
+  .dev.ios       { --tint: #0087fe; --off-fill: #cbcbcf; --off-ink: #f2f2f5;
+                   --glass: #fbfbff; --glass-ink: #111114; --sheet: #f2f2f7 }
+  .dev.ios.dark  { --tint: #0a84ff; --off-fill: #48484a; --off-ink: #8e8e93;
+                   --glass: #2c2c2e; --glass-ink: #ffffff; --sheet: #0b0b0d }
+  .dev.and       { --tint: #2a4174; --tint-ink: #ffffff; --off-fill: #e4e2e8;
+                   --off-ink: #97969c; --bar-ink: #111114 }
+  .dev.and.dark  { --tint: #bcc7ec; --tint-ink: #23335e; --off-fill: #2b2a30;
+                   --off-ink: #78767e; --bar-ink: #ffffff }
+
+  /* Each platform paints the screen it owns: iOS the grouped-settings sheet,
+     Android the Material surface. Neither is the app's --background. */
+  .dev.ios { background: var(--sheet) }
+  .dev.and { background: #faf8ff }
+  .dev.and.dark { background: #131318 }
+
+  /* status bar */
+  .statusbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 22px 2px; font-size: 14px; font-weight: 600;
+    color: var(--foreground); flex: none;
+  }
+  .statusbar .sigs { display: flex; gap: 5px; align-items: center; opacity: .85 }
+  .statusbar .sig { width: 15px; height: 11px; border-radius: 2px;
+                    background: currentColor; opacity: .55 }
+  .statusbar .sig.bat { width: 22px; border-radius: 3px }
+  .dev.and .statusbar { padding: 10px 20px 0; font-size: 13px; font-weight: 500 }
+
+  /* ── iOS navigation bar ── */
+  .navbar {
+    flex: none; position: relative; display: flex; align-items: center;
+    justify-content: space-between; padding: 8px 12px 10px; gap: 8px;
+  }
+  .navbar .title {
+    position: absolute; left: 0; right: 0; text-align: center;
+    font-size: 17px; font-weight: 600; pointer-events: none;
+  }
+  .glassbtn {
+    width: 44px; height: 44px; border-radius: 50%; border: 0; flex: none;
+    background: var(--glass); color: var(--glass-ink);
+    display: grid; place-items: center; cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,.10);
+  }
+  .ios-save {
+    width: 44px; height: 44px; border-radius: 50%; border: 0; flex: none;
+    display: grid; place-items: center; cursor: pointer;
+    background: var(--tint); color: #fff;
+    transition: background .15s ease, color .15s ease;
+  }
+  .ios-save[disabled] { background: var(--off-fill); color: var(--off-ink); cursor: default }
+  .ios-save:not([disabled]):active { filter: brightness(.9) }
+
+  /* ── Android app bar ── */
+  .appbar {
+    flex: none; display: flex; align-items: center; gap: 4px;
+    padding: 14px 12px 12px 8px; color: var(--bar-ink);
+  }
+  .appbar .title { font-size: 22px; font-weight: 500; margin-left: 6px }
+  .appbar .grow { flex: 1 }
+  .iconbtn {
+    width: 48px; height: 48px; border-radius: 50%; border: 0; background: none;
+    color: inherit; display: grid; place-items: center; cursor: pointer; flex: none;
+  }
+  .and-save {
+    width: 40px; height: 40px; border-radius: 50%; border: 0; flex: none;
+    display: grid; place-items: center; cursor: pointer;
+    background: var(--tint); color: var(--tint-ink); margin-right: 6px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .and-save[disabled] { background: var(--off-fill); color: var(--off-ink); cursor: default }
+  .and-save:not([disabled]):active { filter: brightness(.92) }
+
+  /* spinner that replaces the save control while a save runs */
+  .spin {
+    width: 44px; height: 44px; flex: none; display: grid; place-items: center;
+  }
+  .dev.and .spin { width: 40px; height: 40px; margin-right: 6px }
+  .spin i {
+    width: 20px; height: 20px; border-radius: 50%; display: block;
+    border: 2px solid var(--muted); border-top-color: transparent;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg) } }
+
+  /* ── screen body ── */
+  .body { flex: 1; overflow-y: auto; padding-bottom: 28px }
+
+  .hero { display: flex; flex-direction: column; align-items: center; padding: 14px 0 6px }
+  .avatar {
+    width: 96px; height: 96px; border-radius: 50%; background: #cfe2f7;
+    color: #076eca; display: grid; place-items: center;
+    font-size: 40px; font-weight: 500; letter-spacing: -1px;
+  }
+  .dev.dark .avatar { background: #14375f; color: #8ec2ff }
+  .pill {
+    margin-top: 12px; border: 0; cursor: pointer;
+    background: var(--surface); color: var(--foreground);
+    font: 500 15px/1 var(--font); padding: 9px 16px; border-radius: 99px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  }
+  .dev.and .pill { font-weight: 500; font-size: 16px }
+
+  /* grouped form */
+  .group { margin: 22px 16px 0 }
+  .card {
+    background: var(--surface); border-radius: var(--radius); overflow: hidden;
+  }
+  .dev.and .card { background: #eeedf4; border-radius: 22px }
+  .dev.and.dark .card { background: #22222a }
+  .row {
+    position: relative; display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; min-height: 46px;
+  }
+  .dev.and .row { padding: 16px 20px }
+  /* iOS insets the hairline to the label's left edge; Android's list draws none. */
+  .dev.ios { --sep: #e8e8e8 }
+  .dev.ios.dark { --sep: #38383a }
+  .dev.ios .row + .row::before,
+  .dev.ios .pickrow + .pickrow::before {
+    content: ''; position: absolute; left: 16px; right: 0; top: 0; height: 1px;
+    background: var(--sep);
+  }
+  .row .label { flex: none; font-size: 17px }
+  .dev.and .row .label { font-size: 16px }
+  .row input {
+    flex: 1; min-width: 0; border: 0; background: none; outline: none;
+    text-align: right; font: inherit; font-size: 17px; color: var(--foreground);
+    padding: 0;
+  }
+  .dev.and .row input { font-size: 16px }
+  .row input::placeholder { color: var(--muted) }
+  .row input:read-only { color: var(--muted) }
+
+  .foot { padding: 8px 16px 0; font-size: 13px; line-height: 1.45; color: var(--muted) }
+  .dev.and .foot { padding: 10px 20px 0; font-size: 14px; color: var(--foreground) }
+  .foot p { margin: 0 0 6px }
+  .foot p:last-child { margin-bottom: 0 }
+  .foot .bad { color: var(--danger) }
+
+  .grouptitle {
+    padding: 0 16px 7px; font-size: 13px; color: var(--muted);
+  }
+  .dev.and .grouptitle { padding: 0 20px 8px; font-size: 14px }
+
+  .pickrow {
+    position: relative; display: flex; align-items: center;
+    padding: 12px 16px; min-height: 46px;
+    font-size: 17px; cursor: pointer; background: none; border: 0;
+    color: var(--foreground); width: 100%; text-align: left; font-family: inherit;
+  }
+  .dev.and .pickrow { padding: 16px 20px; font-size: 16px }
+
+  .dangerrow {
+    padding: 12px 16px; min-height: 46px; display: flex; align-items: center;
+    color: var(--danger); font-size: 17px; cursor: pointer;
+  }
+  .dev.and .dangerrow { padding: 16px 20px; font-size: 16px }
+
+  svg.gl { display: block }
+</style>
+
+<header class="sh-bar">
+  <b>proto</b>
+  <label class="sh-control"><span class="sh-control-label">screen</span><select id="sh-screen" autocomplete="off"></select></label>
+  <span class="sh-spacer"></span>
+  <label class="sh-control"><span class="sh-control-label">state</span><select id="sh-state" autocomplete="off"></select></label>
+  <button id="sh-vp">vp: full (m)</button>
+</header>
+
+<main class="sh-stage"></main>
+
+<script>
+  /* The same profile screen on two platforms in two appearance modes. One
+     source keeps the four in step; each still renders as its own section. */
+  document.body.classList.add('sh-vp-390');
+
+  const STATES = '저장 가능,아이디 형식 오류,저장 중,저장 실패,아이디 사용 중,아이디 잠김';
+  const NOT_SAVING = 'Default,저장 가능,아이디 형식 오류,저장 실패,아이디 사용 중,아이디 잠김';
+  const PLAIN_NOTE = 'Default,저장 가능,아이디 형식 오류,저장 중,저장 실패,아이디 사용 중';
+
+  const check = '<svg class="gl" width="20" height="20" viewBox="0 0 20 20" fill="none"' +
+    ' stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M4 10.5 8 14.5 16 5.5"/></svg>';
+  const chevron = '<svg class="gl" width="18" height="18" viewBox="0 0 18 18" fill="none"' +
+    ' stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M11 3 5 9l6 6"/></svg>';
+  const arrow = '<svg class="gl" width="22" height="22" viewBox="0 0 22 22" fill="none"' +
+    ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M19 11H4m0 0 6-6m-6 6 6 6"/></svg>';
+
+  function statusbar(platform) {
+    if (platform === 'ios') {
+      return '<div class="statusbar"><span>9:41</span>' +
+        '<span class="sigs"><i class="sig"></i><i class="sig"></i><i class="sig bat"></i></span></div>';
+    }
+    return '<div class="statusbar"><span>9:41</span>' +
+      '<span class="sigs"><i class="sig"></i><i class="sig bat"></i></span></div>';
+  }
+
+  function header(platform) {
+    if (platform === 'ios') {
+      return '<div class="navbar" data-component="Stack.Toolbar">' +
+        '<button class="glassbtn" aria-label="뒤로">' + chevron + '</button>' +
+        '<span class="title">프로필</span>' +
+        '<button class="ios-save" data-save data-component="Stack.Toolbar.Button"' +
+        ' aria-label="저장" data-when="' + NOT_SAVING + '" disabled>' + check + '</button>' +
+        '<span class="spin" data-when="저장 중" role="progressbar" aria-label="저장 중"' +
+        ' data-component="ActivityIndicator"><i></i></span>' +
+        '</div>';
+    }
+    return '<div class="appbar" data-component="Stack.Screen header">' +
+      '<button class="iconbtn" aria-label="뒤로">' + arrow + '</button>' +
+      '<span class="title">프로필</span><span class="grow"></span>' +
+      '<button class="and-save" data-save data-component="FilledIconButton"' +
+      ' aria-label="저장" data-when="' + NOT_SAVING + '" disabled>' + check + '</button>' +
+      '<span class="spin" data-when="저장 중" role="progressbar" aria-label="저장 중"' +
+      ' data-component="ActivityIndicator"><i></i></span>' +
+      '</div>';
+  }
+
+  function screenHtml(platform) {
+    return statusbar(platform) + header(platform) +
+      '<div class="body">' +
+
+      '<div class="hero" data-component="EditableProfileHero">' +
+        '<div class="avatar" aria-hidden="true">김</div>' +
+        '<button class="pill" aria-label="사진 편집">편집</button>' +
+      '</div>' +
+
+      '<div class="group" data-component="FieldGroup.Section">' +
+        '<div class="card">' +
+          '<div class="row" data-component="Row">' +
+            '<span class="label">닉네임</span>' +
+            '<input data-field="nickname" data-component="TextInput" aria-label="닉네임"' +
+            ' value="김한울" maxlength="30">' +
+          '</div>' +
+          '<div class="row" data-component="Row">' +
+            '<span class="label">아이디</span>' +
+            '<input data-field="username" data-component="TextInput" aria-label="아이디"' +
+            ' value="hanwool_kim" maxlength="20">' +
+          '</div>' +
+        '</div>' +
+        '<div class="foot" data-component="FieldGroup.SectionFooter">' +
+          /* Filled by the draft itself: these say why the save control is asleep. */
+          '<p class="bad" data-msg="nickname" hidden></p>' +
+          '<p class="bad" data-msg="username" hidden></p>' +
+          '<p data-when="' + PLAIN_NOTE + '">아이디는 30일에 한 번 바꿀 수 있어요. 이전 아이디는 30일 동안 다른 사람이 사용할 수 없어요.</p>' +
+          '<p data-when="아이디 잠김">2026년 9월 12일부터 아이디를 다시 바꿀 수 있어요.</p>' +
+          '<p class="bad" data-when="저장 실패">프로필을 저장하지 못했어요. 입력한 내용은 그대로 두었어요. 다시 저장해 주세요.</p>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="group" data-when="아이디 사용 중" data-component="FieldGroup.Section">' +
+        '<div class="grouptitle">사용할 수 있는 아이디</div>' +
+        '<div class="card">' +
+          '<button class="pickrow" data-suggest data-component="ListItem">hanwool_2</button>' +
+          '<button class="pickrow" data-suggest data-component="ListItem">hanwool_kim2</button>' +
+          '<button class="pickrow" data-suggest data-component="ListItem">kim_hanwool</button>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="group" data-component="FieldGroup.Section">' +
+        '<div class="card">' +
+          '<div class="dangerrow" data-component="SettingsActionRow">계정 삭제</div>' +
+        '</div>' +
+        '<div class="foot" data-component="FieldGroup.SectionFooter">' +
+          '<p>로그인 계정, 프로필과 올린 사진이 모두 삭제됩니다. 되돌릴 수 없습니다.</p>' +
+        '</div>' +
+      '</div>' +
+
+      '</div>';
+  }
+
+  const SCREENS = [
+    { slug: 'profile-ios',      title: '프로필 · iOS',            cls: 'ios' },
+    { slug: 'profile-android',  title: '프로필 · Android',        cls: 'and' },
+    { slug: 'profile-ios-dark', title: '프로필 · iOS 어두운 모드',     cls: 'ios dark' },
+    { slug: 'profile-and-dark', title: '프로필 · Android 어두운 모드', cls: 'and dark' },
+  ];
+
+  const stageEl = document.querySelector('.sh-stage');
+  stageEl.innerHTML = SCREENS.map(s =>
+    '<section data-screen="' + s.slug + '" data-title="' + s.title + '" data-states="' + STATES + '">' +
+      '<div class="dev ' + s.cls + '">' + screenHtml(s.cls.split(' ')[0]) + '</div>' +
+    '</section>'
+  ).join('');
+</script>
+
+<script>
+  const stage = document.querySelector('.sh-stage');
+  const screens = [...stage.querySelectorAll('[data-screen]')];
+  const screenSelect = document.getElementById('sh-screen');
+  const stateSelect = document.getElementById('sh-state');
+  const vpBtn = document.getElementById('sh-vp');
+  let current = null;
+  let currentStates = [];
+
+  screens.forEach(s => {
+    const option = document.createElement('option');
+    option.textContent = s.dataset.title || s.dataset.screen;
+    option.value = s.dataset.screen;
+    screenSelect.append(option);
+  });
+  screenSelect.onchange = () => show(screenSelect.value);
+
+  function show(slug) {
+    current = screens.find(s => s.dataset.screen === slug) || screens[0];
+    screens.forEach(s => s.hidden = s !== current);
+    screenSelect.value = current.dataset.screen;
+    history.replaceState(null, '', '#' + current.dataset.screen);
+    buildStates();
+  }
+
+  function buildStates() {
+    const declared = (current.dataset.states || '').split(',').map(x => x.trim()).filter(Boolean);
+    currentStates = ['Default', ...declared.filter(name => name !== 'Default')];
+    stateSelect.innerHTML = '';
+    currentStates.forEach(name => {
+      const option = document.createElement('option');
+      option.textContent = name;
+      option.value = name;
+      stateSelect.append(option);
+    });
+    applyState('Default');
+  }
+
+  function applyState(name) {
+    const active = currentStates.includes(name) ? name : 'Default';
+    current.querySelectorAll('[data-when]').forEach(el => {
+      el.hidden = !el.dataset.when.split(',').map(x => x.trim()).includes(active);
+    });
+    stateSelect.value = active;
+  }
+  stateSelect.onchange = () => applyState(stateSelect.value);
+
+  window.prototypeShell = {
+    showScreen: show,
+    setState: applyState,
+    getScreen: () => current?.dataset.screen,
+    getState: () => stateSelect.value
+  };
+
+  const VPS = ['full', '390', '768'];
+  let vp = VPS.find(v => document.body.classList.contains('sh-vp-' + v)) || 'full';
+  function applyVp() {
+    VPS.forEach(v => document.body.classList.toggle('sh-vp-' + v, v === vp && v !== 'full'));
+    vpBtn.textContent = 'vp: ' + vp + ' (m)';
+    vpBtn.classList.toggle('on', vp !== 'full');
+  }
+  vpBtn.onclick = () => { vp = VPS[(VPS.indexOf(vp) + 1) % VPS.length]; applyVp(); };
+  applyVp();
+
+  addEventListener('keydown', e => {
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const i = screens.indexOf(current);
+    if (e.key === 'ArrowRight') show(screens[(i + 1) % screens.length].dataset.screen);
+    if (e.key === 'ArrowLeft') show(screens[(i - 1 + screens.length) % screens.length].dataset.screen);
+    if (e.key === 'm') vpBtn.click();
+  });
+
+  addEventListener('hashchange', () => show(location.hash.slice(1)));
+  show(location.hash.slice(1));
+</script>
+
+<script>
+  /* Product behaviour: what a person can actually do on this screen.
+     The save control follows the draft, so typing is the way to see it wake up. */
+  const SAVED = { nickname: '김한울', username: 'hanwool_kim' };
+
+  /* What each preset holds in the fields. A preset that leaves the draft alone
+     is not listed and keeps the saved values. */
+  const PRESET_FIELDS = {
+    '저장 가능':      { nickname: '한울' },
+    '아이디 형식 오류': { username: 'hw' },
+    '저장 중':        { nickname: '한울' },
+    '저장 실패':      { nickname: '한울' },
+    '아이디 사용 중': { username: 'hanwool' },
+    '아이디 잠김':    { nickname: '한울' },
+  };
+  /* The server has already answered for this draft, so the field alone cannot
+     tell that the id is gone. */
+  const TAKEN = '아이디 사용 중';
+
+  const NICKNAME_MAX = 30;
+  const USERNAME_MIN = 3;
+  const USERNAME_MAX = 20;
+  /* Counts what a person sees as one letter, the same unit the app counts. */
+  const letters = value => [...value].length;
+
+  function dirty(section) {
+    return [...section.querySelectorAll('[data-field]')]
+      .some(input => input.value.trim() !== SAVED[input.dataset.field]);
+  }
+
+  /* The same question the save control asks: is every value usable? */
+  function trouble(section) {
+    const nickname = section.querySelector('[data-field="nickname"]').value.trim();
+    const username = section.querySelector('[data-field="username"]').value.trim();
+    const found = { nickname: '', username: '' };
+
+    /* An empty field says nothing: the person has not typed yet, so there is
+       nothing to correct. It still keeps the save control asleep. */
+    if (letters(nickname) > NICKNAME_MAX) found.nickname = '30자 이하로 입력해 주세요.';
+
+    if (window.prototypeShell.getState() === TAKEN) {
+      found.username = '이미 사용 중인 아이디예요.';
+    } else if (username && !/^[a-z0-9_]+$/.test(username)) {
+      found.username = '영문 소문자, 숫자, 밑줄(_)만 사용할 수 있어요.';
+    } else if (username && letters(username) < USERNAME_MIN) {
+      found.username = '3자 이상 입력해 주세요.';
+    } else if (letters(username) > USERNAME_MAX) {
+      found.username = '20자 이하로 입력해 주세요.';
+    }
+
+    const filled = nickname.length > 0 && username.length > 0;
+    return { ...found, usable: filled && !found.nickname && !found.username };
+  }
+
+  function refreshSave(section) {
+    const save = section.querySelector('[data-save]');
+    if (!save) return;
+    const found = trouble(section);
+
+    section.querySelectorAll('[data-msg]').forEach(el => {
+      const text = found[el.dataset.msg];
+      el.textContent = text;
+      el.hidden = !text;
+    });
+
+    save.disabled = !dirty(section) || !found.usable;
+  }
+
+  function activeSection() {
+    return screens.find(s => !s.hidden);
+  }
+
+  /* Presets own the draft; Default returns it to the saved profile. */
+  function syncFields() {
+    const section = activeSection();
+    if (!section) return;
+    const state = window.prototypeShell.getState();
+    const preset = PRESET_FIELDS[state] || {};
+    section.querySelectorAll('[data-field]').forEach(input => {
+      const key = input.dataset.field;
+      input.value = preset[key] ?? SAVED[key];
+      input.readOnly = state === '아이디 잠김' && key === 'username';
+    });
+    refreshSave(section);
+  }
+
+  stage.addEventListener('input', event => {
+    const input = event.target.closest('[data-field]');
+    if (!input) return;
+    const section = input.closest('[data-screen]');
+
+    /* A capital is corrected in the field rather than only on its way to the
+       server, so what the person sees is what gets saved. Everything else they
+       type is left alone and answered by the message below instead. */
+    if (input.dataset.field === 'username' && input.value !== input.value.toLowerCase()) {
+      const at = input.selectionStart;
+      input.value = input.value.toLowerCase();
+      input.setSelectionRange(at, at);
+    }
+
+    /* Editing the id past the one the server rejected leaves that answer
+       behind, so the preset stops describing the draft. */
+    if (window.prototypeShell.getState() === TAKEN &&
+        input.dataset.field === 'username' &&
+        input.value !== PRESET_FIELDS[TAKEN].username) {
+      window.prototypeShell.setState('Default');
+    }
+
+    refreshSave(section);
+  });
+
+  stage.addEventListener('click', event => {
+    const suggestion = event.target.closest('[data-suggest]');
+    if (suggestion) {
+      const section = suggestion.closest('[data-screen]');
+      section.querySelector('[data-field="username"]').value = suggestion.textContent;
+      /* Picking a free id leaves the taken-id condition behind. */
+      window.prototypeShell.setState('Default');
+      refreshSave(section);
+      return;
+    }
+
+    const save = event.target.closest('[data-save]');
+    if (!save || save.disabled) return;
+    const section = save.closest('[data-screen]');
+    const draft = {};
+    section.querySelectorAll('[data-field]').forEach(i => { draft[i.dataset.field] = i.value; });
+
+    window.prototypeShell.setState('저장 중');
+    section.querySelectorAll('[data-field]').forEach(i => { i.value = draft[i.dataset.field]; });
+
+    /* A finished save returns the screen to the saved profile. The prototype
+       keeps SAVED as it was so every preset stays reproducible after a save;
+       in the app the new values become the saved ones. */
+    setTimeout(() => {
+      window.prototypeShell.setState('Default');
+      syncFields();
+    }, 1600);
+  });
+
+  /* The shell owns screen and state changes; every path through it ends here. */
+  ['sh-state', 'sh-screen'].forEach(id =>
+    document.getElementById(id).addEventListener('change', syncFields));
+  addEventListener('hashchange', syncFields);
+  addEventListener('keydown', event => {
+    if (/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)) return;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') syncFields();
+  });
+  syncFields();
+</script>
