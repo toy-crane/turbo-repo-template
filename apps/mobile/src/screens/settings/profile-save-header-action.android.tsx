@@ -2,7 +2,7 @@ import { FilledIconButton, Host, Icon } from "@expo/ui/jetpack-compose";
 import { ActivityIndicator, View, type ViewStyle } from "react-native";
 
 import { profileLabels } from "@/features/auth/ui/profile-labels";
-import { toolbarIcons } from "@/shared/ui/icon/toolbar-icons";
+import { toolbarIcons } from "@/shared/ui/toolbar-icons";
 import type { ProfileSaveHeaderActionProps } from "./profile-save-header-action";
 
 const ICON_SIZE = 24;

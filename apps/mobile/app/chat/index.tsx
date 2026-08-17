@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 import { useAppTheme } from "@/core/theme/app-theme-bridge";
 import { chatLabels } from "@/features/chat/ui/chat-labels";
 import { ChatScreen } from "@/screens/chat/chat-screen";
-import { toolbarIcon } from "@/shared/ui/icon/toolbar-icons";
+import { toolbarIcon } from "@/shared/ui/toolbar-icons";
 
 function goBack() {
   router.back();

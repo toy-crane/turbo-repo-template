@@ -75,7 +75,7 @@ jest.mock("@/screens/home/profile-avatar-button", () => {
   };
 });
 
-jest.mock("@/shared/ui/icon/toolbar-icons", () => ({
+jest.mock("@/shared/ui/toolbar-icons", () => ({
   toolbarIcon: (name: string) => name,
 }));
 

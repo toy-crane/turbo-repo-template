@@ -7,7 +7,7 @@
 - React Native UI는 `lucide-react-native`를 감싼 프로젝트 공통 `Icon`을 사용한다. iOS와 Android에서 같은 의미에 같은 SVG 실루엣을 렌더링하며, 기능 코드는 `lucide-react-native`를 직접 불러오지 않는다.
 - HeroUI Native 컴포넌트가 기본 아이콘을 제공하는 자리는 해당 컴포넌트가 계속 소유한다. 제품 아이콘으로 바꿔야 할 요구가 확인될 때만 프로젝트 `Icon`으로 교체한다.
 - `@expo/ui`의 `Host` 안에서는 `@expo/ui`가 제공하는 `Icon`을 사용한다. 이 API는 iOS에서 SF Symbol을, Android에서 Material Symbol XML을 렌더링한다.
-- `Stack.Toolbar` 버튼의 아이콘은 `src/shared/ui/icon/toolbar-icons.tsx`가 한곳에서 정의한다. 한 의미에 iOS SF Symbol 이름과 Android Material Symbol을 함께 적고, `icon` prop으로 넘긴다.
+- `Stack.Toolbar` 버튼의 아이콘은 `src/shared/ui/toolbar-icons.tsx`가 한곳에서 정의한다. 한 의미에 iOS SF Symbol 이름과 Android Material Symbol을 함께 적고, `icon` prop으로 넘긴다.
 - Android 툴바 아이콘은 `@expo/material-symbols`가 아이콘마다 내주는 XML 벡터 드로어블을 쓴다. 배율별 PNG를 저장소에 두지 않는다.
 - 툴바 아이콘의 플랫폼 분기는 `Platform.OS`가 아니라 `process.env.EXPO_OS`로 쓴다.
 - 브랜드 로고나 제품 고유 그래픽은 프로젝트가 소유하는 이미지 또는 SVG 파일로 제공한다.
