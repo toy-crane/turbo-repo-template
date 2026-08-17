@@ -11,9 +11,9 @@ import { getSettingsSheetOptions } from "@/core/navigation/settings-sheet";
 import { QueryProvider } from "@/core/providers/query-provider";
 import { AppThemeBridge, useAppTheme } from "@/core/theme/app-theme-bridge";
 import { AuthSessionProvider } from "@/features/auth/state/auth-session";
-import { ProfileUnavailableScreen } from "@/features/auth/ui/profile-unavailable-screen";
-import { SessionCheckingScreen } from "@/features/auth/ui/session-checking-screen";
-import { SetupNeededScreen } from "@/features/auth/ui/setup-needed-screen";
+import { ProfileUnavailableScreen } from "@/screens/session/profile-unavailable-screen";
+import { SessionCheckingScreen } from "@/screens/session/session-checking-screen";
+import { SetupNeededScreen } from "@/screens/session/setup-needed-screen";
 
 const heroUIConfig = {
   devInfo: { stylingPrinciples: false },

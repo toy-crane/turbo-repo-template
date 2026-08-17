@@ -5,10 +5,10 @@ import type { TextInput } from "react-native";
 import { View } from "react-native";
 
 import { useNicknameStep } from "@/features/auth/state/use-nickname-step";
+import { AuthError, AuthLayout } from "@/features/auth/ui/auth-layout";
+import { onboardingLabels } from "@/features/auth/ui/onboarding-labels";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 import { Button } from "@/shared/ui/button";
-import { AuthError, AuthScreen } from "./auth-screen";
-import { onboardingLabels } from "./onboarding-labels";
 
 /**
  * The first of the two screens a new account sees.
@@ -27,7 +27,7 @@ export function NicknameScreen({ onNext }: { onNext: () => void }) {
   const inputRef = useFocusOnArrival<TextInput>();
 
   return (
-    <AuthScreen
+    <AuthLayout
       footer={
         <Button
           accessibilityLabel={onboardingLabels.next}
@@ -61,6 +61,6 @@ export function NicknameScreen({ onNext }: { onNext: () => void }) {
           </AuthError>
         ) : null}
       </View>
-    </AuthScreen>
+    </AuthLayout>
   );
 }

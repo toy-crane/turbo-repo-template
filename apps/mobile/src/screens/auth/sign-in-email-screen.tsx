@@ -4,10 +4,10 @@ import type { TextInput } from "react-native";
 import { View } from "react-native";
 
 import { useEmailRequest } from "@/features/auth/state/use-email-request";
+import { AuthError, AuthLayout } from "@/features/auth/ui/auth-layout";
+import { signInLabels } from "@/features/auth/ui/sign-in-labels";
 import { useFocusOnArrival } from "@/shared/navigation/use-screen-arrival";
 import { Button } from "@/shared/ui/button";
-import { AuthError, AuthScreen } from "./auth-screen";
-import { signInLabels } from "./sign-in-labels";
 
 /**
  * The address step.
@@ -25,7 +25,7 @@ export function SignInEmailScreen({
   const inputRef = useFocusOnArrival<TextInput>();
 
   return (
-    <AuthScreen
+    <AuthLayout
       footer={
         <Button
           accessibilityLabel={signInLabels.submitEmail}
@@ -65,6 +65,6 @@ export function SignInEmailScreen({
           </AuthError>
         ) : null}
       </View>
-    </AuthScreen>
+    </AuthLayout>
   );
 }

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 
-import { SignInMethodScreen } from "@/features/auth/ui/sign-in-method-screen";
+import { SignInMethodScreen } from "@/screens/auth/sign-in-method-screen";
 
 function goToEmail() {
   router.push("/(auth)/email");

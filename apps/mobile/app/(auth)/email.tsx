@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 
-import { SignInEmailScreen } from "@/features/auth/ui/sign-in-email-screen";
+import { SignInEmailScreen } from "@/screens/auth/sign-in-email-screen";
 
 function goToCode(email: string) {
   router.push({ params: { email }, pathname: "/(auth)/code" });

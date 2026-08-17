@@ -2,9 +2,13 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 import { useProviderSignIn } from "@/features/auth/state/use-provider-sign-in";
-import { AuthDivider, AuthError, AuthScreen } from "./auth-screen";
-import { LoginButton } from "./login-button";
-import { signInLabels } from "./sign-in-labels";
+import {
+  AuthDivider,
+  AuthError,
+  AuthLayout,
+} from "@/features/auth/ui/auth-layout";
+import { SignInButton } from "@/features/auth/ui/sign-in-button";
+import { signInLabels } from "@/features/auth/ui/sign-in-labels";
 
 /**
  * The first screen of the auth stack: which way in.
@@ -22,36 +26,36 @@ export function SignInMethodScreen({
   const appName = Constants.expoConfig?.name ?? "앱";
 
   return (
-    <AuthScreen
+    <AuthLayout
       footer={
         <>
-          <LoginButton
+          <SignInButton
             isBusy={provider.pending === "google"}
             isDisabled={provider.isBusy}
             label={signInLabels.google}
+            method="google"
             onPress={provider.startGoogle}
-            provider="google"
             testID="sign-in-google"
           />
 
           {Platform.OS === "ios" ? (
-            <LoginButton
+            <SignInButton
               isBusy={provider.pending === "apple"}
               isDisabled={provider.isBusy}
               label={signInLabels.apple}
+              method="apple"
               onPress={provider.startApple}
-              provider="apple"
               testID="sign-in-apple"
             />
           ) : null}
 
           <AuthDivider />
 
-          <LoginButton
+          <SignInButton
             isDisabled={provider.isBusy}
             label={signInLabels.emailMethod}
+            method="email"
             onPress={onChooseEmail}
-            provider="email"
             testID="sign-in-email-method"
           />
 
