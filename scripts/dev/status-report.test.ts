@@ -4,7 +4,7 @@ import {
   buildStatusReport,
   renderStatusReport,
   type StatusFacts,
-} from "./status";
+} from "./status-report";
 
 const MAIN = "/repo";
 const FEATURE = "/repo/.worktrees/feature";

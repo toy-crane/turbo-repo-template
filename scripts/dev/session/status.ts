@@ -12,7 +12,7 @@ import {
   renderStatusReport,
   type StatusFacts,
   type StatusReport,
-} from "../status";
+} from "../status-report";
 import { createSessionContext, type SessionIo } from "./context";
 import { liveProcessKeys, processKey } from "./maintenance";
 
