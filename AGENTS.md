@@ -24,6 +24,11 @@
 - 최신 문서는 `bunx @hono/cli@0.1.11 docs [path]`로 읽고, 주제 검색은 `bunx @hono/cli@0.1.11 search <query>`를 사용한다.
 - 로컬 `llms.txt`는 Hono가 제공하는 `https://hono.dev/llms.txt`의 사본이다. Hono를 올릴 때 공식 원본으로 갱신한다.
 
+# Astro 개발
+
+- `apps/web` 작업을 시작할 때 Astro Docs MCP 서버로 공식 문서를 확인한다. `.mcp.json`이 `Astro docs`라는 이름으로 이 서버를 연결한다.
+- Astro는 llms.txt를 제공하지 않는다. 공식 안내가 MCP 서버를 권장 방법으로 지정한다.
+
 # 앱 실행
 
 - 앱은 저장소 루트의 `bun run dev <ios|android>`로 실행한다. 이 명령이 이 폴더 전용 포트로 API와 Metro를 띄우고 이 폴더에 배정한 기기에서 앱을 연다. 두 플랫폼이 필요하면 `bun run dev ios android`처럼 나열한다.
