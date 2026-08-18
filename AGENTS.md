@@ -16,6 +16,7 @@
 
 - 작업 주제와 맞는 결정 계약을 [결정 계약 색인](docs/decisions/README.md)에서 확인한다.
 - 앱 화면 문구를 쓰거나 고칠 때는 [화면 문구 한국어 말투](docs/decisions/korean-ui-writing.md)를 따른다.
+- Expo 화면이나 상호작용의 실제 구현 예가 필요하면 [Expo 참조 저장소 색인](docs/references/expo-reference-repos.md)에서 볼 저장소를 고른다.
 
 # Hono 개발
 
