@@ -32,6 +32,10 @@
 - [Supabase 스키마 작업 방식](supabase-schema-workflow.md) — Supabase 스키마 원본, 로컬 스택, 마이그레이션 또는 타입 생성 방식을 변경할 때 읽는다.
 - [Supabase 클라이언트 경계](supabase-client-boundaries.md) — Supabase 타입, 클라이언트 초기화, 세션 저장소 또는 런타임별 키 소유권을 변경할 때 읽는다.
 
+## 웹
+
+- [공개 웹 사이트](web-public-site.md) — 로그인 없이 열리는 법률 문서나 마케팅 페이지를 만들거나, `apps/web`의 렌더러, 배포 위치 또는 스토어에 넣는 공개 주소를 변경할 때 읽는다.
+
 ## 모바일 기반
 
 - [모바일 코드 구조](mobile-code-architecture.md) — 모바일 영역 구분, 기능 내부 책임, 폴더 구조 또는 import 경계를 변경할 때 읽는다.
