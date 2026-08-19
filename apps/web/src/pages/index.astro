@@ -1,0 +1,37 @@
+---
+import { APP_NAME, STORE_LINKS } from "../config/site";
+import PageLayout from "../layouts/PageLayout.astro";
+---
+
+<PageLayout
+  title="홈"
+  description={`${APP_NAME} 소개와 이용약관, 개인정보처리방침, 계정 삭제 요청 안내`}
+>
+  <h1>{APP_NAME}</h1>
+  <p class="lede">
+    휴대폰에서 쓰는 앱이에요. 이메일이나 Google, Apple 계정으로 로그인하고 프로필을
+    만들면 바로 시작할 수 있어요.
+  </p>
+
+  <h2>내려받기</h2>
+  <ul class="stores">
+    {
+      STORE_LINKS.map((store) => (
+        <li>
+          {store.url ? (
+            <a href={store.url}>{store.label}</a>
+          ) : (
+            <span class="store-pending">{store.label} 준비 중</span>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+
+  <h2>약관과 방침</h2>
+  <ul>
+    <li><a href="/terms">이용약관</a></li>
+    <li><a href="/privacy">개인정보처리방침</a></li>
+    <li><a href="/delete-account">계정 삭제 요청</a></li>
+  </ul>
+</PageLayout>

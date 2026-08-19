@@ -26,6 +26,13 @@
     "test": {
       "dependsOn": ["transit"]
     },
+    // The web tests read apps/mobile/app.json to catch a renamed app leaving the
+    // web pages behind. That file is outside this package, so it is not in the
+    // task hash and a cached pass would hide the drift the test exists to find.
+    "@repo/web#test": {
+      "cache": false,
+      "dependsOn": ["transit"]
+    },
     "check-types": {
       "dependsOn": ["transit"]
     },

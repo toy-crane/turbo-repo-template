@@ -1,0 +1,85 @@
+---
+import { APP_NAME, PLACEHOLDERS_IN_USE } from "../config/site";
+import "../styles/global.css";
+
+interface Props {
+  description: string;
+  title: string;
+}
+
+const { title, description } = Astro.props;
+
+const navigation = [
+  { href: "/", label: "홈" },
+  { href: "/terms", label: "이용약관" },
+  { href: "/privacy", label: "개인정보처리방침" },
+  { href: "/delete-account", label: "계정 삭제 요청" },
+];
+
+// The built pages are files, so a request for `/terms` arrives here as
+// `/terms.html` and the home page as `/index.html`. Comparing those to the hrefs
+// above needs the extension off first, or no link is ever the current one.
+function toRoute(pathname: string): string {
+  const withoutExtension = pathname.replace(/\.html$/, "");
+  return withoutExtension === "/index" || withoutExtension === ""
+    ? "/"
+    : withoutExtension;
+}
+
+const currentRoute = toRoute(Astro.url.pathname);
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · {APP_NAME}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={`${title} · ${APP_NAME}`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="masthead">
+        <a class="wordmark" href="/">{APP_NAME}</a>
+        <nav aria-label="주요 페이지">
+          <ul>
+            {
+              navigation.map((item) => (
+                <li>
+                  <a
+                    href={item.href}
+                    aria-current={item.href === currentRoute ? "page" : undefined}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </header>
+
+      <main>
+        {
+          PLACEHOLDERS_IN_USE.length > 0 && (
+            <p class="notice">
+              아직 자리표시자인 값이 있습니다: {PLACEHOLDERS_IN_USE.join(", ")}. 실제
+              값으로 바꾸기 전에는 이 사이트를 스토어에 등록하지 마세요.
+            </p>
+          )
+        }
+        <slot />
+      </main>
+
+      <footer class="pagefoot">
+        <ul>
+          {navigation.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        </ul>
+        <p>{APP_NAME}</p>
+      </footer>
+    </div>
+  </body>
+</html>
