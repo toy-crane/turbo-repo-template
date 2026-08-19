@@ -3,5 +3,19 @@
   "extends": [
     "ultracite/biome/core",
     "ultracite/biome/react"
+  ],
+  "overrides": [
+    {
+      // Biome 2.5.6 parses `.astro` but never reads the template, so every rule
+      // that asks "is this used?" answers no for anything a page uses only in its
+      // markup. `check --write` then deletes those imports and variables, which
+      // empties a page's frontmatter and breaks the build. Astro files are covered
+      // by `astro check` until Biome's Astro support leaves experimental.
+      // See docs/follow-ups/biome-deletes-astro-frontmatter-code.md.
+      "includes": ["**/*.astro"],
+      "linter": { "enabled": false },
+      "formatter": { "enabled": false },
+      "assist": { "enabled": false }
+    }
   ]
 }
