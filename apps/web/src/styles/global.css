@@ -1,0 +1,185 @@
+:root {
+  --page: #ffffff;
+  --ink: #16181d;
+  --ink-muted: #5c6270;
+  --line: #e2e5ea;
+  --accent: #1f5fd0;
+  --notice-bg: #fff6e0;
+  --notice-line: #e6c667;
+  --notice-ink: #6b4b00;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0b0b0d;
+    --ink: #eceef2;
+    --ink-muted: #9aa1af;
+    --line: #2a2d35;
+    --accent: #8ab4ff;
+    --notice-bg: #2a2205;
+    --notice-line: #6b5a1c;
+    --notice-ink: #f0dca4;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+    "Malgun Gothic", system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--ink);
+  word-break: keep-all;
+  background: var(--page);
+}
+
+.shell {
+  max-width: 44rem;
+  padding: 1.5rem 1.25rem 4rem;
+  margin: 0 auto;
+}
+
+a {
+  color: var(--accent);
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.masthead a {
+  color: inherit;
+}
+
+.wordmark {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0;
+  margin: 0;
+  font-size: 0.94rem;
+  list-style: none;
+}
+
+nav a[aria-current="page"] {
+  font-weight: 700;
+  text-decoration: none;
+}
+
+h1 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.9rem;
+  line-height: 1.35;
+}
+
+h2 {
+  margin: 2.25rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+h3 {
+  margin: 1.5rem 0 0.35rem;
+  font-size: 1rem;
+}
+
+p,
+li {
+  color: var(--ink);
+}
+
+.lede {
+  margin-top: 0;
+  color: var(--ink-muted);
+}
+
+dl {
+  margin: 0.5rem 0;
+}
+
+dt {
+  margin-top: 0.85rem;
+  font-weight: 700;
+}
+
+dd {
+  margin: 0.15rem 0 0;
+}
+
+.callout {
+  padding: 1.1rem 1.25rem;
+  margin: 1.25rem 0;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+
+.callout p:last-child {
+  margin-bottom: 0;
+}
+
+.contact {
+  font-size: 1.3rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.notice {
+  padding: 0.85rem 1.1rem;
+  margin: 1.25rem 0;
+  font-size: 0.94rem;
+  color: var(--notice-ink);
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-line);
+  border-radius: 0.75rem;
+}
+
+.stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 1.25rem 0;
+  list-style: none;
+}
+
+.store-pending {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.94rem;
+  color: var(--ink-muted);
+  border: 1px dashed var(--line);
+  border-radius: 0.6rem;
+}
+
+.pagefoot {
+  padding-top: 1rem;
+  margin-top: 3.5rem;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--line);
+}
+
+.pagefoot ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0;
+  margin: 0 0 0.75rem;
+  list-style: none;
+}

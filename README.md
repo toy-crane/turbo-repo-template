@@ -560,6 +560,35 @@ bun run agent-device:doctor
 모델은 서버 설정입니다. 모바일 앱은 모델을 고르지 않고 요청에 모델 이름을 넣지 않습니다.
 대화는 `useChat()` 메모리에만 있으므로 앱을 다시 시작하면 사라집니다.
 
+## 공개 웹 페이지
+
+`apps/web`은 랜딩, 이용약관, 개인정보처리방침, 계정 삭제 요청 네 장을 내는 Astro 정적 사이트입니다.
+모바일 앱, `apps/api`와 다른 Vercel 프로젝트에 배포합니다. 서버 없이 정적 파일만 만듭니다.
+
+```bash
+bun run --cwd apps/web dev      # http://localhost:4321
+bun run --cwd apps/web build    # dist/에 정적 파일 생성
+bun run --cwd apps/web preview  # 만들어진 결과 확인
+```
+
+내보내기 전에 [apps/web/src/config/site.ts](apps/web/src/config/site.ts)의 자리표시자를 실제 값으로 바꿔야 합니다.
+남은 자리표시자는 모든 페이지 상단에 경고로 표시되며, 목록은 다음과 같습니다.
+
+| 값 | 왜 필요한가 |
+| --- | --- |
+| `APP_NAME` | 스토어 등록 정보의 앱 이름과 같아야 합니다. |
+| `OPERATOR_NAME` | 약관이 "회사"라고 부르는 주체입니다. |
+| `SUPPORT_EMAIL` | 계정 삭제 요청을 받는 주소입니다. Play Console의 Data safety 양식에 등록합니다. |
+| `PRIVACY_OFFICER` | 「개인정보 보호법」이 처리방침 필수 기재사항으로 요구합니다. |
+| `AI_MODEL_PROVIDER` | 이용자가 입력한 대화를 전달받는 위탁사입니다. |
+| `DOCUMENT_EFFECTIVE_DATE` | 약관과 방침을 사람이 검토해 공개하는 날입니다. |
+
+약관과 방침 문구는 초안입니다. 배포 전에 사람이 검토해야 합니다.
+
+Biome는 `.astro` 파일을 검사하지 않습니다. 타입 검사는 `astro check`가 맡습니다.
+이유는 [docs/follow-ups/biome-deletes-astro-frontmatter-code.md](docs/follow-ups/biome-deletes-astro-frontmatter-code.md)에 있습니다.
+
+
 ## 로컬 Supabase 스택
 
 먼저 Docker를 실행해야 합니다.
