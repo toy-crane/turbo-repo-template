@@ -1,0 +1,22 @@
+{
+  "name": "@repo/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "astro build",
+    "check": "ultracite check .",
+    "check-types": "astro check",
+    "dev": "astro dev",
+    "fix": "ultracite fix .",
+    "preview": "astro preview",
+    "stop": "astro dev stop"
+  },
+  "dependencies": {
+    "astro": "7.2.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "typescript": "5.9.2"
+  }
+}

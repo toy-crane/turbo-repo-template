@@ -3,5 +3,22 @@
   "extends": [
     "ultracite/biome/core",
     "ultracite/biome/react"
+  ],
+  "overrides": [
+    {
+      // Biome parses only the frontmatter of an .astro file, so anything the
+      // template alone uses reads as dead code. `astro check` runs these two
+      // checks with the template included, so turning them off here loses no
+      // coverage.
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    }
   ]
 }

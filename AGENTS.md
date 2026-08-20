@@ -24,6 +24,14 @@
 - 최신 문서는 `bunx @hono/cli@0.1.11 docs [path]`로 읽고, 주제 검색은 `bunx @hono/cli@0.1.11 search <query>`를 사용한다.
 - 로컬 `llms.txt`는 Hono가 제공하는 `https://hono.dev/llms.txt`의 사본이다. Hono를 올릴 때 공식 원본으로 갱신한다.
 
+# Astro 개발
+
+- Astro 관련 작업을 시작할 때 `astro-docs` MCP의 `search_astro_docs`로 공식 문서를 확인한다.
+- Astro는 `llms.txt`를 제공하지 않는다. 그래서 `.agents/context/`의 사본 대신 `.mcp.json`과 `.codex/config.toml`에 등록한 공식 문서 MCP 서버를 쓴다.
+- 랜딩과 법적 고지 웹 페이지는 `apps/web`이 소유한다. 모바일 앱은 Expo Web을 개발하지 않는다.
+- 웹 개발 서버는 `apps/web`에서 `bun run dev`로 띄우고 `bun run stop`으로 내린다. `astro dev`는 셸을 벗어나 백그라운드에 남으므로 끝나면 반드시 내린다. 상태는 `bunx astro dev status`로 본다.
+- 루트의 `bun run dev`는 API, Metro와 기기만 관리한다. 웹 개발 서버는 시작하지도 멈추지도 않는다.
+
 # 앱 실행
 
 - 앱은 저장소 루트의 `bun run dev <ios|android>`로 실행한다. 이 명령이 이 폴더 전용 포트로 API와 Metro를 띄우고 이 폴더에 배정한 기기에서 앱을 연다. 두 플랫폼이 필요하면 `bun run dev ios android`처럼 나열한다.

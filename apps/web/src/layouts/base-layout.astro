@@ -1,0 +1,54 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+// A host may or may not add a trailing slash to the address, so compare
+// the trimmed form instead of the raw pathname.
+const currentPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
+
+// Every page carries the same three links so a reviewer can walk all the
+// routes without typing addresses by hand.
+const NAV_ITEMS = [
+  { href: "/", label: "랜딩" },
+  { href: "/terms", label: "이용약관" },
+  { href: "/privacy", label: "개인정보 처리방침" },
+];
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <!-- Without this the page keeps black default text on the browser's
+         dark canvas, which is unreadable. Opting in lets the browser pick
+         readable defaults for both schemes, so the page still ships no
+         colors of its own. -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <nav>
+      <ul>
+        {
+          NAV_ITEMS.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={item.href === currentPath ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
