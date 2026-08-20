@@ -19,8 +19,8 @@
 - 저장소 루트의 turbo `build`, `check`, `check-types`, `fix` 작업에 이 앱을
   연결한다.
 - `AGENTS.md`에 Astro 작업을 시작할 때 공식 문서 MCP를 쓰라는 안내 한 줄을 더한다.
-- Astro 공식 문서 MCP 서버는 이 명세를 쓰면서 `.mcp.json`에 이미 더했다. 구현에서
-  다시 설치하지 않는다.
+- Astro 공식 문서 MCP 서버는 이 명세를 쓰면서 `.mcp.json`과 `.codex/config.toml`에
+  이미 더했다. 구현에서 다시 설치하지 않는다.
 
 ## 확정 제약과 이유
 
@@ -40,8 +40,8 @@
   `GLOSSARY.md`를 따른다.
 - Astro는 `llms.txt`를 제공하지 않는다. 공식 에이전트 컨텍스트는
   `https://mcp.docs.astro.build/mcp`의 문서 MCP 서버이고 `search_astro_docs` 도구
-  하나를 노출한다. 그래서 `.agents/context/` 아래에 파일을 두지 않고 `.mcp.json`에
-  서버를 등록한다.
+  하나를 노출한다. 그래서 `.agents/context/` 아래에 파일을 두지 않고 두 도구의
+  MCP 설정에 서버를 등록한다.
 
 ## 수용 기준
 

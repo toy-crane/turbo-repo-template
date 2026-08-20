@@ -9,7 +9,8 @@
     "check-types": "astro check",
     "dev": "astro dev",
     "fix": "ultracite fix .",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "stop": "astro dev stop"
   },
   "dependencies": {
     "astro": "7.2.4"

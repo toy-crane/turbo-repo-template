@@ -5,6 +5,10 @@ interface Props {
 
 const { title } = Astro.props;
 
+// A host may or may not add a trailing slash to the address, so compare
+// the trimmed form instead of the raw pathname.
+const currentPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
+
 // Every page carries the same three links so a reviewer can walk all the
 // routes without typing addresses by hand.
 const NAV_ITEMS = [
@@ -32,7 +36,12 @@ const NAV_ITEMS = [
         {
           NAV_ITEMS.map((item) => (
             <li>
-              <a href={item.href}>{item.label}</a>
+              <a
+                href={item.href}
+                aria-current={item.href === currentPath ? "page" : undefined}
+              >
+                {item.label}
+              </a>
             </li>
           ))
         }
