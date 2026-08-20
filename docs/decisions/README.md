@@ -31,6 +31,7 @@
 
 - [Supabase 스키마 작업 방식](supabase-schema-workflow.md) — Supabase 스키마 원본, 로컬 스택, 마이그레이션 또는 타입 생성 방식을 변경할 때 읽는다.
 - [Supabase 클라이언트 경계](supabase-client-boundaries.md) — Supabase 타입, 클라이언트 초기화, 세션 저장소 또는 런타임별 키 소유권을 변경할 때 읽는다.
+- [로컬 인증 제공자 설정](local-auth-provider-configuration.md) — 로컬 스택의 Google·Apple Provider 설정, client ID 보관 위치, OAuth client 구성 또는 Android 서명 등록을 변경할 때 읽는다.
 
 ## 모바일 기반
 
