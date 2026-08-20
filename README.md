@@ -51,8 +51,8 @@ bun run setup --project-slug aurora-notes --display-name "Aurora Notes" --mobile
 | --- | --- |
 | 로컬 이메일 로그인 개발 | `bun run setup`, 로컬 Supabase URL과 publishable key |
 | 원격 Supabase 사용 | 새 Supabase 프로젝트, 프로젝트 URL과 publishable key |
-| Google 로그인 검증 | Google Cloud 프로젝트, Web·iOS·Android OAuth 클라이언트, Supabase Google Provider |
-| Apple 로그인 검증 | Apple Developer App ID와 capability, Supabase Apple Provider |
+| Google 로그인 검증 | Google Cloud 프로젝트, Web·iOS·Android OAuth 클라이언트, Supabase Google Provider(로컬 또는 원격) |
+| Apple 로그인 검증 | Apple Developer App ID와 capability, Supabase Apple Provider(로컬 또는 원격) |
 | 원격 이메일 로그인 검증 | 전용 SMTP 발신자, 6자리 OTP 이메일 템플릿 |
 
 이 템플릿에는 실제 OAuth client ID, client secret, 서명 자격 정보, SMTP 계정 또는 백엔드
@@ -92,7 +92,9 @@ EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
 `service_role`, secret key와 데이터베이스 비밀번호는 앱에 넣지 않습니다.
-Google이나 Apple 로그인을 검증할 때는 `.env.local`이 해당 Provider를 설정한 원격 Supabase
+Google과 Apple 로그인은 원격 프로젝트가 없어도 검증할 수 있습니다. 앱이 브라우저 OAuth 대신
+네이티브 `signInWithIdToken`을 사용하므로, Provider를 `supabase/config.toml`에 설정하면 로컬
+스택이 ID 토큰을 검증합니다. 원격 프로젝트를 쓸 때는 `.env.local`이 해당 Provider를 설정한
 프로젝트를 가리키는지 먼저 확인합니다. 이 템플릿은 로컬 값과 원격 값을 자동으로 바꾸지 않습니다.
 
 ### 3. Google 로그인 준비
@@ -112,33 +114,39 @@ Nitro Google Sign-In의 Expo config plugin, 공개 client ID와 iOS URL scheme�
 
    | 유형 | 입력값 | 용도 |
    | --- | --- | --- |
-   | Web application | Supabase Provider 화면에 표시된 callback URL | 앱이 요청할 Google ID Token의 대상과 Supabase Provider 설정 |
+   | Web application | Supabase callback URL(4번에서 등록) | 앱이 요청할 Google ID Token의 대상과 Supabase Provider 설정 |
    | iOS | `bun run setup`에서 정한 bundle identifier | iOS 네이티브 Google 로그인과 URL scheme |
    | Android | Android package와 서명 인증서 SHA-1 | Android Credential Manager에서 앱 신원 확인 |
 
-4. Web client에는 원격 Supabase callback URL을 Authorized redirect URI로 등록합니다. 일반적인
-   형식은 다음과 같습니다.
-
-   ```text
-   https://<project-ref>.supabase.co/auth/v1/callback
-   ```
-
-   Google Provider를 로컬 Supabase에도 연결할 때만 다음 callback도 추가합니다.
+4. Web client에 Authorized redirect URI를 등록합니다. 로컬 스택만 쓴다면 아래 주소 하나로
+   충분합니다.
 
    ```text
    http://127.0.0.1:54321/auth/v1/callback
    ```
 
-   모바일 앱은 브라우저 OAuth callback을 사용하지 않지만, Web client와 Supabase Provider를
-   등록하려면 이 값이 필요합니다.
-5. 첫 Android Development Build 뒤 로컬 서명 SHA-1은 다음 명령으로 확인할 수 있습니다.
+   원격 프로젝트도 쓴다면 그 callback도 함께 등록합니다.
 
-   ```bash
-   cd apps/mobile/android
-   ./gradlew signingReport
+   ```text
+   https://<project-ref>.supabase.co/auth/v1/callback
    ```
 
-   `apps/mobile/android`는 `bun run --cwd apps/mobile android`를 처음 실행할 때 생성됩니다.
+   앱은 네이티브 `signInWithIdToken`만 사용하므로 이 주소로 실제 요청이 오지는 않습니다.
+   Google이 Web client를 만들 때 요구하는 값이라 채웁니다.
+5. 로컬 Development Build는 Expo 템플릿의 debug keystore로 서명합니다. 이 값은 프로젝트마다
+   만들지 않고 그대로 복사하므로 머신과 worktree가 달라도 같습니다.
+
+   ```text
+   5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25
+   ```
+
+   직접 확인하려면 Android Development Build를 한 번 만든 뒤 keystore를 읽습니다.
+   `apps/mobile/android`는 `bun run dev android`를 처음 실행할 때 생성됩니다.
+
+   ```bash
+   keytool -list -v -keystore apps/mobile/android/app/debug.keystore -storepass android -alias androiddebugkey
+   ```
+
    Play 서명 값은 Google Play Console의 **Setup > App integrity**에서 확인합니다.
 6. Android OAuth client는 서명 인증서마다 만듭니다. 최소한 실제로 사용하는 항목을 모두
    등록합니다.
@@ -155,13 +163,32 @@ Nitro Google Sign-In의 Expo config plugin, 공개 client ID와 iOS URL scheme�
    Android client ID는 앱 코드에 넣지 않습니다. Google은 package와 SHA-1로 Android 앱을
    확인합니다. Expo config plugin은 iOS client ID에 대응하는
    `com.googleusercontent.apps.<client-prefix>` URL scheme을 사용합니다.
-8. Supabase Dashboard의 **Authentication > Sign In / Providers > Google**에서 Google을
-   활성화합니다.
-   - Client IDs에는 Web, iOS, Android client ID를 쉼표로 연결합니다.
-   - Web client ID를 첫 번째에 둡니다.
-   - Android 서명별 client ID가 여러 개면 모두 추가합니다.
-   - Client Secret에는 Web client secret을 넣습니다.
-   - nonce 검사를 끄지 않습니다.
+8. Supabase에서 Google Provider를 활성화합니다. Client ID 목록에는 Web과 iOS client ID를
+   쉼표로 연결하고 Web client ID를 첫 번째에 둡니다. nonce 검사는 끄지 않습니다.
+
+   Android client ID는 넣지 않습니다. Android가 돌려주는 ID Token의 `aud`는 Web client ID이고
+   Android client ID는 `azp`에만 들어가므로 Supabase가 검증에 사용하지 않습니다.
+
+   **로컬 스택**은 `supabase/config.toml`을 읽습니다. client ID는 공개 값이지만 프로젝트마다
+   달라서 `supabase/.env`에 두고 `config.toml`은 이름만 가리킵니다.
+   [supabase/.env.example](supabase/.env.example)을 복사해 값을 채우세요.
+
+   ```dotenv
+   SUPABASE_AUTH_GOOGLE_CLIENT_IDS=<web-client-id>.apps.googleusercontent.com,<ios-client-id>.apps.googleusercontent.com
+   ```
+
+   값을 채운 뒤 `[auth.external.google]`의 `enabled`를 `true`로 바꾸고 스택을 다시 띄웁니다.
+   변수가 비어 있으면 Supabase가 `env(...)` 문자열을 그대로 client ID로 씁니다. 그래서
+   기본값은 `false`입니다.
+
+   ```bash
+   bun run db:stop && bun run db:start
+   ```
+
+   Client Secret은 로컬에서 필요하지 않습니다. ID 토큰 검증에는 secret을 사용하지 않습니다.
+
+   **원격 프로젝트**는 Dashboard의 **Authentication > Sign In / Providers > Google**에서
+   설정합니다. Client Secret에 Web client secret을 넣습니다.
 
 Android에서 Google 버튼이 아무 반응 없이 끝나면 대부분 이 SHA-1 등록이 빠진 것입니다.
 Credential Manager는 사용자가 창을 닫았을 때와 설정이 맞지 않을 때를 같은 값으로 알려 주므로
@@ -182,9 +209,14 @@ Apple 로그인은 iOS 네이티브 방식만 사용합니다. Android와 웹용
    Explicit App ID를 만듭니다.
 2. Bundle ID에는 `bun run setup`에서 정한 iOS bundle identifier를 그대로 입력합니다.
 3. App ID의 capability에서 **Sign in with Apple**을 활성화합니다.
-4. Supabase Dashboard의 **Authentication > Sign In / Providers > Apple**에서 Apple을
-   활성화합니다.
-5. Client IDs에 iOS bundle identifier를 추가합니다.
+4. Supabase에서 Apple Provider를 활성화합니다. Client ID는 iOS bundle identifier입니다.
+
+   로컬 스택은 `supabase/config.toml`의 `[auth.external.apple]`을 읽습니다. `client_id`는
+   `bun run setup`이 `apps/mobile/app.json`의 bundle identifier와 같은 값으로 이미 채웠습니다.
+   `enabled`를 `true`로 바꾸고 스택을 다시 띄우면 됩니다. Client Secret은 필요하지 않습니다.
+
+   원격 프로젝트는 Dashboard의 **Authentication > Sign In / Providers > Apple**에서
+   활성화하고 Client IDs에 같은 bundle identifier를 넣습니다.
 
 이 템플릿은 네이티브 `signInWithIdToken`만 사용하므로 Services ID, 웹 callback, `.p8` signing
 key와 6개월마다 바꿔야 하는 Apple OAuth secret이 필요하지 않습니다. 나중에 웹이나 Android에서
