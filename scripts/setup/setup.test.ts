@@ -48,6 +48,7 @@ const unknownOptionMessage = /알 수 없는 옵션/;
 const missingValueMessage = /값이 필요합니다/;
 const notExactlyOneMessage = /정확히 하나 찾지 못했습니다/;
 const reservedSegmentMessage = /예약어/;
+const missingTableMessage = /블록을 찾지 못했습니다/;
 
 const nonInteractiveArgv = [
   "--project-slug",
@@ -82,6 +83,81 @@ describe("runSetup", () => {
       expect(readFixtureFile(root, "supabase/config.toml")).toContain(
         'project_id = "aurora-notes"'
       );
+    })
+  );
+
+  test(
+    "Apple client_id를 iOS bundleIdentifier와 같은 값으로 채운다",
+    withFixture(async (root) => {
+      await runSetup({ argv: nonInteractiveArgv, io: createIo().io, root });
+
+      const config = readFixtureFile(root, "supabase/config.toml");
+
+      expect(config).toContain('client_id = "com.aurora.notes"');
+      expect(readFixtureFile(root, "apps/mobile/app.json")).toContain(
+        '"bundleIdentifier": "com.aurora.notes"'
+      );
+    })
+  );
+
+  test(
+    "같은 이름을 쓰는 다른 블록의 client_id는 건드리지 않는다",
+    withFixture(async (root) => {
+      await runSetup({ argv: nonInteractiveArgv, io: createIo().io, root });
+
+      const config = readFixtureFile(root, "supabase/config.toml");
+
+      expect(config).toContain(
+        'client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_IDS)"'
+      );
+      expect(config).toContain('redirect_uri = ""');
+      expect(config).toContain('url = ""');
+
+      // The table after Apple holds the same key with the same template value.
+      // Only a range that ends at the next header leaves it alone.
+      expect(config).toContain(`[auth.external.azure]
+enabled = false
+client_id = ""`);
+    })
+  );
+
+  test(
+    "설정할 블록이 없으면 어떤 파일도 바꾸지 않고 멈춘다",
+    withFixture(async (root) => {
+      const configPath = join(root, "supabase", "config.toml");
+      const withoutApple = readFixtureFile(
+        root,
+        "supabase/config.toml"
+      ).replace("[auth.external.apple]", "[auth.external.notion]");
+
+      writeFileSync(configPath, withoutApple);
+
+      const before = readFixtureFile(root, "package.json");
+
+      await expect(
+        runSetup({ argv: nonInteractiveArgv, io: createIo().io, root })
+      ).rejects.toThrow(missingTableMessage);
+
+      expect(readFixtureFile(root, "package.json")).toBe(before);
+      expect(readFixtureFile(root, "supabase/config.toml")).toBe(withoutApple);
+    })
+  );
+
+  test(
+    "config.toml에 같은 값으로 다시 실행해도 결과가 같다",
+    withFixture(async (root) => {
+      await runSetup({ argv: nonInteractiveArgv, io: createIo().io, root });
+
+      const applied = readFixtureFile(root, "supabase/config.toml");
+
+      const result = await runSetup({
+        argv: [...nonInteractiveArgv, "--force"],
+        io: createIo().io,
+        root,
+      });
+
+      expect(result.status).toBe("unchanged");
+      expect(readFixtureFile(root, "supabase/config.toml")).toBe(applied);
     })
   );
 

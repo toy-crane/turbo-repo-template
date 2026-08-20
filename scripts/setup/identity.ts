@@ -29,6 +29,9 @@ const TEMPLATE_SLUG = "turbo-repo-template";
 const TEMPLATE_MOBILE_SLUG = "turbo-repo-mobile";
 const TEMPLATE_MOBILE_APP_ID = "com.toycrane.turborepotemplate.mobile";
 
+/** The start of any TOML table header, used to find where a table ends. */
+const TABLE_HEADER = /^\[/m;
+
 /**
  * Every identifier setup owns. Nothing outside this list is rewritten, so a
  * string that merely looks like the template name stays untouched.
@@ -97,6 +100,15 @@ export const IDENTITY_FIELDS: IdentityField[] = [
     source: "projectSlug",
     templateDefault: TEMPLATE_SLUG,
   },
+  {
+    file: "supabase/config.toml",
+    format: "toml",
+    key: "client_id",
+    label: "Supabase Apple client_id",
+    path: ["auth.external.apple", "client_id"],
+    source: "mobileAppId",
+    templateDefault: "",
+  },
 ];
 
 function escapeRegExp(value: string): string {
@@ -121,26 +133,64 @@ function readJsonPath(text: string, path: string[], file: string): string {
   return node;
 }
 
-function readTomlKey(text: string, key: string, file: string): string {
+/**
+ * The table a TOML field lives under, or `undefined` for a key above the first
+ * table header. A path of one element is top-level; a longer one names its
+ * table first.
+ */
+function tableOf(field: IdentityField): string | undefined {
+  return field.path.length > 1 ? field.path[0] : undefined;
+}
+
+/**
+ * The slice of the file a TOML field may be read from or written to. Keys
+ * repeat across tables — `client_id` appears under both Google and Apple — so
+ * matching the whole file would silently pick whichever came first.
+ */
+function tableRange(text: string, field: IdentityField): [number, number] {
+  const table = tableOf(field);
+
+  if (table === undefined) {
+    const firstHeader = text.search(TABLE_HEADER);
+
+    return [0, firstHeader === -1 ? text.length : firstHeader];
+  }
+
+  const header = text.match(new RegExp(`^\\[${escapeRegExp(table)}\\]$`, "m"));
+
+  if (header?.index === undefined) {
+    throw new Error(`${field.file}에서 [${table}] 블록을 찾지 못했습니다.`);
+  }
+
+  const start = header.index + header[0].length;
+  const nextHeader = text.slice(start).search(TABLE_HEADER);
+
+  return [start, nextHeader === -1 ? text.length : start + nextHeader];
+}
+
+function readTomlKey(text: string, field: IdentityField): string {
+  const [start, end] = tableRange(text, field);
   const pattern = new RegExp(
-    `^${escapeRegExp(key)}\\s*=\\s*"([^"]*)"\\s*$`,
+    `^${escapeRegExp(field.key)}\\s*=\\s*"([^"]*)"\\s*$`,
     "m"
   );
-  const match = text.match(pattern);
+  const match = text.slice(start, end).match(pattern);
 
   if (match?.[1] === undefined) {
-    throw new Error(`${file}에서 ${key} 값을 찾지 못했습니다.`);
+    throw new Error(`${field.file}에서 ${field.label} 값을 찾지 못했습니다.`);
   }
 
   return match[1];
 }
 
-function readField(root: string, field: IdentityField): string {
-  const text = readFileSync(join(root, field.file), "utf8");
-
+function readValue(text: string, field: IdentityField): string {
   return field.format === "json"
     ? readJsonPath(text, field.path, field.file)
-    : readTomlKey(text, field.key, field.file);
+    : readTomlKey(text, field);
+}
+
+function readField(root: string, field: IdentityField): string {
+  return readValue(readFileSync(join(root, field.file), "utf8"), field);
 }
 
 export function readIdentity(root: string): Map<IdentityField, string> {
@@ -190,8 +240,13 @@ function patternFor(field: IdentityField): RegExp {
  * like what setup knows how to edit, so it fails instead of guessing.
  */
 function replaceSingleValue(text: string, change: IdentityChange): string {
+  const [start, end] =
+    change.field.format === "toml"
+      ? tableRange(text, change.field)
+      : [0, text.length];
+  const scope = text.slice(start, end);
   const pattern = patternFor(change.field);
-  const hits = [...text.matchAll(pattern)].filter(
+  const hits = [...scope.matchAll(pattern)].filter(
     (match) => match[2] !== undefined && JSON.parse(match[2]) === change.from
   );
 
@@ -201,11 +256,15 @@ function replaceSingleValue(text: string, change: IdentityChange): string {
     );
   }
 
-  return text.replace(pattern, (match, prefix: string, quoted: string) =>
-    JSON.parse(quoted) === change.from
-      ? `${prefix}${JSON.stringify(change.to)}`
-      : match
+  const replaced = scope.replace(
+    pattern,
+    (match, prefix: string, quoted: string) =>
+      JSON.parse(quoted) === change.from
+        ? `${prefix}${JSON.stringify(change.to)}`
+        : match
   );
+
+  return `${text.slice(0, start)}${replaced}${text.slice(end)}`;
 }
 
 /**
@@ -222,10 +281,7 @@ export function applyIdentityChanges(root: string, changes: IdentityChange[]) {
     );
 
     for (const change of fileChanges) {
-      const applied =
-        change.field.format === "json"
-          ? readJsonPath(text, change.field.path, file)
-          : readTomlKey(text, change.field.key, file);
+      const applied = readValue(text, change.field);
 
       if (applied !== change.to) {
         throw new Error(

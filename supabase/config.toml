@@ -342,8 +342,25 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+[auth.external.google]
+enabled = false
+# Web과 iOS client ID를 쉼표로 잇고 Web을 맨 앞에 둡니다. Android client ID는
+# 넣지 않습니다. Android 토큰의 aud는 Web client ID이고 Android client ID는 azp에만
+# 들어가므로 검증에 쓰이지 않습니다. 공개 값이지만 프로젝트마다 달라서
+# supabase/.env에 두고 여기서는 이름만 가리킵니다.
+# 값을 채운 뒤에만 enabled를 true로 바꿉니다. 비어 있으면 Supabase가 아래
+# env(...) 문자열을 그대로 client ID로 씁니다.
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_IDS)"
+# DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
+# 앱은 signInWithIdToken만 쓰므로 이 secret은 로컬 검증에 쓰이지 않습니다.
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+# 앱이 로그인마다 nonce를 만들어 보냅니다. 끄지 마세요.
+skip_nonce_check = false
+
 [auth.external.apple]
 enabled = false
+# iOS bundle identifier입니다. bun run setup이 apps/mobile/app.json과 같은 값으로
+# 채웁니다. 손으로 고치지 마세요.
 client_id = ""
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
