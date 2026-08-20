@@ -86,6 +86,53 @@ describe("runSetup", () => {
   );
 
   test(
+    "Apple client_id를 iOS bundleIdentifier와 같은 값으로 채운다",
+    withFixture(async (root) => {
+      await runSetup({ argv: nonInteractiveArgv, io: createIo().io, root });
+
+      const config = readFixtureFile(root, "supabase/config.toml");
+
+      expect(config).toContain('client_id = "com.aurora.notes"');
+      expect(readFixtureFile(root, "apps/mobile/app.json")).toContain(
+        '"bundleIdentifier": "com.aurora.notes"'
+      );
+    })
+  );
+
+  test(
+    "같은 이름을 쓰는 다른 블록의 client_id는 건드리지 않는다",
+    withFixture(async (root) => {
+      await runSetup({ argv: nonInteractiveArgv, io: createIo().io, root });
+
+      const config = readFixtureFile(root, "supabase/config.toml");
+
+      expect(config).toContain(
+        'client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_IDS)"'
+      );
+      expect(config).toContain('redirect_uri = ""');
+      expect(config).toContain('url = ""');
+    })
+  );
+
+  test(
+    "config.toml에 같은 값으로 다시 실행해도 결과가 같다",
+    withFixture(async (root) => {
+      await runSetup({ argv: nonInteractiveArgv, io: createIo().io, root });
+
+      const applied = readFixtureFile(root, "supabase/config.toml");
+
+      const result = await runSetup({
+        argv: [...nonInteractiveArgv, "--force"],
+        io: createIo().io,
+        root,
+      });
+
+      expect(result.status).toBe("unchanged");
+      expect(readFixtureFile(root, "supabase/config.toml")).toBe(applied);
+    })
+  );
+
+  test(
     "local database 이름과 env 파일은 건드리지 않는다",
     withFixture(async (root) => {
       const { io } = createIo();
