@@ -58,6 +58,10 @@ secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
 # Two more empty strings under the same table. Only client_id may move.
 redirect_uri = ""
 url = ""
+
+[auth.external.azure]
+enabled = false
+client_id = ""
 `;
 
 /**

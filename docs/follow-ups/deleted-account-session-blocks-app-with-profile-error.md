@@ -4,7 +4,7 @@
 
 **Observed evidence**: 2026-08-20 이 템플릿으로 만든 프로젝트(`toy-crane/flyn`)의 iOS Simulator Development Build에서 확인했다. 이메일 인증 코드 로그인과 온보딩을 마쳐 홈 화면까지 들어간 뒤 `delete from auth.users where email='<검증용 주소>'`로 행을 지웠다. `auth.users`가 0행인 상태에서 앱을 다시 열자 위 오류 화면이 나왔다. 앱을 지우고 캐시된 빌드를 다시 설치하니 로그인 화면이 정상으로 열렸다. 그 프로젝트는 인증과 프로필 코드를 바꾸지 않았으므로 이 템플릿에서 그대로 재현된다.
 
-**Suspected cause**: [protected-area.ts:71](../../apps/mobile/src/core/navigation/protected-area.ts:71)이 `profile.isError`를 전부 `profileUnavailable`로 보낸다. 기기에 저장된 Supabase 세션은 남아 있는데 그 사용자의 `public.profiles` 행이 없는 경우와, 요청이 실패한 경우를 구분하지 않는 것으로 보인다. 같은 파일의 주석은 끊긴 요청 때문에 사람을 로그아웃시키지 않겠다는 의도를 밝혀 두었다. 사용자가 사라진 경우는 그 의도가 다루지 않은 상황으로 보이지만, 조회 계층이 "행 없음"을 오류로 올리는지는 확인하지 않았다.
+**Suspected cause**: `apps/mobile/src/core/navigation/protected-area.ts`의 `profile.isError` 분기가 오류를 전부 `profileUnavailable`로 보낸다. 기기에 저장된 Supabase 세션은 남아 있는데 그 사용자의 `public.profiles` 행이 없는 경우와, 요청이 실패한 경우를 구분하지 않는 것으로 보인다. 같은 파일의 주석은 끊긴 요청 때문에 사람을 로그아웃시키지 않겠다는 의도를 밝혀 두었다. 사용자가 사라진 경우는 그 의도가 다루지 않은 상황으로 보이지만, 조회 계층이 "행 없음"을 오류로 올리는지는 확인하지 않았다.
 
 **What was tried**: 앱을 지우고 캐시된 빌드에서 다시 설치해 세션 저장소를 비웠다. 로그인 화면이 정상으로 돌아와 검증을 이어갈 수 있었다. 인증이나 프로필 조회 코드는 바꾸지 않았다. 이번 작업은 로컬 인증 제공자 설정만 다뤘다.
 

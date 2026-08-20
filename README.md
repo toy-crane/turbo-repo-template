@@ -21,7 +21,7 @@ bun run setup
 | --- | --- |
 | 프로젝트 슬러그(영문 소문자 kebab-case, 첫 글자는 문자) | 루트 `package.json`의 `name`, Expo의 `slug`와 `scheme`, `supabase/config.toml`의 `project_id` |
 | 표시 이름 | Expo의 `name` |
-| 모바일 앱 식별자(완성된 reverse-DNS) | iOS의 `bundleIdentifier`, Android의 `package` |
+| 모바일 앱 식별자(완성된 reverse-DNS) | iOS의 `bundleIdentifier`, Android의 `package`, `supabase/config.toml`의 `[auth.external.apple]` `client_id` |
 
 질문 없이 실행하려면 세 값을 모두 전달합니다.
 

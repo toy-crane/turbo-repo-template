@@ -47,5 +47,6 @@ Google은 Android 앱을 package와 서명 인증서로 확인한다. Android OA
 
 - Expo 템플릿의 debug keystore는 프로젝트마다 생성하지 않고 그대로 복사한다. `expo-template-bare-minimum@57.0.16`의 `android/app/debug.keystore` SHA-256이 `221e0a3106aa4c3ccc154e0a418b55020b3f9ea6e84f92e8749cd9e2f39f5e58`이고, 인증서는 2014-01-01 발급에 2052-05-01 만료다. 따라서 debug SHA-1 `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`은 worktree와 머신이 달라도 같다. 순수 React Native CLI 프로젝트는 이와 달리 머신마다 다른 값을 만든다.
 - 로컬 스택의 제공자 활성 상태는 `/auth/v1/settings`로 확인한다. 2026-08-20 이 저장소에서 기본 설정은 `google`과 `apple`이 `false`, `email`이 `true`였고, `supabase/.env`를 채우고 `enabled = true`로 바꾸자 `google`이 `true`가 됐다. Apple은 `client_id`에 bundle identifier만 넣고 secret 없이 `true`가 됐다.
+- 셸 환경 변수가 `supabase/.env`를 이긴다. 2026-08-20 파일에 `FILE-VALUE`를, 셸에 `SHELL-VALUE`를 넣고 스택을 띄우자 auth 컨테이너의 `GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID`가 `SHELL-VALUE`였다. 그래서 CI는 파일 없이 환경 변수로 주입할 수 있다.
 - 꺼진 제공자에 ID Token을 보내면 `Unsupported provider`가, 켜진 제공자에 잘못된 토큰을 보내면 `Bad ID token`이 돌아온다. 두 응답이 설정 문제와 토큰 문제를 구분해 준다.
 - `config.toml`의 `skip_nonce_check` 기본 주석은 "Required for local sign in with Google auth"라고 안내하지만 이 앱에는 해당하지 않는다. 앱이 로그인마다 nonce를 만들어 보내므로 `false`를 유지한다.
