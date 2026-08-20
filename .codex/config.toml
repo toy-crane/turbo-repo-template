@@ -1,6 +1,15 @@
-# Project-scoped Context7 MCP configuration. Codex loads this file only after
-# the repository is trusted. Authentication is optional; when present, Codex
-# reads the token from the developer's environment instead of this repository.
+# Project-scoped MCP configuration. Codex loads this file only after the
+# repository is trusted. Keep it in sync with `.mcp.json`, which carries the
+# same servers for Claude Code.
+
+# Astro's official docs server. Astro publishes no llms.txt, so this is the
+# vendor-recommended agent context. No authentication.
+[mcp_servers.astro-docs]
+url = "https://mcp.docs.astro.build/mcp"
+enabled = true
+
+# Authentication is optional; when present, Codex reads the token from the
+# developer's environment instead of this repository.
 [mcp_servers.context7]
 url = "https://mcp.context7.com/mcp"
 bearer_token_env_var = "CONTEXT7_API_KEY"
