@@ -24,7 +24,8 @@
 - **"여럿이 논의하면 답이 더 정확해진다"는 기대는 근거가 약하다.** 이 기능의 가치는
   정확도가 아니라 경험(여러 관점, 역할극, 생동감)에서 찾아야 한다.
 - **비용이 핵심 제약이다.** AI 응답 수가 사용자 메시지당 몇 배로 늘고, 대화록을 매 호출에
-  다시 보낸다. 유사 기능을 내놨던 제품들이 짧게는 8개월 만에 접은 공통 배경이기도 하다.
+  다시 보낸다. 유사 기능을 내놨다가 접은 제품이 여럿이라는 사실도 신중할 이유다. 다만
+  종료 이유를 비용이라고 밝힌 제품은 없다(아래 실패 방식 참고).
 - **페르소나는 프롬프트만으로 유지되지 않는다.** 몇 라운드 만에 말투가 무너지고 서로의
   성격을 흡수한다는 측정이 있다. 발화 경계에서 자르는 장치와 주기적인 역할 재주입이
   필요하다.
@@ -179,10 +180,14 @@
   토큰이 불어난다.
 - **작은 모델의 붕괴**: 인원이 늘수록 페르소나 분리가 무너져, 커뮤니티는 그룹 전용
   파인튜닝 모델과 캐릭터별 모델 배정 확장까지 만들었다.
-- **기능 사망률**: Character.AI Rooms 폐지(2024), Meta 셀럽 페르소나 폐지(2024),
-  Shapes의 Discord 퇴출(2025), ChatGPT 그룹 채팅 종료(2026, 약 8개월 만). 사용자 메시지
-  1건에 생성 여러 건이라는 원가 구조와 불분명한 리텐션이 공통 배경으로 꼽힌다. 응답 수를
-  작고 예측 가능하게 유지하고, 2~3명 인원에서도 가치 있는 설계여야 한다는 교훈이다.
+- **짧게 살다 사라진 기능들**: Character.AI Rooms 폐지(2024), Meta 셀럽 페르소나
+  폐지(2024), Shapes의 Discord 퇴출(2025), ChatGPT 그룹 채팅 종료(2026, 약 8개월 만).
+  사례의 성격은 서로 다르다. Meta 셀럽 페르소나는 다자간 대화가 아닌 개별 페르소나
+  봇이었고, Shapes는 비용이 아니라 플랫폼 정책 분쟁으로 퇴출되었으며, OpenAI가 밝힌
+  종료 이유는 제품을 단순하게 유지한다는 것이었다. 비용이나 리텐션이 공통 원인이라는
+  사후 분석은 출처에 없고, 원가 구조가 이런 기능을 유지하기 어렵게 만들었으리라는 것은
+  이 문서의 추정이다. 다만 응답 수를 작고 예측 가능하게 유지하고 2~3명 인원에서도
+  가치 있게 설계하자는 교훈은 원인 단정 없이도 성립한다.
 
 ## 연구 근거가 말하는 것
 
@@ -335,9 +340,11 @@
 - Character.AI: [그룹 채팅 발표](https://blog.character.ai/new-feature-announcement-character-group-chat/),
   [출시 구조 보도](https://www.maginative.com/article/character-ai-introduces-new-group-chats-feature/)
 - Poe: [멀티 봇 발표(X)](https://x.com/poe_platform/status/1779898268174168511)
-- Shapes: [그룹 채팅 가이드(Free Will 단계)](https://docs.shapes.inc/shapeschatsguide)
+- Shapes: [그룹 채팅 가이드(Free Will 단계)](https://docs.shapes.inc/shapeschatsguide),
+  [Discord 퇴출 보도](https://techissuestoday.com/shapes-inc-removed-from-discord-reactions/)
 - Kindroid: [Groupchats 문서](https://kindroid.ai/v2/docs/groupchats/)
-- Meta AI: [WhatsApp 그룹의 @Meta AI](https://faq.whatsapp.com/203220822537614)
+- Meta AI: [WhatsApp 그룹의 @Meta AI](https://faq.whatsapp.com/203220822537614),
+  [셀럽 페르소나 폐지 보도](https://www.socialmediatoday.com/news/meta-retires-celebrity-styled-ai-bots/722974/)
 
 ### 연구
 
