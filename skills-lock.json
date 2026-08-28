@@ -5,7 +5,7 @@
       "source": "toy-crane/skills",
       "sourceType": "github",
       "skillPath": "skills/workflow/add-stack-context/SKILL.md",
-      "computedHash": "711e01adba8ce1bcc607278cf10bf791b7688d0a978eedf1392e0047ba813104"
+      "computedHash": "963265a45b37e496cb9e308a563f1940d5841e2cda54142d2bea3f6b59325dbd"
     },
     "agent-device": {
       "source": "callstack/agent-device",
@@ -113,7 +113,7 @@
       "source": "toy-crane/skills",
       "sourceType": "github",
       "skillPath": "skills/expo/expo-dev-loop/SKILL.md",
-      "computedHash": "277e6e23478d5006906d8f9ba7d2a5e44414481d46323057f9a19c38deb74b0f"
+      "computedHash": "398e3d1d5c4ed8b520d69f53eed21cafe6f12bc8ef92fe4f47a817c8c49dc206"
     },
     "expo-dom": {
       "source": "expo/skills",
@@ -157,6 +157,12 @@
       "skillPath": "plugins/expo/skills/expo-skill-feedback/SKILL.md",
       "computedHash": "7964b0683a81a9e2932151d5f1ddda27f60f22932e38c1687e60f754fdb45277"
     },
+    "expo-smoke-test": {
+      "source": "toy-crane/skills",
+      "sourceType": "github",
+      "skillPath": "skills/expo/expo-smoke-test/SKILL.md",
+      "computedHash": "1f7781a361f4fbd89cb7607a277b751145a8469858c46320afe518cca575067f"
+    },
     "expo-tailwind-setup": {
       "source": "expo/skills",
       "sourceType": "github",
@@ -197,7 +203,7 @@
       "source": "toy-crane/skills",
       "sourceType": "github",
       "skillPath": "skills/workflow/implement/SKILL.md",
-      "computedHash": "e23826e2bd89d7e33bd56bc9a7da0c029600f41119253f7984eebd9514d88a2f"
+      "computedHash": "717fa8f7ea4bd98886ab94f4df4d3ee31719d0ef92d8f21419fdcdad60e7fa12"
     },
     "maintain-project-context": {
       "source": "toy-crane/skills",
@@ -257,13 +263,13 @@
       "source": "toy-crane/skills",
       "sourceType": "github",
       "skillPath": "skills/workflow/shape-idea/SKILL.md",
-      "computedHash": "d04a9c3fbf5dbd46154e8a6bbc09f72528259b54f030067bbd1a999585609618"
+      "computedHash": "6bfe2d38e9b9f614550b77db38068db87166baad50af85f226aeec437d12d8d4"
     },
     "split-into-tasks": {
       "source": "toy-crane/skills",
       "sourceType": "github",
       "skillPath": "skills/workflow/split-into-tasks/SKILL.md",
-      "computedHash": "7b443d2c180f379a0f8bfb4810ee5912c24626b6f3ce050de55bc445c754a3ca"
+      "computedHash": "801dc12c1c9ffd9ef2a64ab7cd1e767215cf034c36d6284ff0fdee82a55c93de"
     },
     "supabase": {
       "source": "supabase/agent-skills",
@@ -287,7 +293,7 @@
       "source": "toy-crane/skills",
       "sourceType": "github",
       "skillPath": "skills/workflow/tdd/SKILL.md",
-      "computedHash": "98cc3a64783dcd8049c4701ba1efeb065dc56b24db791ab613273ca8b4a22627"
+      "computedHash": "a2c820cbb37e2150d26cae2f47c435a5348dfada5b7d4bc49456ffde54d9f198"
     },
     "uniwind": {
       "source": "uni-stack/uniwind",
